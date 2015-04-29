@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2015/04/24 00:29:52.000.346,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Edit.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\mergeplugins.dproj</Transaction>
+    <Transaction>2015/04/24 00:31:02.000.053,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\mergeplugins.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj</Transaction>
+    <Transaction>2015/04/24 00:31:20.000.450,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Edit.dproj</Transaction>
+    <Transaction>2015/04/24 00:31:20.000.479,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Edit.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj</Transaction>
+    <Transaction>2015/04/24 00:31:29.000.741,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\MergeEdit.dproj</Transaction>
+    <Transaction>2015/04/24 00:34:26.000.288,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\MergeEdit.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\MergePlugins.dproj</Transaction>
+    <Transaction>2015/04/24 12:11:00.000.744,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\mteMergeForm.pas=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\Unit1.pas</Transaction>
+    <Transaction>2015/04/24 12:11:00.000.744,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\mteMergeForm.dfm=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\Unit1.dfm</Transaction>
+  </Transactions>
+</BorlandProject>
