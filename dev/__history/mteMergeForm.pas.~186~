@@ -3,18 +3,15 @@ unit mteMergeForm;
 interface
 
 uses
+  // delphi units
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList,
-  ShlObj, Menus, IdHashMessageDigest,
-  wbBSA,
-  wbHelpers,
-  wbInterface,
-  wbImplementation,
-  wbDefinitionsFNV,
-  wbDefinitionsFO3,
-  wbDefinitionsTES3,
-  wbDefinitionsTES4,
-  wbDefinitionsTES5, Grids, ValEdit;
+  Menus, Grids, ValEdit, ShlObj,
+  // mte units
+  mteHelpers, mteMerge,
+  // tes5edit units
+  wbBSA, wbHelpers, wbInterface, wbImplementation, wbDefinitionsFNV,
+  wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4, wbDefinitionsTES5;
 
 type
   TMergeForm = class(TForm)
@@ -52,6 +49,8 @@ type
     MergeListView: TListView;
     DetailsEditor: TValueListEditor;
     FlagList: TImageList;
+    CheckforErrors1: TMenuItem;
+    Ignorepluginchanges1: TMenuItem;
     procedure LogMessage(s: string);
     procedure FormCreate(Sender: TObject);
     procedure DictionaryButtonClick(Sender: TObject);
@@ -72,45 +71,13 @@ type
     procedure AddToMergeClick(Sender: TObject);
     procedure DetailsEditorSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
+    procedure PageControlChange(Sender: TObject);
+    procedure CheckforErrors1Click(Sender: TObject);
+    procedure Deletemerge1Click(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
-  end;
-  TMerge = class(TObject)
-    public
-      name: string;
-      filename: string;
-      dateBuilt: TDateTime;
-      plugins: TStringList;
-      hashes: TStringList;
-      masters: TStringList;
-      method: string;
-      renumbering: string;
-      log: string;
-      constructor Create; virtual;
-  end;
-  TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_MCM, HAS_FACEDATA,
-    HAS_VOICEDATA, HAS_FRAGMENTS);
-  TPluginFlags = set of TPluginFlag;
-  TPlugin = class(TObject)
-    public
-      pluginFile: IwbFile;
-      hasData: boolean;
-      flags: TPluginFlags;
-      filename: string;
-      numRecords: string;
-      numOverrides: string;
-      author: string;
-      description: string;
-      masters: TStringList;
-      errors: TStringList;
-      reports: TStringList;
-      hash: string;
-      constructor Create; virtual;
-      procedure GetData(bCountOverrides: boolean);
-      procedure GetFlags;
-      function GetFlagsString: string;
   end;
 
 var
@@ -126,263 +93,12 @@ implementation
 
 {$R *.dfm}
 
-constructor TMerge.Create;
-begin
-  name := 'NewMerge';
-  filename := 'NewMerge.esp';
-  dateBuilt := 0;
-  plugins := TStringList.Create;
-  masters := TStringList.Create;
-  hashes := TStringList.Create;
-  method := 'Overrides';
-  renumbering := 'Conflicting';
-  log := '';
-end;
-
-constructor TPlugin.Create;
-begin
-  hasData := false;
-  masters := TStringList.Create;
-  errors := TStringList.Create;
-  reports := TStringList.Create;
-end;
-
-{
-  Returns true if the input record is an override record
-}
-function IsOverride(aRecord: IwbMainRecord): boolean;
-begin
-  Result := not aRecord.Equals(aRecord.MasterOrSelf);
-end;
-
-{
-  Returns the number of override records in a file
-}
-function CountOverrides(aFile: IwbFile): integer;
-var
-  i: Integer;
-  aRecord: IwbMainRecord;
-begin
-  Result := 0;
-  for i := 0 to Pred(aFile.GetRecordCount) do begin
-    aRecord := aFile.GetRecord(i);
-    if IsOverride(aRecord) then
-      Inc(Result);
-  end;
-end;
-
-{
-  Replaces newlines with a comma and space
-}
-function csvText(s: string): string;
-begin
-  result := StringReplace(Trim(s), #13, ', ', [rfReplaceAll]);
-end;
-
-{
-  Recursively traverse a container looking for errors
-}
-function CheckForErrorsLinear(const aElement: IwbElement;
-  LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
-var
-  Error: string;
-  Container: IwbContainerElementRef;
-  i: Integer;
-begin
-  Error := aElement.Check;
-  if Error <> '' then begin
-    Result := aElement.ContainingMainRecord;
-    // first error in this record - show record's name
-    if Assigned(Result) and (Result <> LastRecord) then begin
-      errors.Add(Result.Name);
-    end;
-    errors.Add('    ' + aElement.Path + ' -> ' + Error);
-  end else
-    // passing through last record with error
-    Result := LastRecord;
-  if Supports(aElement, IwbContainerElementRef, Container) then
-    for i := 0 to Pred(Container.ElementCount) do
-      Result := CheckForErrorsLinear(Container.Elements[i], Result, errors);
-end;
-
-function CheckForErrors(const aIndent: Integer; const aElement: IwbElement;
-  var errors: TStringList): Boolean;
-var
-  Error: string;
-  Container: IwbContainerElementRef;
-  i: Integer;
-begin
-  Error := aElement.Check;
-  Result := Error <> '';
-  if Result then begin
-    Error := aElement.Check;
-    errors.Add(StringOfChar(' ', aIndent * 2) + aElement.Name + ' -> ' + Error);
-  end else
-    errors.Add('');
-
-  // recursion
-  if Supports(aElement, IwbContainerElementRef, Container) then
-    for i := Pred(Container.ElementCount) downto 0 do
-      Result := CheckForErrors(aIndent + 1, Container.Elements[i], errors) or Result;
-
-  if Result and (Error = '') then begin
-    errors.Add(StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + aElement.Name);
-  end;
-end;
-
-{
-  Gets the MD5 hash for a file
-}
-function MD5(const fileName : string) : string;
-var
-  idmd5 : TIdHashMessageDigest5;
-  sl: TStringList;
-begin
-  idmd5 := TIdHashMessageDigest5.Create;
-  sl := TStringList.Create;
-  try
-    sl.LoadFromFile(fileName);
-    Result := idmd5.HashStringAsHex(fileName, nil);
-  finally
-    sl.Free;
-    idmd5.Free;
-  end;
-end;
-
-{
-  Gets the masters in an IwbFile and puts them into a stringlist
-}
-procedure GetMasters(aFile: IwbFile; var sl: TStringList);
-var
-  Container, MasterFiles, MasterFile: IwbContainer;
-  i: integer;
-begin
-  Container := aFile as IwbContainer;
-  Container := Container.Elements[0] as IwbContainer;
-  if Container.ElementExists['Master Files'] then begin
-    MasterFiles := Container.ElementByPath['Master Files'] as IwbContainer;
-    for i := 0 to MasterFiles.ElementCount - 1 do begin
-      MasterFile := MasterFiles.Elements[i] as IwbContainer;
-      sl.Add(MasterFile.GetElementEditValue('MAST - Filename'));
-    end;
-  end;
-end;
-
-{
-  Checks if a BSA exists associated with the given filename
-}
-function BSAExists(filename: string): boolean;
-begin
-  if (Pos('.esp', filename) > 0)
-  or (Pos('.esm', filename) > 0) then
-    filename := Copy(filename, 1, Length(filename) - 4) + '.bsa'
-  else
-    filename := filename + '.bsa';
-  Result := FileExists(wbDataPath + filename);
-end;
-
-function MCMExists(filename: string): boolean;
-begin
-  Result := false;
-end;
-
-function FaceDataExists(filename: string): boolean;
-var
-  facetint, facegeom: boolean;
-begin
-  facetint := DirectoryExists(wbDataPath + 'textures\actors\character\facegendata\facetint\' + filename);
-  facegeom := DirectoryExists(wbDataPath + 'meshes\actors\character\facegendata\facegeom\' + filename);
-  Result := facetint or facegeom;
-end;
-
-function VoiceDataExists(filename: string): boolean;
-begin
-  Result := DirectoryExists(wbDataPath + 'sound\voice\' + filename);
-end;
-
-function FragmentsExist(filename: string): boolean;
-begin
-  Result := false;
-end;
-
-{
-  Gets the flag values for a TPlugin
-}
-procedure TPlugin.GetFlags;
-begin
-  if blacklist.IndexOf(filename) > -1 then begin
-    flags := flags + [IS_BLACKLISTED];
-    exit;
-  end;
-  if errors.Count > 0 then
-    flags := flags + [HAS_ERRORS];
-  if BSAExists(filename) then
-    flags := flags + [HAS_BSA];
-  if MCMExists(filename) then
-    flags := flags + [HAS_MCM];
-  if FaceDataExists(filename) then
-    flags := flags + [HAS_FACEDATA];
-  if VoiceDataExists(filename) then
-    flags := flags + [HAS_VOICEDATA];
-  if FragmentsExist(filename) then
-    flags := flags + [HAS_FRAGMENTS];
-end;
-
-{
-  Returns a string representing the flags in a plugin
-}
-function TPlugin.GetFlagsString: string;
-begin
-  Result := '';
-  if IS_BLACKLISTED in flags then
-    Result := Result + 'X';
-  if HAS_ERRORS in flags then
-    Result := Result + 'E';
-  if HAS_BSA in flags then
-    Result := Result + 'A';
-end;
-
-{
-  Fetches data associated with a plugin.
-}
-procedure TPlugin.GetData(bCountOverrides: boolean);
-var
-  Container: IwbContainer;
-begin
-  hasData := true;
-  filename := pluginFile.FileName;
-  Container := pluginFile as IwbContainer;
-  Container := Container.Elements[0] as IwbContainer;
-  author := Container.GetElementEditValue('CNAM - Author');
-  numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
-  description := Container.GetElementEditValue('SNAM - Description');
-  GetMasters(pluginFile, masters);
-  //CheckForErrors(0, pluginFile as IwbElement, errors);
-  GetFlags;
-  hash := MD5(wbDataPath + filename);
-
-  if bCountOverrides then
-    numOverrides := IntToStr(CountOverrides(pluginFile));
-end;
-
 {
   Prints a message to the log memo
 }
 procedure TMergeForm.LogMessage(s: string);
 begin
   Memo1.Lines.Add(s);
-end;
-
-{
-  Gets a folder by its integer CSID.
-}
-function GetCSIDLShellFolder(CSIDLFolder: integer): string;
-begin
-  SetLength(Result, MAX_PATH);
-  SHGetSpecialFolderPath(0, PChar(Result), CSIDLFolder, True);
-  SetLength(Result, StrLen(PChar(Result)));
-  if (Result <> '') then
-    Result := IncludeTrailingBackslash(Result);
 end;
 
 {
@@ -471,6 +187,10 @@ begin
   blacklist.Add('Dawnguard.esm');
   blacklist.Add('HearthFires.esm');
   blacklist.Add('Dragonborn.esm');
+  blacklist.Add('SkyUI.esp');
+  blacklist.Add('HighResTexturePack01.esp');
+  blacklist.Add('HighResTexturePack02.esp');
+  blacklist.Add('HighResTexturePack03.esp');
 
   // GUI ICONS
   IconList.GetBitmap(0, NewButton.Glyph);
@@ -506,13 +226,14 @@ begin
     plugin := TPlugin.Create;
     plugin.filename := sl[i];
     plugin.pluginFile := wbFile(wbDataPath + sl[i], i);
-    plugin.GetFlags;
+    plugin.GetFlags(blacklist);
     pluginObjects.Add(Pointer(plugin));
 
     ListItem := PluginsListView.Items.Add;
     ListItem.Caption := IntToHex(i, 2);
     ListItem.SubItems.Add(plugin.filename);
     ListItem.SubItems.Add(plugin.GetFlagsString);
+    ListItem.SubItems.Add(' ');
   end;
 
 
@@ -537,6 +258,17 @@ end;
 {
   Loads plugin details
 }
+procedure TMergeForm.PageControlChange(Sender: TObject);
+var
+  ndx: integer;
+begin
+  ndx := TPageControl(Sender).ActivePageIndex;
+  if ndx = 0 then
+    PluginsListViewChange(nil, nil, TItemChange(nil))
+  else if ndx = 1 then
+    MergeListViewChange(nil, nil, TItemChange(nil))
+end;
+
 procedure TMergeForm.PluginsListViewChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 var
@@ -556,11 +288,12 @@ begin
   // get plugin information
   index := PluginsListView.ItemIndex;
   plugin := TPlugin(pluginObjects[index]);
-  if not plugin.hasData then plugin.GetData(index > 0);
+  if not plugin.hasData then plugin.GetData(blacklist, index > 0);
 
   // add details items
   AddDetailsItem('Filename', plugin.filename);
-  AddDetailsItem('Hash', plugin.hash);
+  AddDetailsItem('File size', FormatByteSize(plugin.fileSize));
+  AddDetailsItem('Date modified', plugin.dateModified);
   AddDetailsItem('Flags', plugin.GetFlagsString);
   AddDetailsItem('Number of records', plugin.numRecords);
   AddDetailsItem('Number of overrides', plugin.numOverrides);
@@ -569,18 +302,6 @@ begin
   AddDetailsItem('Master files', csvText(plugin.masters.Text));
   AddDetailsItem('Errors', csvText(plugin.errors.Text));
   AddDetailsItem('Reports', csvText(plugin.reports.Text));
-end;
-
-{
-  Converts a TDateTime to a string, with 0 being the string 'Never'
-}
-function DateBuiltString(date: TDateTime): string;
-begin
-  if date = 0 then
-    Result := 'Never'
-  else begin
-    Result := DateTimeToStr(date);
-  end;
 end;
 
 {
@@ -635,9 +356,11 @@ begin
   end;
 end;
 
+
 {
-  Add selected plugins to existing merge
+  PluginsPopupMenu events
 }
+// Add to merge
 procedure TMergeForm.AddToMergeClick(Sender: TObject);
 var
   MenuItem: TMenuItem;
@@ -656,18 +379,16 @@ begin
       continue;
     plugin := TPlugin(pluginObjects[i]);
     if not plugin.hasData then
-      plugin.GetData(true);
+      plugin.GetData(blacklist, true);
     merge.plugins.Add(plugin.filename);
-    merge.hashes.Add(plugin.hash);
+    merge.pluginSizes.Add(Pointer(plugin.fileSize));
+    merge.pluginDates.Add(plugin.dateModified);
   end;
 
   // update gui
   UpdateMerges;
 end;
-
-{
-  Add selected plugins to a new merge
-}
+// Add to new merge
 procedure TMergeForm.NewMerge1Click(Sender: TObject);
 var
   merge: TMerge;
@@ -680,17 +401,124 @@ begin
     ListItem := PluginsListView.Items[i];
     if not ListItem.Selected then
       continue;
+    ListItem.SubItems[2] := merge.name;
     plugin := TPlugin(pluginObjects[i]);
     merge.plugins.Add(plugin.filename);
-    merge.hashes.Add(plugin.hash);
+    merge.pluginSizes.Add(Pointer(plugin.fileSize));
+    merge.pluginDates.Add(plugin.dateModified);
   end;
   merges.Add(merge);
   UpdateMerges;
+end;
+// Check for errors
+procedure TMergeForm.CheckforErrors1Click(Sender: TObject);
+var
+  i: integer;
+  ListItem: TListItem;
+  plugin: TPlugin;
+begin
+  for i := 0 to Pred(PluginsListView.Items.Count) do begin
+    ListItem := PluginsListView.Items[i];
+    if not ListItem.Selected then
+      continue;
+    plugin := TPlugin(pluginObjects[i]);
+    plugin.FindErrors;
+  end;
+end;
+
+{
+  Update merge
+}
+procedure TMergeForm.DetailsEditorSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  if not Assigned(currentMerge) then
+    exit;
+
+  // update merge
+  currentMerge.name := DetailsEditor.Values['Merge name'];
+  currentMerge.filename := DetailsEditor.Values['Filename'];
+  currentMerge.method := DetailsEditor.Values['Merge method'];
+  currentMerge.renumbering := DetailsEditor.Values['Renumbering'];
+
+  UpdateMerges;
+end;
+
+{
+  MergesPopupMenu events
+}
+procedure TMergeForm.Deletemerge1Click(Sender: TObject);
+begin
+  if MergeListView.ItemIndex = -1 then
+    exit;
+
+  currentMerge := nil;
+  merges.Delete(MergeListView.ItemIndex);
+  MergeListView.Items[MergeListView.ItemIndex].Delete;
+end;
+
+{
+  Merge selected
+}
+procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+var
+  mergeItem: TListItem;
+  merge: TMerge;
+  prop: TItemProp;
+begin
+  // prepare list view for merge information
+  DetailsEditor.OnSetEditText := nil;
+  DetailsEditor.Strings.Clear;
+  DetailsEditor.Options := DetailsEditor.Options + [goEditing];
+  DetailsLabel.Caption := 'Merge Details:';
+
+  // don't do anything if no item selected
+  mergeItem := MergeListView.Selected;
+  if not Assigned(mergeItem) then
+    exit;
+
+  // get merge information
+  merge := merges[MergeListView.ItemIndex];
+  currentMerge := merge;
+  AddDetailsItem('Merge name', merge.name, true);
+  AddDetailsItem('Filename', merge.filename, true);
+  AddDetailsItem('Plugin count', IntToStr(merge.plugins.Count));
+  AddDetailsItem('Date built', DateBuiltString(merge.dateBuilt));
+  AddDetailsItem('Plugins', csvText(merge.plugins.Text));
+  AddDetailsItem('Masters', csvText(merge.masters.Text));
+  AddDetailsItem(' ', ' ');
+  prop := AddDetailsItem('Merge method', merge.method, false);
+  prop.EditStyle := esPickList;
+  prop.PickList.Add('Overrides');
+  prop.PickList.Add('New records');
+  prop := AddDetailsItem('Renumbering', merge.renumbering, false);
+  prop.EditStyle := esPickList;
+  prop.PickList.Add('Conflicting');
+  prop.PickList.Add('All');
+  AddDetailsItem('Log', merge.log);
+
+  // return event
+  DetailsEditor.OnSetEditText := DetailsEditorSetEditText;
 end;
 
 {
   Rebuild merges
 }
+procedure RebuildMerges;
+var
+  i: integer;
+  merge: TMerge;
+begin
+  for i := 0 to Pred(merges.count) do begin
+    merge := merges[i];
+    if merge.DateBuilt = 0 then
+      BuildMerge(merge)
+    else if PluginsModified(merge) then
+      RebuildMerge(merge);
+  end;
+end;
+
 procedure TMergeForm.BuildButtonClick(Sender: TObject);
 begin
   Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
@@ -702,21 +530,6 @@ end;
 procedure TMergeForm.ReportButtonClick(Sender: TObject);
 begin
   Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
-end;
-
-{
-  Update merge
-}
-procedure TMergeForm.DetailsEditorSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
-begin
-  // update merge
-  currentMerge.name := DetailsEditor.Values['Merge name'];
-  currentMerge.filename := DetailsEditor.Values['Filename'];
-  currentMerge.method := DetailsEditor.Values['Merge method'];
-  currentMerge.renumbering := DetailsEditor.Values['Renumbering'];
-
-  UpdateMerges;
 end;
 
 {
@@ -749,51 +562,6 @@ end;
 procedure TMergeForm.HelpButtonClick(Sender: TObject);
 begin
   Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
-end;
-
-{
-  Merge selected
-}
-procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
-  Change: TItemChange);
-var
-  mergeItem: TListItem;
-  merge: TMerge;
-  prop: TItemProp;
-begin
-  // don't do anything if no item selected
-  mergeItem := MergeListView.Selected;
-  if not Assigned(mergeItem) then
-    exit;
-
-  // prepare list view for merge information
-  DetailsEditor.OnSetEditText := nil;
-  DetailsEditor.Strings.Clear;
-  DetailsEditor.Options := DetailsEditor.Options + [goEditing];
-  DetailsLabel.Caption := 'Merge Details:';
-
-  // get merge information
-  merge := merges[MergeListView.ItemIndex];
-  currentMerge := merge;
-  AddDetailsItem('Merge name', merge.name, true);
-  AddDetailsItem('Filename', merge.filename, true);
-  AddDetailsItem('Plugin count', IntToStr(merge.plugins.Count));
-  AddDetailsItem('Date built', DateBuiltString(merge.dateBuilt));
-  AddDetailsItem('Plugins', csvText(merge.plugins.Text));
-  AddDetailsItem('Masters', csvText(merge.masters.Text));
-  AddDetailsItem(' ', ' ');
-  prop := AddDetailsItem('Merge method', merge.method, false);
-  prop.EditStyle := esPickList;
-  prop.PickList.Add('Overrides');
-  prop.PickList.Add('New records');
-  prop := AddDetailsItem('Renumbering', merge.renumbering, false);
-  prop.EditStyle := esPickList;
-  prop.PickList.Add('Conflicting');
-  prop.PickList.Add('All');
-  AddDetailsItem('Log', merge.log);
-
-  // return event
-  DetailsEditor.OnSetEditText := DetailsEditorSetEditText;
 end;
 
 end.

@@ -18,12 +18,7 @@ uses
   Forms,
   Dialogs,
   SysUtils,
-  mpMergeForm in 'mpMergeForm.pas' {MergeForm},
-  mpHelpers in 'mpHelpers.pas',
-  mpMerge in 'mpMerge.pas',
-  mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
-  mpOptionsForm in 'mpOptionsForm.pas' {Form2},
-  mpLogger in 'mpLogger.pas';
+  mteMergeForm in 'mteMergeForm.pas' {MergeForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

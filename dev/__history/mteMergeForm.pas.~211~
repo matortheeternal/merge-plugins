@@ -1,0 +1,571 @@
+unit mteMergeForm;
+
+interface
+
+uses
+  // delphi units
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList,
+  Menus, Grids, ValEdit, ShlObj,
+  // mte units
+  mteHelpers, mteMerge,
+  // tes5edit units
+  wbBSA, wbHelpers, wbInterface, wbImplementation, wbDefinitionsFNV,
+  wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4, wbDefinitionsTES5;
+
+type
+  TMergeForm = class(TForm)
+    ButtonPanel: TPanel;
+    NewButton: TSpeedButton;
+    BuildButton: TSpeedButton;
+    ReportButton: TSpeedButton;
+    DictionaryButton: TSpeedButton;
+    OptionsButton: TSpeedButton;
+    UpdateButton: TSpeedButton;
+    HelpButton: TSpeedButton;
+    MainPanel: TPanel;
+    Splitter: TSplitter;
+    DetailsPanel: TPanel;
+    PageControl: TPageControl;
+    PluginsTabSheet: TTabSheet;
+    MergesTabSheet: TTabSheet;
+    LogTabSheet: TTabSheet;
+    XPManifest: TXPManifest;
+    Memo1: TMemo;
+    IconList: TImageList;
+    StatusBar: TStatusBar;
+    PluginsListView: TListView;
+    DetailsLabel: TLabel;
+    PluginsPopupMenu: TPopupMenu;
+    Addtomerge1: TMenuItem;
+    Removefrommerge1: TMenuItem;
+    Report1: TMenuItem;
+    MergesPopupMenu: TPopupMenu;
+    Createnewmerge1: TMenuItem;
+    Deletemerge1: TMenuItem;
+    Rebuildmerge1: TMenuItem;
+    Reportonmerge1: TMenuItem;
+    NewMerge1: TMenuItem;
+    MergeListView: TListView;
+    DetailsEditor: TValueListEditor;
+    FlagList: TImageList;
+    CheckforErrors1: TMenuItem;
+    Ignorepluginchanges1: TMenuItem;
+    procedure LogMessage(s: string);
+    procedure FormCreate(Sender: TObject);
+    procedure DictionaryButtonClick(Sender: TObject);
+    procedure OptionsButtonClick(Sender: TObject);
+    procedure ReportButtonClick(Sender: TObject);
+    procedure BuildButtonClick(Sender: TObject);
+    procedure CreateNewMerge(Sender: TObject);
+    procedure UpdateButtonClick(Sender: TObject);
+    procedure HelpButtonClick(Sender: TObject);
+    function AddDetailsItem(name, value: string; editable: boolean = false):
+      TItemProp;
+    procedure PluginsListViewChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
+    procedure MergeListViewChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
+    procedure AddToNewMerge(Sender: TObject);
+    procedure UpdateMerges;
+    procedure AddToMerge(Sender: TObject);
+    procedure DetailsEditorSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
+    procedure PageControlChange(Sender: TObject);
+    procedure CheckforErrors1Click(Sender: TObject);
+    procedure Deletemerge1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  MergeForm: TMergeForm;
+  pluginObjects: TList;
+  merges: TList;
+  currentMerge: TMerge;
+  blacklist: TStringList;
+  time: TDateTime;
+
+
+implementation
+
+{$R *.dfm}
+
+{
+  Prints a message to the log memo
+}
+procedure TMergeForm.LogMessage(s: string);
+begin
+  Memo1.Lines.Add(s);
+end;
+
+{
+  Remove comments and empty lines from a stringlist
+}
+procedure RemoveCommentsAndEmpty(sl: TStrings);
+var
+  i, j: integer;
+  s: string;
+begin
+  for i := Pred(sl.Count) downto 0 do begin
+    s := Trim(sl.Strings[i]);
+    j := Pos('#', s);
+    if j > 0 then
+      System.Delete(s, j, High(Integer));
+    if Trim(s) = '' then
+      sl.Delete(i);
+  end;
+end;
+
+{
+  Remove missing files from stringlist
+}
+procedure RemoveMissingFiles(sl: TStrings);
+var
+  i: integer;
+begin
+  for i := Pred(sl.Count) downto 0 do
+    if not FileExists(wbDataPath + sl.Strings[i]) then
+      sl.Delete(i);
+end;
+
+{
+  Add missing *.esp and *.esm files to list
+}
+procedure AddMissingToLoadList(sl: TStrings);
+var
+  F: TSearchRec;
+  i: integer;
+begin
+  // find last master
+  for i := Pred(sl.Count) downto 0 do
+    if IsFileESM(sl[i]) then
+      Break;
+
+  // search for missing plugins, add to end
+  if FindFirst(wbDataPath + '*.esp', faAnyFile, F) = 0 then try
+    repeat
+      if sl.IndexOf(F.Name) = -1 then
+        sl.Add(F.Name);
+    until FindNext(F) <> 0;
+  finally
+    FindClose(F);
+  end;
+
+  // search for missing masters, add after last master
+  if FindFirst(wbDataPath + '*.esm', faAnyFile, F) = 0 then try
+    repeat
+      if sl.IndexOf(F.Name) = -1 then begin
+        sl.Insert(i, F.Name);
+        Inc(i);
+      end;
+    until FindNext(F) <> 0;
+  finally
+    FindClose(F);
+  end;
+end;
+
+{
+  Initialize form, initialize TES5Edit API, and load plugins
+}
+procedure TMergeForm.FormCreate(Sender: TObject);
+var
+  wbPluginsFileName: string;
+  sl: TStringList;
+  i: integer;
+  ListItem: TListItem;
+  plugin: TPlugin;
+begin
+  // INITIALIZE LISTS
+  merges := TList.Create;
+  pluginObjects := TList.Create;
+  blacklist := TStringList.Create;
+  blacklist.Add('Skyrim.esm');
+  blacklist.Add('Update.esm');
+  blacklist.Add('Dawnguard.esm');
+  blacklist.Add('HearthFires.esm');
+  blacklist.Add('Dragonborn.esm');
+  blacklist.Add('SkyUI.esp');
+  blacklist.Add('HighResTexturePack01.esp');
+  blacklist.Add('HighResTexturePack02.esp');
+  blacklist.Add('HighResTexturePack03.esp');
+
+  // GUI ICONS
+  IconList.GetBitmap(0, NewButton.Glyph);
+  IconList.GetBitmap(1, BuildButton.Glyph);
+  IconList.GetBitmap(2, ReportButton.Glyph);
+  IconList.GetBitmap(3, DictionaryButton.Glyph);
+  IconList.GetBitmap(4, OptionsButton.Glyph);
+  IconList.GetBitmap(5, UpdateButton.Glyph);
+  IconList.GetBitmap(6, HelpButton.Glyph);
+
+  // INITIALIZE TES5EDIT API
+  wbGameMode := gmTES5;
+  wbAppName := 'TES5';
+  wbGameName := 'Skyrim';
+  wbDataPath := 'C:\Program Files (x86)\Steam\steamapps\common\Skyrim\Data\';
+  wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
+  wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
+  DefineTES5;
+
+  // LOAD PLUGINS
+  sl := TStringList.Create;
+  sl.LoadFromFile(wbPluginsFileName);
+  RemoveCommentsAndEmpty(sl);
+  if wbGameMode = gmTES5 then begin
+    if sl.IndexOf('Update.esm') = -1 then
+      sl.Insert(0, 'Update.esm');
+    if sl.IndexOf(wbGameName+'.esm') = -1 then
+      sl.Insert(0, wbGameName+'.esm');
+  end;
+  RemoveMissingFiles(sl);
+  AddMissingToLoadList(sl);
+  for i := 0 to Pred(sl.Count) do begin
+    plugin := TPlugin.Create;
+    plugin.filename := sl[i];
+    plugin.pluginFile := wbFile(wbDataPath + sl[i], i);
+    plugin.GetFlags(blacklist);
+    pluginObjects.Add(Pointer(plugin));
+
+    ListItem := PluginsListView.Items.Add;
+    ListItem.Caption := IntToHex(i, 2);
+    ListItem.SubItems.Add(plugin.filename);
+    ListItem.SubItems.Add(plugin.GetFlagsString);
+    ListItem.SubItems.Add(' ');
+  end;
+
+
+  // CLEAN UP -
+  sl.Free;
+end;
+
+{
+   Adds a ListItem to DetailsView with @name and @value
+}
+function TMergeForm.AddDetailsItem(name, value: string;
+  editable: boolean = false): TItemProp;
+var
+  prop: TItemProp;
+begin
+  DetailsEditor.InsertRow(name, value, true);
+  prop := DetailsEditor.ItemProps[DetailsEditor.RowCount - 1];
+  prop.ReadOnly := not editable;
+  Result := prop;
+end;
+
+{
+  Loads plugin details
+}
+procedure TMergeForm.PageControlChange(Sender: TObject);
+var
+  ndx: integer;
+begin
+  ndx := TPageControl(Sender).ActivePageIndex;
+  if ndx = 0 then
+    PluginsListViewChange(nil, nil, TItemChange(nil))
+  else if ndx = 1 then
+    MergeListViewChange(nil, nil, TItemChange(nil))
+end;
+
+{******************************************************************************}
+{ Plugins List View Events
+  Events involving the PluginsListView control.  Events include:
+  - PluginsListViewChange
+  - AddToMerge
+  - AddToNewMerge
+  - CheckPluginForErrors
+}
+{******************************************************************************}
+
+procedure TMergeForm.PluginsListViewChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+var
+  plugin: TPlugin;
+  index: integer;
+begin
+  // don't do anything if no item selected
+  if not Assigned(PluginsListView.Selected) then
+    exit;
+
+  // prepare list view for plugin information
+  DetailsEditor.OnSetEditText := nil;
+  DetailsEditor.Strings.Clear;
+  DetailsEditor.Options := DetailsEditor.Options - [goEditing];
+  DetailsLabel.Caption := 'Plugin Details:';
+
+  // get plugin information
+  index := PluginsListView.ItemIndex;
+  plugin := TPlugin(pluginObjects[index]);
+  if not plugin.hasData then plugin.GetData(blacklist, index > 0);
+
+  // add details items
+  AddDetailsItem('Filename', plugin.filename);
+  AddDetailsItem('File size', FormatByteSize(plugin.fileSize));
+  AddDetailsItem('Date modified', plugin.dateModified);
+  AddDetailsItem('Flags', plugin.GetFlagsString);
+  AddDetailsItem('Number of records', plugin.numRecords);
+  AddDetailsItem('Number of overrides', plugin.numOverrides);
+  AddDetailsItem('Author', plugin.author);
+  AddDetailsItem('Description', plugin.description);
+  AddDetailsItem('Master files', csvText(plugin.masters.Text));
+  AddDetailsItem('Errors', csvText(plugin.errors.Text));
+  AddDetailsItem('Reports', csvText(plugin.reports.Text));
+end;
+
+{ PluginsPopupMenu events }
+procedure TMergeForm.AddToMerge(Sender: TObject);
+var
+  MenuItem: TMenuItem;
+  merge: TMerge;
+  i: integer;
+  ListItem: TListItem;
+  plugin: TPlugin;
+begin
+  MenuItem := TMenuItem(Sender);
+  merge := TMerge(merges[MenuItem.MenuIndex - 1]);
+
+  // loop through plugins list, adding selected plugins to merge
+  for i := 0 to Pred(PluginsListView.Items.Count) do begin
+    ListItem := PluginsListView.Items[i];
+    if not ListItem.Selected then
+      continue;
+    plugin := TPlugin(pluginObjects[i]);
+    if not plugin.hasData then
+      plugin.GetData(blacklist, true);
+    merge.plugins.Add(plugin.filename);
+    merge.pluginSizes.Add(Pointer(plugin.fileSize));
+    merge.pluginDates.Add(plugin.dateModified);
+  end;
+
+  // update gui
+  UpdateMerges;
+end;
+
+procedure TMergeForm.AddToNewMerge(Sender: TObject);
+var
+  merge: TMerge;
+  plugin: TPlugin;
+  i: Integer;
+  ListItem: TListItem;
+begin
+  merge := TMerge.Create;
+  for i := 0 to Pred(PluginsListView.Items.Count) do begin
+    ListItem := PluginsListView.Items[i];
+    if not ListItem.Selected then
+      continue;
+    ListItem.SubItems[2] := merge.name;
+    plugin := TPlugin(pluginObjects[i]);
+    merge.plugins.Add(plugin.filename);
+    merge.pluginSizes.Add(Pointer(plugin.fileSize));
+    merge.pluginDates.Add(plugin.dateModified);
+  end;
+  merges.Add(merge);
+  UpdateMerges;
+end;
+
+procedure TMergeForm.CheckforErrors1Click(Sender: TObject);
+var
+  i: integer;
+  ListItem: TListItem;
+  plugin: TPlugin;
+begin
+  for i := 0 to Pred(PluginsListView.Items.Count) do begin
+    ListItem := PluginsListView.Items[i];
+    if not ListItem.Selected then
+      continue;
+    plugin := TPlugin(pluginObjects[i]);
+    plugin.FindErrors;
+  end;
+end;
+
+{
+  Update merges in GUI
+}
+procedure TMergeForm.UpdateMerges;
+var
+  i: Integer;
+  merge: TMerge;
+  AddToMerge, MenuItem: TMenuItem;
+  ListItem: TListItem;
+begin
+  // clear popup menu and list view
+  AddToMerge := PluginsPopupMenu.Items[0];
+  MergeListView.Items.Clear;
+  AddToMerge.Clear;
+
+  // add <New Merge> option to Plugins popup menu
+  MenuItem := TMenuItem.Create(AddToMerge);
+  MenuItem.Caption := '<New Merge>';
+  MenuItem.OnClick := AddToNewMerge;
+  AddToMerge.Add(MenuItem);
+
+  // add merges to list view and plugins popup menu
+  for i := 0 to Pred(merges.Count) do begin
+    merge := TMerge(merges[i]);
+    MenuItem := TMenuItem.Create(AddToMerge);
+    MenuItem.Caption := merge.name;
+    MenuItem.OnClick := AddToMerge;
+    AddToMerge.Add(MenuItem);
+
+    ListItem := MergeListView.Items.Add;
+    ListItem.Caption := IntToHex(MergeListView.Items.Count, 2);
+    ListItem.SubItems.Add(merge.name);
+    ListItem.SubItems.Add(merge.filename);
+    ListItem.SubItems.Add(IntToStr(merge.plugins.Count));
+    ListItem.SubItems.Add(DateBuiltString(merge.dateBuilt));
+  end;
+end;
+
+{
+  Update merge
+}
+procedure TMergeForm.DetailsEditorSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  if not Assigned(currentMerge) then
+    exit;
+
+  // update merge
+  currentMerge.name := DetailsEditor.Values['Merge name'];
+  currentMerge.filename := DetailsEditor.Values['Filename'];
+  currentMerge.method := DetailsEditor.Values['Merge method'];
+  currentMerge.renumbering := DetailsEditor.Values['Renumbering'];
+
+  UpdateMerges;
+end;
+
+{
+  MergesPopupMenu events
+}
+// Delete merge
+procedure TMergeForm.Deletemerge1Click(Sender: TObject);
+begin
+  if MergeListView.ItemIndex = -1 then
+    exit;
+
+  currentMerge := nil;
+  merges.Delete(MergeListView.ItemIndex);
+  MergeListView.Items[MergeListView.ItemIndex].Delete;
+end;
+// Create new merge
+procedure TMergeForm.CreateNewMerge(Sender: TObject);
+var
+  merge: TMerge;
+begin
+  Memo1.Lines.Add('Created new merge!');
+
+  merge := TMerge.Create;
+  merges.Add(merge);
+  UpdateMerges;
+end;
+
+{
+  Merge selected
+}
+procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+var
+  mergeItem: TListItem;
+  merge: TMerge;
+  prop: TItemProp;
+begin
+  // prepare list view for merge information
+  DetailsEditor.OnSetEditText := nil;
+  DetailsEditor.Strings.Clear;
+  DetailsEditor.Options := DetailsEditor.Options + [goEditing];
+  DetailsLabel.Caption := 'Merge Details:';
+
+  // don't do anything if no item selected
+  mergeItem := MergeListView.Selected;
+  if not Assigned(mergeItem) then
+    exit;
+
+  // get merge information
+  merge := merges[MergeListView.ItemIndex];
+  currentMerge := merge;
+  AddDetailsItem('Merge name', merge.name, true);
+  AddDetailsItem('Filename', merge.filename, true);
+  AddDetailsItem('Plugin count', IntToStr(merge.plugins.Count));
+  AddDetailsItem('Date built', DateBuiltString(merge.dateBuilt));
+  AddDetailsItem('Plugins', csvText(merge.plugins.Text));
+  AddDetailsItem('Masters', csvText(merge.masters.Text));
+  AddDetailsItem(' ', ' ');
+  prop := AddDetailsItem('Merge method', merge.method, false);
+  prop.EditStyle := esPickList;
+  prop.PickList.Add('Overrides');
+  prop.PickList.Add('New records');
+  prop := AddDetailsItem('Renumbering', merge.renumbering, false);
+  prop.EditStyle := esPickList;
+  prop.PickList.Add('Conflicting');
+  prop.PickList.Add('All');
+  AddDetailsItem('Log', merge.log);
+
+  // return event
+  DetailsEditor.OnSetEditText := DetailsEditorSetEditText;
+end;
+
+{
+  Rebuild merges
+}
+procedure RebuildMerges;
+var
+  i: integer;
+  merge: TMerge;
+begin
+  for i := 0 to Pred(merges.count) do begin
+    merge := merges[i];
+    if merge.DateBuilt = 0 then
+      BuildMerge(merge)
+    else if PluginsModified(merge) then
+      RebuildMerge(merge);
+  end;
+end;
+
+procedure TMergeForm.BuildButtonClick(Sender: TObject);
+begin
+  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+end;
+
+{
+  Submit report
+}
+procedure TMergeForm.ReportButtonClick(Sender: TObject);
+begin
+  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+end;
+
+{
+  View the dictionary file
+}
+procedure TMergeForm.DictionaryButtonClick(Sender: TObject);
+begin
+  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+end;
+
+{
+  Options
+}
+procedure TMergeForm.OptionsButtonClick(Sender: TObject);
+begin
+  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+end;
+
+{
+  Update
+}
+procedure TMergeForm.UpdateButtonClick(Sender: TObject);
+begin
+  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+end;
+
+{
+  Help
+}
+procedure TMergeForm.HelpButtonClick(Sender: TObject);
+begin
+  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+end;
+
+end.

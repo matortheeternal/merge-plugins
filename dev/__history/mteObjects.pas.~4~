@@ -1,0 +1,134 @@
+unit mteObjects;
+
+interface
+
+uses
+  mteHelpers;
+
+type
+ TMerge = class(TObject)
+    public
+      name: string;
+      filename: string;
+      dateBuilt: TDateTime;
+      plugins: TStringList;
+      pluginSizes: TList;
+      pluginDates: TList;
+      masters: TStringList;
+      method: string;
+      renumbering: string;
+      log: string;
+      constructor Create; virtual;
+  end;
+  TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_MCM, HAS_FACEDATA,
+    HAS_VOICEDATA, HAS_FRAGMENTS);
+  TPluginFlags = set of TPluginFlag;
+  TPlugin = class(TObject)
+    public
+      pluginFile: IwbFile;
+      hasData: boolean;
+      fileSize: Int64;
+      dateModified: TDateTime;
+      flags: TPluginFlags;
+      filename: string;
+      numRecords: string;
+      numOverrides: string;
+      author: string;
+      description: string;
+      masters: TStringList;
+      errors: TStringList;
+      reports: TStringList;
+      constructor Create; virtual;
+      procedure GetData(bCountOverrides: boolean);
+      procedure GetFlags;
+      function GetFlagsString: string;
+  end;
+
+implementation
+
+constructor TMerge.Create;
+begin
+  name := 'NewMerge';
+  filename := 'NewMerge.esp';
+  dateBuilt := 0;
+  plugins := TStringList.Create;
+  pluginSizes := TList.Create;
+  pluginDates := TList.Create;
+  masters := TStringList.Create;
+  method := 'Overrides';
+  renumbering := 'Conflicting';
+  log := '';
+end;
+
+constructor TPlugin.Create;
+begin
+  hasData := false;
+  masters := TStringList.Create;
+  errors := TStringList.Create;
+  reports := TStringList.Create;
+end;
+
+{
+  Gets the flag values for a TPlugin
+}
+procedure TPlugin.GetFlags;
+begin
+  if blacklist.IndexOf(filename) > -1 then begin
+    flags := flags + [IS_BLACKLISTED];
+    exit;
+  end;
+  if errors.Count > 0 then
+    flags := flags + [HAS_ERRORS];
+  if BSAExists(filename) then
+    flags := flags + [HAS_BSA];
+  if MCMExists(filename) then
+    flags := flags + [HAS_MCM];
+  if FaceDataExists(filename) then
+    flags := flags + [HAS_FACEDATA];
+  if VoiceDataExists(filename) then
+    flags := flags + [HAS_VOICEDATA];
+  if FragmentsExist(filename) then
+    flags := flags + [HAS_FRAGMENTS];
+end;
+
+{
+  Returns a string representing the flags in a plugin
+}
+function TPlugin.GetFlagsString: string;
+begin
+  Result := '';
+  if IS_BLACKLISTED in flags then
+    Result := Result + 'X';
+  if HAS_ERRORS in flags then
+    Result := Result + 'E';
+  if HAS_BSA in flags then
+    Result := Result + 'A';
+end;
+
+{
+  Fetches data associated with a plugin.
+}
+procedure TPlugin.GetData(bCountOverrides: boolean);
+var
+  Container: IwbContainer;
+begin
+  hasData := true;
+  filename := pluginFile.FileName;
+  Container := pluginFile as IwbContainer;
+  Container := Container.Elements[0] as IwbContainer;
+  author := Container.GetElementEditValue('CNAM - Author');
+  numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
+  description := Container.GetElementEditValue('SNAM - Description');
+  GetMasters(pluginFile, masters);
+  //CheckForErrors(0, pluginFile as IwbElement, errors);
+  GetFlags;
+
+  // get file attributes
+  fileSize := GetFileSize(wbDataPath + filename);
+  dateModified := GetLastModified(wbDataPath + filename);
+
+  if bCountOverrides then
+    numOverrides := IntToStr(CountOverrides(pluginFile));
+end;
+
+end.

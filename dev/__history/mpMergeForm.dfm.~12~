@@ -39,9 +39,10 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Create new merge'
+      Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = NewButtonClick
+      OnClick = CreateNewMerge
     end
     object BuildButton: TSpeedButton
       Left = 52
@@ -49,9 +50,10 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Build merges'
+      Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = BuildButtonClick
+      OnClick = RebuildMerges
     end
     object ReportButton: TSpeedButton
       Left = 102
@@ -59,6 +61,7 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Submit reports'
+      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = ReportButtonClick
@@ -69,6 +72,7 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'View dictionary'
+      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = DictionaryButtonClick
@@ -79,6 +83,7 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Merge options'
+      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = OptionsButtonClick
@@ -90,6 +95,7 @@ object MergeForm: TMergeForm
       Height = 40
       Hint = 'Update'
       Anchors = [akTop, akRight]
+      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = UpdateButtonClick
@@ -101,6 +107,7 @@ object MergeForm: TMergeForm
       Height = 40
       Hint = 'Help'
       Anchors = [akTop, akRight]
+      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = HelpButtonClick
@@ -118,12 +125,13 @@ object MergeForm: TMergeForm
     object PageControl: TPageControl
       Left = 3
       Top = 7
-      Width = 631
+      Width = 628
       Height = 609
       ActivePage = PluginsTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
+      OnChange = PageControlChange
       object PluginsTabSheet: TTabSheet
         Margins.Left = 4
         Margins.Top = 4
@@ -133,7 +141,7 @@ object MergeForm: TMergeForm
         object PluginsListView: TListView
           Left = 3
           Top = 3
-          Width = 617
+          Width = 614
           Height = 575
           Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
@@ -165,14 +173,10 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergeListView: TListView
-          Left = 10
+          Left = 3
           Top = 3
-          Width = 617
+          Width = 614
           Height = 575
           Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
@@ -207,17 +211,13 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
-          623
+          620
           581)
         object Memo1: TMemo
           Left = 3
           Top = 3
-          Width = 617
+          Width = 614
           Height = 575
           Anchors = [akLeft, akTop, akRight, akBottom]
           ReadOnly = True
@@ -249,14 +249,15 @@ object MergeForm: TMergeForm
       Height = 588
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
-      DisplayOptions = [doKeyColFixed]
+      DisplayOptions = [doAutoColResize, doKeyColFixed]
+      FixedCols = 1
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goEditing, goAlwaysShowEditor, goThumbTracking]
       ScrollBars = ssVertical
       TabOrder = 0
       TitleCaptions.Strings = (
         'Name'
         'Value')
-      OnSetEditText = DetailsEditorSetEditText
+      OnStringsChange = DetailsEditorStringsChange
       ColWidths = (
         150
         458)
@@ -279,7 +280,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C0101070009009C0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000900A80020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1343,13 +1344,14 @@ object MergeForm: TMergeForm
       000000000000}
   end
   object PluginsPopupMenu: TPopupMenu
+    OnPopup = PluginsPopupMenuPopup
     Left = 48
     Top = 112
     object Addtomerge1: TMenuItem
       Caption = 'Add to merge'
       object NewMerge1: TMenuItem
         Caption = '<New Merge>'
-        OnClick = NewMerge1Click
+        OnClick = AddToNewMerge
       end
     end
     object Removefrommerge1: TMenuItem
@@ -1358,29 +1360,47 @@ object MergeForm: TMergeForm
     object Report1: TMenuItem
       Caption = 'Report on plugin'
     end
+    object CheckforErrors1: TMenuItem
+      Caption = 'Check for errors'
+      OnClick = CheckPluginForErrors
+    end
   end
   object MergesPopupMenu: TPopupMenu
+    OnPopup = MergesPopupMenuPopup
     Left = 184
     Top = 112
     object Createnewmerge1: TMenuItem
       Caption = 'Create new merge'
-      OnClick = NewButtonClick
+      OnClick = CreateNewMerge
     end
     object Deletemerge1: TMenuItem
       Caption = 'Delete merge'
+      OnClick = DeleteMerge
     end
     object Rebuildmerge1: TMenuItem
-      Caption = 'Rebuild merge'
+      Caption = 'Build merge'
     end
     object Reportonmerge1: TMenuItem
       Caption = 'Report on merge'
+    end
+    object Ignorepluginchanges1: TMenuItem
+      Caption = 'Ignore plugin changes'
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object Rebuildallmerges1: TMenuItem
+      Caption = 'Build all merges'
+    end
+    object Reportonmerges1: TMenuItem
+      Caption = 'Report on all merges'
     end
   end
   object FlagList: TImageList
     Left = 1000
     Top = 8
     Bitmap = {
-      494C0101070018001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107001800280010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000006262629D313131CEF8F8F807FEFE
       FE01F4F4F40BFFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FDFDFD02FFFF

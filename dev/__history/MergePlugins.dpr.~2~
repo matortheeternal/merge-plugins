@@ -21,9 +21,8 @@ uses
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
   mpHelpers in 'mpHelpers.pas',
   mpMerge in 'mpMerge.pas',
-  mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
-  mpOptionsForm in 'mpOptionsForm.pas' {Form2},
-  mpLogger in 'mpLogger.pas';
+  mpDictionaryForm in 'mpDictionaryForm.pas' {Form1},
+  mpOptionsForm in 'mpOptionsForm.pas' {Form2};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -38,5 +37,7 @@ begin
 
   Application.Initialize;
   Application.CreateForm(TMergeForm, MergeForm);
+  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TForm2, Form2);
   Application.Run;
 end.
