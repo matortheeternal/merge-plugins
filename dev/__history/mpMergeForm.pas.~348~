@@ -137,12 +137,10 @@ var
   plugin: TPlugin;
   time: TDateTime;
 begin
-  try
   // INITIALIZE LISTS
   time := now;
   merges := TList.Create;
   pluginObjects := TList.Create;
-  LoadDictionary;
 
   // GUI ICONS
   IconList.GetBitmap(0, NewButton.Glyph);
@@ -191,16 +189,14 @@ begin
   end;
 
   // LOAD DICTIONARY
+  LoadDictionary;
 
   // CLEAN UP -
   sl.Free;
-  //LoadMerges;
+  LoadMerges;
 
   time := (Now - time) * 86400;
   LogMessage(FormatFloat('0.###', time) + ' spent loading.');
-  except on x: Exception do
-    LogMessage(x.Message);
-  end;
 end;
 
 procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);

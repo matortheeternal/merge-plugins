@@ -206,14 +206,14 @@ begin
   if (rating > 2.0) then begin
     k2 := (rating - 2.0)/2.0;
     k1 := 1.0 - k2;
-    r := Trunc($E5 * k1 + $00 * k2);
-    g := Trunc($A8 * k1 + $90 * k2);
+    r := Trunc($80 * k1 + $00 * k2);
+    g := Trunc($80 * k1 + $90 * k2);
   end
   else begin
     k2 := (rating/2.0);
     k1 := 1.0 - k2;
-    r := Trunc($FF * k1 + $E5 * k2);
-    g := Trunc($00 * k1 + $A8 * k2);
+    r := Trunc($FF * k1 + $80 * k2);
+    g := Trunc($00 * k1 + $80 * k2);
   end;
 
   Result := g * 256 + r;
@@ -240,6 +240,7 @@ var
 begin
   if Item.Selected then begin
     TListView(Sender).Canvas.Brush.Color := $FFEEDD;
+    //TListView(Sender).Canvas.DrawFocusRect(Rect);
     TListView(Sender).Canvas.FillRect(Rect);
   end;
   x := Rect.Left + 3;

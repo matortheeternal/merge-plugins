@@ -92,7 +92,7 @@ type
 
 var
   dictionary: TList;
-  blacklist: TList;
+  blacklist: TStringList;
 
 
 implementation
@@ -685,16 +685,14 @@ begin
   numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
   description.Text := Container.GetElementEditValue('SNAM - Description');
   GetMasters(pluginFile, masters);
-  GetFlags;
+  GetFlags(blacklist);
 
   // get file attributes
   fileSize := GetFileSize(wbDataPath + filename);
   dateModified := DateTimeToStr(GetLastModified(wbDataPath + filename));
 
   if bCountOverrides then
-    numOverrides := IntToStr(CountOverrides(pluginFile))
-  else
-    numOverrides := '0';
+    numOverrides := IntToStr(CountOverrides(pluginFile));
 end;
 
 { Checks for errors in a plugin }

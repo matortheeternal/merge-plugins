@@ -142,7 +142,6 @@ begin
   time := now;
   merges := TList.Create;
   pluginObjects := TList.Create;
-  LoadDictionary;
 
   // GUI ICONS
   IconList.GetBitmap(0, NewButton.Glyph);
@@ -191,6 +190,7 @@ begin
   end;
 
   // LOAD DICTIONARY
+  //LoadDictionary;
 
   // CLEAN UP -
   sl.Free;

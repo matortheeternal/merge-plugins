@@ -69,10 +69,11 @@ object DictionaryForm: TDictionaryForm
       SortType = stData
       TabOrder = 0
       ViewStyle = vsReport
+      OnAdvancedCustomDrawItem = ListView1AdvancedCustomDrawItem
+      OnAdvancedCustomDrawSubItem = ListView1AdvancedCustomDrawSubItem
       OnChange = ListView1Change
       OnColumnClick = ListView1ColumnClick
       OnData = ListView1Data
-      OnDrawItem = ListView1DrawItem
     end
     object Panel2: TPanel
       Left = 855

@@ -92,7 +92,7 @@ type
 
 var
   dictionary: TList;
-  blacklist: TList;
+  blacklist: TStringList;
 
 
 implementation
@@ -694,7 +694,7 @@ begin
   if bCountOverrides then
     numOverrides := IntToStr(CountOverrides(pluginFile))
   else
-    numOverrides := '0';
+    numOverrides := 0;
 end;
 
 { Checks for errors in a plugin }

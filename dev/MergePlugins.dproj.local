@@ -26,11 +26,12 @@
     <Transaction>2015/04/29 23:22:33.000.118,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteMerge.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMerge.pas</Transaction>
     <Transaction>2015/04/29 23:22:36.000.808,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteDictionaryForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpDictionaryForm.dfm</Transaction>
     <Transaction>2015/04/29 23:22:36.000.808,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteDictionaryForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpDictionaryForm.pas</Transaction>
-    <Transaction>2015/04/29 23:22:41.000.223,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteMergeForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMergeForm.pas</Transaction>
     <Transaction>2015/04/29 23:22:41.000.223,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteMergeForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMergeForm.dfm</Transaction>
-    <Transaction>2015/04/29 23:22:45.000.269,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpOptionsForm.pas</Transaction>
+    <Transaction>2015/04/29 23:22:41.000.223,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteMergeForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMergeForm.pas</Transaction>
     <Transaction>2015/04/29 23:22:45.000.269,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpOptionsForm.dfm</Transaction>
-    <Transaction>2015/04/30 09:25:44.213,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
-    <Transaction>2015/04/30 09:25:49.991,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpLogger.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
+    <Transaction>2015/04/29 23:22:45.000.269,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpOptionsForm.pas</Transaction>
+    <Transaction>2015/04/30 09:25:44.000.213,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
+    <Transaction>2015/04/30 09:25:49.000.991,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpLogger.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
+    <Transaction>2015/04/30 21:27:45.000.704,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\superobject.pas</Transaction>
   </Transactions>
 </BorlandProject>

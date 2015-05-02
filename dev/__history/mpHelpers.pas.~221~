@@ -49,8 +49,8 @@ type
       reports: TStringList;
       rating: real;
       constructor Create; virtual;
-      procedure GetData(bCountOverrides: boolean);
-      procedure GetFlags;
+      procedure GetData(blacklist: TStringList; bCountOverrides: boolean);
+      procedure GetFlags(blacklist: TStringList);
       function GetFlagsString: string;
       procedure FindErrors;
   end;
@@ -87,12 +87,11 @@ type
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
   procedure LoadDictionary;
-  function IsBlacklisted(const filename: string): boolean;
-  function GetEntry(const filename: string): TEntry;
+  function IsBlacklisted(const s: string): boolean;
 
 var
   dictionary: TList;
-  blacklist: TList;
+  blacklist: TStringList;
 
 
 implementation
@@ -470,7 +469,6 @@ end;
   List of methods:
   - LoadDictionary
   - IsBlackListed
-  - GetEntry
 }
 {******************************************************************************}
 
@@ -491,7 +489,7 @@ begin
   // load dictionary file into entry object
   for i := 0 to Pred(sl.Count) do begin
     entry := TEntry.Create(sl[i]);
-    if entry.rating = '-1.0' then
+    if entry.rating = '-1' then
       blacklist.Add(entry);
     dictionary.Add(entry);
   end;
@@ -500,7 +498,7 @@ begin
   sl.Free;
 end;
 
-function IsBlacklisted(const filename: string): boolean;
+function IsBlacklisted(const s: string): boolean;
 var
   i: Integer;
   entry: TEntry;
@@ -508,23 +506,8 @@ begin
   Result := false;
   for i := 0 to Pred(blacklist.Count) do begin
     entry := TEntry(blacklist[i]);
-    if entry.pluginName = filename then begin
+    if entry.pluginName = s then begin
       Result := true;
-      break;
-    end;
-  end;
-end;
-
-function GetEntry(const filename: string): TEntry;
-var
-  i: Integer;
-  entry: TEntry;
-begin
-  Result := nil;
-  for i := 0 to Pred(dictionary.Count) do begin
-    entry := TEntry(dictionary[i]);
-    if entry.pluginName = filename then begin
-      Result := entry;
       break;
     end;
   end;
@@ -631,9 +614,9 @@ begin
 end;
 
 { Gets the flag values for a TPlugin }
-procedure TPlugin.GetFlags;
+procedure TPlugin.GetFlags(blacklist: TStringList);
 begin
-  if IsBlacklisted(filename) then begin
+  if blacklist.IndexOf(filename) > -1 then begin
     flags := flags + [IS_BLACKLISTED];
     exit;
   end;
@@ -672,7 +655,7 @@ begin
 end;
 
 { Fetches data associated with a plugin. }
-procedure TPlugin.GetData(bCountOverrides: boolean);
+procedure TPlugin.GetData(blacklist: TStringList; bCountOverrides: boolean);
 var
   Container: IwbContainer;
 begin
@@ -685,16 +668,14 @@ begin
   numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
   description.Text := Container.GetElementEditValue('SNAM - Description');
   GetMasters(pluginFile, masters);
-  GetFlags;
+  GetFlags(blacklist);
 
   // get file attributes
   fileSize := GetFileSize(wbDataPath + filename);
   dateModified := DateTimeToStr(GetLastModified(wbDataPath + filename));
 
   if bCountOverrides then
-    numOverrides := IntToStr(CountOverrides(pluginFile))
-  else
-    numOverrides := '0';
+    numOverrides := IntToStr(CountOverrides(pluginFile));
 end;
 
 { Checks for errors in a plugin }

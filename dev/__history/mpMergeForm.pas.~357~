@@ -174,9 +174,11 @@ begin
     if sl.IndexOf(wbGameName+'.esm') = -1 then
       sl.Insert(0, wbGameName+'.esm');
   end;
+  LogMessage('hello');
   RemoveMissingFiles(sl);
   AddMissingFiles(sl);
   for i := 0 to Pred(sl.Count) do begin
+    LogMessage('hello '+sl[i]);
     plugin := TPlugin.Create;
     plugin.filename := sl[i];
     plugin.pluginFile := wbFile(wbDataPath + sl[i], i);
@@ -189,6 +191,7 @@ begin
     ListItem.SubItems.Add(plugin.GetFlagsString);
     ListItem.SubItems.Add(' ');
   end;
+  LogMessage('hello end');
 
   // LOAD DICTIONARY
 

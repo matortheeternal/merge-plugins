@@ -175,6 +175,10 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 581
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -208,11 +212,16 @@ object MergeForm: TMergeForm
           TabOrder = 0
           ViewStyle = vsReport
           OnChange = MergeListViewChange
+          ExplicitHeight = 575
         end
       end
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 581
         DesignSize = (
           620
           580)
@@ -225,6 +234,7 @@ object MergeForm: TMergeForm
           ReadOnly = True
           ScrollBars = ssVertical
           TabOrder = 0
+          ExplicitHeight = 575
         end
       end
     end
@@ -281,7 +291,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C010107000900B00020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000900AC0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1401,7 +1411,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010107001800300010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101070018002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000006262629D313131CEF8F8F807FEFE
       FE01F4F4F40BFFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FDFDFD02FFFF

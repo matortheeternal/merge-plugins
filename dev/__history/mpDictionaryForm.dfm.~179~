@@ -62,7 +62,6 @@ object DictionaryForm: TDictionaryForm
         end>
       DoubleBuffered = True
       OwnerData = True
-      OwnerDraw = True
       ReadOnly = True
       RowSelect = True
       ParentDoubleBuffered = False

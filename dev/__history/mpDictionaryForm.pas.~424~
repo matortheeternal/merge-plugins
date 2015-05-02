@@ -240,6 +240,7 @@ var
 begin
   if Item.Selected then begin
     TListView(Sender).Canvas.Brush.Color := $FFEEDD;
+    //TListView(Sender).Canvas.DrawFocusRect(Rect);
     TListView(Sender).Canvas.FillRect(Rect);
   end;
   x := Rect.Left + 3;

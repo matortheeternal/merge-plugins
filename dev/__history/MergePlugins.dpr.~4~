@@ -23,8 +23,7 @@ uses
   mpMerge in 'mpMerge.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {Form2},
-  mpLogger in 'mpLogger.pas',
-  superobject in 'superobject.pas';
+  mpLogger in 'mpLogger.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

@@ -49,8 +49,8 @@ type
       reports: TStringList;
       rating: real;
       constructor Create; virtual;
-      procedure GetData(bCountOverrides: boolean);
-      procedure GetFlags;
+      procedure GetData(blacklist: TStringList; bCountOverrides: boolean);
+      procedure GetFlags(blacklist: TStringList);
       function GetFlagsString: string;
       procedure FindErrors;
   end;
@@ -92,7 +92,7 @@ type
 
 var
   dictionary: TList;
-  blacklist: TList;
+  blacklist: TStringList;
 
 
 implementation
@@ -633,7 +633,7 @@ end;
 { Gets the flag values for a TPlugin }
 procedure TPlugin.GetFlags;
 begin
-  if IsBlacklisted(filename) then begin
+  if IsBlacklisted(filename) > -1 then begin
     flags := flags + [IS_BLACKLISTED];
     exit;
   end;
@@ -672,7 +672,7 @@ begin
 end;
 
 { Fetches data associated with a plugin. }
-procedure TPlugin.GetData(bCountOverrides: boolean);
+procedure TPlugin.GetData(blacklist: TStringList; bCountOverrides: boolean);
 var
   Container: IwbContainer;
 begin
@@ -685,16 +685,14 @@ begin
   numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
   description.Text := Container.GetElementEditValue('SNAM - Description');
   GetMasters(pluginFile, masters);
-  GetFlags;
+  GetFlags(blacklist);
 
   // get file attributes
   fileSize := GetFileSize(wbDataPath + filename);
   dateModified := DateTimeToStr(GetLastModified(wbDataPath + filename));
 
   if bCountOverrides then
-    numOverrides := IntToStr(CountOverrides(pluginFile))
-  else
-    numOverrides := '0';
+    numOverrides := IntToStr(CountOverrides(pluginFile));
 end;
 
 { Checks for errors in a plugin }

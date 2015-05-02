@@ -72,7 +72,6 @@ object DictionaryForm: TDictionaryForm
       OnChange = ListView1Change
       OnColumnClick = ListView1ColumnClick
       OnData = ListView1Data
-      OnDrawItem = ListView1DrawItem
     end
     object Panel2: TPanel
       Left = 855

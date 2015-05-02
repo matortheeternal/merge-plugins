@@ -212,7 +212,7 @@ begin
   else begin
     k2 := (rating/2.0);
     k1 := 1.0 - k2;
-    r := Trunc($FF * k1 + $E5 * k2);
+    r := Trunc($FF * k1 + $80 * k2);
     g := Trunc($00 * k1 + $A8 * k2);
   end;
 
@@ -240,6 +240,7 @@ var
 begin
   if Item.Selected then begin
     TListView(Sender).Canvas.Brush.Color := $FFEEDD;
+    //TListView(Sender).Canvas.DrawFocusRect(Rect);
     TListView(Sender).Canvas.FillRect(Rect);
   end;
   x := Rect.Left + 3;
