@@ -1,0 +1,351 @@
+unit mpMerge;
+
+interface
+
+uses
+  Windows, SysUtils, Classes,
+  mpHelpers, mpLogger, mpTracker,
+  wbBSA,
+  wbHelpers,
+  wbInterface,
+  wbImplementation,
+  wbDefinitionsFNV,
+  wbDefinitionsFO3,
+  wbDefinitionsTES3,
+  wbDefinitionsTES4,
+  wbDefinitionsTES5;
+
+  procedure BuildMerge(plugins: TList; var merge: TMerge);
+  procedure DeleteOldMergeFiles(var merge: TMerge);
+  procedure RebuildMerge(plugins: TList; var merge: TMerge);
+
+implementation
+
+{******************************************************************************}
+{ Renumbering Methods
+  Methods for renumbering formIDs.
+
+  Includes:
+  - FindHighestFormID
+  - RenumberAll
+  - RenumberConflicting
+}
+{******************************************************************************}
+
+const
+  debugRenumbering = true;
+
+function FindHighestFormID(var pluginsToMerge: TList; var merge: TMerge): Cardinal;
+var
+  i, j: Integer;
+  plugin: TPlugin;
+  aFile: IwbFile;
+  aRecord: IwbMainRecord;
+  formID: cardinal;
+begin
+  // loop through plugins to merge
+  for i := 0 to Pred(pluginsToMerge.Count) do begin
+    plugin := pluginsToMerge[i];
+    aFile := plugin.pluginFile;
+    // loop through records
+    for j := 0 to Pred(aFile.RecordCount) do begin
+      aRecord := aFile.Records[j];
+      // skip override records
+      if IsOverride(aRecord) then continue;
+      formID := FileFormID(aRecord);
+      if formID > Result then Result := formID;
+    end;
+  end;
+
+  // loop through mergePlugin
+  plugin := merge.mergePlugin.pluginFile;
+  aFile := plugin.pluginFile;
+  // loop through records
+  for j := 0 to Pred(aFile.RecordCount) do begin
+    aRecord := aFile.Records[j];
+    // skip override records
+    if IsOverride(aRecord) then continue;
+    formID := FileFormID(aRecord);
+    if formID > Result then Result := formID;
+  end;
+end;
+
+procedure RenumberAll(var pluginsToMerge: TList; var merge: TMerge);
+var
+  i, j, rc: integer;
+  plugin: TPlugin;
+  aFile: IwbFile;
+  aRecord: IwbMainRecord;
+  Records: TList;
+  BaseFormID, NewFormID: cardinal;
+begin
+  Tracker.Write('Renumbering All records');
+  // initialize variables
+  Records := TList.Create;
+  BaseFormID := FindHighestFormID(pluginsToMerge, merge) + 128;
+  if debugRenumbering then
+    Tracker.Write('  BaseFormID: '+IntToHex(BaseFormID, 8));
+
+  // renumber records in all pluginsToMerge
+  for i := 0 to Pred(pluginsToMerge) do begin
+    plugin := pluginsToMerge[i];
+    aFile := plugin.pluginFile;
+    Tracker.Write('  Renumbering records in ' + plugin.filename);
+
+    // build records array because indexed order will change
+    rc := aFile.RecordCount;
+    for j := 0 to Pred(rc) do begin
+      aRecord := aFile.Records[j];
+      Records.Add(aRecord);
+    end;
+
+    // renumber records in file
+    for j := 0 to RC do begin
+      aRecord := Records[j];
+      if aRecord.Signature = 'TES4' then continue;
+      if IsOverride(aRecord) then continue;
+
+      OldFormID := HexFormID(aRecord);
+      NewFormID :=
+      if debugRenumbering then
+        Tracker.Write('    Changing FormID to [%s] on %s', );
+
+    end;
+
+  end;
+
+
+end;
+
+procedure RenumberConflicting(var pluginsToMerge: TList; var merge: TMerge);
+begin
+
+end;
+
+{******************************************************************************}
+{ Copying Methods
+  Methods for copying records.
+
+  Includes:
+  - CopyAsNewRecords
+  - CopyAsOverrides
+}
+{******************************************************************************}
+
+procedure CopyAsNewRecords(var plugin: TPlugin; var merge: TMerge);
+begin
+
+end;
+
+procedure CopyAsOverrides(var plugin: TPlugin; var merge: TMerge);
+begin
+
+end;
+
+{******************************************************************************}
+{ Copy Assets methods
+  Methods for copying file-specific assets.
+
+  Includes:
+  - CopyFaceGen
+  - CopyVoice
+  - CopyTranslations
+  - SaveTranslations
+  - CopyScriptFragments
+  - CopyAssets
+}
+{******************************************************************************}
+
+procedure CopyFaceGen(var plugin: TPlugin; var merge: TMerge);
+begin
+end;
+
+procedure CopyVoice(var plugin: TPlugin; var merge: TMerge);
+begin
+end;
+
+procedure CopyTranslations(var plugin: TPlugin; var merge: TMerge);
+begin
+end;
+
+procedure SaveTranslations(var merge: TMerge);
+begin
+end;
+
+procedure CopyScriptFragments(var plugin: TPlugin; var merge: TMerge);
+begin
+  // can't use yet
+end;
+
+procedure CopyAssets(var plugin: TPlugin; var merge: TMerge);
+begin
+  if settings.handleFaceGenData then
+    CopyFaceGen(plugin, merge);
+  if settings.handleVoiceAssets then
+    CopyVoice(plugin, merge);
+  if settings.handleMCMTranslations then
+    CopyTranslations(plugin, merge);
+  if settings.handleScriptFragments then
+    CopyScriptFragments(plugin, merge);
+end;
+
+{******************************************************************************}
+{ Merge Handling methods
+  Methods for building, rebuilding, and deleting merges.
+
+  Includes:
+  - BuildMerge
+  - DeleteOldMergeFiles
+  - RebuildMerge
+}
+{******************************************************************************}
+
+procedure BuildMerge(plugins: TList; var merge: TMerge);
+var
+  plugin, mergePlugin: TPlugin;
+  mergeFile: IwbFile;
+  failed: string;
+  pluginsToMerge: TList;
+  i, LoadOrder: Integer;
+  usedExistingFile: boolean;
+begin
+  // initialize
+  Tracker.Write('Building merge: '+merge.name);
+  failed := 'Failed to merge '+merge.name;
+
+  // don't merge if no plugins to merge
+  if merge.plugins.Count < 1 then begin
+    Tracker.Write(failed+', no plugins to merge!');
+    exit;
+  end;
+
+  // don't merge if usingMO is true and MODirectory is blank
+  if settings.usingMO and (settings.MODirectory = '') then begin
+    Tracker.Write(failed + ', Mod Organizer Directory blank.');
+    exit;
+  end;
+
+  // don't merge if usingMO is true and MODirectory is invalid
+  if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
+     Tracker.Write(failed + ', Mod Organizer Directory invalid.');
+     exit;
+  end;
+
+  // don't merge if merge has plugins not found in current load order
+  pluginsToMerge := TList.Create;
+  for i := 0 to Pred(merge.plugins.Count) do begin
+    plugin := PluginByFileName(plugins, merge.plugins[i]);
+
+    if not Assigned(plugin) then begin
+      Tracker.Write(failed + ', couldn''t find plugin '+merge.plugins[i]);
+      pluginsToMerge.Free;
+      exit;
+    end;
+    pluginsToMerge.Add(plugin);
+  end;
+
+  // identify destination file or create new one
+  plugin := PluginByFilename(plugins, merge.filename);
+  merge.mergePlugin := nil;
+  merge.map.Clear;
+  if Assigned(plugin) then begin
+    usedExistingFile := true;
+    merge.mergePlugin := plugin;
+  end
+  else begin
+    usedExistingFile := false;
+    merge.mergePlugin := CreateNewPlugin(plugins, merge.filename);
+  end;
+
+  // don't merge if mergeFile not assigned
+  if not Assigned(merge.mergePlugin) then begin
+    Tracker.Write(failed + ', couldn''t assign merge file.');
+    exit;
+  end;
+
+  // don't merge if mergeFile is at an invalid load order position relative
+  // don't the plugins being merged
+  if usedExistingFile then begin
+    for i := 0 to Pred(pluginsToMerge.Count) do begin
+      plugin := pluginsToMerge[i];
+
+      if plugins.IndexOf(plugin) < plugins.IndexOf(mergePlugin) then begin
+        Tracker.Write(failed + ', '+plugin.filename +
+          ' is at a lower load order position than '+merge.filename);
+        pluginsToMerge.Free;
+        exit;
+      end;
+    end;
+  end;
+
+  // force merge directories to exist
+  merge.mergeDataPath := settings.mergeDirectory + merge.name + '\';
+  ForceDirectories(merge.mergeDataPath);
+
+  // renumber formIDs in plugins to be merged
+  if merge.method = 'Overrides' then begin
+    Tracker.Write(' ');
+    Tracker.Write('Renumbering FormIDs');
+    if merge.renumbering = 'All' then
+        RenumberAll(pluginsToMerge, merge)
+    else if merge.renumbering = 'Conflicting' then
+      RenumberConflicting(pluginsToMerge, merge);
+  end;
+
+  // copy records
+  Tracker.Write(' ');
+  Tracker.Write('Copying records');
+  for i := 0 to Pred(pluginsToMerge.Count) do begin
+    plugin := pluginsToMerge[i];
+    if merge.method = 'New records' then
+      CopyAsNewRecords(plugin, merge)
+    else
+      CopyAsOverrides(plugin, merge);
+  end;
+
+  // copy assets
+  Tracker.Write(' ');
+  Tracker.Write('Copying assets');
+  for i := 0 to Pred(pluginsToMerge.Count) do begin
+    plugin := pluginsToMerge[i];
+    Tracker.Write('  Copying assets for '+plugin.filename);
+    CopyAssets(plugin, merge);
+  end;
+  SaveTranslations(merge);
+
+  // reload plugins to be merged to discard changes
+  if merge.method = 'Overrides' then begin
+    Tracker.Write(' ');
+    Tracker.Write('Discarding changes to source plugins');
+    for i := 0 to Pred(pluginsToMerge.Count) do begin
+      plugin := pluginsToMerge[i];
+      LoadOrder := plugins.IndexOf(plugin);
+      plugin.pluginFile := wbFile(wbDataPath + plugin.filename, LoadOrder);
+    end;
+  end;
+
+  // done merging
+  Tracker.Write(' ');
+  Tracker.Write('Done merging '+merge.name);
+end;
+
+procedure DeleteOldMergeFiles(var merge: TMerge);
+var
+  i: integer;
+  path: string;
+begin
+  for i := Pred(merge.files.Count) downto 0 do begin
+    path := merge.mergeDataPath + merge.files[i];
+    if FileExists(path) then
+      DeleteFile(path);
+    merge.files.Delete(i);
+  end;
+end;
+
+procedure RebuildMerge(plugins: TList; var merge: TMerge);
+begin
+  DeleteOldMergeFiles(merge);
+  BuildMerge(plugins, merge);
+end;
+
+end.

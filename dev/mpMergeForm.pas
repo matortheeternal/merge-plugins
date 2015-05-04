@@ -10,10 +10,10 @@ uses
   // third party libraries
   superobject,
   // mp units
-  mpHelpers, mpMerge, mpLogger, mpDictionaryForm,
+  mpHelpers, mpMerge, mpLogger, mpDictionaryForm, mpOptionsForm, mpProgressForm,
+  mpTracker,
   // tes5edit units
-  wbBSA, wbHelpers, wbInterface, wbImplementation, wbDefinitionsFNV,
-  wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4, wbDefinitionsTES5;
+  wbBSA, wbHelpers, wbInterface, wbImplementation;
 
 type
   TMergeForm = class(TForm)
@@ -40,8 +40,8 @@ type
     DetailsLabel: TLabel;
     PluginsPopupMenu: TPopupMenu;
     Addtomerge1: TMenuItem;
-    Removefrommerge1: TMenuItem;
-    Report1: TMenuItem;
+    RemoveFromMerge: TMenuItem;
+    ReportOnPlugin: TMenuItem;
     MergesPopupMenu: TPopupMenu;
     Createnewmerge1: TMenuItem;
     Deletemerge1: TMenuItem;
@@ -65,7 +65,7 @@ type
     procedure OptionsButtonClick(Sender: TObject);
     procedure ReportButtonClick(Sender: TObject);
     procedure RebuildMerges(Sender: TObject);
-    procedure CreateNewMerge(Sender: TObject);
+    procedure CreateNewMergeClick(Sender: TObject);
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     function AddDetailsItem(name, value: string; editable: boolean = false):
@@ -84,6 +84,7 @@ type
     procedure PluginsPopupMenuPopup(Sender: TObject);
     procedure MergesPopupMenuPopup(Sender: TObject);
     procedure SaveMergeEdit(Sender: TObject);
+    procedure RemoveFromMergeClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -96,8 +97,6 @@ var
   merges: TList;
   currentMerge: TMerge;
   blacklist: TStringList;
-  time: TDateTime;
-
 
 implementation
 
@@ -114,12 +113,11 @@ implementation
 }
 {******************************************************************************}
 
-{
-  Prints a message to the log memo
-}
+{ Prints a message to the log memo }
 procedure TMergeForm.LogMessage(const s: string);
 begin
   Memo1.Lines.Add(s);
+  SendMessage(Memo1.Handle, EM_LINESCROLL, 0, Memo1.Lines.Count);
 end;
 
 procedure ProgressMessage(const s: string);
@@ -136,68 +134,78 @@ var
   ListItem: TListItem;
   plugin: TPlugin;
   time: TDateTime;
+  aFile: IwbFile;
 begin
   try
-  // INITIALIZE LISTS
-  time := now;
-  merges := TList.Create;
-  pluginObjects := TList.Create;
-  LoadDictionary;
+    // INITIALIZE LISTS
+    time := now;
+    merges := TList.Create;
+    pluginObjects := TList.Create;
+    LoadSettings;
+    LoadDictionary;
 
-  // GUI ICONS
-  IconList.GetBitmap(0, NewButton.Glyph);
-  IconList.GetBitmap(1, BuildButton.Glyph);
-  IconList.GetBitmap(2, ReportButton.Glyph);
-  IconList.GetBitmap(3, DictionaryButton.Glyph);
-  IconList.GetBitmap(4, OptionsButton.Glyph);
-  IconList.GetBitmap(5, UpdateButton.Glyph);
-  IconList.GetBitmap(6, HelpButton.Glyph);
+    // GUI ICONS
+    IconList.GetBitmap(0, NewButton.Glyph);
+    IconList.GetBitmap(1, BuildButton.Glyph);
+    IconList.GetBitmap(2, ReportButton.Glyph);
+    IconList.GetBitmap(3, DictionaryButton.Glyph);
+    IconList.GetBitmap(4, OptionsButton.Glyph);
+    IconList.GetBitmap(5, UpdateButton.Glyph);
+    IconList.GetBitmap(6, HelpButton.Glyph);
 
-  // INITIALIZE TES5EDIT API
-  wbProgressCallback := ProgressMessage;
-  Logger.OnLogEvent := LogMessage;
-  wbGameMode := gmTES5;
-  wbAppName := 'TES5';
-  wbGameName := 'Skyrim';
-  wbDataPath := 'C:\Program Files (x86)\Steam\steamapps\common\Skyrim\Data\';
-  wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
-  wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
-  DefineTES5;
+    // INITIALIZE TES5EDIT API
+    wbProgressCallback := ProgressMessage;
+    Logger.OnLogEvent := LogMessage;
+    wbGameMode := gmTES5;
+    wbAppName := 'TES5';
+    LoadDefinitions;
 
-  // LOAD PLUGINS
-  sl := TStringList.Create;
-  sl.LoadFromFile(wbPluginsFileName);
-  RemoveCommentsAndEmpty(sl);
-  if wbGameMode = gmTES5 then begin
-    if sl.IndexOf('Update.esm') = -1 then
-      sl.Insert(0, 'Update.esm');
-    if sl.IndexOf(wbGameName+'.esm') = -1 then
-      sl.Insert(0, wbGameName+'.esm');
-  end;
-  RemoveMissingFiles(sl);
-  AddMissingFiles(sl);
-  for i := 0 to Pred(sl.Count) do begin
-    plugin := TPlugin.Create;
-    plugin.filename := sl[i];
-    plugin.pluginFile := wbFile(wbDataPath + sl[i], i);
-    plugin.GetFlags;
-    pluginObjects.Add(Pointer(plugin));
+    // PREPARE TO LOAD PLUGINS
+    wbGameName := 'Skyrim';
+    wbDataPath := 'C:\Program Files (x86)\Steam\steamapps\common\Skyrim\Data\';
+    wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
+    wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
 
-    ListItem := PluginsListView.Items.Add;
-    ListItem.Caption := IntToHex(i, 2);
-    ListItem.SubItems.Add(plugin.filename);
-    ListItem.SubItems.Add(plugin.GetFlagsString);
-    ListItem.SubItems.Add(' ');
-  end;
+    // LOAD PLUGINS
+    sl := TStringList.Create;
+    sl.LoadFromFile(wbPluginsFileName);
+    RemoveCommentsAndEmpty(sl);
+    if wbGameMode = gmTES5 then begin
+      if sl.IndexOf('Update.esm') = -1 then
+        sl.Insert(0, 'Update.esm');
+      if sl.IndexOf('Skyrim.esm') = -1 then
+        sl.Insert(0, 'Skyrim.esm');
+    end;
+    RemoveMissingFiles(sl);
+    AddMissingFiles(sl);
+    for i := 0 to Pred(sl.Count) do begin
+      plugin := TPlugin.Create;
+      plugin.filename := sl[i];
+      plugin.pluginFile := wbFile(wbDataPath + sl[i], i);
+      plugin.pluginFile._AddRef;
+      plugin.GetFlags;
+      pluginObjects.Add(Pointer(plugin));
 
-  // LOAD DICTIONARY
+      ListItem := PluginsListView.Items.Add;
+      ListItem.Caption := IntToHex(i, 2);
+      ListItem.SubItems.Add(plugin.filename);
+      ListItem.SubItems.Add(plugin.GetFlagsString);
+      ListItem.SubItems.Add(' ');
 
-  // CLEAN UP -
-  sl.Free;
-  //LoadMerges;
+      // load hardcoded dat
+      if i = 0 then begin
+        aFile := wbFile(wbProgramPath + wbGameName + wbHardcodedDat, 0);
+        aFile._AddRef;
+      end;
+    end;
 
-  time := (Now - time) * 86400;
-  LogMessage(FormatFloat('0.###', time) + ' spent loading.');
+    // FINALIZE
+    sl.Free;
+    LoadMerges;
+
+    // PRINT TIME
+    time := (Now - time) * 86400;
+    LogMessage(FormatFloat('0.###', time) + ' spent loading.');
   except on x: Exception do
     LogMessage(x.Message);
   end;
@@ -231,7 +239,7 @@ begin
   // loop through merges
   for i := 0 to Pred(merges.Count) do begin
     merge := merges[i];
-    json.A['merges'].Add(merge.dump);
+    json.A['merges'].Add(merge.Dump);
   end;
 
   // save and finalize
@@ -342,14 +350,14 @@ begin
 
   // prepare list view for plugin information
   DetailsEditor.OnStringsChange := nil;
-  DetailsEditor.Strings.Clear;
   DetailsEditor.Options := DetailsEditor.Options - [goEditing];
+  DetailsEditor.Strings.Clear;
   DetailsLabel.Caption := 'Plugin Details:';
 
   // get plugin information
   index := PluginsListView.ItemIndex;
   plugin := TPlugin(pluginObjects[index]);
-  if not plugin.hasData then plugin.GetData(index > 0);
+  if not plugin.hasData then plugin.GetData;
 
   // add details items
   AddDetailsItem('Filename', plugin.filename);
@@ -411,7 +419,7 @@ begin
       continue;
     plugin := TPlugin(pluginObjects[i]);
     if not plugin.hasData then
-      plugin.GetData(true);
+      plugin.GetData;
     merge.plugins.Add(plugin.filename);
     merge.pluginSizes.Add(Pointer(plugin.fileSize));
     merge.pluginDates.Add(plugin.dateModified);
@@ -428,7 +436,9 @@ var
   i: Integer;
   ListItem: TListItem;
 begin
-  merge := TMerge.Create;
+  merge := CreateNewMerge(merges);
+
+  // add items selected in PluginListView to merge
   for i := 0 to Pred(PluginsListView.Items.Count) do begin
     ListItem := PluginsListView.Items[i];
     if not ListItem.Selected then
@@ -436,14 +446,14 @@ begin
     ListItem.SubItems[2] := merge.name;
     plugin := TPlugin(pluginObjects[i]);
     if not plugin.hasData then
-      plugin.GetData(true);
+      plugin.GetData;
     merge.plugins.Add(plugin.filename);
     merge.pluginSizes.Add(Pointer(plugin.fileSize));
     merge.pluginDates.Add(plugin.dateModified);
   end;
-  merges.Add(merge);
 
-  // update gui
+  // update gui, add to merges list
+  merges.Add(merge);
   UpdateMerges;
 end;
 
@@ -509,7 +519,7 @@ begin
   prop.EditStyle := esPickList;
   prop.PickList.Add('Conflicting');
   prop.PickList.Add('All');
-  AddDetailsList('Log', merge.log);
+  AddDetailsList('Fails', merge.fails);
 
   // return event
   DetailsEditor.OnStringsChange := SaveMergeEdit;
@@ -577,7 +587,7 @@ begin
     ListItem.SubItems.Add(DateBuiltString(merge.dateBuilt));
 
     for j := 0 to Pred(merge.plugins.Count) do begin
-      plugin := PluginByName(pluginObjects, merge.plugins[j]);
+      plugin := PluginByFilename(pluginObjects, merge.plugins[j]);
       if Assigned(plugin) then begin
         index := pluginObjects.IndexOf(plugin);
         ListItem := PluginsListView.Items[index];
@@ -603,19 +613,32 @@ end;
 
 { MergesPopupMenu events }
 procedure TMergeForm.DeleteMerge(Sender: TObject);
+var
+  i: Integer;
+  ListItem: TListItem;
 begin
   // exit if no merge selected
   if MergeListView.ItemIndex = -1 then
     exit;
 
   // else prompt user, delete merge and update details editor
-  currentMerge := merges[MergeListView.ItemIndex];
+  currentMerge := TMerge(merges[MergeListView.ItemIndex]);
   if MessageDlg('Are you sure you want to delete '+currentMerge.name+'?',
     mtConfirmation, mbOKCancel, 0) = mrOK then begin
 
+    // remove merge from PluginListView Merge column
+    for i := 0 to Pred(PluginsListView.Items.Count) do begin
+      ListItem := PluginsListView.Items[i];
+      if ListItem.SubItems[2] = currentMerge.name then
+        ListItem.SubItems[2] := '';
+    end;
+
+    // delete merge
     currentMerge := nil;
     merges.Delete(MergeListView.ItemIndex);
     MergeListView.Items[MergeListView.ItemIndex].Delete;
+
+    // clear details editor
     DetailsEditor.OnStringsChange := nil;
     DetailsEditor.Options := DetailsEditor.Options - [goEditing];
     DetailsEditor.Strings.Clear;
@@ -625,75 +648,130 @@ begin
   UpdateMerges;
 end;
 
-procedure TMergeForm.CreateNewMerge(Sender: TObject);
+procedure TMergeForm.CreateNewMergeClick(Sender: TObject);
 var
   merge: TMerge;
 begin
-  Memo1.Lines.Add('Created new merge!');
-
-  merge := TMerge.Create;
+  LogMessage('Created new merge!');
+  merge := CreateNewMerge(merges);
+  // add and update merge
   merges.Add(merge);
   UpdateMerges;
+
 end;
 
 procedure TMergeForm.RebuildMerges(Sender: TObject);
 var
-  i: integer;
+  i, timeCost: integer;
   merge: TMerge;
+  ProgressForm: TProgressForm;
+  timeCosts: TList;
 begin
   LogMessage('Rebuild merges!');
+  if merges.Count = 0 then
+    exit;
+
+  // calculate time costs
+  timeCosts := TList.Create;
+  for i := 0 to Pred(merges.Count) do begin
+    merge := TMerge(merges[i]);
+    timeCost := merge.GetTimeCost(pluginObjects);
+    LogMessage('Time cost for '+merge.name+': '+IntToStr(timeCost));
+    timeCosts.Add(Pointer(timeCost));
+  end;
+
+  // make and show progress form
+  ProgressForm := TProgressForm.Create(nil);
+  ProgressForm.Show;
+  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
+
+  // rebuild merges
   for i := 0 to Pred(merges.count) do begin
     merge := merges[i];
-    if merge.DateBuilt = 0 then
-      BuildMerge(merge)
-    else if PluginsModified(merges, merge) then
-      RebuildMerge(merge);
+    try
+      if merge.DateBuilt = 0 then
+        BuildMerge(pluginObjects, merge)
+      else if PluginsModified(merges, merge) then
+        RebuildMerge(pluginObjects, merge);
+    except on x : Exception do
+      Tracker.Write('Exception: '+x.Message);
+    end;
+    Tracker.Write(' '#13#10);
+    ProgressForm.ProgressBar.Position := IntegerListSum(timeCosts, i);
+  end;
+
+  // display progress form after merging
+  ProgressForm.DetailsButtonClick(nil);
+  ProgressForm.Visible := false;
+  ProgressForm.ShowModal;
+
+  // free memory
+  ProgressForm.Free;
+  timeCosts.Free;
+end;
+
+{ Remove from Merge }
+procedure TMergeForm.RemoveFromMergeClick(Sender: TObject);
+var
+  i: integer;
+  listItem: TListItem;
+  pluginName, mergeName: string;
+  merge: TMerge;
+begin
+  for i := 0 to Pred(PluginsListView.Items.Count) do begin
+    ListItem := PluginsListView.Items[i];
+    if not ListItem.Selected then
+      continue;
+    pluginName := ListItem.SubItems[0];
+    mergeName := ListItem.SubItems[2];
+    if mergeName <> '' then begin
+      merge := MergeByName(merges, mergeName);
+      if Assigned(merge) then
+        merge.plugins.Delete(merge.plugins.IndexOf(pluginName));
+      ListItem.SubItems[2] := '';
+    end;
   end;
 end;
 
-{
-  Submit report
-}
+{ Submit report }
 procedure TMergeForm.ReportButtonClick(Sender: TObject);
 begin
-  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+  LogMessage(TButton(Sender).Hint+' clicked!');
 end;
 
-{
-  View the dictionary file
-}
+{ View the dictionary file }
 procedure TMergeForm.DictionaryButtonClick(Sender: TObject);
 var
   DictionaryForm: TDictionaryForm;
 begin
-  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+  LogMessage(TButton(Sender).Hint+' clicked!');
   DictionaryForm := TDictionaryForm.Create(nil);
   DictionaryForm.ShowModal;
   DictionaryForm.Free;
 end;
 
-{
-  Options
-}
+{ Options }
 procedure TMergeForm.OptionsButtonClick(Sender: TObject);
+var
+  OptionsForm: TOptionsForm;
 begin
-  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+  LogMessage(TButton(Sender).Hint+' clicked!');
+  OptionsForm := TOptionsForm.Create(nil);
+  OptionsForm.ShowModal;
+  OptionsForm.Free;
+  settings.Load('settings.ini');
 end;
 
-{
-  Update
-}
+{ Update }
 procedure TMergeForm.UpdateButtonClick(Sender: TObject);
 begin
-  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+  LogMessage(TButton(Sender).Hint+' clicked!');
 end;
 
-{
-  Help
-}
+{ Help }
 procedure TMergeForm.HelpButtonClick(Sender: TObject);
 begin
-  Memo1.Lines.Add(TButton(Sender).Hint+' clicked!');
+  LogMessage(TButton(Sender).Hint+' clicked!');
 end;
 
 end.

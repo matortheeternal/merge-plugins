@@ -22,9 +22,11 @@ uses
   mpHelpers in 'mpHelpers.pas',
   mpMerge in 'mpMerge.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
-  mpOptionsForm in 'mpOptionsForm.pas' {Form2},
+  mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
   mpLogger in 'mpLogger.pas',
-  superobject in 'superobject.pas';
+  superobject in 'superobject.pas',
+  mpTracker in 'mpTracker.pas',
+  mpProgressForm in 'mpProgressForm.pas' {ProgressForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -39,5 +41,6 @@ begin
 
   Application.Initialize;
   Application.CreateForm(TMergeForm, MergeForm);
+  Application.CreateForm(TProgressForm, ProgressForm);
   Application.Run;
 end.
