@@ -1,3 +1,7 @@
 # merge-plugins
 Standalone application for merging bethesda plugin files.
-Currently non-functional, pretty much just GUI functionality right now.
+Currently works with 
+- Renumber = Conflicting
+- Method = Overrides.  
+
+No asset copying yet.
