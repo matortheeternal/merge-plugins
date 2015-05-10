@@ -85,7 +85,7 @@
 			<DCCReference Include="mpMergeForm.pas">
 				<Form>MergeForm</Form>
 			</DCCReference>
-			<DCCReference Include="mpHelpers.pas"/>
+			<DCCReference Include="mpBase.pas"/>
 			<DCCReference Include="mpMerge.pas"/>
 			<DCCReference Include="mpDictionaryForm.pas">
 				<Form>DictionaryForm</Form>
@@ -98,6 +98,9 @@
 			<DCCReference Include="mpTracker.pas"/>
 			<DCCReference Include="mpProgressForm.pas">
 				<Form>ProgressForm</Form>
+			</DCCReference>
+			<DCCReference Include="mpSplash.pas">
+				<Form>SplashForm</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

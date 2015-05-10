@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl,
-  mpHelpers,
+  mpBase,
   wbInterface;
 
 type

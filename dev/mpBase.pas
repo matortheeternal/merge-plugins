@@ -1,18 +1,32 @@
-unit mpHelpers;
+unit mpBase;
 
 interface
 
 uses
-  Windows, SysUtils, ShlObj, Classes, IniFiles,
+  Windows, SysUtils, ShlObj, Classes, IniFiles, Dialogs,
   superobject,
   mpLogger, mpTracker,
+  Registry,
   wbBSA,
   wbHelpers,
   wbInterface,
-  wbImplementation;
+  wbImplementation,
+  wbDefinitionsFNV, wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4,
+  wbDefinitionsTES5;
 
 type
-  TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_MCM, HAS_FACEDATA,
+  TEntry = class(TObject)
+  public
+    pluginName: string;
+    records: string;
+    version: string;
+    rating: string;
+    reports: string;
+    notes: string;
+    constructor Create; Overload;
+    constructor Create(const s: string); Overload;
+  end;
+  TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_TRANSLATION, HAS_FACEDATA,
     HAS_VOICEDATA, HAS_FRAGMENTS);
   TPluginFlags = set of TPluginFlag;
   TPlugin = class(TObject)
@@ -23,14 +37,15 @@ type
       dateModified: string;
       flags: TPluginFlags;
       filename: string;
+      merge: string;
       numRecords: string;
       numOverrides: string;
       author: string;
+      entry: TEntry;
       description: TStringList;
       masters: TStringList;
       errors: TStringList;
       reports: TStringList;
-      rating: real;
       constructor Create; virtual;
       procedure GetData;
       procedure GetFlags;
@@ -46,6 +61,7 @@ type
       pluginSizes: TList;
       pluginDates: TStringList;
       masters: TStringList;
+      status: string;
       method: string;
       renumbering: string;
       mergeDataPath: string;
@@ -57,16 +73,8 @@ type
       function Dump: ISuperObject;
       procedure LoadDump(obj: ISuperObject);
       function GetTimeCost(pluginObjects: TList): integer;
-  end;
-  TEntry = class(TObject)
-  public
-    pluginName: string;
-    records: string;
-    version: string;
-    rating: string;
-    reports: string;
-    notes: string;
-    constructor Create(const s: string); virtual;
+      procedure GetStatus;
+      function GetStatusColor: integer;
   end;
   TSettings = class(TObject)
   public
@@ -90,6 +98,8 @@ type
     procedure Load(const filename: string);
   end;
 
+  function LoadDataPath: boolean;
+  procedure LoadDefinitions;
   function IsOverride(aRecord: IwbMainRecord): boolean;
   function LocalFormID(aRecord: IwbMainRecord): integer;
   function LoadOrderPrefix(aRecord: IwbMainRecord): integer;
@@ -97,7 +107,7 @@ type
   procedure GetMasters(aFile: IwbFile; var sl: TStringList);
   procedure AddMasters(aFile: IwbFile; var sl: TStringList);
   function BSAExists(filename: string): boolean;
-  function MCMExists(filename: string): boolean;
+  function TranslationExists(filename: string): boolean;
   function FaceDataExists(filename: string): boolean;
   function VoiceDataExists(filename: string): boolean;
   function FragmentsExist(filename: string): boolean;
@@ -108,6 +118,7 @@ type
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
   function IntegerListSum(list: TList; maxIndex: integer): integer;
+  function Wordwrap(var s: string; charCount: integer): string;
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
   procedure AddMissingFiles(var sl: TStringList);
@@ -117,8 +128,9 @@ type
   function RecursiveFileSearch(aPath, aFileName: string; ignore: TStringList; maxDepth: integer): string;
   procedure LoadSettings;
   procedure LoadDictionary;
+  function GetRatingColor(rating: real): integer;
+  function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
-  function GetEntry(const filename: string): TEntry;
   function AppendIfMissing(str, substr: string): string;
   function PluginByFilename(plugins: TList; filename: string): TPlugin;
   function MergeByName(merges: TList; name: string): TMerge;
@@ -126,10 +138,16 @@ type
   function CreateNewMerge(merges: TList): TMerge;
   function CreateNewPlugin(plugins: TList; filename: string): TPlugin;
 
+const
+  ProgramVersion = '2.0';
+  flagChar = 'XEATGVF';
+
 var
   dictionary: TList;
   blacklist: TList;
   settings: TSettings;
+  handler: IwbContainerHandler;
+  PluginsList: TList;
 
 implementation
 
@@ -138,7 +156,11 @@ implementation
   Set of functions that read bethesda plugin files for various attributes.
 
   List of functions:
+  - LoadDataPath
+  - LoadDefinitions
   - IsOverride
+  - LocalFormID
+   -LoadOrderPrefix
   - CountOverrides
   - GetMasters
   - AddMasters
@@ -151,6 +173,52 @@ implementation
   - CheckForErrors
 }
 {*****************************************************************************}
+
+{ Loads Data Path from Registry key or app path }
+function LoadDataPath: boolean;
+const
+  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
+  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+var
+  s: string;
+begin
+  Result := false;
+  if wbDataPath = '' then with TRegistry.Create do try
+    RootKey := HKEY_LOCAL_MACHINE;
+
+    if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
+      if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
+        s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\';
+        if wbGameMode = gmTES5 then
+          ShowMessage(s+#13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
+        Result := false;
+        exit;
+      end;
+
+    wbDataPath := ReadString('Installed Path');
+
+    if wbDataPath = '' then begin
+      s := 'Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key';
+      if wbGameMode = gmTES5 then
+        ShowMessage(s+#13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
+      Result := false;
+    end;
+  finally
+    Free;
+  end;
+
+  if wbDataPath <> '' then begin
+    Result := true;
+    wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'Data\';
+  end;
+end;
+
+{ Loads definitions based on wbGameMode }
+procedure LoadDefinitions;
+begin
+  if wbGameMode = gmTES5 then
+    DefineTES5;
+end;
 
 { Returns true if the input record is an override record }
 function IsOverride(aRecord: IwbMainRecord): boolean;
@@ -215,15 +283,20 @@ end;
 
 { Checks if a BSA exists associated with the given filename }
 function BSAExists(filename: string): boolean;
+var
+  bsaFilename, ContainerName: string;
 begin
-  if (Pos('.esp', filename) > 0)
-  or (Pos('.esm', filename) > 0) then
-    filename := Copy(filename, 1, Length(filename) - 4) + '.bsa'
-  else
-    filename := filename + '.bsa';
-  Result := FileExists(wbDataPath + filename);
+  Result := false;
+  bsaFilename := ChangeFileExt(filename, '.bsa');
+  if FileExists(wbDataPath + bsaFilename) then begin
+    ContainerName := wbDataPath + bsaFilename;
+    if not handler.ContainerExists(ContainerName) then
+      handler.AddBSA(ContainerName);
+    Result := true;
+  end;
 end;
 
+{ Returns true if a file exists at @path matching @filename }
 function MatchingFileExists(path: string; filename: string): boolean;
 var
   rec: TSearchRec;
@@ -240,29 +313,72 @@ begin
   end;
 end;
 
-function MCMExists(filename: string): boolean;
+{ Return true if MCM translation files for @filename are found }
+function TranslationExists(filename: string): boolean;
 var
-  searchPath: string;
+  searchPath, bsaFilename, ContainerName: string;
+  ResourceList: TStringList;
 begin
-  filename := Lowercase(ChangeFileExt(filename, ''));
   searchPath := wbDataPath + 'Interface\translations\*';
-  Result := MatchingFileExists(searchPath, filename)
+  Result := MatchingFileExists(searchPath, ChangeFileExt(filename, ''));
+  if Result then exit;
+
+  // check in BSA
+  if BSAExists(filename) then begin
+    bsaFilename := ChangeFileExt(filename, '.bsa');
+    ContainerName := wbDataPath + bsaFilename;
+    ResourceList := TStringList.Create;
+    handler.ContainerResourceList(ContainerName, ResourceList, 'Interface\translations');
+    Result := ResourceList.Count > 0;
+  end;
 end;
 
+{ Return true if file-specific FaceGenData files for @filename are found }
 function FaceDataExists(filename: string): boolean;
 var
+  facetintDir, facegeomDir, bsaFilename, ContainerName: string;
+  ResourceList: TStringList;
   facetint, facegeom: boolean;
 begin
-  facetint := DirectoryExists(wbDataPath + 'textures\actors\character\facegendata\facetint\' + filename);
-  facegeom := DirectoryExists(wbDataPath + 'meshes\actors\character\facegendata\facegeom\' + filename);
+  facetintDir := 'textures\actors\character\facegendata\facetint\' + filename;
+  facegeomDir := 'meshes\actors\character\facegendata\facegeom\' + filename;
+  facetint := DirectoryExists(wbDataPath + facetintDir);
+  facegeom := DirectoryExists(wbDataPath + facegeomDir);
   Result := facetint or facegeom;
+  if Result then exit;
+
+  // check in BSA
+  if BSAExists(filename) then begin
+    bsaFilename := ChangeFileExt(filename, '.bsa');
+    ContainerName := wbDataPath + bsaFilename;
+    ResourceList := TStringList.Create;
+    handler.ContainerResourceList(ContainerName, ResourceList, facetintDir);
+    handler.ContainerResourceList(ContainerName, ResourceList, facegeomDir);
+    Result := ResourceList.Count > 0;
+  end;
 end;
 
+{ Return true if file-specific Voice files for @filename are found }
 function VoiceDataExists(filename: string): boolean;
+var
+  voiceDir, bsaFilename, ContainerName: string;
+  ResourceList: TStringList;
 begin
-  Result := DirectoryExists(wbDataPath + 'sound\voice\' + filename);
+  voiceDir := 'sound\voice\' + filename;
+  Result := DirectoryExists(wbDataPath + voiceDir);
+  if Result then exit;
+
+  // check in BSA
+  if BSAExists(filename) then begin
+    bsaFilename := ChangeFileExt(filename, '.bsa');
+    ContainerName := wbDataPath + bsaFilename;
+    ResourceList := TStringList.Create;
+    handler.ContainerResourceList(ContainerName, ResourceList, voiceDir);
+    Result := ResourceList.Count > 0;
+  end;
 end;
 
+{ Return true if file-specific Script Fragments for @filename are found }
 function FragmentsExist(filename: string): boolean;
 begin
   Result := false;
@@ -295,15 +411,20 @@ end;
 function CheckForErrors(const aIndent: Integer; const aElement: IwbElement;
   var errors: TStringList): Boolean;
 var
-  Error: string;
+  Error, msg: string;
   Container: IwbContainerElementRef;
   i: Integer;
 begin
+  if Supports(aElement, IwbMainRecord) then
+    Tracker.Update(1);
+
   Error := aElement.Check;
   Result := Error <> '';
   if Result then begin
     Error := aElement.Check;
-    errors.Add(StringOfChar(' ', aIndent * 2) + aElement.Name + ' -> ' + Error);
+    msg := StringOfChar(' ', aIndent * 2) + aElement.Name + ' -> ' + Error;
+    Tracker.Write(msg);
+    errors.Add(msg);
   end;
 
   // recursion
@@ -312,7 +433,9 @@ begin
       Result := CheckForErrors(aIndent + 1, Container.Elements[i], errors) or Result;
 
   if Result and (Error = '') then begin
-    errors.Add(StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + aElement.Name);
+    msg := StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + aElement.Name;
+    Tracker.Write(msg);
+    errors.Add(msg);
   end;
 end;
 
@@ -402,6 +525,29 @@ begin
   Result := 0;
   for i := 0 to maxIndex do
     Inc(result, Integer(list[i]));
+end;
+
+function Wordwrap(var s: string; charCount: integer): string;
+var
+  i, lastSpace, counter: Integer;
+begin
+  counter := 0;
+  lastSpace := 0;
+  for i := 1 to Length(s) do begin
+    Inc(counter);
+    if (s[i] = ' ') or (s[i] = ',') then
+      lastSpace := i;
+    if (s[i] = #13) or (s[i] = #10) then begin
+      lastSpace := 0;
+      counter := 0;
+    end;
+    if (counter = charCount) and (lastSpace > 0) then begin
+      Insert(#13#10, s, lastSpace + 1);
+      lastSpace := 0;
+      counter := 0;
+    end;
+  end;
+  Result := s;
 end;
 
 
@@ -587,6 +733,8 @@ end;
   List of methods:
   - LoadSettings
   - LoadDictionary
+  - GetRatingColor
+  - GetRating
   - IsBlackListed
   - GetEntry
 }
@@ -624,6 +772,52 @@ begin
   sl.Free;
 end;
 
+function GetRatingColor(rating: real): integer;
+var
+  k1, k2: real;
+  r, g: byte;
+begin
+  if rating = -2.0 then begin
+    Result := $707070;
+    exit;
+  end;
+
+  if rating = -1.0 then begin
+    Result := $000000;
+    exit;
+  end;
+
+  if (rating > 2.0) then begin
+    k2 := (rating - 2.0)/2.0;
+    k1 := 1.0 - k2;
+    r := Trunc($E5 * k1 + $00 * k2);
+    g := Trunc($A8 * k1 + $90 * k2);
+  end
+  else begin
+    k2 := (rating/2.0);
+    k1 := 1.0 - k2;
+    r := Trunc($FF * k1 + $E5 * k2);
+    g := Trunc($00 * k1 + $A8 * k2);
+  end;
+
+  Result := g * 256 + r;
+end;
+
+function GetEntry(pluginName, numRecords, version: string): TEntry;
+var
+  i: Integer;
+  entry: TEntry;
+begin
+  Result := TEntry.Create;
+  for i := 0 to Pred(dictionary.Count) do begin
+    entry := TEntry(dictionary[i]);
+    if entry.pluginName = pluginName then begin
+      Result := entry;
+      exit;
+    end;
+  end;
+end;
+
 function IsBlacklisted(const filename: string): boolean;
 var
   i: Integer;
@@ -634,21 +828,6 @@ begin
     entry := TEntry(blacklist[i]);
     if entry.pluginName = filename then begin
       Result := true;
-      break;
-    end;
-  end;
-end;
-
-function GetEntry(const filename: string): TEntry;
-var
-  i: Integer;
-  entry: TEntry;
-begin
-  Result := nil;
-  for i := 0 to Pred(dictionary.Count) do begin
-    entry := TEntry(dictionary[i]);
-    if entry.pluginName = filename then begin
-      Result := entry;
       break;
     end;
   end;
@@ -754,7 +933,7 @@ var
   plugin: TPlugin;
 begin
   Result := nil;
-  LoadOrder := plugins.Count;
+  LoadOrder := plugins.Count + 1;
   // fail if maximum load order reached
   if LoadOrder > 254 then begin
     Tracker.Write('Maximum load order reached!  Can''t create file '+filename);
@@ -762,9 +941,8 @@ begin
   end;
 
   // create new plugin file
-  Tracker.Write('Attempting to create file '+wbDataPath + filename+' at load order '+IntToStr(LoadOrder));
   aFile := wbNewFile(wbDataPath + filename, LoadOrder);
-  Tracker.Write('File created successfully!');
+  aFile._AddRef;
 
   // create new plugin object
   plugin := TPlugin.Create;
@@ -799,7 +977,7 @@ end;
 constructor TPlugin.Create;
 begin
   hasData := false;
-  rating := -2.0;
+  merge := ' ';
   description := TStringList.Create;
   masters := TStringList.Create;
   errors := TStringList.Create;
@@ -817,8 +995,8 @@ begin
     flags := flags + [HAS_ERRORS];
   if BSAExists(filename) then
     flags := flags + [HAS_BSA];
-  if MCMExists(filename) then
-    flags := flags + [HAS_MCM];
+  if TranslationExists(filename) then
+    flags := flags + [HAS_TRANSLATION];
   if FaceDataExists(filename) then
     flags := flags + [HAS_FACEDATA];
   if VoiceDataExists(filename) then
@@ -829,40 +1007,49 @@ end;
 
 { Returns a string representing the flags in a plugin }
 function TPlugin.GetFlagsString: string;
+var
+  flag: TPluginFlag;
 begin
   Result := '';
-  if IS_BLACKLISTED in flags then
-    Result := Result + 'X';
+  for flag in flags do
+     Result := Result + flagChar[Ord(flag) + 1];
+
+  {if IS_BLACKLISTED in flags then
+    Result := Result + flagChar[IS_BLACKLISTED + 1];
   if HAS_ERRORS in flags then
-    Result := Result + 'E';
+    Result := Result + flagChar[HAS_ERRORS + 1];
   if HAS_BSA in flags then
-    Result := Result + 'A';
-  if HAS_MCM in flags then
-    Result := Result + 'M';
+    Result := Result + flagChar[HAS_BSA + 1];
+  if HAS_TRANSLATION in flags then
+    Result := Result + flagChar[HAS_TRANSLATION + 1];
   if HAS_FACEDATA in flags then
-    Result := Result + 'G';
+    Result := Result + flagChar[HAS_FACEDATA + 1];
   if HAS_VOICEDATA in flags then
-    Result := Result + 'V';
+    Result := Result + flagChar[HAS_VOICEDATA + 1];
   if HAS_FRAGMENTS in flags then
-    Result := Result + 'F';
+    Result := Result + flagChar[HAS_FRAGMENTS + 1];}
 end;
 
 { Fetches data associated with a plugin. }
 procedure TPlugin.GetData;
 var
   Container: IwbContainer;
+  s: string;
 begin
   hasData := true;
   // get data
-  Logger.Write('Getting data for plugin '+pluginFile.FileName);
   filename := pluginFile.FileName;
   Container := pluginFile as IwbContainer;
   Container := Container.Elements[0] as IwbContainer;
   author := Container.GetElementEditValue('CNAM - Author');
   numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
-  description.Text := Container.GetElementEditValue('SNAM - Description');
+  s := Container.GetElementEditValue('SNAM - Description');
+  description.Text := Wordwrap(s, 70);
   GetMasters(pluginFile, masters);
   GetFlags;
+  entry := GetEntry(filename, numRecords, ProgramVersion);
+  s := Trim(StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]));
+  reports.Text := Wordwrap(s, 70);
 
   // get file attributes
   fileSize := GetFileSize(wbDataPath + filename);
@@ -876,7 +1063,7 @@ end;
 procedure TPlugin.FindErrors;
 begin
   errors.Clear;
-  CheckForErrors(0, pluginFile as IwbElement, errors);
+  CheckForErrors(2, pluginFile as IwbElement, errors);
   if errors.Count = 0 then
     errors.Add('None.');
 end;
@@ -973,23 +1160,100 @@ begin
     fails.Add(item.AsString);
 end;
 
-function TMerge.GetTimeCost(pluginObjects: TList): integer;
+function TMerge.GetTimeCost: integer;
 var
   i: Integer;
   plugin: TPlugin;
 begin
   Result := 1;
   for i := 0 to Pred(plugins.Count) do begin
-    plugin := PluginByFilename(pluginObjects, plugins[i]);
+    plugin := PluginByFilename(PluginsList, plugins[i]);
     if Assigned(plugin) then begin
       if not plugin.HasData then
         plugin.GetData;
       Inc(Result, 2*StrToInt(plugin.numRecords));
+      if not plugin.errors.Count > 0 then
+        Inc(Result, StrToInt(plugin.numRecords));
     end;
   end;
 end;
 
+procedure TMerge.GetStatus;
+var
+  i: Integer;
+  plugin: TPlugin;
+begin
+  Tracker.Write('Getting status for '+name);
+
+  // don't merge if no plugins to merge
+  if plugins.Count < 1 then begin
+    Tracker.Write('  No plugins to merge');
+    status := 'No plugins to merge';
+    exit;
+  end;
+
+  // don't merge if usingMO is true and MODirectory is blank
+  if settings.usingMO and (settings.MODirectory = '') then begin
+    Tracker.Write('  Mod Organizer Directory blank');
+    status := 'Mod Organizer Directory blank';
+    exit;
+  end;
+
+  // don't merge if usingMO is true and MODirectory is invalid
+  if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
+     Tracker.Write('  Mod Organizer Directory invalid');
+     status := 'Mod Organizer Directory invalid';
+     exit;
+  end;
+
+  // loop through plugins
+  for i := 0 to Pred(plugins.Count) do begin
+    plugin := PluginByFilename(PluginsList, plugins[i]);
+
+    // see if plugin is loaded
+    if not Assigned(plugin) then begin
+      Tracker.Write('  Plugin '+plugins[i]+' is missing');
+      status := 'Plugin '+plugins[i]+' is not loaded';
+      exit;
+    end;
+
+    // check for errors
+    if plugin.errors.Count = 0 then begin
+      Tracker.Write('  Checking for errors in '+plugin.filename);
+      plugin.FindErrors;
+    end;
+    if plugin.errors[0] = 'None.' then begin
+      Tracker.Write('  No errors in '+plugin.filename);
+      continue
+    end
+    else begin
+      Tracker.Write('  '+plugin.filename+' has errors');
+      status := plugin.filename+' has errors';
+      exit;
+    end;
+  end;
+
+  // status green, ready to go
+  Tracker.Write('  Ready to be merged.');
+  Tracker.Write(' ');
+  status := 'Ready to be merged.';
+end;
+
+function TMerge.GetStatusColor: integer;
+begin
+  Result := $0000FF;
+  if status = '' then
+    Result := $707070;
+  if status = 'Ready to be merged.' then
+    Result := $009000;
+end;
+
 { TEntry Constructor }
+constructor TEntry.Create;
+begin
+  rating := 'No rating';
+end;
+
 constructor TEntry.Create(const s: string);
 var
   i, lastIndex, ct: Integer;

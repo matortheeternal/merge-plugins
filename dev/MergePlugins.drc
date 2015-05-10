@@ -8,226 +8,256 @@
   resources were bound to the produced executable.
 */
 
-#define Imaging_SErrorSavingMemory 65184
-#define Imaging_SErrorFindColor 65185
-#define Imaging_SErrorGrayscalePalette 65186
-#define Imaging_SErrorSwapPalette 65187
-#define Imaging_SErrorCopyRect 65188
-#define Imaging_SErrorFillRect 65189
-#define Imaging_SErrorCopyPalette 65190
-#define Imaging_SErrorReplaceColor 65191
-#define Imaging_SErrorRotateImage 65192
-#define Imaging_SErrorStretchRect 65193
-#define Imaging_SErrorEmptyStream 65194
-#define Imaging_SErrorInvalidInputImage 65195
-#define Imaging_SErrorResizeImage 65200
-#define Imaging_SErrorSwapImage 65201
-#define Imaging_SFileFormatCanNotLoad 65202
-#define Imaging_SFileFormatCanNotSave 65203
-#define Imaging_SErrorNewImage 65204
-#define Imaging_SErrorConvertImage 65205
-#define Imaging_SImageInfo 65206
-#define Imaging_SImageInfoInvalid 65207
-#define Imaging_SFileNotValid 65208
-#define Imaging_SStreamNotValid 65209
-#define Imaging_SMemoryNotValid 65210
-#define Imaging_SErrorLoadingFile 65211
-#define Imaging_SErrorLoadingStream 65212
-#define Imaging_SErrorLoadingMemory 65213
-#define Imaging_SErrorSavingFile 65214
-#define Imaging_SErrorSavingStream 65215
-#define ComStrs_sTabFailSetObject 65216
-#define ComStrs_sTabMustBeMultiLine 65217
-#define ComStrs_sInvalidOwner 65218
-#define ComStrs_sPageIndexError 65219
-#define ZLibConst_sTargetBufferTooSmall 65220
-#define ZLibConst_sError 65221
-#define ImagingCanvases_SConstructorInvalidPointer 65222
-#define ImagingCanvases_SConstructorInvalidImage 65223
-#define ImagingCanvases_SConstructorUnsupportedFormat 65224
-#define ImagingNetworkGraphics_SErrorLoadingChunk 65225
-#define Imaging_SExceptMsg 65226
-#define Imaging_SUnknownFormat 65227
-#define Imaging_SErrorFreeImage 65228
-#define Imaging_SErrorCloneImage 65229
-#define Imaging_SErrorFlipImage 65230
-#define Imaging_SErrorMirrorImage 65231
-#define Consts_SNoEqualsInKey 65232
-#define Consts_SErrorSettingCount 65233
-#define Consts_SListBoxMustBeVirtual 65234
-#define Consts_SNoGetItemEventHandler 65235
-#define Consts_SInvalidPath 65236
-#define Consts_SPageControlNotSet 65237
-#define Consts_SWindowsVistaRequired 65238
-#define Consts_SXPThemesRequired 65239
-#define Consts_STaskDlgButtonCaption 65240
-#define Consts_STaskDlgRadioButtonCaption 65241
-#define Consts_SInvalidTaskDlgButtonCaption 65242
-#define ComStrs_sTabFailClear 65243
-#define ComStrs_sTabFailDelete 65244
-#define ComStrs_sTabFailRetrieve 65245
-#define ComStrs_sTabFailGetObject 65246
-#define ComStrs_sTabFailSet 65247
-#define Consts_SIconToClipboard 65248
-#define Consts_SCannotOpenClipboard 65249
-#define Consts_SInvalidMemoSize 65250
-#define Consts_SInvalidPrinterOp 65251
-#define Consts_SNoDefaultPrinter 65252
-#define Consts_SDuplicateMenus 65253
-#define Consts_SDockedCtlNeedsName 65254
-#define Consts_SDockTreeRemoveError 65255
-#define Consts_SDockZoneNotFound 65256
-#define Consts_SDockZoneHasNoCtl 65257
-#define Consts_SDockZoneVersionConflict 65258
-#define Consts_SKeyCaption 65259
-#define Consts_SValueCaption 65260
-#define Consts_SKeyConflict 65261
-#define Consts_SKeyNotFound 65262
-#define Consts_SNoColumnMoving 65263
-#define Consts_SmkcPgDn 65264
-#define Consts_SmkcEnd 65265
-#define Consts_SmkcHome 65266
-#define Consts_SmkcLeft 65267
-#define Consts_SmkcUp 65268
-#define Consts_SmkcRight 65269
-#define Consts_SmkcDown 65270
-#define Consts_SmkcIns 65271
-#define Consts_SmkcDel 65272
-#define Consts_SmkcShift 65273
-#define Consts_SmkcCtrl 65274
-#define Consts_SmkcAlt 65275
-#define Consts_SOutOfRange 65276
-#define Consts_sAllFilter 65277
-#define Consts_SInsertLineError 65278
-#define Consts_SInvalidClipFmt 65279
-#define Consts_SMsgDlgOK 65280
-#define Consts_SMsgDlgCancel 65281
-#define Consts_SMsgDlgHelp 65282
-#define Consts_SMsgDlgAbort 65283
-#define Consts_SMsgDlgRetry 65284
-#define Consts_SMsgDlgIgnore 65285
-#define Consts_SMsgDlgAll 65286
-#define Consts_SMsgDlgNoToAll 65287
-#define Consts_SMsgDlgYesToAll 65288
-#define Consts_SMsgDlgClose 65289
-#define Consts_SmkcBkSp 65290
-#define Consts_SmkcTab 65291
-#define Consts_SmkcEsc 65292
-#define Consts_SmkcEnter 65293
-#define Consts_SmkcSpace 65294
-#define Consts_SmkcPgUp 65295
-#define Consts_SVIcons 65296
-#define Consts_SVBitmaps 65297
-#define Consts_SVTIFFImages 65298
-#define Consts_SGridTooLarge 65299
-#define Consts_STooManyDeleted 65300
-#define Consts_SIndexOutOfRange 65301
-#define Consts_SFixedColTooBig 65302
-#define Consts_SFixedRowTooBig 65303
-#define Consts_SMaskErr 65304
-#define Consts_SMaskEditErr 65305
-#define Consts_SMsgDlgWarning 65306
-#define Consts_SMsgDlgError 65307
-#define Consts_SMsgDlgInformation 65308
-#define Consts_SMsgDlgConfirm 65309
-#define Consts_SMsgDlgYes 65310
-#define Consts_SMsgDlgNo 65311
-#define Consts_SNoMDIForm 65312
-#define Consts_SImageCanvasNeedsBitmap 65313
-#define Consts_SControlParentSetToSelf 65314
-#define Consts_SOKButton 65315
-#define Consts_SCancelButton 65316
-#define Consts_SYesButton 65317
-#define Consts_SNoButton 65318
-#define Consts_SHelpButton 65319
-#define Consts_SCloseButton 65320
-#define Consts_SIgnoreButton 65321
-#define Consts_SRetryButton 65322
-#define Consts_SAbortButton 65323
-#define Consts_SAllButton 65324
-#define Consts_SCannotDragForm 65325
-#define Consts_SVMetafiles 65326
-#define Consts_SVEnhMetafiles 65327
-#define Consts_SParentRequired 65328
-#define Consts_SParentGivenNotAParent 65329
-#define Consts_SMDIChildNotVisible 65330
-#define Consts_SVisibleChanged 65331
-#define Consts_SCannotShowModal 65332
-#define Consts_SPropertyOutOfRange 65333
-#define Consts_SMenuIndexError 65334
-#define Consts_SMenuReinserted 65335
-#define Consts_SMenuNotFound 65336
-#define Consts_SNoTimers 65337
-#define Consts_SNotPrinting 65338
-#define Consts_SPrinting 65339
-#define Consts_SPrinterIndexError 65340
-#define Consts_SInvalidPrinter 65341
-#define Consts_SDeviceOnPort 65342
-#define Consts_SGroupIndexTooLow 65343
-#define Consts_SInvalidImage 65344
-#define Consts_SChangeIconSize 65345
-#define Consts_SChangeWicSize 65346
-#define Consts_SUnknownExtension 65347
-#define Consts_SUnknownClipboardFormat 65348
-#define Consts_SOutOfResources 65349
-#define Consts_SNoCanvasHandle 65350
-#define Consts_SInvalidImageSize 65351
-#define Consts_SInvalidImageList 65352
-#define Consts_SReplaceImage 65353
-#define Consts_SImageIndexError 65354
-#define Consts_SImageReadFail 65355
-#define Consts_SImageWriteFail 65356
-#define Consts_SWindowDCError 65357
-#define Consts_SWindowClass 65358
-#define Consts_SCannotFocus 65359
-#define RTLConsts_SInvalidInteger 65360
-#define RTLConsts_SInvalidTime 65361
-#define RTLConsts_STimeEncodeError 65362
-#define RTLConsts_SNoContext 65363
-#define RTLConsts_SNoContextFound 65364
-#define RTLConsts_SNoIndex 65365
-#define RTLConsts_SNoSearch 65366
-#define RTLConsts_SNoTableOfContents 65367
-#define RTLConsts_SNoTopics 65368
-#define RTLConsts_SNothingFound 65369
-#define Consts_SInvalidTabPosition 65370
-#define Consts_SInvalidTabStyle 65371
-#define Consts_SInvalidBitmap 65372
-#define Consts_SInvalidIcon 65373
-#define Consts_SInvalidMetafile 65374
-#define Consts_SInvalidPixelFormat 65375
-#define RTLConsts_SWriteError 65376
-#define RTLConsts_SThreadCreateError 65377
-#define RTLConsts_SThreadError 65378
-#define RTLConsts_SThreadExternalTerminate 65379
-#define RTLConsts_SThreadExternalWait 65380
-#define RTLConsts_SThreadStartError 65381
-#define RTLConsts_SThreadExternalCheckTerminated 65382
-#define RTLConsts_SThreadExternalSetReturnValue 65383
-#define RTLConsts_SParamIsNegative 65384
-#define RTLConsts_SInputBufferExceed 65385
-#define RTLConsts_SFileNotFound 65386
-#define RTLConsts_hNoFilterViewer 65387
-#define RTLConsts_sInvalidStringAndObjectArrays 65388
-#define RTLConsts_sInvalidTimeoutValue 65389
-#define RTLConsts_SInvalidDate 65390
-#define RTLConsts_SInvalidDateTime 65391
-#define RTLConsts_SListCapacityError 65392
-#define RTLConsts_SListCountError 65393
-#define RTLConsts_SListIndexError 65394
-#define RTLConsts_SMemoryStreamError 65395
-#define RTLConsts_SNoComSupport 65396
-#define RTLConsts_SPropertyException 65397
-#define RTLConsts_SReadError 65398
-#define RTLConsts_SReadOnlyProperty 65399
-#define RTLConsts_SRegCreateFailed 65400
-#define RTLConsts_SRegGetDataFailed 65401
-#define RTLConsts_SRegSetDataFailed 65402
-#define RTLConsts_SResNotFound 65403
-#define RTLConsts_SSeekNotImplemented 65404
-#define RTLConsts_SSortedListError 65405
-#define RTLConsts_SUnknownGroup 65406
-#define RTLConsts_SUnknownProperty 65407
+#define pnglang_EPNGUnexpectedEndText 65152
+#define pnglang_EPNGNoImageDataText 65153
+#define pnglang_EPNGCannotAddChunkText 65154
+#define pnglang_EPNGCannotAddInvalidImageText 65155
+#define pnglang_EPNGCouldNotLoadResourceText 65156
+#define pnglang_EPNGOutMemoryText 65157
+#define pnglang_EPNGCannotChangeTransparentText 65158
+#define pnglang_EPNGHeaderNotPresentText 65159
+#define pnglang_EInvalidNewSize 65160
+#define pnglang_EInvalidSpec 65161
+#define Imaging_SErrorStretchRect 65168
+#define Imaging_SErrorEmptyStream 65169
+#define Imaging_SErrorInvalidInputImage 65170
+#define pnglang_EPngInvalidCRCText 65171
+#define pnglang_EPNGInvalidIHDRText 65172
+#define pnglang_EPNGMissingMultipleIDATText 65173
+#define pnglang_EPNGZLIBErrorText 65174
+#define pnglang_EPNGInvalidPaletteText 65175
+#define pnglang_EPNGInvalidFileHeaderText 65176
+#define pnglang_EPNGIHDRNotFirstText 65177
+#define pnglang_EPNGSizeExceedsText 65178
+#define pnglang_EPNGUnknownPalEntryText 65179
+#define pnglang_EPNGUnknownCriticalChunkText 65180
+#define pnglang_EPNGUnknownCompressionText 65181
+#define pnglang_EPNGUnknownInterlaceText 65182
+#define pnglang_EPNGCannotAssignChunkText 65183
+#define Imaging_SStreamNotValid 65184
+#define Imaging_SMemoryNotValid 65185
+#define Imaging_SErrorLoadingFile 65186
+#define Imaging_SErrorLoadingStream 65187
+#define Imaging_SErrorLoadingMemory 65188
+#define Imaging_SErrorSavingFile 65189
+#define Imaging_SErrorSavingStream 65190
+#define Imaging_SErrorSavingMemory 65191
+#define Imaging_SErrorFindColor 65192
+#define Imaging_SErrorGrayscalePalette 65193
+#define Imaging_SErrorSwapPalette 65194
+#define Imaging_SErrorCopyRect 65195
+#define Imaging_SErrorFillRect 65196
+#define Imaging_SErrorCopyPalette 65197
+#define Imaging_SErrorReplaceColor 65198
+#define Imaging_SErrorRotateImage 65199
+#define ImagingNetworkGraphics_SErrorLoadingChunk 65200
+#define Imaging_SExceptMsg 65201
+#define Imaging_SUnknownFormat 65202
+#define Imaging_SErrorFreeImage 65203
+#define Imaging_SErrorCloneImage 65204
+#define Imaging_SErrorFlipImage 65205
+#define Imaging_SErrorMirrorImage 65206
+#define Imaging_SErrorResizeImage 65207
+#define Imaging_SErrorSwapImage 65208
+#define Imaging_SFileFormatCanNotLoad 65209
+#define Imaging_SFileFormatCanNotSave 65210
+#define Imaging_SErrorNewImage 65211
+#define Imaging_SErrorConvertImage 65212
+#define Imaging_SImageInfo 65213
+#define Imaging_SImageInfoInvalid 65214
+#define Imaging_SFileNotValid 65215
+#define Consts_STaskDlgRadioButtonCaption 65216
+#define Consts_SInvalidTaskDlgButtonCaption 65217
+#define ComStrs_sTabFailClear 65218
+#define ComStrs_sTabFailDelete 65219
+#define ComStrs_sTabFailRetrieve 65220
+#define ComStrs_sTabFailGetObject 65221
+#define ComStrs_sTabFailSet 65222
+#define ComStrs_sTabFailSetObject 65223
+#define ComStrs_sTabMustBeMultiLine 65224
+#define ComStrs_sInvalidOwner 65225
+#define ComStrs_sPageIndexError 65226
+#define ZLibConst_sTargetBufferTooSmall 65227
+#define ZLibConst_sError 65228
+#define ImagingCanvases_SConstructorInvalidPointer 65229
+#define ImagingCanvases_SConstructorInvalidImage 65230
+#define ImagingCanvases_SConstructorUnsupportedFormat 65231
+#define Consts_SDockZoneHasNoCtl 65232
+#define Consts_SDockZoneVersionConflict 65233
+#define Consts_SKeyCaption 65234
+#define Consts_SValueCaption 65235
+#define Consts_SKeyConflict 65236
+#define Consts_SKeyNotFound 65237
+#define Consts_SNoColumnMoving 65238
+#define Consts_SNoEqualsInKey 65239
+#define Consts_SErrorSettingCount 65240
+#define Consts_SListBoxMustBeVirtual 65241
+#define Consts_SNoGetItemEventHandler 65242
+#define Consts_SInvalidPath 65243
+#define Consts_SPageControlNotSet 65244
+#define Consts_SWindowsVistaRequired 65245
+#define Consts_SXPThemesRequired 65246
+#define Consts_STaskDlgButtonCaption 65247
+#define Consts_SmkcShift 65248
+#define Consts_SmkcCtrl 65249
+#define Consts_SmkcAlt 65250
+#define Consts_SOutOfRange 65251
+#define Consts_sAllFilter 65252
+#define Consts_SInsertLineError 65253
+#define Consts_SInvalidClipFmt 65254
+#define Consts_SIconToClipboard 65255
+#define Consts_SCannotOpenClipboard 65256
+#define Consts_SInvalidMemoSize 65257
+#define Consts_SInvalidPrinterOp 65258
+#define Consts_SNoDefaultPrinter 65259
+#define Consts_SDuplicateMenus 65260
+#define Consts_SDockedCtlNeedsName 65261
+#define Consts_SDockTreeRemoveError 65262
+#define Consts_SDockZoneNotFound 65263
+#define Consts_SMsgDlgClose 65264
+#define Consts_SmkcBkSp 65265
+#define Consts_SmkcTab 65266
+#define Consts_SmkcEsc 65267
+#define Consts_SmkcEnter 65268
+#define Consts_SmkcSpace 65269
+#define Consts_SmkcPgUp 65270
+#define Consts_SmkcPgDn 65271
+#define Consts_SmkcEnd 65272
+#define Consts_SmkcHome 65273
+#define Consts_SmkcLeft 65274
+#define Consts_SmkcUp 65275
+#define Consts_SmkcRight 65276
+#define Consts_SmkcDown 65277
+#define Consts_SmkcIns 65278
+#define Consts_SmkcDel 65279
+#define Consts_SMaskEditErr 65280
+#define Consts_SMsgDlgWarning 65281
+#define Consts_SMsgDlgError 65282
+#define Consts_SMsgDlgInformation 65283
+#define Consts_SMsgDlgConfirm 65284
+#define Consts_SMsgDlgYes 65285
+#define Consts_SMsgDlgNo 65286
+#define Consts_SMsgDlgOK 65287
+#define Consts_SMsgDlgCancel 65288
+#define Consts_SMsgDlgHelp 65289
+#define Consts_SMsgDlgAbort 65290
+#define Consts_SMsgDlgRetry 65291
+#define Consts_SMsgDlgIgnore 65292
+#define Consts_SMsgDlgAll 65293
+#define Consts_SMsgDlgNoToAll 65294
+#define Consts_SMsgDlgYesToAll 65295
+#define Consts_SIgnoreButton 65296
+#define Consts_SRetryButton 65297
+#define Consts_SAbortButton 65298
+#define Consts_SAllButton 65299
+#define Consts_SCannotDragForm 65300
+#define Consts_SVMetafiles 65301
+#define Consts_SVEnhMetafiles 65302
+#define Consts_SVIcons 65303
+#define Consts_SVBitmaps 65304
+#define Consts_SVTIFFImages 65305
+#define Consts_SGridTooLarge 65306
+#define Consts_STooManyDeleted 65307
+#define Consts_SIndexOutOfRange 65308
+#define Consts_SFixedColTooBig 65309
+#define Consts_SFixedRowTooBig 65310
+#define Consts_SMaskErr 65311
+#define Consts_SNoTimers 65312
+#define Consts_SNotPrinting 65313
+#define Consts_SPrinting 65314
+#define Consts_SPrinterIndexError 65315
+#define Consts_SInvalidPrinter 65316
+#define Consts_SDeviceOnPort 65317
+#define Consts_SGroupIndexTooLow 65318
+#define Consts_SNoMDIForm 65319
+#define Consts_SImageCanvasNeedsBitmap 65320
+#define Consts_SControlParentSetToSelf 65321
+#define Consts_SOKButton 65322
+#define Consts_SCancelButton 65323
+#define Consts_SYesButton 65324
+#define Consts_SNoButton 65325
+#define Consts_SHelpButton 65326
+#define Consts_SCloseButton 65327
+#define Consts_SReplaceImage 65328
+#define Consts_SImageIndexError 65329
+#define Consts_SImageReadFail 65330
+#define Consts_SImageWriteFail 65331
+#define Consts_SWindowDCError 65332
+#define Consts_SWindowClass 65333
+#define Consts_SCannotFocus 65334
+#define Consts_SParentRequired 65335
+#define Consts_SParentGivenNotAParent 65336
+#define Consts_SMDIChildNotVisible 65337
+#define Consts_SVisibleChanged 65338
+#define Consts_SCannotShowModal 65339
+#define Consts_SPropertyOutOfRange 65340
+#define Consts_SMenuIndexError 65341
+#define Consts_SMenuReinserted 65342
+#define Consts_SMenuNotFound 65343
+#define RTLConsts_SNothingFound 65344
+#define Consts_SInvalidTabPosition 65345
+#define Consts_SInvalidTabStyle 65346
+#define Consts_SInvalidBitmap 65347
+#define Consts_SInvalidIcon 65348
+#define Consts_SInvalidMetafile 65349
+#define Consts_SInvalidPixelFormat 65350
+#define Consts_SInvalidImage 65351
+#define Consts_SChangeIconSize 65352
+#define Consts_SChangeWicSize 65353
+#define Consts_SUnknownExtension 65354
+#define Consts_SUnknownClipboardFormat 65355
+#define Consts_SOutOfResources 65356
+#define Consts_SNoCanvasHandle 65357
+#define Consts_SInvalidImageSize 65358
+#define Consts_SInvalidImageList 65359
+#define RTLConsts_SFileNotFound 65360
+#define RTLConsts_SFileAlreadyExists 65361
+#define RTLConsts_hNoFilterViewer 65362
+#define RTLConsts_sInvalidStringAndObjectArrays 65363
+#define RTLConsts_sInvalidTimeoutValue 65364
+#define RTLConsts_SInvalidDate 65365
+#define RTLConsts_SInvalidDateTime 65366
+#define RTLConsts_SInvalidInteger 65367
+#define RTLConsts_SInvalidTime 65368
+#define RTLConsts_STimeEncodeError 65369
+#define RTLConsts_SNoContext 65370
+#define RTLConsts_SNoContextFound 65371
+#define RTLConsts_SNoIndex 65372
+#define RTLConsts_SNoSearch 65373
+#define RTLConsts_SNoTableOfContents 65374
+#define RTLConsts_SNoTopics 65375
+#define RTLConsts_SUnknownProperty 65376
+#define RTLConsts_SWriteError 65377
+#define RTLConsts_SThreadCreateError 65378
+#define RTLConsts_SThreadError 65379
+#define RTLConsts_SThreadExternalTerminate 65380
+#define RTLConsts_SThreadExternalWait 65381
+#define RTLConsts_SThreadStartError 65382
+#define RTLConsts_SThreadExternalCheckTerminated 65383
+#define RTLConsts_SThreadExternalSetReturnValue 65384
+#define RTLConsts_SParamIsNegative 65385
+#define RTLConsts_SInputBufferExceed 65386
+#define RTLConsts_SInvalidCharsInPath 65387
+#define RTLConsts_SInvalidCharsInSearchPattern 65388
+#define RTLConsts_SPathTooLong 65389
+#define RTLConsts_SPathNotFound 65390
+#define RTLConsts_SPathFormatNotSupported 65391
+#define RTLConsts_SInvalidRegType 65392
+#define RTLConsts_SListCapacityError 65393
+#define RTLConsts_SListCountError 65394
+#define RTLConsts_SListIndexError 65395
+#define RTLConsts_SMemoryStreamError 65396
+#define RTLConsts_SNoComSupport 65397
+#define RTLConsts_SPropertyException 65398
+#define RTLConsts_SReadError 65399
+#define RTLConsts_SReadOnlyProperty 65400
+#define RTLConsts_SRegCreateFailed 65401
+#define RTLConsts_SRegGetDataFailed 65402
+#define RTLConsts_SRegSetDataFailed 65403
+#define RTLConsts_SResNotFound 65404
+#define RTLConsts_SSeekNotImplemented 65405
+#define RTLConsts_SSortedListError 65406
+#define RTLConsts_SUnknownGroup 65407
 #define RTLConsts_SCantWriteResourceStreamError 65408
 #define RTLConsts_SCheckSynchronizeError 65409
 #define RTLConsts_SClassNotFound 65410
@@ -239,11 +269,11 @@
 #define RTLConsts_SFOpenErrorEx 65416
 #define RTLConsts_SInvalidFileName 65417
 #define RTLConsts_SInvalidImage 65418
-#define RTLConsts_SInvalidName 65419
-#define RTLConsts_SInvalidProperty 65420
-#define RTLConsts_SInvalidPropertyPath 65421
-#define RTLConsts_SInvalidPropertyValue 65422
-#define RTLConsts_SInvalidRegType 65423
+#define RTLConsts_SInvalidMask 65419
+#define RTLConsts_SInvalidName 65420
+#define RTLConsts_SInvalidProperty 65421
+#define RTLConsts_SInvalidPropertyPath 65422
+#define RTLConsts_SInvalidPropertyValue 65423
 #define SysConst_SLongDayNameWed 65424
 #define SysConst_SLongDayNameThu 65425
 #define SysConst_SLongDayNameFri 65426
@@ -358,6 +388,39 @@
 #define SysConst_SOverflow 65535
 STRINGTABLE
 BEGIN
+	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
+	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
+	pnglang_EPNGCannotAddChunkText,	"The program tried to add a existent critical chunk to the current image which is not allowed."
+	pnglang_EPNGCannotAddInvalidImageText,	"It's not allowed to add a new chunk because the current image is invalid."
+	pnglang_EPNGCouldNotLoadResourceText,	"The png image could not be loaded from the resource ID."
+	pnglang_EPNGOutMemoryText,	"Some operation could not be performed because the system is out of resources. Close some windows and try again."
+	pnglang_EPNGCannotChangeTransparentText,	"Setting bit transparency color is not allowed for png images containing alpha value for each pixel (COLOR_RGBALPHA and COLOR_GRAYSCALEALPHA)"
+	pnglang_EPNGHeaderNotPresentText,	"This operation is not valid because the current image contains no valid header."
+	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
+	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
+	Imaging_SErrorStretchRect,	"Error while stretching rect from image %s to image %s."
+	Imaging_SErrorEmptyStream,	"Input stream has no data. Check Position property."
+	Imaging_SErrorInvalidInputImage,	"Invalid input image."
+	pnglang_EPngInvalidCRCText,	"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
+	pnglang_EPNGInvalidIHDRText,	"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
+	pnglang_EPNGMissingMultipleIDATText,	"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
+	pnglang_EPNGZLIBErrorText,	"Could not decompress the image because it contains invalid compressed data.\r\n Description: "
+	pnglang_EPNGInvalidPaletteText,	"The \"Portable Network Graphics\" image contains an invalid palette."
+	pnglang_EPNGInvalidFileHeaderText,	"The file being read is not a valid \"Portable Network Graphics\" image because it contains an invalid header. This file may be corrupted, try obtaining it again"
+	pnglang_EPNGIHDRNotFirstText,	"This \"Portable Network Graphics\" image is not supported or it might be invalid.\r\n(IHDR chunk is not the first)"
+	pnglang_EPNGSizeExceedsText,	"This \"Portable Network Graphics\" image is not supported because either its width or height exceeds the maximum size of 65535 pixels."
+	pnglang_EPNGUnknownPalEntryText,	"There is no such palette entry."
+	pnglang_EPNGUnknownCriticalChunkText,	"This \"Portable Network Graphics\" image contains an unknown critical part which could not be decoded."
+	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
+	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
+	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
+	Imaging_SStreamNotValid,	"Stream %p does not contain valid image in \"%s\" format."
+	Imaging_SMemoryNotValid,	"Memory %p (%d Bytes) does not contain valid image in \"%s\" format."
+	Imaging_SErrorLoadingFile,	"Error while loading images from file \"%s\" (file format: %s)."
+	Imaging_SErrorLoadingStream,	"Error while loading images from stream %p (file format: %s)."
+	Imaging_SErrorLoadingMemory,	"Error while loading images from memory %p (%d Bytes) (file format: %s)."
+	Imaging_SErrorSavingFile,	"Error while saving images to file \"%s\" (file format: %s)."
+	Imaging_SErrorSavingStream,	"Error while saving images to stream %p (file format: %s)."
 	Imaging_SErrorSavingMemory,	"Error while saving images to memory %p (%d Bytes) (file format: %s)."
 	Imaging_SErrorFindColor,	"Error while finding color in palette @%p with %d entries."
 	Imaging_SErrorGrayscalePalette,	"Error while filling grayscale palette @%p with %d entries."
@@ -367,9 +430,13 @@ BEGIN
 	Imaging_SErrorCopyPalette,	"Error while copying %d entries from palette @%p to @%p"
 	Imaging_SErrorReplaceColor,	"Error while replacing colors in rectangle X:%d Y:%d W:%d H:%d of image %s"
 	Imaging_SErrorRotateImage,	"Error while rotating image %s by %.2n degrees"
-	Imaging_SErrorStretchRect,	"Error while stretching rect from image %s to image %s."
-	Imaging_SErrorEmptyStream,	"Input stream has no data. Check Position property."
-	Imaging_SErrorInvalidInputImage,	"Invalid input image."
+	ImagingNetworkGraphics_SErrorLoadingChunk,	"Error when reading %s chunk data. File may be corrupted."
+	Imaging_SExceptMsg,	"Exception Message"
+	Imaging_SUnknownFormat,	"Unknown and unsupported format"
+	Imaging_SErrorFreeImage,	"Error while freeing image. %s"
+	Imaging_SErrorCloneImage,	"Error while cloning image. %s"
+	Imaging_SErrorFlipImage,	"Error while flipping image. %s"
+	Imaging_SErrorMirrorImage,	"Error while mirroring image. %s"
 	Imaging_SErrorResizeImage,	"Error while resizing image.  %s"
 	Imaging_SErrorSwapImage,	"Error while swapping channels of image. %s"
 	Imaging_SFileFormatCanNotLoad,	"Image Format \"%s\" does not support loading images."
@@ -379,13 +446,13 @@ BEGIN
 	Imaging_SImageInfo,	"Image @%p info: Width = %dpx, Height = %dpx, Format = %s, Size = %.0n %s, Bits @%p, Palette @%p."
 	Imaging_SImageInfoInvalid,	"Access violation encountered when getting info on image at address %p."
 	Imaging_SFileNotValid,	"File \"%s\" is not valid image in \"%s\" format."
-	Imaging_SStreamNotValid,	"Stream %p does not contain valid image in \"%s\" format."
-	Imaging_SMemoryNotValid,	"Memory %p (%d Bytes) does not contain valid image in \"%s\" format."
-	Imaging_SErrorLoadingFile,	"Error while loading images from file \"%s\" (file format: %s)."
-	Imaging_SErrorLoadingStream,	"Error while loading images from stream %p (file format: %s)."
-	Imaging_SErrorLoadingMemory,	"Error while loading images from memory %p (%d Bytes) (file format: %s)."
-	Imaging_SErrorSavingFile,	"Error while saving images to file \"%s\" (file format: %s)."
-	Imaging_SErrorSavingStream,	"Error while saving images to stream %p (file format: %s)."
+	Consts_STaskDlgRadioButtonCaption,	"RadioButton%d"
+	Consts_SInvalidTaskDlgButtonCaption,	"Caption cannot be empty"
+	ComStrs_sTabFailClear,	"Failed to clear tab control"
+	ComStrs_sTabFailDelete,	"Failed to delete tab at index %d"
+	ComStrs_sTabFailRetrieve,	"Failed to retrieve tab at index %d"
+	ComStrs_sTabFailGetObject,	"Failed to get object at index %d"
+	ComStrs_sTabFailSet,	"Failed to set tab \"%s\" at index %d"
 	ComStrs_sTabFailSetObject,	"Failed to set object at index %d"
 	ComStrs_sTabMustBeMultiLine,	"MultiLine must be True when TabPosition is tpLeft or tpRight"
 	ComStrs_sInvalidOwner,	"Invalid owner"
@@ -395,13 +462,13 @@ BEGIN
 	ImagingCanvases_SConstructorInvalidPointer,	"Invalid pointer (%p) to TImageData passed to TImagingCanvas constructor."
 	ImagingCanvases_SConstructorInvalidImage,	"Invalid image data passed to TImagingCanvas constructor (%s)."
 	ImagingCanvases_SConstructorUnsupportedFormat,	"Image passed to TImagingCanvas constructor is in unsupported format (%s)"
-	ImagingNetworkGraphics_SErrorLoadingChunk,	"Error when reading %s chunk data. File may be corrupted."
-	Imaging_SExceptMsg,	"Exception Message"
-	Imaging_SUnknownFormat,	"Unknown and unsupported format"
-	Imaging_SErrorFreeImage,	"Error while freeing image. %s"
-	Imaging_SErrorCloneImage,	"Error while cloning image. %s"
-	Imaging_SErrorFlipImage,	"Error while flipping image. %s"
-	Imaging_SErrorMirrorImage,	"Error while mirroring image. %s"
+	Consts_SDockZoneHasNoCtl,	" - Dock zone has no control"
+	Consts_SDockZoneVersionConflict,	"Error loading dock zone from the stream. Expecting version %d, but found %d."
+	Consts_SKeyCaption,	"Key"
+	Consts_SValueCaption,	"Value"
+	Consts_SKeyConflict,	"A key with the name of \"%s\" already exists"
+	Consts_SKeyNotFound,	"Key \"%s\" not found"
+	Consts_SNoColumnMoving,	"goColMoving is not a supported option"
 	Consts_SNoEqualsInKey,	"Key may not contain equals sign (\"=\")"
 	Consts_SErrorSettingCount,	"Error setting %s.Count"
 	Consts_SListBoxMustBeVirtual,	"Listbox (%s) style must be virtual in order to set Count"
@@ -411,13 +478,13 @@ BEGIN
 	Consts_SWindowsVistaRequired,	"%s requires Windows Vista or later"
 	Consts_SXPThemesRequired,	"%s requires themes to be enabled"
 	Consts_STaskDlgButtonCaption,	"Button%d"
-	Consts_STaskDlgRadioButtonCaption,	"RadioButton%d"
-	Consts_SInvalidTaskDlgButtonCaption,	"Caption cannot be empty"
-	ComStrs_sTabFailClear,	"Failed to clear tab control"
-	ComStrs_sTabFailDelete,	"Failed to delete tab at index %d"
-	ComStrs_sTabFailRetrieve,	"Failed to retrieve tab at index %d"
-	ComStrs_sTabFailGetObject,	"Failed to get object at index %d"
-	ComStrs_sTabFailSet,	"Failed to set tab \"%s\" at index %d"
+	Consts_SmkcShift,	"Shift+"
+	Consts_SmkcCtrl,	"Ctrl+"
+	Consts_SmkcAlt,	"Alt+"
+	Consts_SOutOfRange,	"Value must be between %d and %d"
+	Consts_sAllFilter,	"All"
+	Consts_SInsertLineError,	"Unable to insert a line"
+	Consts_SInvalidClipFmt,	"Invalid clipboard format"
 	Consts_SIconToClipboard,	"Clipboard does not support Icons"
 	Consts_SCannotOpenClipboard,	"Cannot open clipboard: %s"
 	Consts_SInvalidMemoSize,	"Text exceeds memo capacity"
@@ -427,13 +494,13 @@ BEGIN
 	Consts_SDockedCtlNeedsName,	"Docked control must have a name"
 	Consts_SDockTreeRemoveError,	"Error removing control from dock tree"
 	Consts_SDockZoneNotFound,	" - Dock zone not found"
-	Consts_SDockZoneHasNoCtl,	" - Dock zone has no control"
-	Consts_SDockZoneVersionConflict,	"Error loading dock zone from the stream. Expecting version %d, but found %d."
-	Consts_SKeyCaption,	"Key"
-	Consts_SValueCaption,	"Value"
-	Consts_SKeyConflict,	"A key with the name of \"%s\" already exists"
-	Consts_SKeyNotFound,	"Key \"%s\" not found"
-	Consts_SNoColumnMoving,	"goColMoving is not a supported option"
+	Consts_SMsgDlgClose,	"&Close"
+	Consts_SmkcBkSp,	"BkSp"
+	Consts_SmkcTab,	"Tab"
+	Consts_SmkcEsc,	"Esc"
+	Consts_SmkcEnter,	"Enter"
+	Consts_SmkcSpace,	"Space"
+	Consts_SmkcPgUp,	"PgUp"
 	Consts_SmkcPgDn,	"PgDn"
 	Consts_SmkcEnd,	"End"
 	Consts_SmkcHome,	"Home"
@@ -443,13 +510,13 @@ BEGIN
 	Consts_SmkcDown,	"Down"
 	Consts_SmkcIns,	"Ins"
 	Consts_SmkcDel,	"Del"
-	Consts_SmkcShift,	"Shift+"
-	Consts_SmkcCtrl,	"Ctrl+"
-	Consts_SmkcAlt,	"Alt+"
-	Consts_SOutOfRange,	"Value must be between %d and %d"
-	Consts_sAllFilter,	"All"
-	Consts_SInsertLineError,	"Unable to insert a line"
-	Consts_SInvalidClipFmt,	"Invalid clipboard format"
+	Consts_SMaskEditErr,	"Invalid input value.  Use escape key to abandon changes"
+	Consts_SMsgDlgWarning,	"Warning"
+	Consts_SMsgDlgError,	"Error"
+	Consts_SMsgDlgInformation,	"Information"
+	Consts_SMsgDlgConfirm,	"Confirm"
+	Consts_SMsgDlgYes,	"&Yes"
+	Consts_SMsgDlgNo,	"&No"
 	Consts_SMsgDlgOK,	"OK"
 	Consts_SMsgDlgCancel,	"Cancel"
 	Consts_SMsgDlgHelp,	"&Help"
@@ -459,13 +526,13 @@ BEGIN
 	Consts_SMsgDlgAll,	"&All"
 	Consts_SMsgDlgNoToAll,	"N&o to All"
 	Consts_SMsgDlgYesToAll,	"Yes to &All"
-	Consts_SMsgDlgClose,	"&Close"
-	Consts_SmkcBkSp,	"BkSp"
-	Consts_SmkcTab,	"Tab"
-	Consts_SmkcEsc,	"Esc"
-	Consts_SmkcEnter,	"Enter"
-	Consts_SmkcSpace,	"Space"
-	Consts_SmkcPgUp,	"PgUp"
+	Consts_SIgnoreButton,	"&Ignore"
+	Consts_SRetryButton,	"&Retry"
+	Consts_SAbortButton,	"Abort"
+	Consts_SAllButton,	"&All"
+	Consts_SCannotDragForm,	"Cannot drag a form"
+	Consts_SVMetafiles,	"Metafiles"
+	Consts_SVEnhMetafiles,	"Enhanced Metafiles"
 	Consts_SVIcons,	"Icons"
 	Consts_SVBitmaps,	"Bitmaps"
 	Consts_SVTIFFImages,	"TIFF Images"
@@ -475,13 +542,13 @@ BEGIN
 	Consts_SFixedColTooBig,	"Fixed column count must be less than column count"
 	Consts_SFixedRowTooBig,	"Fixed row count must be less than row count"
 	Consts_SMaskErr,	"Invalid input value"
-	Consts_SMaskEditErr,	"Invalid input value.  Use escape key to abandon changes"
-	Consts_SMsgDlgWarning,	"Warning"
-	Consts_SMsgDlgError,	"Error"
-	Consts_SMsgDlgInformation,	"Information"
-	Consts_SMsgDlgConfirm,	"Confirm"
-	Consts_SMsgDlgYes,	"&Yes"
-	Consts_SMsgDlgNo,	"&No"
+	Consts_SNoTimers,	"Not enough timers available"
+	Consts_SNotPrinting,	"Printer is not currently printing"
+	Consts_SPrinting,	"Printing in progress"
+	Consts_SPrinterIndexError,	"Printer index out of range"
+	Consts_SInvalidPrinter,	"Printer selected is not valid"
+	Consts_SDeviceOnPort,	"%s on %s"
+	Consts_SGroupIndexTooLow,	"GroupIndex cannot be less than a previous menu item's GroupIndex"
 	Consts_SNoMDIForm,	"Cannot create form. No MDI forms are currently active"
 	Consts_SImageCanvasNeedsBitmap,	"Can only modify an image if it contains a bitmap"
 	Consts_SControlParentSetToSelf,	"A control cannot have itself as its parent"
@@ -491,13 +558,13 @@ BEGIN
 	Consts_SNoButton,	"&No"
 	Consts_SHelpButton,	"&Help"
 	Consts_SCloseButton,	"&Close"
-	Consts_SIgnoreButton,	"&Ignore"
-	Consts_SRetryButton,	"&Retry"
-	Consts_SAbortButton,	"Abort"
-	Consts_SAllButton,	"&All"
-	Consts_SCannotDragForm,	"Cannot drag a form"
-	Consts_SVMetafiles,	"Metafiles"
-	Consts_SVEnhMetafiles,	"Enhanced Metafiles"
+	Consts_SReplaceImage,	"Unable to Replace Image"
+	Consts_SImageIndexError,	"Invalid ImageList Index"
+	Consts_SImageReadFail,	"Failed to read ImageList data from stream"
+	Consts_SImageWriteFail,	"Failed to write ImageList data to stream"
+	Consts_SWindowDCError,	"Error creating window device context"
+	Consts_SWindowClass,	"Error creating window class"
+	Consts_SCannotFocus,	"Cannot focus a disabled or invisible window"
 	Consts_SParentRequired,	"Control '%s' has no parent window"
 	Consts_SParentGivenNotAParent,	"Parent given is not a parent of '%s'"
 	Consts_SMDIChildNotVisible,	"Cannot hide an MDI Child Form"
@@ -507,13 +574,13 @@ BEGIN
 	Consts_SMenuIndexError,	"Menu index out of range"
 	Consts_SMenuReinserted,	"Menu inserted twice"
 	Consts_SMenuNotFound,	"Sub-menu is not in menu"
-	Consts_SNoTimers,	"Not enough timers available"
-	Consts_SNotPrinting,	"Printer is not currently printing"
-	Consts_SPrinting,	"Printing in progress"
-	Consts_SPrinterIndexError,	"Printer index out of range"
-	Consts_SInvalidPrinter,	"Printer selected is not valid"
-	Consts_SDeviceOnPort,	"%s on %s"
-	Consts_SGroupIndexTooLow,	"GroupIndex cannot be less than a previous menu item's GroupIndex"
+	RTLConsts_SNothingFound,	"No help found for %s"
+	Consts_SInvalidTabPosition,	"Tab position incompatible with current tab style"
+	Consts_SInvalidTabStyle,	"Tab style incompatible with current tab position"
+	Consts_SInvalidBitmap,	"Bitmap image is not valid"
+	Consts_SInvalidIcon,	"Icon image is not valid"
+	Consts_SInvalidMetafile,	"Metafile is not valid"
+	Consts_SInvalidPixelFormat,	"Invalid pixel format"
 	Consts_SInvalidImage,	"Invalid image"
 	Consts_SChangeIconSize,	"Cannot change the size of an icon"
 	Consts_SChangeWicSize,	"Cannot change the size of a WIC Image"
@@ -523,13 +590,13 @@ BEGIN
 	Consts_SNoCanvasHandle,	"Canvas does not allow drawing"
 	Consts_SInvalidImageSize,	"Invalid image size"
 	Consts_SInvalidImageList,	"Invalid ImageList"
-	Consts_SReplaceImage,	"Unable to Replace Image"
-	Consts_SImageIndexError,	"Invalid ImageList Index"
-	Consts_SImageReadFail,	"Failed to read ImageList data from stream"
-	Consts_SImageWriteFail,	"Failed to write ImageList data to stream"
-	Consts_SWindowDCError,	"Error creating window device context"
-	Consts_SWindowClass,	"Error creating window class"
-	Consts_SCannotFocus,	"Cannot focus a disabled or invisible window"
+	RTLConsts_SFileNotFound,	"The specified file was not found"
+	RTLConsts_SFileAlreadyExists,	"The specified file already exists"
+	RTLConsts_hNoFilterViewer,	"No help viewer that supports filters"
+	RTLConsts_sInvalidStringAndObjectArrays,	"Length of Strings and Objects arrays must be equal"
+	RTLConsts_sInvalidTimeoutValue,	"Invalid Timeout value: %s"
+	RTLConsts_SInvalidDate,	"''%s'' is not a valid date"
+	RTLConsts_SInvalidDateTime,	"''%s'' is not a valid date and time"
 	RTLConsts_SInvalidInteger,	"''%s'' is not a valid integer value"
 	RTLConsts_SInvalidTime,	"''%s'' is not a valid time"
 	RTLConsts_STimeEncodeError,	"Invalid argument to time encode"
@@ -539,13 +606,7 @@ BEGIN
 	RTLConsts_SNoSearch,	"Unable to open Search"
 	RTLConsts_SNoTableOfContents,	"Unable to find a Table of Contents"
 	RTLConsts_SNoTopics,	"No topic-based help system installed"
-	RTLConsts_SNothingFound,	"No help found for %s"
-	Consts_SInvalidTabPosition,	"Tab position incompatible with current tab style"
-	Consts_SInvalidTabStyle,	"Tab style incompatible with current tab position"
-	Consts_SInvalidBitmap,	"Bitmap image is not valid"
-	Consts_SInvalidIcon,	"Icon image is not valid"
-	Consts_SInvalidMetafile,	"Metafile is not valid"
-	Consts_SInvalidPixelFormat,	"Invalid pixel format"
+	RTLConsts_SUnknownProperty,	"Property %s does not exist"
 	RTLConsts_SWriteError,	"Stream write error"
 	RTLConsts_SThreadCreateError,	"Thread creation error: %s"
 	RTLConsts_SThreadError,	"Thread Error: %s (%d)"
@@ -556,12 +617,12 @@ BEGIN
 	RTLConsts_SThreadExternalSetReturnValue,	"Cannot call SetReturnValue on an externally create thread"
 	RTLConsts_SParamIsNegative,	"Parameter %s cannot be a negative value"
 	RTLConsts_SInputBufferExceed,	"Input buffer exceeded for %s = %d, %s = %d"
-	RTLConsts_SFileNotFound,	"The specified file was not found"
-	RTLConsts_hNoFilterViewer,	"No help viewer that supports filters"
-	RTLConsts_sInvalidStringAndObjectArrays,	"Length of Strings and Objects arrays must be equal"
-	RTLConsts_sInvalidTimeoutValue,	"Invalid Timeout value: %s"
-	RTLConsts_SInvalidDate,	"''%s'' is not a valid date"
-	RTLConsts_SInvalidDateTime,	"''%s'' is not a valid date and time"
+	RTLConsts_SInvalidCharsInPath,	"Invalid characters in path"
+	RTLConsts_SInvalidCharsInSearchPattern,	"Invalid characters in search pattern"
+	RTLConsts_SPathTooLong,	"The specified path is too long"
+	RTLConsts_SPathNotFound,	"The specified path was not found"
+	RTLConsts_SPathFormatNotSupported,	"The path format is not supported"
+	RTLConsts_SInvalidRegType,	"Invalid data type for '%s'"
 	RTLConsts_SListCapacityError,	"List capacity out of bounds (%d)"
 	RTLConsts_SListCountError,	"List count out of bounds (%d)"
 	RTLConsts_SListIndexError,	"List index out of bounds (%d)"
@@ -577,7 +638,6 @@ BEGIN
 	RTLConsts_SSeekNotImplemented,	"%s.Seek not implemented"
 	RTLConsts_SSortedListError,	"Operation not allowed on sorted list"
 	RTLConsts_SUnknownGroup,	"%s not in a class registration group"
-	RTLConsts_SUnknownProperty,	"Property %s does not exist"
 	RTLConsts_SCantWriteResourceStreamError,	"Can't write to a read-only resource stream"
 	RTLConsts_SCheckSynchronizeError,	"CheckSynchronize called from thread $%x, which is NOT the main thread"
 	RTLConsts_SClassNotFound,	"Class %s not found"
@@ -589,11 +649,11 @@ BEGIN
 	RTLConsts_SFOpenErrorEx,	"Cannot open file \"%s\". %s"
 	RTLConsts_SInvalidFileName,	"Invalid file name - %s"
 	RTLConsts_SInvalidImage,	"Invalid stream format"
+	RTLConsts_SInvalidMask,	"'%s' is an invalid mask at (%d)"
 	RTLConsts_SInvalidName,	"''%s'' is not a valid component name"
 	RTLConsts_SInvalidProperty,	"Invalid property value"
 	RTLConsts_SInvalidPropertyPath,	"Invalid property path"
 	RTLConsts_SInvalidPropertyValue,	"Invalid property value"
-	RTLConsts_SInvalidRegType,	"Invalid data type for '%s'"
 	SysConst_SLongDayNameWed,	"Wednesday"
 	SysConst_SLongDayNameThu,	"Thursday"
 	SysConst_SLongDayNameFri,	"Friday"
@@ -715,6 +775,7 @@ END
 /* f:\program files (x86)\embarcadero\rad studio\8.0\lib\Win32\release\FileCtrl.res */
 /* F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpOptionsForm.dfm */
 /* F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpProgressForm.dfm */
+/* F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpSplash.dfm */
 /* F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMergeForm.dfm */
 /* F:\Users\Mator\Documents\GitHub\merge-plugins\dev\MergePlugins.res */
 /* F:\Users\Mator\Documents\GitHub\merge-plugins\dev\MergePlugins.drf */

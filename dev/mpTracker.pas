@@ -32,6 +32,8 @@ end;
 
 procedure TProgressTracker.Write(const s: string);
 begin
+  if s = '' then
+    exit;
   if Assigned(FLogEvent) then
     FLogEvent(s);
 end;

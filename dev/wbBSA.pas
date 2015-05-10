@@ -20,7 +20,7 @@ interface
 
 uses
   Classes, SysUtils, IOUtils,
-  wbInterface;
+  wbInterface, mpLogger;
 
 function wbCreateContainerHandler: IwbContainerHandler;
 
@@ -409,9 +409,9 @@ var
 begin
   if not Assigned(aList) then
     Exit;
-  Folder := ExcludeTrailingPathDelimiter(aFolder);
+  Folder := Lowercase(ExcludeTrailingPathDelimiter(aFolder));
   for i := Low(bfFolders) to High(bfFolders) do with bfFolders[i] do
-    if (aFolder = '') or SameText(Folder, Name) then
+    if (aFolder = '') or (Pos(Folder, Lowercase(Name)) = 1) then
       for j := Low(Files) to High(Files) do
         aList.Add(Name + '\' + Files[j].Name);
 end;

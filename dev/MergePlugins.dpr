@@ -19,14 +19,15 @@ uses
   Dialogs,
   SysUtils,
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
-  mpHelpers in 'mpHelpers.pas',
+  mpBase in 'mpBase.pas',
   mpMerge in 'mpMerge.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
   mpLogger in 'mpLogger.pas',
   superobject in 'superobject.pas',
   mpTracker in 'mpTracker.pas',
-  mpProgressForm in 'mpProgressForm.pas' {ProgressForm};
+  mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
+  mpSplash in 'mpSplash.pas' {SplashForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -42,5 +43,6 @@ begin
   Application.Initialize;
   Application.CreateForm(TMergeForm, MergeForm);
   Application.CreateForm(TProgressForm, ProgressForm);
+  Application.CreateForm(TSplashForm, SplashForm);
   Application.Run;
 end.

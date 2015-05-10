@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, Grids, ValEdit,
-  mpHelpers, mpLogger;
+  mpBase, mpLogger;
 
 type
   TDictionaryForm = class(TForm)
@@ -94,6 +94,7 @@ var
 begin
   // initialize listview
   columnToSort := -1;
+  ListView1.OwnerDraw := not settings.simpleDictionaryView;
   ListView1.Items.Count := dictionary.Count;
 
   // read dictionary details
@@ -180,32 +181,6 @@ begin
   ListView1Change(nil, nil, TItemChange(nil));
 end;
 
-function GetReportColor(rating: real): integer;
-var
-  k1, k2: real;
-  r, g: byte;
-begin
-  if rating < 0 then begin
-    Result := 0;
-    exit;
-  end;
-
-  if (rating > 2.0) then begin
-    k2 := (rating - 2.0)/2.0;
-    k1 := 1.0 - k2;
-    r := Trunc($E5 * k1 + $00 * k2);
-    g := Trunc($A8 * k1 + $90 * k2);
-  end
-  else begin
-    k2 := (rating/2.0);
-    k1 := 1.0 - k2;
-    r := Trunc($FF * k1 + $E5 * k2);
-    g := Trunc($00 * k1 + $A8 * k2);
-  end;
-
-  Result := g * 256 + r;
-end;
-
 procedure TDictionaryForm.ListView1Data(Sender: TObject; Item: TListItem);
 var
   entry: TEntry;
@@ -216,7 +191,7 @@ begin
   Item.SubItems.Add(entry.version);
   Item.SubItems.Add(entry.rating);
   Item.SubItems.Add(entry.reports);
-  ListView1.Canvas.Font.Color := GetReportColor(StrToFloat(entry.rating));
+  ListView1.Canvas.Font.Color := GetRatingColor(StrToFloat(entry.rating));
   ListView1.Canvas.Font.Style := ListView1.Canvas.Font.Style + [fsBold];
 end;
 
@@ -239,5 +214,3 @@ begin
 end;
 
 end.
-
-
