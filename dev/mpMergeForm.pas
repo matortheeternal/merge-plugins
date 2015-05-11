@@ -6,7 +6,7 @@ uses
   // delphi units
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList,
-  Menus, Grids, ValEdit, ShlObj,
+  Menus, Grids, ValEdit, ShlObj, ShellAPI,
   // third party libraries
   superobject,
   // mp units
@@ -43,28 +43,28 @@ type
     RemoveFromMerge: TMenuItem;
     ReportOnPlugin: TMenuItem;
     MergesPopupMenu: TPopupMenu;
-    Createnewmerge1: TMenuItem;
-    Deletemerge1: TMenuItem;
-    Rebuildmerge1: TMenuItem;
+    CreateNewMergeItem: TMenuItem;
+    DeleteMergeItem: TMenuItem;
+    RebuildMergeItem: TMenuItem;
     NewMerge1: TMenuItem;
     MergeListView: TListView;
     DetailsEditor: TValueListEditor;
     FlagList: TImageList;
     CheckforErrors1: TMenuItem;
-    Ignorepluginchanges1: TMenuItem;
-    Rebuildallmerges1: TMenuItem;
+    ForceRebuildItem: TMenuItem;
+    BuildAllMergesItem: TMenuItem;
     N1: TMenuItem;
-    Reportonmerges1: TMenuItem;
-    Reportonmerge1: TMenuItem;
+    ReportOnMergesItem: TMenuItem;
+    ReportOnMergeItem: TMenuItem;
+    OpenInExplorerItem: TMenuItem;
+    IgnoreRebuildItem: TMenuItem;
     procedure LogMessage(const s: string);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SaveMerges;
-    procedure LoadMerges;
     procedure DictionaryButtonClick(Sender: TObject);
     procedure OptionsButtonClick(Sender: TObject);
     procedure ReportButtonClick(Sender: TObject);
-    procedure RebuildMerges(Sender: TObject);
+    procedure RebuildMergesClick(Sender: TObject);
     procedure CreateNewMergeClick(Sender: TObject);
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
@@ -81,11 +81,12 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure MergeListViewChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
-    procedure AddToNewMerge(Sender: TObject);
     procedure UpdateMerges;
-    procedure AddToMerge(Sender: TObject);
+    procedure AddToNewMergeClick(Sender: TObject);
+    procedure UpdatePluginsPopupMenu;
+    procedure AddToMergeClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
-    procedure CheckPluginsForErrors(Sender: TObject);
+    procedure CheckForErrorsClick(Sender: TObject);
     procedure DeleteMerge(Sender: TObject);
     procedure PluginsPopupMenuPopup(Sender: TObject);
     procedure MergesPopupMenuPopup(Sender: TObject);
@@ -93,6 +94,11 @@ type
     procedure RemoveFromMergeClick(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure MergeListViewData(Sender: TObject; Item: TListItem);
+    procedure MergeListViewDrawItem(Sender: TCustomListView; Item: TListItem;
+      Rect: TRect; State: TOwnerDrawState);
+    procedure OpenInExplorerClick(Sender: TObject);
+    procedure ForceRebuildItemClick(Sender: TObject);
+    procedure IgnoreRebuildItemClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -101,21 +107,17 @@ type
 
 var
   MergeForm: TMergeForm;
-  merges: TList;
   currentMerge: TMerge;
   blacklist: TStringList;
 
 implementation
-
-var
-  bDontSave, bCaptureTracker: boolean;
 
 {$R *.dfm}
 
 
 {******************************************************************************}
 { Merge Form Events
-  Events for the Merge Form.  Events include:
+  Events for the Merge Form.
   - LogMessage
   - ProgressMessage
   - FormCreate
@@ -155,11 +157,13 @@ begin
     splash := TSplashForm.Create(nil);
     splash.Show;
 
-    // INITIALIZE LISTS
-    Tracker.Write('Loading Settings');
+    // INITIALIZE VARIABLES
     time := now;
-    merges := TList.Create;
+    tempPath := wbProgramPath + 'temp\';
+    ForceDirectories(tempPath);
+    MergesList := TList.Create;
     PluginsList := TList.Create;
+    Tracker.Write('Loading Settings');
     LoadSettings;
     Tracker.Write('Loading Dictionary');
     LoadDictionary;
@@ -234,13 +238,17 @@ begin
       end;
     end;
 
+    // LOAD MERGES
+    Tracker.Write('Loading Merges');
+    LoadMerges;
+    UpdateMerges;
+    MergeListView.Items.Count := MergesList.Count;
+
     // FINALIZE
     sl.Free;
     PluginsListView.OwnerDraw := not settings.simplePluginsView;
     PluginsListView.Items.Count := PluginsList.Count;
     PluginsListView.Columns[1].AutoSize := true;
-    Tracker.Write('Loading Merges');
-    LoadMerges;
     Sleep(250);
     splash.Free;
 
@@ -262,68 +270,6 @@ procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if not bDontSave then SaveMerges;
   Action := caFree;
-end;
-
-{******************************************************************************}
-{ Data Handling Methods
-  Methods for loading and saving data used by the form.  Methods include:
-  - SaveMerges
-  - LoadMerges
-}
-{******************************************************************************}
-
-procedure TMergeForm.SaveMerges;
-var
-  i: Integer;
-  merge: TMerge;
-  json: ISuperObject;
-begin
-  // initialize json
-  json := SO;
-  json.O['merges'] := SA([]);
-
-  // loop through merges
-  for i := 0 to Pred(merges.Count) do begin
-    merge := merges[i];
-    json.A['merges'].Add(merge.Dump);
-  end;
-
-  // save and finalize
-  json.SaveTo('merges.json');
-  json := nil;
-end;
-
-procedure TMergeForm.LoadMerges;
-const
-  debug = false;
-var
-  merge: TMerge;
-  plugin: TPlugin;
-  obj, mergeItem: ISuperObject;
-  sl: TStringList;
-  i: Integer;
-begin
-  // load file into SuperObject to parse it
-  sl := TStringList.Create;
-  sl.LoadFromFile('merges.json');
-  obj := SO(PChar(sl.Text));
-
-  // loop through merges
-  for mergeItem in obj['merges'] do begin
-    merge := TMerge.Create;
-    merge.LoadDump(mergeItem);
-    merges.Add(merge);
-    for i := 0 to Pred(merge.plugins.Count) do begin
-      plugin := PluginByFilename(PluginsList, merge.plugins[i]);
-      if Assigned(plugin) then
-        plugin.merge := merge.name;
-    end;
-  end;
-
-  // finalize
-  obj := nil;
-  sl.Free;
-  UpdateMerges;
 end;
 
 {******************************************************************************}
@@ -501,6 +447,19 @@ begin
   end;
 end;
 
+
+{******************************************************************************}
+{ PluginsPopupMenu methods
+  Methods for dealing with the popup menu for the PluginsListView.
+  - PluginsPopupMenuPopup
+  - UpdatePluginsPopupMenu
+  - AddToMergeClick
+  - AddToNewMergeClick
+  - CheckForErrorsClick
+  - RemoveFromMergeClick
+}
+{******************************************************************************}
+
 procedure TMergeForm.PluginsPopupMenuPopup(Sender: TObject);
 var
   i: integer;
@@ -528,8 +487,33 @@ begin
   PluginsPopupMenu.Items[3].Enabled := not b;
 end;
 
-{ PluginsPopupMenu events }
-procedure TMergeForm.AddToMerge(Sender: TObject);
+procedure TMergeForm.UpdatePluginsPopupMenu;
+var
+  i: Integer;
+  merge: TMerge;
+  AddToMergeItem, MenuItem: TMenuItem;
+begin
+  // clear popup menu
+  AddToMergeItem := PluginsPopupMenu.Items[0];
+  AddToMergeItem.Clear;
+
+  // add <New Merge> option to Plugins popup menu
+  MenuItem := TMenuItem.Create(AddToMergeItem);
+  MenuItem.Caption := '<New Merge>';
+  MenuItem.OnClick := AddToNewMergeClick;
+  AddToMergeItem.Add(MenuItem);
+
+  // add merges to plugins popup menu
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := TMerge(MergesList[i]);
+    MenuItem := TMenuItem.Create(AddToMergeItem);
+    MenuItem.Caption := merge.name;
+    MenuItem.OnClick := AddToMergeClick;
+    AddToMergeItem.Add(MenuItem);
+  end;
+end;
+
+procedure TMergeForm.AddToMergeClick(Sender: TObject);
 var
   MenuItem: TMenuItem;
   merge: TMerge;
@@ -538,7 +522,7 @@ var
   plugin: TPlugin;
 begin
   MenuItem := TMenuItem(Sender);
-  merge := TMerge(merges[MenuItem.MenuIndex - 1]);
+  merge := TMerge(MergesList[MenuItem.MenuIndex - 1]);
 
   // loop through plugins list, adding selected plugins to merge
   for i := 0 to Pred(PluginsListView.Items.Count) do begin
@@ -554,19 +538,19 @@ begin
     plugin.merge := merge.name;
   end;
 
-  // update gui
-  UpdateMerges;
+  // update
   PluginsListView.Repaint;
+  UpdateMerges;
 end;
 
-procedure TMergeForm.AddToNewMerge(Sender: TObject);
+procedure TMergeForm.AddToNewMergeClick(Sender: TObject);
 var
   merge: TMerge;
   plugin: TPlugin;
   i: Integer;
   ListItem: TListItem;
 begin
-  merge := CreateNewMerge(merges);
+  merge := CreateNewMerge(MergesList);
 
   // add items selected in PluginListView to merge
   for i := 0 to Pred(PluginsListView.Items.Count) do begin
@@ -583,13 +567,16 @@ begin
     plugin.merge := merge.name;
   end;
 
-  // update gui, add to merges list
-  merges.Add(merge);
+  // update merges
+  MergesList.Add(merge);
+  MergeListView.Items.Count := MergesList.Count;
   UpdateMerges;
+  // update plugins
+  UpdatePluginsPopupMenu;
   PluginsListView.Repaint;
 end;
 
-procedure TMergeForm.CheckPluginsForErrors(Sender: TObject);
+procedure TMergeForm.CheckForErrorsClick(Sender: TObject);
 var
   i: integer;
   ListItem: TListItem;
@@ -622,279 +609,7 @@ begin
   ProgressForm.Visible := false;
   ProgressForm.ShowModal;
   ProgressForm.Free;
-end;
-
-{******************************************************************************}
-{ Merge List View Events
-  Events involving the MergeListView control.  Events include:
-  - MergeListViewChange
-  - UpdateMerges
-  - SaveMergeEdit
-  - DeleteMerge
-  - CreateNewMerge
-}
-{******************************************************************************}
-
-procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
-  Change: TItemChange);
-var
-  mergeItem: TListItem;
-  merge: TMerge;
-  prop: TItemProp;
-begin
-  // don't do anything if no item selected
-  mergeItem := MergeListView.Selected;
-  if not Assigned(mergeItem) then
-    exit;
-
-  // prepare list view for merge information
-  DetailsEditor.OnStringsChange := nil;
-  DetailsEditor.Strings.Clear;
-  DetailsEditor.Options := DetailsEditor.Options + [goEditing];
-  DetailsLabel.Caption := 'Merge Details:';
-
-  // get merge information
-  merge := merges[MergeListView.ItemIndex];
-  currentMerge := merge;
-  AddDetailsItem('Status', merge.status, false);
-  AddDetailsItem('Merge name', merge.name, true);
-  AddDetailsItem('Filename', merge.filename, true);
-  AddDetailsItem('Plugin count', IntToStr(merge.plugins.Count));
-  AddDetailsItem('Date built', DateBuiltString(merge.dateBuilt));
-  AddDetailsList('Plugins', merge.plugins);
-  AddDetailsList('Masters', merge.masters);
-  AddDetailsItem(' ', ' ');
-  prop := AddDetailsItem('Merge method', merge.method, false);
-  prop.EditStyle := esPickList;
-  prop.PickList.Add('Overrides');
-  prop.PickList.Add('New records');
-  prop := AddDetailsItem('Renumbering', merge.renumbering, false);
-  prop.EditStyle := esPickList;
-  prop.PickList.Add('Conflicting');
-  prop.PickList.Add('All');
-  AddDetailsList('Fails', merge.fails);
-
-  // return event
-  DetailsEditor.OnStringsChange := SaveMergeEdit;
-end;
-
-procedure TMergeForm.MergeListViewData(Sender: TObject; Item: TListItem);
-var
-  merge: TMerge;
-begin
-  merge := TMerge(merges[Item.Index]);
-  Item.Caption := IntToHex(Item.Index, 2);
-  Item.SubItems.Add(merge.name);
-  Item.SubItems.Add(merge.filename);
-  Item.SubItems.Add(merge.plugins.count);
-  Item.SubItems.Add(merge.dateBuilt);
-  MergeListView.Canvas.Font.Color := merge.GetStatusColor;
-  MergeListView.Canvas.Font.Style := MergeListView.Canvas.Font.Style + [fsBold];
-end;
-
-
-procedure TMergeForm.MergesPopupMenuPopup(Sender: TObject);
-var
-  i: integer;
-  b, neverBuilt: boolean;
-  ListItem: TListItem;
-  merge: TMerge;
-begin
-  b := true;
-  neverBuilt := false;
-  for i := 0 to Pred(MergeListView.Items.Count) do begin
-    ListItem := MergeListView.Items[i];
-    if not ListItem.Selected then
-      continue;
-
-    merge := merges[i];
-    if merge.dateBuilt = 0 then
-      neverBuilt := true;
-    b := false;
-    break;
-  end;
-
-  MergesPopupMenu.Items[1].Enabled := not b;
-  MergesPopupMenu.Items[2].Enabled := not b;
-  MergesPopupMenu.Items[3].Enabled := (not b) and (not neverBuilt);
-  MergesPopupMenu.Items[4].Enabled := (not b) and (not neverBuilt);
-end;
-
-procedure TMergeForm.UpdateMerges;
-var
-  i: Integer;
-  merge: TMerge;
-  AddToMergeItem, MenuItem: TMenuItem;
-  ListItem: TListItem;
-begin
-  // clear popup menu and list view
-  AddToMergeItem := PluginsPopupMenu.Items[0];
-  MergeListView.Items.Clear;
-  AddToMergeItem.Clear;
-
-  // add <New Merge> option to Plugins popup menu
-  MenuItem := TMenuItem.Create(AddToMergeItem);
-  MenuItem.Caption := '<New Merge>';
-  MenuItem.OnClick := AddToNewMerge;
-  AddToMergeItem.Add(MenuItem);
-
-  // add merges to list view and plugins popup menu
-  for i := 0 to Pred(merges.Count) do begin
-    merge := TMerge(merges[i]);
-    MenuItem := TMenuItem.Create(AddToMergeItem);
-    MenuItem.Caption := merge.name;
-    MenuItem.OnClick := AddToMerge;
-    AddToMergeItem.Add(MenuItem);
-
-    ListItem := MergeListView.Items.Add;
-    ListItem.Caption := IntToHex(MergeListView.Items.Count, 2);
-    ListItem.SubItems.Add(merge.name);
-    ListItem.SubItems.Add(merge.filename);
-    ListItem.SubItems.Add(IntToStr(merge.plugins.Count));
-    ListItem.SubItems.Add(DateBuiltString(merge.dateBuilt));
-  end;
-end;
-
-procedure TMergeForm.SaveMergeEdit(Sender: TObject);
-var
-  i: integer;
-  plugin: TPlugin;
-begin
-  if not Assigned(currentMerge) then
-    exit;
-
-  // update merge
-  currentMerge.name := DetailsEditor.Values['Merge name'];
-  currentMerge.filename := DetailsEditor.Values['Filename'];
-  currentMerge.method := DetailsEditor.Values['Merge method'];
-  currentMerge.renumbering := DetailsEditor.Values['Renumbering'];
   UpdateMerges;
-
-  for i := 0 to Pred(currentMerge.plugins.Count) do begin
-    plugin := PluginByFilename(PluginsList, currentMerge.plugins[i]);
-    if Assigned(plugin) then
-      plugin.merge := currentMerge.name;
-  end;
-end;
-
-{ MergesPopupMenu events }
-procedure TMergeForm.DeleteMerge(Sender: TObject);
-var
-  i: Integer;
-  plugin: TPlugin;
-begin
-  // exit if no merge selected
-  if MergeListView.ItemIndex = -1 then
-    exit;
-
-  // else prompt user, delete merge and update details editor
-  currentMerge := TMerge(merges[MergeListView.ItemIndex]);
-  if MessageDlg('Are you sure you want to delete '+currentMerge.name+'?',
-    mtConfirmation, mbOKCancel, 0) = mrOK then begin
-
-    // remove merge from plugin merge properties
-    for i := 0 to Pred(PluginsList.Count) do begin
-      plugin := TPlugin(PluginsList[i]);
-      plugin.merge := ' ';
-    end;
-
-    // delete merge
-    currentMerge := nil;
-    merges.Delete(MergeListView.ItemIndex);
-    MergeListView.Items[MergeListView.ItemIndex].Delete;
-
-    // clear details editor
-    DetailsEditor.OnStringsChange := nil;
-    DetailsEditor.Options := DetailsEditor.Options - [goEditing];
-    DetailsEditor.Strings.Clear;
-  end;
-
-  // update merges
-  UpdateMerges;
-end;
-
-procedure TMergeForm.CreateNewMergeClick(Sender: TObject);
-var
-  merge: TMerge;
-begin
-  LogMessage('Created new merge!');
-  merge := CreateNewMerge(merges);
-  // add and update merge
-  merges.Add(merge);
-  UpdateMerges;
-
-end;
-
-procedure TMergeForm.RebuildMerges(Sender: TObject);
-var
-  i, timeCost: integer;
-  merge: TMerge;
-  ProgressForm: TProgressForm;
-  timeCosts: TList;
-begin
-  LogMessage('Rebuild merges!');
-  if merges.Count = 0 then
-    exit;
-
-  // get merge statuses
-  for i := 0 to Pred(merges.Count) do begin
-    if merge.status <> '' then
-      continue;
-    timeCost := merge.GetTimeCost div 3;
-    timeCosts.Add(Pointer(timeCost));
-  end;
-
-  for i := 0 to Pred(merges.Count) do begin
-    if merge.status = '' then
-      merge.GetStatus;
-  end;
-
-  // calculate time costs
-  timeCosts := TList.Create;
-  for i := 0 to Pred(merges.Count) do begin
-    merge := TMerge(merges[i]);
-    if merge.status <> 'Ready to be merged.' then
-      continue;
-    timeCost := merge.GetTimeCost;
-    LogMessage('Time cost for '+merge.name+': '+IntToStr(timeCost));
-    timeCosts.Add(Pointer(timeCost));
-  end;
-
-  // make and show progress form
-  ProgressForm := TProgressForm.Create(nil);
-  ProgressForm.Show;
-  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
-  bCaptureTracker := true;
-
-  // rebuild merges
-  for i := 0 to Pred(merges.count) do begin
-    merge := merges[i];
-    if merge.status <> 'Ready to be merged.' then
-      continue;
-    try
-      if merge.DateBuilt = 0 then
-        BuildMerge(merge)
-      else if PluginsModified(merges, merge) then
-        RebuildMerge(merge);
-    except on x : Exception do
-      Tracker.Write('Exception: '+x.Message);
-    end;
-    Tracker.Write(' '#13#10);
-    ProgressForm.ProgressBar.Position := IntegerListSum(timeCosts, i);
-  end;
-
-  // display progress form after merging
-  ProgressForm.DetailsButtonClick(nil);
-  ProgressForm.Visible := false;
-  ProgressForm.ShowModal;
-
-  // free memory
-  ProgressForm.Free;
-  timeCosts.Free;
-
-  // update mpMergeForm
-  MergeListViewChange(nil, nil, TItemChange(nil));
-  PluginsListView.Items.Count := PluginsList.Count;
 end;
 
 { Remove from Merge }
@@ -917,15 +632,331 @@ begin
     pluginName := plugin.filename;
     mergeName := plugin.merge;
     if mergeName <> ' ' then begin
-      merge := MergeByName(merges, mergeName);
+      merge := MergeByName(MergesList, mergeName);
       if Assigned(merge) then
         merge.plugins.Delete(merge.plugins.IndexOf(pluginName));
       plugin.merge := ' ';
     end;
   end;
 
-  // repaint
+  // update
+  UpdateMerges;
   PluginsListView.Repaint;
+end;
+
+{******************************************************************************}
+{ Merge List View Events
+  Events involving the MergeListView control.  Events include:
+  - MergeListViewChange
+  - UpdateMerges
+  - SaveMergeEdit
+}
+{******************************************************************************}
+
+procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+var
+  mergeItem: TListItem;
+  merge: TMerge;
+  prop: TItemProp;
+begin
+  // don't do anything if no item selected
+  mergeItem := MergeListView.Selected;
+  if not Assigned(mergeItem) then
+    exit;
+
+  // prepare list view for merge information
+  DetailsEditor.OnStringsChange := nil;
+  DetailsEditor.Strings.Clear;
+  DetailsEditor.Options := DetailsEditor.Options + [goEditing];
+  DetailsLabel.Caption := 'Merge Details:';
+
+  // get merge information
+  merge := MergesList[MergeListView.ItemIndex];
+  currentMerge := merge;
+  AddDetailsItem('Status', StatusArray[merge.status].caption, false);
+  AddDetailsItem('Merge name', merge.name, true);
+  AddDetailsItem('Filename', merge.filename, true);
+  AddDetailsItem('Plugin count', IntToStr(merge.plugins.Count));
+  AddDetailsItem('Date built', DateBuiltString(merge.dateBuilt));
+  AddDetailsList('Plugins', merge.plugins);
+  AddDetailsList('Masters', merge.masters);
+  AddDetailsItem(' ', ' ');
+  prop := AddDetailsItem('Merge method', merge.method, false);
+  prop.EditStyle := esPickList;
+  prop.PickList.Add('Overrides');
+  prop.PickList.Add('New records');
+  prop := AddDetailsItem('Renumbering', merge.renumbering, false);
+  prop.EditStyle := esPickList;
+  prop.PickList.Add('Conflicting');
+  prop.PickList.Add('All');
+  AddDetailsList('Fails', merge.fails);
+
+  // return event
+  DetailsEditor.OnStringsChange := SaveMergeEdit;
+end;
+
+procedure TMergeForm.UpdateMerges;
+var
+  i: integer;
+  merge: TMerge;
+begin
+  // get status of each merge
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := TMerge(MergesList[i]);
+    if not (merge.status in ForcedStatuses) then
+      merge.GetStatus;
+  end;
+end;
+
+procedure TMergeForm.MergeListViewData(Sender: TObject; Item: TListItem);
+var
+  merge: TMerge;
+begin
+  merge := TMerge(MergesList[Item.Index]);
+  Item.Caption := IntToHex(Item.Index, 2);
+  Item.SubItems.Add(merge.name);
+  Item.SubItems.Add(merge.filename);
+  Item.SubItems.Add(IntToStr(merge.plugins.count));
+  Item.SubItems.Add(DateBuiltString(merge.dateBuilt));
+  MergeListView.Canvas.Font.Color := StatusArray[merge.status].color;
+  MergeListView.Canvas.Font.Style := MergeListView.Canvas.Font.Style + [fsBold];
+end;
+
+procedure TMergeForm.MergeListViewDrawItem(Sender: TCustomListView;
+  Item: TListItem; Rect: TRect; State: TOwnerDrawState);
+var
+  i, x, y: integer;
+  ListView: TListView;
+  R: TRect;
+begin
+  ListView := TListView(Sender);
+  if Item.Selected then begin
+    ListView.Canvas.Brush.Color := $FFEEDD;
+    ListView.Canvas.FillRect(Rect);
+  end;
+
+  R := Rect;
+  R.Right := R.Left + ListView.Columns[0].Width - 3;
+  x := Rect.Left + 3;
+  y := (Rect.Bottom - Rect.Top - ListView.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
+  ListView.Canvas.TextRect(R, x, y, Item.Caption);
+  for i := 0 to Item.SubItems.Count - 1 do begin
+    R.Left := R.Right + 3;
+    R.Right := R.Left + ListView.Columns[i + 1].Width;
+    x := R.Left;
+    ListView.Canvas.TextRect(R, x, y, Item.SubItems[i]);
+  end;
+end;
+
+procedure TMergeForm.SaveMergeEdit(Sender: TObject);
+var
+  i: integer;
+  plugin: TPlugin;
+begin
+  if not Assigned(currentMerge) then
+    exit;
+
+  // update merge
+  currentMerge.name := DetailsEditor.Values['Merge name'];
+  currentMerge.filename := DetailsEditor.Values['Filename'];
+  currentMerge.method := DetailsEditor.Values['Merge method'];
+  currentMerge.renumbering := DetailsEditor.Values['Renumbering'];
+  UpdatePluginsPopupMenu;
+
+  for i := 0 to Pred(currentMerge.plugins.Count) do begin
+    plugin := PluginByFilename(currentMerge.plugins[i]);
+    if Assigned(plugin) then
+      plugin.merge := currentMerge.name;
+  end;
+
+  MergeListView.Repaint;
+end;
+
+
+{******************************************************************************}
+{ MergePopupMenu methods
+  Methods for dealing with the popup menu for the MergesListView.
+  - MergesPopupMenuPopup
+  - DeleteMerge
+}
+{******************************************************************************}
+
+procedure TMergeForm.MergesPopupMenuPopup(Sender: TObject);
+var
+  mergeSelected, neverBuilt: boolean;
+begin
+  neverBuilt := false;
+  mergeSelected := MergeListView.ItemIndex > -1;
+  if mergeSelected then begin
+    currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
+    neverBuilt := currentMerge.dateBuilt = 0;
+  end;
+
+  MergesPopupMenu.Items[1].Enabled := mergeSelected;
+  MergesPopupMenu.Items[2].Enabled := mergeSelected;
+  MergesPopupMenu.Items[3].Enabled := mergeSelected;
+  MergesPopupMenu.Items[4].Enabled := mergeSelected and (not neverBuilt);
+  MergesPopupMenu.Items[5].Enabled := mergeSelected and (not neverBuilt);
+  MergesPopupMenu.Items[6].Enabled := mergeSelected and (not neverBuilt);
+end;
+
+procedure TMergeForm.DeleteMerge(Sender: TObject);
+var
+  i: Integer;
+  plugin: TPlugin;
+begin
+  // exit if no merge selected
+  if MergeListView.ItemIndex = -1 then
+    exit;
+
+  // else prompt user, delete merge and update details editor
+  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
+  if MessageDlg('Are you sure you want to delete '+currentMerge.name+'?',
+    mtConfirmation, mbOKCancel, 0) = mrOK then begin
+
+    // remove merge from plugin merge properties
+    for i := 0 to Pred(PluginsList.Count) do begin
+      plugin := TPlugin(PluginsList[i]);
+      plugin.merge := ' ';
+    end;
+
+    // delete merge
+    currentMerge := nil;
+    MergesList.Delete(MergeListView.ItemIndex);
+
+    // clear details editor
+    DetailsEditor.OnStringsChange := nil;
+    DetailsEditor.Options := DetailsEditor.Options - [goEditing];
+    DetailsEditor.Strings.Clear;
+  end;
+
+  // update merges
+  MergeListView.Items.Count := MergesList.Count;
+  UpdatePluginsPopupMenu;
+end;
+
+procedure TMergeForm.OpenInExplorerClick(Sender: TObject);
+var
+  path: string;
+begin
+  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
+  path := settings.mergeDirectory + currentMerge.name;
+  ForceDirectories(path);
+  ShellExecute(TForm(MergeForm).Handle, 'open', PChar(path), '', '', SW_SHOWNORMAL);
+end;
+
+procedure TMergeForm.ForceRebuildItemClick(Sender: TObject);
+begin
+  // force rebuild
+  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
+  currentMerge.Status := 9;
+  MergeListView.Repaint;
+  MergeListViewChange(nil, nil, TItemChange(nil));
+end;
+
+procedure TMergeForm.IgnoreRebuildItemClick(Sender: TObject);
+begin
+  // ignore rebuild
+  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
+  currentMerge.Status := 6;
+  MergeListView.Repaint;
+  MergeListViewChange(nil, nil, TItemChange(nil));
+end;
+
+
+{******************************************************************************}
+{ QuickBar Button Events
+  Events involving buttons on the QuickBar.  Events include:
+  - CreateNewMergeClick
+  - RebuildMergesClick
+  - ReportButtonClick
+  - OptionsButtonClick
+  - DictionaryButtonClick
+  - UpdateButtonClick
+  - HelpButtonClick
+}
+{******************************************************************************}
+
+procedure TMergeForm.CreateNewMergeClick(Sender: TObject);
+var
+  merge: TMerge;
+begin
+  LogMessage('Created new merge!');
+  merge := CreateNewMerge(MergesList);
+  // add and update merge
+  MergesList.Add(merge);
+  MergeListView.Items.Count := MergesList.Count;
+  UpdateMerges;
+  MergeListView.Repaint;
+  UpdatePluginsPopupMenu;
+end;
+
+procedure TMergeForm.RebuildMergesClick(Sender: TObject);
+var
+  i, timeCost: integer;
+  merge: TMerge;
+  ProgressForm: TProgressForm;
+  timeCosts: TList;
+begin
+  LogMessage('Rebuild merges!');
+  if MergesList.Count = 0 then
+    exit;
+
+  // calculate time costs
+  timeCosts := TList.Create;
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := TMerge(MergesList[i]);
+    if not (merge.status in BuildStatuses) then
+      continue;
+    timeCost := merge.GetTimeCost;
+    Logger.Write('Time cost for '+merge.name+': '+IntToStr(timeCost));
+    timeCosts.Add(Pointer(timeCost));
+  end;
+
+  // exit if no merges to build
+  if timeCosts.Count = 0 then begin
+    Logger.Write('No merges to build!');
+    exit;
+  end;
+
+  // make and show progress form
+  ProgressForm := TProgressForm.Create(nil);
+  ProgressForm.Show;
+  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
+  bCaptureTracker := true;
+
+  // rebuild merges
+  for i := 0 to Pred(MergesList.count) do begin
+    merge := MergesList[i];
+    if not (merge.status in BuildStatuses) then
+      continue;
+    try
+      if merge.status = 7 then
+        BuildMerge(merge)
+      else
+        RebuildMerge(merge);
+    except on x : Exception do
+      Tracker.Write('Exception: '+x.Message);
+    end;
+    Tracker.Write(' '#13#10);
+    ProgressForm.ProgressBar.Position := IntegerListSum(timeCosts, i);
+  end;
+
+  // display progress form after merging
+  ProgressForm.DetailsButtonClick(nil);
+  ProgressForm.Visible := false;
+  ProgressForm.ShowModal;
+
+  // free memory
+  ProgressForm.Free;
+  timeCosts.Free;
+
+  // update mpMergeForm
+  UpdateMerges;
+  MergeListViewChange(nil, nil, TItemChange(nil));
+  MergeListView.Repaint;
+  //PluginsListView.Items.Count := PluginsList.Count;
 end;
 
 { Submit report }
@@ -946,6 +977,7 @@ begin
 end;
 
 { Options }
+
 procedure TMergeForm.OptionsButtonClick(Sender: TObject);
 var
   OptionsForm: TOptionsForm;

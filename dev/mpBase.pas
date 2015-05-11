@@ -5,7 +5,7 @@ interface
 uses
   Windows, SysUtils, ShlObj, Classes, IniFiles, Dialogs,
   superobject,
-  mpLogger, mpTracker,
+  mpLogger, mpTracker, mpProgressForm,
   Registry,
   wbBSA,
   wbHelpers,
@@ -25,6 +25,11 @@ type
     notes: string;
     constructor Create; Overload;
     constructor Create(const s: string); Overload;
+  end;
+  TMergeStatus = Record
+    id: integer;
+    color: integer;
+    caption: string[64];
   end;
   TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_TRANSLATION, HAS_FACEDATA,
     HAS_VOICEDATA, HAS_FRAGMENTS);
@@ -61,7 +66,7 @@ type
       pluginSizes: TList;
       pluginDates: TStringList;
       masters: TStringList;
-      status: string;
+      status: integer;
       method: string;
       renumbering: string;
       mergeDataPath: string;
@@ -72,8 +77,10 @@ type
       constructor Create; virtual;
       function Dump: ISuperObject;
       procedure LoadDump(obj: ISuperObject);
-      function GetTimeCost(pluginObjects: TList): integer;
+      function GetTimeCost: integer;
       procedure GetStatus;
+      function PluginsModified: boolean;
+      function FilesExist: boolean;
       function GetStatusColor: integer;
   end;
   TSettings = class(TObject)
@@ -111,9 +118,10 @@ type
   function FaceDataExists(filename: string): boolean;
   function VoiceDataExists(filename: string): boolean;
   function FragmentsExist(filename: string): boolean;
+  procedure ExtractBSA(ContainerName, folder, destination: string);
   function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
   function CheckForErrors(const aIndent: Integer; const aElement: IwbElement; var errors: TStringList): Boolean;
-  function PluginsModified(plugins: TList; merge: TMerge): boolean;
+  procedure CreateSEQFile(merge: TMerge);
   function csvText(s: string): string;
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
@@ -132,22 +140,38 @@ type
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
   function AppendIfMissing(str, substr: string): string;
-  function PluginByFilename(plugins: TList; filename: string): TPlugin;
+  function PluginByFilename(filename: string): TPlugin;
   function MergeByName(merges: TList; name: string): TMerge;
   function MergeByFilename(merges: TList; filename: string): TMerge;
   function CreateNewMerge(merges: TList): TMerge;
   function CreateNewPlugin(plugins: TList; filename: string): TPlugin;
+  procedure SaveMerges;
+  procedure LoadMerges;
 
 const
   ProgramVersion = '2.0';
   flagChar = 'XEATGVF';
+  StatusArray: array[0..9] of TMergeStatus = (
+    ( id: 0; color: $808080; caption: 'Unknown'; ),
+    ( id: 1; color: $0000FF; caption: 'No plugins to merge'; ),
+    ( id: 2; color: $0000FF; caption: 'Mod Organizer Directory invalid'; ),
+    ( id: 3; color: $0000FF; caption: 'Plugins not loaded'; ),
+    ( id: 4; color: $0000FF; caption: 'Errors in plugins'; ),
+    ( id: 5; color: $900000; caption: 'Up to date'; ),
+    ( id: 6; color: $900000; caption: 'Up to date [Forced]'; ),
+    ( id: 7; color: $009000; caption: 'Ready to be built'; ),
+    ( id: 8; color: $009000; caption: 'Ready to be rebuilt'; ),
+    ( id: 9; color: $009000; caption: 'Ready to be rebuilt [Forced]'; )
+  );
+  BuildStatuses = [7, 8, 9];
+  ForcedStatuses = [6, 9];
 
 var
-  dictionary: TList;
-  blacklist: TList;
+  dictionary, blacklist, PluginsList, MergesList: TList;
   settings: TSettings;
   handler: IwbContainerHandler;
-  PluginsList: TList;
+  bDontSave, bCaptureTracker: boolean;
+  tempPath: string;
 
 implementation
 
@@ -169,8 +193,11 @@ implementation
   - FaceDataExists
   - VoiceDataExists
   - FragmentsExist
+  - ExtractBSA
   - CheckForErorrsLinear
   - CheckForErrors
+  - PluginsModified
+  - CreatSEQFile
 }
 {*****************************************************************************}
 
@@ -384,6 +411,22 @@ begin
   Result := false;
 end;
 
+{ Extracts assets from @folder in the BSA @filename to @destination }
+procedure ExtractBSA(ContainerName, folder, destination: string);
+var
+  ResourceList: TStringList;
+  i: Integer;
+begin
+  if not handler.ContainerExists(ContainerName) then begin
+    Tracker.Write('    '+ContainerName+' not loaded.');
+    exit;
+  end;
+  ResourceList := TStringList.Create;
+  handler.ContainerResourceList(ContainerName, ResourceList, folder);
+  for i := 0 to Pred(ResourceList.Count) do
+    handler.ResourceCopy(ContainerName, ResourceList[i], destination);
+end;
+
 { Recursively traverse a container looking for errors }
 function CheckForErrorsLinear(const aElement: IwbElement;
   LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
@@ -439,19 +482,55 @@ begin
   end;
 end;
 
-{ Checks to see if the plugins in a merge have been modified since it was last
-  merged. }
-function PluginsModified(plugins: TList; merge: TMerge): boolean;
+{ Creates a SEQ (sequence) file for the input plugin.  Important for quests that
+  are Start Game Enabled to execute properly. }
+procedure CreateSEQFile(merge: TMerge);
 var
-  plugin: TPlugin;
-  i: integer;
+  _File: IwbFile;
+  Group: IwbGroupRecord;
+  n: Integer;
+  MainRecord: IwbMainRecord;
+  QustFlags: IwbElement;
+  FormIDs: array of Cardinal;
+  FileStream: TFileStream;
+  p, s: string;
 begin
-  Result := false;
-  for i := 0 to Pred(merge.plugins.count) do begin
-    plugin := PluginByFilename(plugins, merge.plugins[i]);
-    if Assigned(plugin) then begin
-      if plugin.dateModified <> merge.pluginDates[i] then
-        Result := true;
+  _File := merge.mergePlugin.pluginFile;
+  Group := _File.GroupBySignature['QUST'];
+
+  if Assigned(Group) then begin
+    for n := 0 to Pred(Group.ElementCount) do begin
+      if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
+        QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+        // include SGE (start game enabled) quests which are new or set SGE flag on master quest
+        if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then begin
+          if IsOverride(MainRecord) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
+            SetLength(FormIDs, Succ(Length(FormIDs)));
+            FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  if Length(FormIDs) <> 0 then try
+    try
+      p := merge.mergeDataPath + 'seq\';
+      if not DirectoryExists(p) then
+        if not ForceDirectories(p) then
+          raise Exception.Create('  Unable to create SEQ directory for merge.');
+      s := p + ChangeFileExt(_File.FileName, '.seq');
+      FileStream := TFileStream.Create(s, fmCreate);
+      FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
+      Tracker.Write('  Created SEQ file: ' + s);
+    finally
+      if Assigned(FileStream) then
+        FreeAndNil(FileStream);
+    end;
+  except
+    on e: Exception do begin
+      Tracker.Write('  Error: Can''t create SEQ file: ' + s + ', ' + E.Message);
+      Exit;
     end;
   end;
 end;
@@ -843,18 +922,20 @@ end;
   - MergeByFilename
   - CreateNewMerge
   - CreateNewPlugin
+  - SaveMerges
+  - LoadMerges
 }
 {******************************************************************************}
 
 { Gets a plugin matching the given name. }
-function PluginByFilename(plugins: TList; filename: string): TPlugin;
+function PluginByFilename(filename: string): TPlugin;
 var
   i: integer;
   plugin: TPlugin;
 begin
   Result := nil;
-  for i := 0 to Pred(plugins.count) do begin
-    plugin := TPlugin(plugins[i]);
+  for i := 0 to Pred(PluginsList.count) do begin
+    plugin := TPlugin(PluginsList[i]);
     if plugin.filename = filename then begin
       Result := plugin;
       exit;
@@ -953,6 +1034,59 @@ begin
   Result := plugin;
 end;
 
+procedure SaveMerges;
+var
+  i: Integer;
+  merge: TMerge;
+  json: ISuperObject;
+begin
+  // initialize json
+  json := SO;
+  json.O['merges'] := SA([]);
+
+  // loop through merges
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := MergesList[i];
+    json.A['merges'].Add(merge.Dump);
+  end;
+
+  // save and finalize
+  json.SaveTo('merges.json');
+  json := nil;
+end;
+
+procedure LoadMerges;
+const
+  debug = false;
+var
+  merge: TMerge;
+  plugin: TPlugin;
+  obj, mergeItem: ISuperObject;
+  sl: TStringList;
+  i: Integer;
+begin
+  // load file into SuperObject to parse it
+  sl := TStringList.Create;
+  sl.LoadFromFile('merges.json');
+  obj := SO(PChar(sl.Text));
+
+  // loop through merges
+  for mergeItem in obj['merges'] do begin
+    merge := TMerge.Create;
+    merge.LoadDump(mergeItem);
+    MergesList.Add(merge);
+    for i := 0 to Pred(merge.plugins.Count) do begin
+      plugin := PluginByFilename(merge.plugins[i]);
+      if Assigned(plugin) then
+        plugin.merge := merge.name;
+    end;
+  end;
+
+  // finalize
+  obj := nil;
+  sl.Free;
+end;
+
 {******************************************************************************}
 { Object methods
   Set of methods for objects TMerge and TPlugin
@@ -966,6 +1100,9 @@ end;
   - TMerge.Dump
   - TMerge.LoadDump
   - TMerge.GetTimeCost
+  - TMerge.PluginsModified
+  - TMerge.FilesExist
+  - TMerge.GetStatus
   - TEntry.Create
   - TSettings.Create
   - TSettings.Save
@@ -1013,21 +1150,6 @@ begin
   Result := '';
   for flag in flags do
      Result := Result + flagChar[Ord(flag) + 1];
-
-  {if IS_BLACKLISTED in flags then
-    Result := Result + flagChar[IS_BLACKLISTED + 1];
-  if HAS_ERRORS in flags then
-    Result := Result + flagChar[HAS_ERRORS + 1];
-  if HAS_BSA in flags then
-    Result := Result + flagChar[HAS_BSA + 1];
-  if HAS_TRANSLATION in flags then
-    Result := Result + flagChar[HAS_TRANSLATION + 1];
-  if HAS_FACEDATA in flags then
-    Result := Result + flagChar[HAS_FACEDATA + 1];
-  if HAS_VOICEDATA in flags then
-    Result := Result + flagChar[HAS_VOICEDATA + 1];
-  if HAS_FRAGMENTS in flags then
-    Result := Result + flagChar[HAS_FRAGMENTS + 1];}
 end;
 
 { Fetches data associated with a plugin. }
@@ -1073,6 +1195,7 @@ constructor TMerge.Create;
 begin
   name := 'NewMerge';
   filename := 'NewMerge.esp';
+  status := 0;
   dateBuilt := 0;
   plugins := TStringList.Create;
   pluginSizes := TList.Create;
@@ -1167,7 +1290,7 @@ var
 begin
   Result := 1;
   for i := 0 to Pred(plugins.Count) do begin
-    plugin := PluginByFilename(PluginsList, plugins[i]);
+    plugin := PluginByFilename(plugins[i]);
     if Assigned(plugin) then begin
       if not plugin.HasData then
         plugin.GetData;
@@ -1178,74 +1301,104 @@ begin
   end;
 end;
 
+{ Checks to see if the plugins in a merge have been modified since it was last
+  merged. }
+function TMerge.PluginsModified: boolean;
+var
+  plugin: TPlugin;
+  i: integer;
+begin
+  Result := false;
+  for i := 0 to Pred(plugins.count) do begin
+    plugin := PluginByFilename(plugins[i]);
+    if Assigned(plugin) then begin
+      if plugin.dateModified <> pluginDates[i] then begin
+        Logger.Write(plugin.filename + ' was modified ' + plugin.dateModified +
+          ', '+ name + ' has '+pluginDates[i]);
+        Result := true;
+      end;
+    end;
+  end;
+end;
+
+{ Checks if the files associated with a merge exist }
+function TMerge.FilesExist: boolean;
+begin
+  Result := FileExists(mergeDataPath + filename);
+end;
+
 procedure TMerge.GetStatus;
 var
   i: Integer;
   plugin: TPlugin;
 begin
-  Tracker.Write('Getting status for '+name);
+  Logger.Write('Getting status for '+name);
+  status := 0;
 
   // don't merge if no plugins to merge
   if plugins.Count < 1 then begin
-    Tracker.Write('  No plugins to merge');
-    status := 'No plugins to merge';
+    Logger.Write('  No plugins to merge');
+    status := 1;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.MODirectory = '') then begin
-    Tracker.Write('  Mod Organizer Directory blank');
-    status := 'Mod Organizer Directory blank';
+    Logger.Write('  Mod Organizer Directory blank');
+    status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
   if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
-     Tracker.Write('  Mod Organizer Directory invalid');
-     status := 'Mod Organizer Directory invalid';
+     Logger.Write('  Mod Organizer Directory invalid');
+     status := 2;
      exit;
   end;
 
   // loop through plugins
   for i := 0 to Pred(plugins.Count) do begin
-    plugin := PluginByFilename(PluginsList, plugins[i]);
+    plugin := PluginByFilename(plugins[i]);
 
     // see if plugin is loaded
     if not Assigned(plugin) then begin
-      Tracker.Write('  Plugin '+plugins[i]+' is missing');
-      status := 'Plugin '+plugins[i]+' is not loaded';
+      Logger.Write('  Plugin '+plugins[i]+' is missing');
+      status := 3;
       exit;
     end;
 
-    // check for errors
-    if plugin.errors.Count = 0 then begin
-      Tracker.Write('  Checking for errors in '+plugin.filename);
-      plugin.FindErrors;
-    end;
-    if plugin.errors[0] = 'None.' then begin
-      Tracker.Write('  No errors in '+plugin.filename);
-      continue
-    end
+    if plugin.errors.Count = 0 then
+      Logger.Write('  '+plugin.filename+' needs to be checked for errors.')
+    else if plugin.errors[0] = 'None.' then
+      Logger.Write('  No errors in '+plugin.filename)
     else begin
-      Tracker.Write('  '+plugin.filename+' has errors');
-      status := plugin.filename+' has errors';
+      Logger.Write('  '+plugin.filename+' has errors');
+      status := 4;
       exit;
-    end;
+    end
+  end;
+
+  mergeDataPath := settings.mergeDirectory + name + '\';
+  if (not PluginsModified) and FilesExist then begin
+    Logger.Write('  Up to date.');
+    status := 5;
+    exit;
   end;
 
   // status green, ready to go
-  Tracker.Write('  Ready to be merged.');
-  Tracker.Write(' ');
-  status := 'Ready to be merged.';
+  if status = 0 then begin
+    Logger.Write('  Ready to be merged.');
+    if dateBuilt = 0 then
+      status := 7
+    else
+      status := 8;
+  end;
+  Logger.Write(' ');
 end;
 
 function TMerge.GetStatusColor: integer;
 begin
-  Result := $0000FF;
-  if status = '' then
-    Result := $707070;
-  if status = 'Ready to be merged.' then
-    Result := $009000;
+  Result := StatusArray[status].color;
 end;
 
 { TEntry Constructor }

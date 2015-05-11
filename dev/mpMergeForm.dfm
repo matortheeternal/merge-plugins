@@ -57,7 +57,7 @@ object MergeForm: TMergeForm
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = RebuildMerges
+      OnClick = RebuildMergesClick
     end
     object ReportButton: TSpeedButton
       Left = 102
@@ -205,11 +205,10 @@ object MergeForm: TMergeForm
             end
             item
               Caption = 'Size'
-              Width = 75
             end
             item
               Caption = 'Date built'
-              Width = 100
+              Width = 150
             end>
           ColumnClick = False
           DoubleBuffered = True
@@ -223,6 +222,7 @@ object MergeForm: TMergeForm
           ViewStyle = vsReport
           OnChange = MergeListViewChange
           OnData = MergeListViewData
+          OnDrawItem = MergeListViewDrawItem
         end
       end
       object LogTabSheet: TTabSheet
@@ -298,7 +298,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C010107000900D00020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000900D40020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1369,7 +1369,7 @@ object MergeForm: TMergeForm
       Caption = 'Add to merge'
       object NewMerge1: TMenuItem
         Caption = '<New Merge>'
-        OnClick = AddToNewMerge
+        OnClick = AddToNewMergeClick
       end
     end
     object RemoveFromMerge: TMenuItem
@@ -1381,37 +1381,47 @@ object MergeForm: TMergeForm
     end
     object CheckforErrors1: TMenuItem
       Caption = 'Check for errors'
-      OnClick = CheckPluginsForErrors
+      OnClick = CheckForErrorsClick
     end
   end
   object MergesPopupMenu: TPopupMenu
     OnPopup = MergesPopupMenuPopup
     Left = 184
     Top = 112
-    object Createnewmerge1: TMenuItem
+    object CreateNewMergeItem: TMenuItem
       Caption = 'Create new merge'
       OnClick = CreateNewMergeClick
     end
-    object Deletemerge1: TMenuItem
+    object DeleteMergeItem: TMenuItem
       Caption = 'Delete merge'
       OnClick = DeleteMerge
     end
-    object Rebuildmerge1: TMenuItem
+    object RebuildMergeItem: TMenuItem
       Caption = 'Build merge'
     end
-    object Reportonmerge1: TMenuItem
+    object OpenInExplorerItem: TMenuItem
+      Caption = 'Open in explorer'
+      OnClick = OpenInExplorerClick
+    end
+    object ReportOnMergeItem: TMenuItem
       Caption = 'Report on merge'
     end
-    object Ignorepluginchanges1: TMenuItem
-      Caption = 'Ignore plugin changes'
+    object ForceRebuildItem: TMenuItem
+      Caption = 'Force rebuild'
+      OnClick = ForceRebuildItemClick
+    end
+    object IgnoreRebuildItem: TMenuItem
+      Caption = 'Ignore rebuild'
+      OnClick = IgnoreRebuildItemClick
     end
     object N1: TMenuItem
       Caption = '-'
     end
-    object Rebuildallmerges1: TMenuItem
+    object BuildAllMergesItem: TMenuItem
       Caption = 'Build all merges'
+      OnClick = RebuildMergesClick
     end
-    object Reportonmerges1: TMenuItem
+    object ReportOnMergesItem: TMenuItem
       Caption = 'Report on all merges'
     end
   end
@@ -1419,7 +1429,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C0101070018008C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107001800900010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000003B3B3BFF212121EBC7C7C738CCCC
       CC33C3C3C33DFFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00CBCBCB34FFFF
