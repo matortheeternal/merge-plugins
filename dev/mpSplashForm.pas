@@ -1,4 +1,4 @@
-unit mpSplash;
+unit mpSplashForm;
 
 interface
 

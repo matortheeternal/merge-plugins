@@ -91,6 +91,8 @@ begin
   // save text to TEdit
   if s <> '' then
     edMODirectory.Text := AppendIfMissing(s, '\');
+  if DirectoryExists(edMODirectory.Text + 'mods\') then
+    edMergeDirectory.Text := edMODirectory.Text + 'mods\';
 end;
 
 procedure TOptionsForm.btnCancelClick(Sender: TObject);

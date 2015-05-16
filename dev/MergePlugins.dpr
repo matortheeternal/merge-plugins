@@ -27,7 +27,8 @@ uses
   superobject in 'superobject.pas',
   mpTracker in 'mpTracker.pas',
   mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
-  mpSplash in 'mpSplash.pas' {SplashForm};
+  mpSplash in 'mpSplash.pas' {SplashForm},
+  mpEditForm in 'mpEditForm.pas' {EditForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -44,5 +45,6 @@ begin
   Application.CreateForm(TMergeForm, MergeForm);
   Application.CreateForm(TProgressForm, ProgressForm);
   Application.CreateForm(TSplashForm, SplashForm);
+  Application.CreateForm(TEditForm, EditForm);
   Application.Run;
 end.

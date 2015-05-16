@@ -36,8 +36,9 @@ type
   TPluginFlags = set of TPluginFlag;
   TPlugin = class(TObject)
     public
-      pluginFile: IwbFile;
+      _File: IwbFile;
       hasData: boolean;
+      hash: string;
       fileSize: Int64;
       dateModified: string;
       flags: TPluginFlags;
@@ -46,6 +47,7 @@ type
       numRecords: string;
       numOverrides: string;
       author: string;
+      dataPath: string;
       entry: TEntry;
       description: TStringList;
       masters: TStringList;
@@ -53,8 +55,10 @@ type
       reports: TStringList;
       constructor Create; virtual;
       procedure GetData;
+      procedure GetHash;
       procedure GetFlags;
       function GetFlagsString: string;
+      procedure GetDataPath;
       procedure FindErrors;
   end;
   TMerge = class(TObject)
@@ -63,14 +67,13 @@ type
       filename: string;
       dateBuilt: TDateTime;
       plugins: TStringList;
-      pluginSizes: TList;
-      pluginDates: TStringList;
+      hashes: TStringList;
       masters: TStringList;
       status: integer;
       method: string;
       renumbering: string;
-      mergeDataPath: string;
-      mergePlugin: TPlugin;
+      dataPath: string;
+      plugin: TPlugin;
       map: TStringList;
       files: TStringList;
       fails: TStringList;
@@ -144,7 +147,7 @@ type
   function MergeByName(merges: TList; name: string): TMerge;
   function MergeByFilename(merges: TList; filename: string): TMerge;
   function CreateNewMerge(merges: TList): TMerge;
-  function CreateNewPlugin(plugins: TList; filename: string): TPlugin;
+  function CreateNewPlugin(filename: string): TPlugin;
   procedure SaveMerges;
   procedure LoadMerges;
 
@@ -163,7 +166,9 @@ const
     ( id: 8; color: $009000; caption: 'Ready to be rebuilt'; ),
     ( id: 9; color: $009000; caption: 'Ready to be rebuilt [Forced]'; )
   );
+  UpToDateStatuses = [5, 6];
   BuildStatuses = [7, 8, 9];
+  RebuildStatuses = [8, 9];
   ForcedStatuses = [6, 9];
 
 var
@@ -495,7 +500,7 @@ var
   FileStream: TFileStream;
   p, s: string;
 begin
-  _File := merge.mergePlugin.pluginFile;
+  _File := merge.plugin._File;
   Group := _File.GroupBySignature['QUST'];
 
   if Assigned(Group) then begin
@@ -515,7 +520,7 @@ begin
 
   if Length(FormIDs) <> 0 then try
     try
-      p := merge.mergeDataPath + 'seq\';
+      p := merge.dataPath + 'seq\';
       if not DirectoryExists(p) then
         if not ForceDirectories(p) then
           raise Exception.Create('  Unable to create SEQ directory for merge.');
@@ -523,6 +528,7 @@ begin
       FileStream := TFileStream.Create(s, fmCreate);
       FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
       Tracker.Write('  Created SEQ file: ' + s);
+      merge.files.Add(s);
     finally
       if Assigned(FileStream) then
         FreeAndNil(FileStream);
@@ -1007,14 +1013,14 @@ begin
 end;
 
 { Create a new plugin }
-function CreateNewPlugin(plugins: TList; filename: string): TPlugin;
+function CreateNewPlugin(filename: string): TPlugin;
 var
   aFile: IwbFile;
   LoadOrder: integer;
   plugin: TPlugin;
 begin
   Result := nil;
-  LoadOrder := plugins.Count + 1;
+  LoadOrder := PluginsList.Count + 1;
   // fail if maximum load order reached
   if LoadOrder > 254 then begin
     Tracker.Write('Maximum load order reached!  Can''t create file '+filename);
@@ -1028,8 +1034,8 @@ begin
   // create new plugin object
   plugin := TPlugin.Create;
   plugin.filename := filename;
-  plugin.pluginFile := aFile;
-  plugins.Add(plugin);
+  plugin._File := aFile;
+  PluginsList.Add(plugin);
 
   Result := plugin;
 end;
@@ -1160,15 +1166,25 @@ var
 begin
   hasData := true;
   // get data
-  filename := pluginFile.FileName;
-  Container := pluginFile as IwbContainer;
+  filename := _File.FileName;
+  Container := _File as IwbContainer;
   Container := Container.Elements[0] as IwbContainer;
   author := Container.GetElementEditValue('CNAM - Author');
   numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
+
+  // get masters, flags
+  GetMasters(_File, masters);
+  GetFlags;
+
+  // get hash, datapath
+  GetHash;
+  GetDataPath;
+
+  // get description
   s := Container.GetElementEditValue('SNAM - Description');
   description.Text := Wordwrap(s, 70);
-  GetMasters(pluginFile, masters);
-  GetFlags;
+
+  // get reports
   entry := GetEntry(filename, numRecords, ProgramVersion);
   s := Trim(StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]));
   reports.Text := Wordwrap(s, 70);
@@ -1177,15 +1193,26 @@ begin
   fileSize := GetFileSize(wbDataPath + filename);
   dateModified := DateTimeToStr(GetLastModified(wbDataPath + filename));
 
+  // get numOverrides if not blacklisted
   if not (IS_BLACKLISTED in flags) then
-    numOverrides := IntToStr(CountOverrides(pluginFile));
+    numOverrides := IntToStr(CountOverrides(_File));
+end;
+
+procedure TPlugin.GetHash;
+begin
+  hash := IntToHex(wbCRC32File(wbDataPath + filename), 8);
+end;
+
+procedure TPlugin.GetDataPath;
+begin
+  dataPath := wbDataPath;
 end;
 
 { Checks for errors in a plugin }
 procedure TPlugin.FindErrors;
 begin
   errors.Clear;
-  CheckForErrors(2, pluginFile as IwbElement, errors);
+  CheckForErrors(2, _File as IwbElement, errors);
   if errors.Count = 0 then
     errors.Add('None.');
 end;
@@ -1198,8 +1225,7 @@ begin
   status := 0;
   dateBuilt := 0;
   plugins := TStringList.Create;
-  pluginSizes := TList.Create;
-  pluginDates := TStringList.Create;
+  hashes := TStringList.Create;
   masters := TStringList.Create;
   map := TStringList.Create;
   files := TStringList.Create;
@@ -1225,12 +1251,9 @@ begin
   obj.O['plugins'] := SA([]);
   for i := 0 to Pred(plugins.Count) do
     obj.A['plugins'].S[i] := plugins[i];
-  obj.O['pluginSizes'] := SA([]);
-  for i := 0 to Pred(pluginSizes.Count) do
-    obj.A['pluginSizes'].I[i] := Int64(pluginSizes[i]);
-  obj.O['pluginDates'] := SA([]);
-  for i := 0 to Pred(pluginDates.Count) do
-    obj.A['pluginDates'].S[i] := pluginDates[i];
+  obj.O['pluginHashes'] := SA([]);
+  for i := 0 to Pred(hashes.Count) do
+    obj.A['pluginHashes'].S[i] := hashes[i];
   obj.O['masters'] := SA([]);
   for i := 0 to Pred(masters.Count) do
     obj.A['masters'].S[i] := masters[i];
@@ -1271,10 +1294,8 @@ begin
   // load array attributes
   for item in obj['plugins'] do
     plugins.Add(item.AsString);
-  for item in obj['pluginSizes'] do
-    pluginSizes.Add(Pointer(item.AsInteger));
-  for item in obj['pluginDates'] do
-    pluginDates.Add(item.AsString);
+  for item in obj['pluginHashes'] do
+    hashes.Add(item.AsString);
   for item in obj['masters'] do
     masters.Add(item.AsString);
   for item in obj['files'] do
@@ -1312,9 +1333,9 @@ begin
   for i := 0 to Pred(plugins.count) do begin
     plugin := PluginByFilename(plugins[i]);
     if Assigned(plugin) then begin
-      if plugin.dateModified <> pluginDates[i] then begin
-        Logger.Write(plugin.filename + ' was modified ' + plugin.dateModified +
-          ', '+ name + ' has '+pluginDates[i]);
+      if plugin.hash <> hashes[i] then begin
+        Logger.Write(plugin.filename + ' has hash ' + plugin.dateModified +
+          ', '+ name + ' has '+hashes[i]);
         Result := true;
       end;
     end;
@@ -1324,7 +1345,7 @@ end;
 { Checks if the files associated with a merge exist }
 function TMerge.FilesExist: boolean;
 begin
-  Result := FileExists(mergeDataPath + filename);
+  Result := FileExists(dataPath + filename);
 end;
 
 procedure TMerge.GetStatus;
@@ -1378,7 +1399,7 @@ begin
     end
   end;
 
-  mergeDataPath := settings.mergeDirectory + name + '\';
+  dataPath := settings.mergeDirectory + name + '\';
   if (not PluginsModified) and FilesExist then begin
     Logger.Write('  Up to date.');
     status := 5;

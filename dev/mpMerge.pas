@@ -52,7 +52,7 @@ begin
   // loop through plugins to merge
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := pluginsToMerge[i];
-    aFile := plugin.pluginFile;
+    aFile := plugin._File;
     // loop through records
     for j := 0 to Pred(aFile.RecordCount) do begin
       aRecord := aFile.Records[j];
@@ -64,8 +64,8 @@ begin
   end;
 
   // loop through mergePlugin
-  plugin := merge.mergePlugin;
-  aFile := plugin.pluginFile;
+  plugin := merge.plugin;
+  aFile := plugin._File;
   // loop through records
   for j := 0 to Pred(aFile.RecordCount) do begin
     aRecord := aFile.Records[j];
@@ -118,7 +118,7 @@ begin
   // renumber records in all pluginsToMerge
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := pluginsToMerge[i];
-    aFile := plugin.pluginFile;
+    aFile := plugin._File;
     Tracker.Write('  Renumbering records in ' + plugin.filename);
     aFile.BuildRef; // build reference table so we can renumber references
 
@@ -180,7 +180,7 @@ var
   aFile: IwbFile;
 begin
   try
-    aFile := merge.mergePlugin.pluginFile;
+    aFile := merge.plugin._File;
     wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
   except on x : Exception do begin
       Tracker.Write('    Exception copying '+aRecord.Name+': '+x.Message);
@@ -202,7 +202,7 @@ begin
   // copy records from all plugins to be merged
   for i := Pred(pluginsToMerge.Count) downto 0 do begin
     plugin := TPlugin(pluginsToMerge[i]);
-    aFile := plugin.pluginFile;
+    aFile := plugin._File;
     // copy records from file
     Tracker.Write('  Copying records from '+plugin.filename);
     for j := 0 to Pred(aFile.RecordCount) do begin
@@ -212,6 +212,7 @@ begin
     end;
   end;
 end;
+
 
 {******************************************************************************}
 { Copy Assets methods
@@ -227,54 +228,145 @@ end;
 }
 {******************************************************************************}
 
-procedure CopyFaceGen(var plugin: TPlugin; var merge: TMerge);
 const
   faceTintPath = 'textures\actors\character\facegendata\facetint\';
   faceGeomPath = 'meshes\actors\character\facegendata\facegeom\';
-var
-  bsaFilename: string;
-begin
-  if HAS_BSA in plugin.flags then begin
-    bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
-    Tracker.Write('    Extracting '+bsaFilename+'\'+faceTintPath+plugin.filename);
-    ExtractBSA(bsaFilename, faceTintPath+plugin.filename, tempPath);
-    Tracker.Write('    Extracting '+bsaFilename+'\'+faceGeomPath+plugin.filename);
-    ExtractBSA(bsaFilename, faceGeomPath+plugin.filename, tempPath);
-  end;
-end;
-
-procedure CopyVoice(var plugin: TPlugin; var merge: TMerge);
-const
   voicePath = 'sound\voice';
+  translationPath = 'interface\translations\';
+  scriptsPath = 'scripts\';
 var
-  bsaFilename: string;
+  languages: TStringList;
+  translations: array[0..31] of TStringList; // 32 languages maximum
+
+procedure CopyFaceGen(var plugin: TPlugin; var merge: TMerge; srcPath, dstPath: string);
+var
+  info: TSearchRec;
+  oldForm, newForm, dstFile, srcFile: string;
+  index: integer;
 begin
-  if HAS_BSA in plugin.flags then begin
-    bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
-    Tracker.Write('    Extracting '+bsaFilename+'\'+voicePath+plugin.filename);
-    ExtractBSA(bsaFilename, voicePath+plugin.filename, tempPath);
-  end;
+  srcPath := srcPath + plugin.filename + '\';
+  dstPath := dstPath + plugin.filename + '\';
+  // if no files in source path, exit
+  if FindFirst(srcPath + '*', faAnyFile, info) <> 0 then
+    exit;
+  // search srcPath for asset files
+  repeat
+    if (Length(info.Name) < 8) then
+      continue;  // skip . and ..
+    // use merge.map to map to new filename if necessary
+    srcFile := info.Name;
+    dstFile := dstPath + srcFile;
+    oldForm := Copy(srcFile, 1, 8);
+    index := merge.map.IndexOfName(oldForm);
+    if (index > -1) then begin
+      newForm := '00' + Copy(merge.map.Values[oldForm], 3, 6);
+      dstFile := dstPath + StringReplace(srcFile, oldForm, newForm, []);
+    end;
+
+    // copy file
+    Tracker.Write('    Copying asset "'+srcFile+'" to "'+dstFile+'"');
+    CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), true);
+    merge.files.Add(dstPath + dstFile);
+  until FindNext(info) <> 0;
+  FindClose(info);
 end;
 
-procedure CopyTranslations(var plugin: TPlugin; var merge: TMerge);
-const
-  translationPath = 'interface\translations\';
+procedure CopyVoice(var plugin: TPlugin; var merge: TMerge; srcPath, dstPath: string);
 var
-  bsaFilename: string;
+  info, folder: TSearchRec;
+  oldForm, newForm, dstFile, srcFile: string;
+  index: integer;
 begin
-  if HAS_BSA in plugin.flags then begin
-    bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
-    Tracker.Write('    Extracting '+bsaFilename+'\'+translationPath);
-    ExtractBSA(bsaFilename, translationPath, tempPath);
-  end;
+  srcPath := srcPath + plugin.filename + '\';
+  dstPath := dstPath + plugin.filename + '\';
+  // if no folders in srcPath, exit
+  if FindFirst(srcPath + '*', faDirectory, folder) <> 0 then
+    exit;
+  // search source path for asset folders
+  repeat
+    if (Pos('.', folder.Name) = 1) then
+      continue; // skip . and ..
+    ForceDirectories(dstPath + folder.Name); // make folder
+    if FindFirst(srcPath + folder.Name + '\*', faAnyFile, info) <> 0 then
+      continue; // if folder is empty, skip to next folder
+    // search folder for files
+    repeat
+      if (Length(info.Name) < 8) then
+        continue; // skip . and ..
+      // use merge.map to map to new filename if necessary
+      srcFile := info.Name;
+      dstFile := dstPath + srcFile;
+      oldForm := Copy(srcFile, 1, 8);
+      index := merge.map.IndexOfName(oldForm);
+      if (index > -1) then begin
+        newForm := '00' + Copy(merge.map.Values[oldForm], 3, 6);
+        dstFile := dstPath + StringReplace(srcFile, oldForm, newForm, []);
+      end;
+
+      // copy file
+      Tracker.Write('    Copying asset "'+srcFile+'" to "'+dstFile+'"');
+      CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), true);
+      merge.files.Add(dstPath + dstFile);
+    until FindNext(info) <> 0;
+    FindClose(info);
+  until FindNext(folder) <> 0;
+  FindClose(folder);
+end;
+
+procedure CopyTranslations(var plugin: TPlugin; var merge: TMerge; srcPath: string);
+var
+  info: TSearchRec;
+  fn, language: string;
+  index: integer;
+  sl: TStringList;
+begin
+  fn := Lowercase(ChangeFileExt(plugin.filename, ''));
+  if FindFirst(srcPath+'*.txt', faAnyFile, info) <> 0 then
+    exit;
+  repeat
+    if (Pos(fn, Lowercase(info.Name)) <> 1) then
+      continue;
+    Tracker.Write('    Copying MCM translation "'+info.Name+'"');
+    language := StringReplace(Lowercase(info.Name), fn, '', [rfReplaceAll]);
+    index := languages.IndexOf(language);
+    if index > -1 then begin
+      sl := TStringList.Create;
+      sl.LoadFromFile(srcPath + info.Name);
+      translations[index].Text := translations[index].Text + #13#10#13#10 + sl.Text;
+      sl.Free;
+    end
+    else begin
+      translations[languages.Count] := TStringList.Create;
+      translations[languages.Count].LoadFromFile(srcPath + info.Name);
+      languages.Add(language);
+    end;
+  until FindNext(info) <> 0;
+  FindClose(info);
 end;
 
 procedure SaveTranslations(var merge: TMerge);
+var
+  i: integer;
+  output, path: string;
 begin
-  // soon
+  // terminate if we have no translation files to save
+  if languages.Count = 0 then
+    exit;
+
+  // set destination path
+  path := merge.dataPath + translationPath;
+  ForceDirectories(path);
+
+  // save all new translation files
+  for i := Pred(languages.Count) downto 0 do begin
+    output := path + ChangeFileExt(merge.filename, '') + languages[i];
+    translations[i].SaveToFile(output);
+    merge.files.Add(output);
+    translations[i].Free;
+  end;
 end;
 
-procedure CopyScriptFragments(var plugin: TPlugin; var merge: TMerge);
+procedure CopyScriptFragments(var plugin: TPlugin; var merge: TMerge; srcPath, dstPath: string);
 begin
   // soon
 end;
@@ -285,22 +377,68 @@ begin
 end;
 
 procedure CopyAssets(var plugin: TPlugin; var merge: TMerge);
+var
+  bsaFilename: string;
 begin
-  if settings.handleFaceGenData and (HAS_FACEDATA in plugin.flags) then
-    CopyFaceGen(plugin, merge);
+  // handleFaceGenData
+  if settings.handleFaceGenData and (HAS_FACEDATA in plugin.flags) then begin
+    // if BSA exists, extract FaceGenData from it to temp path and copy
+    if HAS_BSA in plugin.flags then begin
+      bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+      Tracker.Write('    Extracting '+bsaFilename+'\'+faceTintPath+plugin.filename);
+      ExtractBSA(bsaFilename, faceTintPath+plugin.filename, tempPath);
+      Tracker.Write('    Extracting '+bsaFilename+'\'+faceGeomPath+plugin.filename);
+      ExtractBSA(bsaFilename, faceGeomPath+plugin.filename, tempPath);
 
-  if settings.handleVoiceAssets and (HAS_VOICEDATA in plugin.flags) then
-    CopyVoice(plugin, merge);
+      // copy assets from tempPath
+      CopyFaceGen(plugin, merge, tempPath + faceTintPath, merge.dataPath + faceTintPath);
+      CopyFaceGen(plugin, merge, tempPath + faceGeomPath, merge.dataPath + faceGeomPath);
+    end;
 
-  if settings.handleMCMTranslations and (HAS_TRANSLATION in plugin.flags) then
-    CopyTranslations(plugin, merge);
+    // copy assets from wbDataPath
+    CopyFaceGen(plugin, merge, wbDataPath + faceTintPath, merge.dataPath + faceTintPath);
+    CopyFaceGen(plugin, merge, wbDataPath + faceGeomPath, merge.dataPath + faceGeomPath);
+  end;
 
-  if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then
-    CopyScriptFragments(plugin, merge);
+  // handleVoiceAssets
+  if settings.handleVoiceAssets and (HAS_VOICEDATA in plugin.flags) then begin
+    // if BSA exists, extract voice assets from it to temp path and copy
+    if HAS_BSA in plugin.flags then begin
+      bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+      Tracker.Write('    Extracting '+bsaFilename+'\'+voicePath+plugin.filename);
+      ExtractBSA(bsaFilename, voicePath+plugin.filename, tempPath);
+      CopyVoice(plugin, merge, tempPath + voicePath, merge.dataPath + voicePath);
+    end;
+    CopyVoice(plugin, merge, wbDataPath + voicePath, merge.dataPath + voicePath);
+  end;
 
+  // handleMCMTranslations
+  if settings.handleMCMTranslations and (HAS_TRANSLATION in plugin.flags) then begin
+    // if BSA exists, extract MCM translations from it to temp path and copy
+    if HAS_BSA in plugin.flags then begin
+      bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+      Tracker.Write('    Extracting '+bsaFilename+'\'+translationPath);
+      ExtractBSA(bsaFilename, translationPath, tempPath);
+      CopyTranslations(plugin, merge, tempPath + translationPath);
+    end;
+    CopyTranslations(plugin, merge, wbDataPath + translationPath);
+  end;
+
+  // handleScriptFragments
+  if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then begin
+    // if BSA exists, extract scripts from it to temp path and copy
+    if HAS_BSA in plugin.flags then begin
+      bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+      Tracker.Write('    Extracting '+bsaFilename+'\'+scriptsPath);
+      ExtractBSA(bsaFilename, scriptsPath, tempPath);
+      CopyScriptFragments(plugin, merge, tempPath + scriptsPath, merge.dataPath + scriptsPath);
+    end;
+    CopyScriptFragments(plugin, merge, wbDataPath + scriptsPath, merge.dataPath + scriptsPath);
+  end;
+
+  // copyGeneralAssets
   if settings.copyGeneralAssets then
     CopyGeneralAssets(plugin, merge);
-
 end;
 
 {******************************************************************************}
@@ -348,22 +486,22 @@ begin
 
   // identify destination file or create new one
   plugin := PluginByFilename(merge.filename);
-  merge.mergePlugin := nil;
+  merge.plugin := nil;
   merge.map.Clear;
   if Assigned(plugin) then begin
     usedExistingFile := true;
-    merge.mergePlugin := plugin;
+    merge.plugin := plugin;
   end
   else begin
     usedExistingFile := false;
-    merge.mergePlugin := CreateNewPlugin(PluginsList, merge.filename);
+    merge.plugin := CreateNewPlugin(merge.filename);
   end;
-  mergeFile := merge.mergePlugin.pluginFile;
+  mergeFile := merge.plugin._File;
   Tracker.Write(' ');
-  Tracker.Write('Merge is using plugin: '+merge.mergePlugin.filename);
+  Tracker.Write('Merge is using plugin: '+merge.plugin.filename);
 
   // don't merge if mergeFile not assigned
-  if not Assigned(merge.mergePlugin) then begin
+  if not Assigned(merge.plugin) then begin
     Tracker.Write(failed + ', couldn''t assign merge file.');
     exit;
   end;
@@ -374,7 +512,7 @@ begin
     for i := 0 to Pred(pluginsToMerge.Count) do begin
       plugin := pluginsToMerge[i];
 
-      if PluginsList.IndexOf(plugin) > PluginsList.IndexOf(merge.mergePlugin) then begin
+      if PluginsList.IndexOf(plugin) > PluginsList.IndexOf(merge.plugin) then begin
         Tracker.Write(failed + ', '+plugin.filename +
           ' is at a lower load order position than '+merge.filename);
         pluginsToMerge.Free;
@@ -384,8 +522,8 @@ begin
   end;
 
   // force merge directories to exist
-  merge.mergeDataPath := settings.mergeDirectory + merge.name + '\';
-  ForceDirectories(merge.mergeDataPath);
+  merge.dataPath := settings.mergeDirectory + merge.name + '\';
+  ForceDirectories(merge.dataPath);
 
   // add required masters
   slMasters := TStringList.Create;
@@ -395,10 +533,14 @@ begin
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := TPlugin(pluginsToMerge[i]);
     slMasters.Add(plugin.filename);
-    GetMasters(plugin.pluginFile, slMasters);
+    GetMasters(plugin._File, slMasters);
   end;
-  AddMasters(merge.mergePlugin.pluginFile, slMasters);
-  mergeFile.SortMasters;
+  try
+    AddMasters(merge.plugin._File, slMasters);
+    mergeFile.SortMasters;
+  except on Exception do
+    // nothing
+  end;
   Tracker.Write('Done adding masters');
 
   // overrides merging method
@@ -418,12 +560,14 @@ begin
   // copy assets
   Tracker.Write(' ');
   Tracker.Write('Copying assets');
+  languages := TStringList.Create;
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := pluginsToMerge[i];
     Tracker.Write('  Copying assets for '+plugin.filename);
     CopyAssets(plugin, merge);
   end;
   SaveTranslations(merge);
+  languages.Free;
 
   // create SEQ file
   CreateSEQFile(merge);
@@ -432,7 +576,7 @@ begin
   desc := 'Merged Plugin: ';
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := pluginsToMerge[i];
-    aFile := plugin.pluginFile;
+    aFile := plugin._File;
     mergeDesc := (aFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'];
     if Pos('Merged Plugin', mergeDesc) > 0 then
       desc := desc+StringReplace(mergeDesc, 'Merged Plugin:', '', [rfReplaceAll])
@@ -469,31 +613,27 @@ begin
       plugin := pluginsToMerge[i];
       Tracker.Write('  Reloading '+plugin.filename+' from disk');
       LoadOrder := PluginsList.IndexOf(plugin);
-      plugin.pluginFile := wbFile(wbDataPath + plugin.filename, LoadOrder);
+      plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
     end;
   end;
 
   // update merge pluginSizes and pluginDates
-  merge.pluginSizes.Clear;
-  merge.pluginDates.Clear;
+  merge.hashes.Clear;
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := TPlugin(pluginsToMerge[i]);
-    merge.pluginSizes.Add(Pointer(plugin.fileSize));
-    merge.pluginDates.Add(plugin.dateModified);
+    merge.hashes.Add(plugin.hash);
   end;
 
   // save merged plugin
-  FileStream := TFileStream.Create(merge.mergeDataPath + merge.filename, fmCreate);
+  FileStream := TFileStream.Create(merge.dataPath + merge.filename, fmCreate);
   try
     Tracker.Write(' ');
-    Tracker.Write('Saving: ' + merge.mergeDataPath + merge.filename);
+    Tracker.Write('Saving: ' + merge.dataPath + merge.filename);
     mergeFile.WriteToStream(FileStream, False);
+    merge.files.Add(merge.dataPath + merge.filename);
   finally
     FileStream.Free;
   end;
-
-  // add to plugins list
-  PluginsList.Add(merge.mergePlugin);
 
   // done merging
   time := (Now - Time) * 86400;
@@ -507,8 +647,9 @@ var
   i: integer;
   path: string;
 begin
+  // delete files
   for i := Pred(merge.files.Count) downto 0 do begin
-    path := merge.mergeDataPath + merge.files[i];
+    path := merge.files[i];
     if FileExists(path) then
       DeleteFile(path);
     merge.files.Delete(i);

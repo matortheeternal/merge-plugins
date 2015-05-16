@@ -46,7 +46,7 @@ object MergeForm: TMergeForm
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = CreateNewMergeClick
+      OnClick = CreateMergeButtonClick
     end
     object BuildButton: TSpeedButton
       Left = 52
@@ -57,7 +57,7 @@ object MergeForm: TMergeForm
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = RebuildMergesClick
+      OnClick = RebuildButtonClick
     end
     object ReportButton: TSpeedButton
       Left = 102
@@ -131,7 +131,7 @@ object MergeForm: TMergeForm
       Top = 7
       Width = 654
       Height = 608
-      ActivePage = MergesTabSheet
+      ActivePage = PluginsTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
@@ -184,6 +184,10 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -196,8 +200,8 @@ object MergeForm: TMergeForm
               Caption = 'Index'
             end
             item
+              AutoSize = True
               Caption = 'Name'
-              Width = 175
             end
             item
               Caption = 'Filename'
@@ -228,6 +232,10 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           646
           580)
@@ -267,11 +275,10 @@ object MergeForm: TMergeForm
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       DisplayOptions = [doAutoColResize, doKeyColFixed]
-      DoubleBuffered = False
+      DoubleBuffered = True
       FixedCols = 1
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goAlwaysShowEditor, goThumbTracking]
       ParentDoubleBuffered = False
-      ScrollBars = ssVertical
       TabOrder = 0
       TitleCaptions.Strings = (
         'Name'
@@ -298,7 +305,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C010107000900D40020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000900E80020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1390,14 +1397,19 @@ object MergeForm: TMergeForm
     Top = 112
     object CreateNewMergeItem: TMenuItem
       Caption = 'Create new merge'
-      OnClick = CreateNewMergeClick
+      OnClick = CreateMergeButtonClick
+    end
+    object EditMergeItem: TMenuItem
+      Caption = 'Edit merge'
+      OnClick = EditMergeItemClick
     end
     object DeleteMergeItem: TMenuItem
       Caption = 'Delete merge'
       OnClick = DeleteMerge
     end
-    object RebuildMergeItem: TMenuItem
+    object BuildMergeItem: TMenuItem
       Caption = 'Build merge'
+      OnClick = BuildMergeItemClick
     end
     object OpenInExplorerItem: TMenuItem
       Caption = 'Open in explorer'
@@ -1405,13 +1417,14 @@ object MergeForm: TMergeForm
     end
     object ReportOnMergeItem: TMenuItem
       Caption = 'Report on merge'
+      OnClick = ReportOnMergeItemClick
     end
     object ForceRebuildItem: TMenuItem
-      Caption = 'Force rebuild'
+      Caption = 'Force rebuild status'
       OnClick = ForceRebuildItemClick
     end
     object IgnoreRebuildItem: TMenuItem
-      Caption = 'Ignore rebuild'
+      Caption = 'Ignore rebuild status'
       OnClick = IgnoreRebuildItemClick
     end
     object N1: TMenuItem
@@ -1419,17 +1432,18 @@ object MergeForm: TMergeForm
     end
     object BuildAllMergesItem: TMenuItem
       Caption = 'Build all merges'
-      OnClick = RebuildMergesClick
+      OnClick = BuildAllMergesItemClick
     end
     object ReportOnMergesItem: TMenuItem
       Caption = 'Report on all merges'
+      OnClick = ReportOnMergesItemClick
     end
   end
   object FlagList: TImageList
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010107001800900010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107001800A40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000003B3B3BFF212121EBC7C7C738CCCC
       CC33C3C3C33DFFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00CBCBCB34FFFF

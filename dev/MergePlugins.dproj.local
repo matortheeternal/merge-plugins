@@ -3,8 +3,8 @@
 	<Transactions>
     <Transaction>2015/04/24 00:29:52.000.346,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Edit.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\mergeplugins.dproj</Transaction>
     <Transaction>2015/04/24 00:31:02.000.053,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\mergeplugins.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj</Transaction>
-    <Transaction>2015/04/24 00:31:20.000.479,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Edit.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj</Transaction>
     <Transaction>2015/04/24 00:31:20.000.450,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Edit.dproj</Transaction>
+    <Transaction>2015/04/24 00:31:20.000.479,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Edit.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj</Transaction>
     <Transaction>2015/04/24 00:31:29.000.741,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\TES5Merge.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\MergeEdit.dproj</Transaction>
     <Transaction>2015/04/24 00:34:26.000.288,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\MergeEdit.dproj=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\MergePlugins.dproj</Transaction>
     <Transaction>2015/04/24 12:11:00.000.744,E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\mteMergeForm.dfm=E:\code\dev\dp\skyrim-plugin-decoding-project-read-only\TES5Edit\branches\dev-mator\Unit1.dfm</Transaction>
@@ -20,16 +20,16 @@
     <Transaction>2015/04/29 23:21:52.000.518,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteDictionaryForm.pas</Transaction>
     <Transaction>2015/04/29 23:21:52.000.518,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteDictionaryForm.dfm</Transaction>
     <Transaction>2015/04/29 23:22:06.000.739,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit2.pas</Transaction>
-    <Transaction>2015/04/29 23:22:17.000.016,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit2.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.pas</Transaction>
     <Transaction>2015/04/29 23:22:17.000.016,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit2.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.dfm</Transaction>
+    <Transaction>2015/04/29 23:22:17.000.016,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit2.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.pas</Transaction>
     <Transaction>2015/04/29 23:22:28.000.469,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteHelpers.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpHelpers.pas</Transaction>
     <Transaction>2015/04/29 23:22:33.000.118,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteMerge.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMerge.pas</Transaction>
     <Transaction>2015/04/29 23:22:36.000.808,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteDictionaryForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpDictionaryForm.pas</Transaction>
     <Transaction>2015/04/29 23:22:36.000.808,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteDictionaryForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpDictionaryForm.dfm</Transaction>
     <Transaction>2015/04/29 23:22:41.000.223,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteMergeForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMergeForm.pas</Transaction>
     <Transaction>2015/04/29 23:22:41.000.223,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteMergeForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpMergeForm.dfm</Transaction>
-    <Transaction>2015/04/29 23:22:45.000.269,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpOptionsForm.pas</Transaction>
     <Transaction>2015/04/29 23:22:45.000.269,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpOptionsForm.dfm</Transaction>
+    <Transaction>2015/04/29 23:22:45.000.269,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mteOptionsForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpOptionsForm.pas</Transaction>
     <Transaction>2015/04/30 09:25:44.000.213,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
     <Transaction>2015/04/30 09:25:49.000.991,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpLogger.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
     <Transaction>2015/04/30 21:27:45.000.704,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\superobject.pas</Transaction>
@@ -39,8 +39,11 @@
     <Transaction>2015/05/03 11:19:01.000.842,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpProgressForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
     <Transaction>2015/05/03 11:19:01.000.842,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpProgressForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.dfm</Transaction>
     <Transaction>2015/05/05 08:46:09.000.641,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
-    <Transaction>2015/05/05 08:47:16.000.620,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpSplash.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
     <Transaction>2015/05/05 08:47:16.000.620,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpSplash.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.dfm</Transaction>
+    <Transaction>2015/05/05 08:47:16.000.620,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpSplash.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
     <Transaction>2015/05/05 14:17:42.000.934,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpHelpers.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpBase.pas</Transaction>
+    <Transaction>2015/05/15 17:06:41.041,=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
+    <Transaction>2015/05/15 17:06:48.500,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpEditForm.pas=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.pas</Transaction>
+    <Transaction>2015/05/15 17:06:48.500,F:\Users\Mator\Documents\GitHub\merge-plugins\dev\mpEditForm.dfm=F:\Users\Mator\Documents\GitHub\merge-plugins\dev\Unit1.dfm</Transaction>
   </Transactions>
 </BorlandProject>

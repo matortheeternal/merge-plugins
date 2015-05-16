@@ -20,7 +20,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = GeneralTabSheet
+    ActivePage = MergingTabSheet
     TabOrder = 0
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
@@ -116,10 +116,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 551
-      ExplicitHeight = 0
       object GroupBox2: TGroupBox
         Left = 6
         Top = 6
@@ -297,7 +293,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800180010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
