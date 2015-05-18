@@ -232,10 +232,6 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           646
           580)
@@ -305,7 +301,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C010107000900E80020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000900EC0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1372,9 +1368,9 @@ object MergeForm: TMergeForm
     OnPopup = PluginsPopupMenuPopup
     Left = 48
     Top = 112
-    object Addtomerge1: TMenuItem
+    object AddToMerge: TMenuItem
       Caption = 'Add to merge'
-      object NewMerge1: TMenuItem
+      object NewMerge: TMenuItem
         Caption = '<New Merge>'
         OnClick = AddToNewMergeClick
       end
@@ -1386,7 +1382,7 @@ object MergeForm: TMergeForm
     object ReportOnPlugin: TMenuItem
       Caption = 'Report on plugin'
     end
-    object CheckforErrors1: TMenuItem
+    object CheckforErrorsItem: TMenuItem
       Caption = 'Check for errors'
       OnClick = CheckForErrorsClick
     end
@@ -1443,7 +1439,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010107001800A40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107001800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000003B3B3BFF212121EBC7C7C738CCCC
       CC33C3C3C33DFFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00CBCBCB34FFFF

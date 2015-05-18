@@ -231,7 +231,7 @@ end;
 const
   faceTintPath = 'textures\actors\character\facegendata\facetint\';
   faceGeomPath = 'meshes\actors\character\facegendata\facegeom\';
-  voicePath = 'sound\voice';
+  voicePath = 'sound\voice\';
   translationPath = 'interface\translations\';
   scriptsPath = 'scripts\';
 var

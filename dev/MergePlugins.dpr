@@ -24,10 +24,9 @@ uses
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
   mpLogger in 'mpLogger.pas',
-  superobject in 'superobject.pas',
   mpTracker in 'mpTracker.pas',
   mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
-  mpSplash in 'mpSplash.pas' {SplashForm},
+  mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm};
 
 {$R *.res}

@@ -4,5 +4,9 @@
     <property name="$defaultDiagram" value="true" />
     <property name="$metaclass" value="Package Diagram" />
     <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:MergePlugins:MergePlugins.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:MergePlugins:MergePlugins.@unitclass.IMAGE_FILE_LARGE_ADDRESS_AWARE" />
+    </reference>
   </view>
 </nodeSet>

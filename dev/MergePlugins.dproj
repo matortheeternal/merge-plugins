@@ -94,17 +94,42 @@
 				<Form>OptionsForm</Form>
 			</DCCReference>
 			<DCCReference Include="mpLogger.pas"/>
-			<DCCReference Include="superobject.pas"/>
 			<DCCReference Include="mpTracker.pas"/>
 			<DCCReference Include="mpProgressForm.pas">
 				<Form>ProgressForm</Form>
 			</DCCReference>
-			<DCCReference Include="mpSplash.pas">
+			<DCCReference Include="mpSplashForm.pas">
 				<Form>SplashForm</Form>
 			</DCCReference>
 			<DCCReference Include="mpEditForm.pas">
 				<Form>EditForm</Form>
 			</DCCReference>
+			<None Include="ModelSupport_MergePlugins\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpTracker\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpDictionaryForm\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpEditForm\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\superobject\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\MergePlugins\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpBase\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpMergeForm\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpOptionsForm\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpLogger\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpProgressForm\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpSplashForm\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpMerge\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\MergePlugins\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpBase\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpDictionaryForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpEditForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpLogger\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpMerge\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpMergeForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpOptionsForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpProgressForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpSplashForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpTracker\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\superobject\default.txaPackage"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -168,7 +193,7 @@
 					<Platform value="Win64">False</Platform>
 					<Platform value="Win32">True</Platform>
 				</Platforms>
-				<ModelSupport>False</ModelSupport>
+				<ModelSupport>True</ModelSupport>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>

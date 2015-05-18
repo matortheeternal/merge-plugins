@@ -4,5 +4,82 @@
     <property name="$defaultDiagram" value="true" />
     <property name="$metaclass" value="Package Diagram" />
     <property name="$name" value="default" />
+    <reference referencedUin="design:view:::v7lqjzuqngt_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="10,10,122,198" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpTracker.TProgressEvent" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpTracker.TLogEvent" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpTracker.TProgressTracker" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpTracker.@unitclass" />
+    </reference>
+    <reference referencedUin="design:view:::ubv8oeki6ys_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="151,1,156,151" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpDictionaryForm.@unitclass" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpDictionaryForm.TDictionaryForm" />
+    </reference>
+    <reference referencedUin="design:view:::zus1s9sg5ql_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="151,171,122,151" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpEditForm.TEditForm" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpEditForm.@unitclass" />
+    </reference>
+    <reference referencedUin="design:view:::oibwgvmtbij_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="326,1,182,577" />
+    </reference>
+    <reference referencedUin="design:view:::c36x3z6nt8s_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="12,227,131,134" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:MergePlugins.@unitclass" />
+    </reference>
+    <reference referencedUin="design:view:::c1fs511fynr_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="162,341,101,243" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.TPluginFlags" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.TPlugin" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.TEntry" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.TPluginFlag" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.TSettings" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.@unitclass" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.TMergeStatus" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpBase.TMerge" />
+    </reference>
+    <reference referencedUin="design:view:::panowrtpv0n_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="345,597,136,151" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpMergeForm.TMergeForm" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpMergeForm.@unitclass" />
+    </reference>
+    <reference referencedUin="design:view:::9yg3xt8g5uq_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="546,1,144,151" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpOptionsForm.@unitclass" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpOptionsForm.TOptionsForm" />
+    </reference>
+    <reference referencedUin="design:view:::wicts0ml25f_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="226,622,111,183" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpLogger.@unitclass" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpLogger.TLogEvent" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpLogger.TLogger" />
+    </reference>
+    <reference referencedUin="design:view:::wbuyrei47fh_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="546,171,151,151" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpProgressForm.TProgressForm" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpProgressForm.@unitclass" />
+    </reference>
+    <reference referencedUin="design:view:::j9ibolkalgl_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="77,622,139,151" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpSplashForm.@unitclass" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpSplashForm.TSplashForm" />
+    </reference>
+    <reference referencedUin="design:view:::d6xvva3nx2h_v">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="546,341,107,134" />
+      <reference referencedUin="delphi:e_class:src:MergePlugins:mpMerge.@unitclass" />
+    </reference>
   </view>
 </nodeSet>

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
-  mpLogger, mpTracker;
+  mpTracker;
 
 type
   TProgressForm = class(TForm)

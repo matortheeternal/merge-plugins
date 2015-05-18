@@ -39,18 +39,18 @@ type
     PluginsListView: TListView;
     DetailsLabel: TLabel;
     PluginsPopupMenu: TPopupMenu;
-    Addtomerge1: TMenuItem;
+    AddToMerge: TMenuItem;
     RemoveFromMerge: TMenuItem;
     ReportOnPlugin: TMenuItem;
     MergesPopupMenu: TPopupMenu;
     CreateNewMergeItem: TMenuItem;
     DeleteMergeItem: TMenuItem;
     BuildMergeItem: TMenuItem;
-    NewMerge1: TMenuItem;
+    NewMerge: TMenuItem;
     MergeListView: TListView;
     DetailsEditor: TValueListEditor;
     FlagList: TImageList;
-    CheckforErrors1: TMenuItem;
+    CheckforErrorsItem: TMenuItem;
     ForceRebuildItem: TMenuItem;
     BuildAllMergesItem: TMenuItem;
     N1: TMenuItem;
@@ -113,7 +113,6 @@ type
 var
   MergeForm: TMergeForm;
   currentMerge: TMerge;
-  blacklist: TStringList;
 
 implementation
 
@@ -642,6 +641,7 @@ begin
       if Assigned(merge) then
         merge.plugins.Delete(merge.plugins.IndexOf(pluginName));
     end;
+    plugin.merge := ' ';
   end;
 
   // update
