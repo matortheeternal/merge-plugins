@@ -104,6 +104,9 @@
 			<DCCReference Include="mpEditForm.pas">
 				<Form>EditForm</Form>
 			</DCCReference>
+			<DCCReference Include="mpGameForm.pas">
+				<Form>GameForm</Form>
+			</DCCReference>
 			<None Include="ModelSupport_MergePlugins\default.txaPackage"/>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
 			<None Include="ModelSupport_MergePlugins\mpTracker\default.txvpck"/>

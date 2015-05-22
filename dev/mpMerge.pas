@@ -37,7 +37,7 @@ var
   UsedFormIDs: array [0..$FFFFFF] of byte;
 
 const
-  debugRenumbering = false;
+  debugRenumbering = true;
 
 function FindHighestFormID(var pluginsToMerge: TList; var merge: TMerge): Cardinal;
 var
@@ -158,6 +158,9 @@ begin
       Tracker.Update(1);
     end;
   end;
+
+  // free memory
+  Records.Free;
 end;
 
 procedure RenumberAfter(merge: TMerge);
@@ -209,6 +212,7 @@ begin
       aRecord := aFile.Records[j];
       if aRecord.Signature = 'TES4' then Continue;
       CopyRecord(aRecord, merge, asNew);
+      Tracker.Update(1);
     end;
   end;
 end;
@@ -255,17 +259,17 @@ begin
       continue;  // skip . and ..
     // use merge.map to map to new filename if necessary
     srcFile := info.Name;
-    dstFile := dstPath + srcFile;
+    dstFile := srcFile;
     oldForm := Copy(srcFile, 1, 8);
     index := merge.map.IndexOfName(oldForm);
     if (index > -1) then begin
       newForm := '00' + Copy(merge.map.Values[oldForm], 3, 6);
-      dstFile := dstPath + StringReplace(srcFile, oldForm, newForm, []);
+      dstFile := StringReplace(srcFile, oldForm, newForm, []);
     end;
 
     // copy file
-    Tracker.Write('    Copying asset "'+srcFile+'" to "'+dstFile+'"');
-    CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), true);
+    Tracker.Write('    Copying asset "'+srcPath+srcFile+'" to "'+dstPath+dstFile+'"');
+    CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), false);
     merge.files.Add(dstPath + dstFile);
   until FindNext(info) <> 0;
   FindClose(info);
@@ -295,17 +299,17 @@ begin
         continue; // skip . and ..
       // use merge.map to map to new filename if necessary
       srcFile := info.Name;
-      dstFile := dstPath + srcFile;
+      dstFile := srcFile;
       oldForm := Copy(srcFile, 1, 8);
       index := merge.map.IndexOfName(oldForm);
       if (index > -1) then begin
         newForm := '00' + Copy(merge.map.Values[oldForm], 3, 6);
-        dstFile := dstPath + StringReplace(srcFile, oldForm, newForm, []);
+        dstFile := StringReplace(srcFile, oldForm, newForm, []);
       end;
 
       // copy file
-      Tracker.Write('    Copying asset "'+srcFile+'" to "'+dstFile+'"');
-      CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), true);
+      Tracker.Write('    Copying asset "'+srcPath+srcFile+'" to "'+dstPath+dstFile+'"');
+      CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), false);
       merge.files.Add(dstPath + dstFile);
     until FindNext(info) <> 0;
     FindClose(info);
@@ -523,6 +527,7 @@ begin
 
   // force merge directories to exist
   merge.dataPath := settings.mergeDirectory + merge.name + '\';
+  Tracker.Write('Merge data path: '+merge.dataPath);
   ForceDirectories(merge.dataPath);
 
   // add required masters
@@ -546,7 +551,7 @@ begin
   // overrides merging method
   if merge.method = 'Overrides' then begin
     Tracker.Write(' ');
-    RenumberBefore(pluginsToMerge, merge);
+      RenumberBefore(pluginsToMerge, merge);
     Tracker.Write(' ');
     CopyRecords(pluginsToMerge, merge);
   end;

@@ -98,8 +98,8 @@ begin
   ListView1.Items.Count := dictionary.Count;
 
   // read dictionary details
-  ValueListEditor1.InsertRow('Filename', 'dictionary.txt', true);
-  s := FormatByteSize(GetFileSize('dictionary.txt'));
+  ValueListEditor1.InsertRow('Filename', dictionaryFilename, true);
+  s := FormatByteSize(GetFileSize(dictionaryFilename));
   ValueListEditor1.InsertRow('File size', s, true);
   s := DateTimeToStr(GetLastModified('dictionary.txt'));
   ValueListEditor1.InsertRow('Date modified', s, true);

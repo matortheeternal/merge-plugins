@@ -20,12 +20,12 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = MergingTabSheet
+    ActivePage = GeneralTabSheet
     TabOrder = 0
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
-      object Label1: TLabel
+      object lblLanguage: TLabel
         Left = 6
         Top = 9
         Width = 47
@@ -56,9 +56,9 @@ object OptionsForm: TOptionsForm
           'Spanish'
           'Chinese')
       end
-      object GroupBox1: TGroupBox
+      object gbStyle: TGroupBox
         Left = 6
-        Top = 34
+        Top = 122
         Width = 548
         Height = 71
         Margins.Left = 6
@@ -84,9 +84,9 @@ object OptionsForm: TOptionsForm
           TabOrder = 1
         end
       end
-      object GroupBox4: TGroupBox
+      object gbUpdating: TGroupBox
         Left = 6
-        Top = 117
+        Top = 205
         Width = 548
         Height = 72
         Margins.Left = 6
@@ -112,11 +112,86 @@ object OptionsForm: TOptionsForm
           TabOrder = 1
         end
       end
+      object gbGameMode: TGroupBox
+        Left = 6
+        Top = 289
+        Width = 548
+        Height = 54
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Caption = 'Game mode'
+        TabOrder = 3
+        object lblGameMode: TLabel
+          Left = 12
+          Top = 20
+          Width = 97
+          Height = 13
+          Caption = 'Default game mode:'
+        end
+        object cbGameMode: TComboBox
+          Left = 184
+          Top = 20
+          Width = 202
+          Height = 21
+          Style = csDropDownList
+          ItemIndex = 0
+          TabOrder = 0
+          Text = 'None'
+          Items.Strings = (
+            'None')
+        end
+        object btnUpdateGameMode: TButton
+          Left = 392
+          Top = 18
+          Width = 150
+          Height = 25
+          Caption = 'Change game mode'
+          TabOrder = 1
+          OnClick = btnUpdateGameModeClick
+        end
+      end
+      object gbReports: TGroupBox
+        Left = 6
+        Top = 39
+        Width = 548
+        Height = 71
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Caption = 'Reports'
+        TabOrder = 4
+        object lblUsername: TLabel
+          Left = 12
+          Top = 20
+          Width = 48
+          Height = 13
+          Caption = 'Username'
+        end
+        object edUsername: TEdit
+          Left = 274
+          Top = 18
+          Width = 268
+          Height = 21
+          Margins.Right = 6
+          TabOrder = 0
+        end
+        object kbSaveReports: TCheckBox
+          Left = 12
+          Top = 40
+          Width = 117
+          Height = 17
+          Caption = 'Save reports locally'
+          TabOrder = 1
+        end
+      end
     end
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      object GroupBox2: TGroupBox
+      object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
         Width = 548
@@ -127,7 +202,7 @@ object OptionsForm: TOptionsForm
         Margins.Bottom = 6
         Caption = 'Mod Organizer'
         TabOrder = 0
-        object Label2: TLabel
+        object lblModOrganizer: TLabel
           Left = 12
           Top = 50
           Width = 117
@@ -180,7 +255,7 @@ object OptionsForm: TOptionsForm
           TabOrder = 3
         end
       end
-      object GroupBox3: TGroupBox
+      object gbAssetCopying: TGroupBox
         Left = 6
         Top = 125
         Width = 548
@@ -191,7 +266,7 @@ object OptionsForm: TOptionsForm
         Margins.Bottom = 6
         Caption = 'Asset Copying'
         TabOrder = 1
-        object Label3: TLabel
+        object lblMergeDestination: TLabel
           Left = 12
           Top = 24
           Width = 134
@@ -236,10 +311,8 @@ object OptionsForm: TOptionsForm
           Width = 139
           Height = 17
           Caption = 'Handle MCM Translations'
-          Checked = True
           Ctl3D = False
           ParentCtl3D = False
-          State = cbChecked
           TabOrder = 3
         end
         object kbBuildBSA: TCheckBox
@@ -277,8 +350,8 @@ object OptionsForm: TOptionsForm
     Width = 75
     Height = 25
     Caption = 'Cancel'
+    ModalResult = 2
     TabOrder = 1
-    OnClick = btnCancelClick
   end
   object btnOK: TButton
     Left = 420
@@ -286,6 +359,7 @@ object OptionsForm: TOptionsForm
     Width = 75
     Height = 25
     Caption = 'OK'
+    ModalResult = 1
     TabOrder = 2
     OnClick = btnOKClick
   end
@@ -293,7 +367,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

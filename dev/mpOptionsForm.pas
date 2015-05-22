@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl,
-  mpBase,
+  mpBase, mpGameForm,
   wbInterface;
 
 type
@@ -13,23 +13,23 @@ type
     SettingsPageControl: TPageControl;
     GeneralTabSheet: TTabSheet;
     MergingTabSheet: TTabSheet;
-    Label1: TLabel;
+    lblLanguage: TLabel;
     cbLanguage: TComboBox;
-    GroupBox1: TGroupBox;
+    gbStyle: TGroupBox;
     kbSimpleDictionary: TCheckBox;
     kbSimplePlugins: TCheckBox;
     btnCancel: TButton;
     btnOK: TButton;
-    GroupBox2: TGroupBox;
+    gbModOrganizer: TGroupBox;
     kbUsingMO: TCheckBox;
-    Label2: TLabel;
+    lblModOrganizer: TLabel;
     edMODirectory: TEdit;
     btnDetect: TButton;
     kbCopyGeneral: TCheckBox;
     btnBrowseMO: TSpeedButton;
     IconList: TImageList;
-    GroupBox3: TGroupBox;
-    Label3: TLabel;
+    gbAssetCopying: TGroupBox;
+    lblMergeDestination: TLabel;
     edMergeDirectory: TEdit;
     btnBrowseAssetDirectory: TSpeedButton;
     kbFaceGen: TCheckBox;
@@ -38,16 +38,24 @@ type
     kbFragments: TCheckBox;
     kbExtractBSAs: TCheckBox;
     kbBuildBSA: TCheckBox;
-    GroupBox4: TGroupBox;
+    gbUpdating: TGroupBox;
     kbUpdateDictionary: TCheckBox;
     kbUpdateProgram: TCheckBox;
+    gbGameMode: TGroupBox;
+    lblGameMode: TLabel;
+    cbGameMode: TComboBox;
+    btnUpdateGameMode: TButton;
+    gbReports: TGroupBox;
+    lblUsername: TLabel;
+    edUsername: TEdit;
+    kbSaveReports: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
     procedure btnBrowseMOClick(Sender: TObject);
     procedure kbUsingMOClick(Sender: TObject);
     procedure btnDetectClick(Sender: TObject);
+    procedure btnUpdateGameModeClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -93,15 +101,6 @@ begin
     edMODirectory.Text := AppendIfMissing(s, '\');
   if DirectoryExists(edMODirectory.Text + 'mods\') then
     edMergeDirectory.Text := edMODirectory.Text + 'mods\';
-end;
-
-procedure TOptionsForm.btnCancelClick(Sender: TObject);
-begin
-  // discard settings
-  settings.Free;
-
-  // close with ModalResult
-  ModalResult := mrCancel;
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
@@ -164,6 +163,9 @@ procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
   // save changes to settings
   settings.language := cbLanguage.Text;
+  settings.defaultGame := GetGameID(cbGameMode.Text);
+  settings.username := edUsername.Text;
+  settings.saveReportsLocally := kbSaveReports.Checked;
   settings.simpleDictionaryView := kbSimpleDictionary.Checked;
   settings.simplePluginsView := kbSimplePlugins.Checked;
   settings.updateDictionary := kbUpdateDictionary.Checked;
@@ -179,15 +181,24 @@ begin
   settings.extractBSAs := kbExtractBSAs.Checked;
   settings.buildMergedBSA := kbBuildBSA.Checked;
   settings.Save('settings.ini');
+end;
 
-  // close with ModalResult
-  ModalResult := mrOk;
+procedure TOptionsForm.btnUpdateGameModeClick(Sender: TObject);
+begin
+  bChangeGameMode := true;
+  btnOKClick(nil);
+  Close;
 end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);
+var
+  index: integer;
+  defaultGame: TGameMode;
 begin
   // load setting
   cbLanguage.Text := settings.language;
+  edUsername.Text := settings.username;
+  kbSaveReports.Checked := settings.saveReportsLocally;
   kbSimpleDictionary.Checked := settings.simpleDictionaryView;
   kbSimplePlugins.Checked := settings.simplePluginsView;
   kbUpdateDictionary.Checked := settings.updateDictionary;
@@ -202,6 +213,20 @@ begin
   kbFragments.Checked := settings.handleScriptFragments;
   kbExtractBSAs.Checked := settings.extractBSAs;
   kbBuildBSA.Checked := settings.buildMergedBSA;
+
+  // load valid game paths
+  if GamePathValid(settings.tes5path, 1) then
+    cbGameMode.Items.Add(GameArray[1].longName);
+  if GamePathValid(settings.fnvpath, 2) then
+    cbGameMode.Items.Add(GameArray[2].longName);
+  if GamePathValid(settings.tes4path, 3) then
+    cbGameMode.Items.Add(GameArray[3].longName);
+  if GamePathValid(settings.fo3path, 4) then
+    cbGameMode.Items.Add(GameArray[4].longName);
+  defaultGame := GameArray[settings.defaultGame];
+  index := cbGameMode.Items.IndexOf(defaultGame.longName);
+  if index > -1 then
+    cbGameMode.ItemIndex := index;
 
   // disable controls if not using mod organizer
   kbUsingMOClick(nil);

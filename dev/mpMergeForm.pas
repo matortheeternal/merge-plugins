@@ -11,7 +11,7 @@ uses
   superobject,
   // mp units
   mpBase, mpMerge, mpLogger, mpDictionaryForm, mpOptionsForm, mpProgressForm,
-  mpTracker, mpSplashForm, mpEditForm,
+  mpTracker, mpSplashForm, mpEditForm, mpGameForm,
   // tes5edit units
   wbBSA, wbHelpers, wbInterface, wbImplementation;
 
@@ -72,6 +72,7 @@ type
     function AddDetailsItem(name, value: string; editable: boolean = false):
       TItemProp;
     procedure AddDetailsList(name: string; sl: TStringList; editable: boolean = false);
+    procedure UpdatePluginDetails;
     procedure PluginsListViewChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
     function FlagNotSafe(Rect: TRect; x: integer): boolean;
@@ -80,6 +81,7 @@ type
     procedure PluginsListViewData(Sender: TObject; Item: TListItem);
     procedure PluginsListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
+    procedure UpdateMergeDetails;
     procedure MergeListViewChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
     procedure UpdateMerges;
@@ -167,10 +169,6 @@ begin
     ForceDirectories(tempPath);
     MergesList := TList.Create;
     PluginsList := TList.Create;
-    Tracker.Write('Loading Settings');
-    LoadSettings;
-    Tracker.Write('Loading Dictionary');
-    LoadDictionary;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
@@ -189,41 +187,56 @@ begin
     wbHideUnused := True;
     wbFlagsAsArray := True;
     wbRequireLoadOrder := True;
-    wbGameMode := gmTES5;
-    wbAppName := 'TES5';
-    wbGameName := 'Skyrim';
     wbLanguage := 'English';
     wbEditAllowed := True;
-
-    // LOAD TES5EDIT DEFINITIONS
-    Tracker.Write('Loading TES5Edit Definitions');
     wbProgressCallback := ProgressMessage;
     Logger.OnLogEvent := LogMessage;
-
-    if not LoadDataPath then begin
-      splash.Free;
-      bDontSave := true;
-      MergeForm.Close;
-      exit;
-    end;
     handler := wbCreateContainerHandler;
     handler._AddRef;
+
+    // SET GAME VARS
+    if settings.selectedGame = 0 then
+      if settings.defaultGame <> 0 then
+        settings.selectedGame := settings.defaultGame
+      else
+        raise Exception.Create('Invalid game selection!');
+    SetGame(settings.selectedGame);
+    Logger.Write('Selected game: '+wbGameName);
+    Logger.Write('Using data path: '+wbDataPath);
+
+    // LOAD SETTINGS FOR GAME
+    LoadSettings;
+
+    // LOAD DICTIONARY
+    dictionaryFilename := wbAppName+'Dictionary.txt';
+    Logger.Write('Loading dictionary '+dictionaryFilename);
+    LoadDictionary;
+
+    // LOAD TES5EDIT DEFINITIONS
+    Logger.Write('Loading '+wbAppName+'Edit Definitions');
     LoadDefinitions;
 
     // PREPARE TO LOAD PLUGINS
     wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
     wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
+    Logger.Write('Using load order '+wbPluginsFileName);
     sl := TStringList.Create;
     sl.LoadFromFile(wbPluginsFileName);
     RemoveCommentsAndEmpty(sl);
-    if wbGameMode = gmTES5 then begin
+    RemoveMissingFiles(sl);
+    // if GameMode is not Skyrim sort by date modified
+    // else add Update.esm and Skyrim.esm to load order
+    if wbGameMode <> gmTES5 then begin
+      GetPluginDates(sl);
+      sl.CustomSort(PluginListCompare);
+    end
+    else begin
       if sl.IndexOf('Update.esm') = -1 then
         sl.Insert(0, 'Update.esm');
       if sl.IndexOf('Skyrim.esm') = -1 then
         sl.Insert(0, 'Skyrim.esm');
     end;
-    RemoveMissingFiles(sl);
-    AddMissingFiles(sl);
+
 
     // LOAD PLUGINS
     for i := 0 to Pred(sl.Count) do begin
@@ -246,7 +259,6 @@ begin
     Tracker.Write('Loading Merges');
     LoadMerges;
     UpdateMerges;
-    MergeListView.Items.Count := MergesList.Count;
     UpdatePluginsPopupMenu;
 
     // FINALIZE
@@ -332,12 +344,13 @@ begin
   if ndx = 0 then
     PluginsListViewChange(nil, nil, TItemChange(nil))
   else if ndx = 1 then
-    MergeListViewChange(nil, nil, TItemChange(nil))
+    UpdateMergeDetails;
 end;
 
 {******************************************************************************}
 { Plugins List View Events
   Events involving the PluginsListView control.  Events include:
+  - UpdatePluginDetails
   - PluginsListViewChange
   - AddToMerge
   - AddToNewMerge
@@ -345,8 +358,7 @@ end;
 }
 {******************************************************************************}
 
-procedure TMergeForm.PluginsListViewChange(Sender: TObject; Item: TListItem;
-  Change: TItemChange);
+procedure TMergeForm.UpdatePluginDetails;
 var
   plugin: TPlugin;
   index: integer;
@@ -378,6 +390,12 @@ begin
   AddDetailsList('Masters', plugin.masters);
   AddDetailsList('Errors', plugin.errors);
   AddDetailsList('Reports', plugin.reports);
+end;
+
+procedure TMergeForm.PluginsListViewChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+begin
+  UpdatePluginDetails;
 end;
 
 procedure TMergeForm.PluginsListViewData(Sender: TObject; Item: TListItem);
@@ -574,7 +592,6 @@ begin
 
   // update merges
   MergesList.Add(merge);
-  MergeListView.Items.Count := MergesList.Count;
   UpdateMerges;
   // update plugins
   UpdatePluginsPopupMenu;
@@ -652,14 +669,14 @@ end;
 {******************************************************************************}
 { Merge List View Events
   Events involving the MergeListView control.  Events include:
-  - MergeListViewChange
+  - UpdateMergeDetails
   - UpdateMerges
+  - MergeListViewChange
   - SaveMergeEdit
 }
 {******************************************************************************}
 
-procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
-  Change: TItemChange);
+procedure TMergeForm.UpdateMergeDetails;
 var
   mergeItem: TListItem;
   merge: TMerge;
@@ -701,12 +718,19 @@ var
   i: integer;
   merge: TMerge;
 begin
+  MergeListView.Items.Count := MergesList.Count;
   // get status of each merge
   for i := 0 to Pred(MergesList.Count) do begin
     merge := TMerge(MergesList[i]);
     if not (merge.status in ForcedStatuses) then
       merge.GetStatus;
   end;
+end;
+
+procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+begin
+  UpdateMergeDetails;
 end;
 
 procedure TMergeForm.MergeListViewData(Sender: TObject; Item: TListItem);
@@ -818,7 +842,7 @@ begin
     exit;
 
   // update popup menus and stuff
-  MergeListViewChange(nil, nil ,TItemChange(nil));
+  UpdateMergeDetails;
   UpdatePluginsPopupMenu;
   for i := 0 to Pred(currentMerge.plugins.Count) do begin
     plugin := PluginByFilename(currentMerge.plugins[i]);
@@ -907,7 +931,7 @@ begin
 
   // update mpMergeForm
   UpdateMerges;
-  MergeListViewChange(nil, nil, TItemChange(nil));
+  UpdateMergeDetails;
   MergeListView.Repaint;
 end;
 
@@ -936,7 +960,7 @@ begin
   currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
   currentMerge.Status := 9;
   MergeListView.Repaint;
-  MergeListViewChange(nil, nil, TItemChange(nil));
+  UpdateMergeDetails;
 end;
 
 procedure TMergeForm.IgnoreRebuildItemClick(Sender: TObject);
@@ -949,7 +973,7 @@ begin
   currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
   currentMerge.Status := 6;
   MergeListView.Repaint;
-  MergeListViewChange(nil, nil, TItemChange(nil));
+  UpdateMergeDetails;
 end;
 
 procedure TMergeForm.ReportOnMergeItemClick(Sender: TObject);
@@ -997,7 +1021,6 @@ begin
   merge := CreateNewMerge(MergesList);
   // add and update merge
   MergesList.Add(merge);
-  MergeListView.Items.Count := MergesList.Count;
   UpdateMerges;
   MergeListView.Repaint;
   UpdatePluginsPopupMenu;
@@ -1066,7 +1089,7 @@ begin
 
   // update mpMergeForm
   UpdateMerges;
-  MergeListViewChange(nil, nil, TItemChange(nil));
+  UpdateMergeDetails;
   MergeListView.Repaint;
   //PluginsListView.Items.Count := PluginsList.Count;
 end;
@@ -1099,6 +1122,10 @@ begin
   OptionsForm.ShowModal;
   OptionsForm.Free;
   PluginsListView.OwnerDraw := not settings.simplePluginsView;
+  if bChangeGameMode then begin
+    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
+    Close;
+  end;
 end;
 
 { Update }

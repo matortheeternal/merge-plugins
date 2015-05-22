@@ -125,6 +125,7 @@ object MergeForm: TMergeForm
     Align = alLeft
     BevelOuter = bvNone
     Caption = 'MainPanel'
+    Constraints.MinWidth = 200
     TabOrder = 1
     object PageControl: TPageControl
       Left = 3
@@ -184,10 +185,6 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -255,6 +252,7 @@ object MergeForm: TMergeForm
     Height = 618
     Align = alClient
     BevelOuter = bvNone
+    Constraints.MinWidth = 200
     TabOrder = 2
     object DetailsLabel: TLabel
       Left = 6
@@ -301,7 +299,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C010107000900EC0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000900F40020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1439,7 +1437,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010107001800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107001800B00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000003B3B3BFF212121EBC7C7C738CCCC
       CC33C3C3C33DFFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00CBCBCB34FFFF

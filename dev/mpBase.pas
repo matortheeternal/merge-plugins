@@ -15,6 +15,13 @@ uses
   wbDefinitionsTES5;
 
 type
+  TGameMode = Record
+    longName: string;
+    gameName: string;
+    gameMode: TwbGameMode;
+    appName: string;
+    exeName: string;
+  end;
   TEntry = class(TObject)
   public
     pluginName: string;
@@ -89,6 +96,14 @@ type
   TSettings = class(TObject)
   public
     language: string;
+    defaultGame: integer;
+    selectedGame: integer;
+    tes5path: string;
+    fnvpath: string;
+    tes4path: string;
+    fo3path: string;
+    username: string;
+    saveReportsLocally: boolean;
     simpleDictionaryView: boolean;
     simplePluginsView: boolean;
     updateDictionary: boolean;
@@ -108,7 +123,10 @@ type
     procedure Load(const filename: string);
   end;
 
-  function LoadDataPath: boolean;
+  function GamePathValid(path: string; id: integer): boolean;
+  procedure SetGame(id: integer);
+  function GetGameID(name: string): integer;
+  function GetGamePath(gameName: string): string;
   procedure LoadDefinitions;
   function IsOverride(aRecord: IwbMainRecord): boolean;
   function LocalFormID(aRecord: IwbMainRecord): integer;
@@ -133,6 +151,8 @@ type
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
   procedure AddMissingFiles(var sl: TStringList);
+  procedure GetPluginDates(var sl: TStringList);
+  function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
@@ -157,7 +177,7 @@ const
   StatusArray: array[0..9] of TMergeStatus = (
     ( id: 0; color: $808080; caption: 'Unknown'; ),
     ( id: 1; color: $0000FF; caption: 'No plugins to merge'; ),
-    ( id: 2; color: $0000FF; caption: 'Mod Organizer Directory invalid'; ),
+    ( id: 2; color: $0000FF; caption: 'Directories invalid'; ),
     ( id: 3; color: $0000FF; caption: 'Plugins not loaded'; ),
     ( id: 4; color: $0000FF; caption: 'Errors in plugins'; ),
     ( id: 5; color: $900000; caption: 'Up to date'; ),
@@ -165,6 +185,16 @@ const
     ( id: 7; color: $009000; caption: 'Ready to be built'; ),
     ( id: 8; color: $009000; caption: 'Ready to be rebuilt'; ),
     ( id: 9; color: $009000; caption: 'Ready to be rebuilt [Forced]'; )
+  );
+  GameArray: array[1..4] of TGameMode = (
+    ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
+      appName: 'TES5'; exeName: 'TESV.exe'; ),
+    ( longName: 'Fallout New Vegas'; gameName: 'FalloutNV'; gameMode: gmFNV;
+      appName: 'FNV'; exeName: 'FalloutNV.exe'; ),
+    ( longName: 'Oblivion'; gameName: 'Oblivion'; gameMode: gmTES4;
+      appName: 'TES4'; exeName: 'Oblivion.exe'; ),
+    ( longName: 'Fallout 3'; gameName: 'Fallout3'; gameMode: gmFO3;
+      appName: 'FO3'; exeName: 'Fallout3.exe'; )
   );
   UpToDateStatuses = [5, 6];
   BuildStatuses = [7, 8, 9];
@@ -175,8 +205,8 @@ var
   dictionary, blacklist, PluginsList, MergesList: TList;
   settings: TSettings;
   handler: IwbContainerHandler;
-  bDontSave, bCaptureTracker: boolean;
-  tempPath: string;
+  bDontSave, bCaptureTracker, bChangeGameMode: boolean;
+  tempPath, dictionaryFilename: string;
 
 implementation
 
@@ -185,6 +215,10 @@ implementation
   Set of functions that read bethesda plugin files for various attributes.
 
   List of functions:
+  - GamePathValid
+  - SetGame
+  - GetGameID
+  - GetGamePath
   - LoadDataPath
   - LoadDefinitions
   - IsOverride
@@ -206,50 +240,72 @@ implementation
 }
 {*****************************************************************************}
 
-{ Loads Data Path from Registry key or app path }
-function LoadDataPath: boolean;
+{ Check if game paths are valid }
+function GamePathValid(path: string; id: integer): boolean;
+begin
+  Result := FileExists(path + GameArray[id].exeName)
+    and DirectoryExists(path + 'Data');
+end;
+
+{ Sets the game mode in the TES5Edit API }
+procedure SetGame(id: integer);
+begin
+  wbGameName := GameArray[id].gameName;
+  wbGameMode := GameArray[id].gameMode;
+  wbAppName := GameArray[id].appName;
+  case id of
+    1: wbDataPath := settings.tes5path + 'Data\';
+    2: wbDataPath := settings.fnvpath + 'Data\';
+    3: wbDataPath := settings.tes4path + 'Data\';
+    4: wbDataPath := settings.fo3path + 'Data\';
+  end;
+end;
+
+{ Get the game ID associated with a game long name }
+function GetGameID(name: string): integer;
+var
+  i: integer;
+begin
+  Result := 0;
+  for i := 1 to 4 do
+    if GameArray[i].longName = name then begin
+      Result := i;
+      exit;
+    end;
+end;
+
+{ Gets the path of a game from registry key or app path }
+function GetGamePath(gameName: string): string;
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
-var
-  s: string;
 begin
-  Result := false;
-  if wbDataPath = '' then with TRegistry.Create do try
+  Result := '';
+  with TRegistry.Create do try
     RootKey := HKEY_LOCAL_MACHINE;
 
-    if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
-      if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
-        s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\';
-        if wbGameMode = gmTES5 then
-          ShowMessage(s+#13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
-        Result := false;
+    if not OpenKeyReadOnly(sBethRegKey + gameName + '\') then
+      if not OpenKeyReadOnly(sBethRegKey64 + gameName + '\') then
         exit;
-      end;
 
-    wbDataPath := ReadString('Installed Path');
-
-    if wbDataPath = '' then begin
-      s := 'Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key';
-      if wbGameMode = gmTES5 then
-        ShowMessage(s+#13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
-      Result := false;
-    end;
+    Result := ReadString('Installed Path');
   finally
     Free;
   end;
 
-  if wbDataPath <> '' then begin
-    Result := true;
-    wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'Data\';
-  end;
+  if Result <> '' then
+    Result := IncludeTrailingPathDelimiter(Result);
 end;
 
 { Loads definitions based on wbGameMode }
 procedure LoadDefinitions;
 begin
-  if wbGameMode = gmTES5 then
-    DefineTES5;
+  case wbGameMode of
+    gmTES5: DefineTES5;
+    gmFNV: DefineFNV;
+    gmTES4: DefineTES4;
+    gmFO3: DefineTES3;
+  end;
 end;
 
 { Returns true if the input record is an override record }
@@ -503,38 +559,43 @@ begin
   _File := merge.plugin._File;
   Group := _File.GroupBySignature['QUST'];
 
-  if Assigned(Group) then begin
-    for n := 0 to Pred(Group.ElementCount) do begin
-      if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
-        QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-        // include SGE (start game enabled) quests which are new or set SGE flag on master quest
-        if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then begin
-          if IsOverride(MainRecord) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
-            SetLength(FormIDs, Succ(Length(FormIDs)));
-            FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
-          end;
-        end;
-      end;
-    end;
+  // don't create SEQ file if no QUST record group
+  if not Assigned(Group) then 
+    exit;
+  
+  // loop through child elements  
+  for n := 0 to Pred(Group.ElementCount) do begin
+    if not Supports(Group.Elements[n], IwbMainRecord, MainRecord) then 
+      continue;
+    
+    // script quests that are not start game enabled
+    QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+    if not (Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0)) then 
+      continue;
+    
+    // skip quests that aren't overrides or newly flagged as start game enabled    
+    if not (IsOverride(MainRecord) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0)) then
+      continue;    
+    
+    // add quest formID to formIDs array
+    SetLength(FormIDs, Succ(Length(FormIDs)));
+    FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
   end;
-
+  
+  // write formIDs to disk
   if Length(FormIDs) <> 0 then try
-    try
-      p := merge.dataPath + 'seq\';
-      if not DirectoryExists(p) then
-        if not ForceDirectories(p) then
-          raise Exception.Create('  Unable to create SEQ directory for merge.');
-      s := p + ChangeFileExt(_File.FileName, '.seq');
-      FileStream := TFileStream.Create(s, fmCreate);
-      FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
-      Tracker.Write('  Created SEQ file: ' + s);
-      merge.files.Add(s);
-    finally
-      if Assigned(FileStream) then
-        FreeAndNil(FileStream);
-    end;
+    p := merge.dataPath + 'seq\';
+    if not ForceDirectories(p) then
+      raise Exception.Create('  Unable to create SEQ directory for merge.');
+    s := p + ChangeFileExt(_File.FileName, '.seq');
+    FileStream := TFileStream.Create(s, fmCreate);
+    FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
+    Tracker.Write('  Created SEQ file: ' + s);
+    merge.files.Add(s);
   except
     on e: Exception do begin
+      if Assigned(FileStream) then
+        FreeAndNil(FileStream);
       Tracker.Write('  Error: Can''t create SEQ file: ' + s + ', ' + E.Message);
       Exit;
     end;
@@ -644,6 +705,7 @@ end;
   - RemoveCommentsAndEmpty
   - RemoveMissingFiles
   - AddMissingFiles
+  - PluginListCompare
 {******************************************************************************}
 
 { Remove comments and empty lines from a stringlist }
@@ -704,6 +766,52 @@ begin
   finally
     FindClose(F);
   end;
+end;
+
+{ Get date modified for plugins in load order and store in stringlist objects }
+procedure GetPluginDates(var sl: TStringList);
+var
+  i: Integer;
+begin
+  for i := 0 to Pred(sl.Count) do
+    sl.Objects[i] := TObject(FileAge(wbDataPath + sl[i]));
+end;
+
+{ Compare function for sorting load order by date modified/esms }
+function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
+var
+  IsESM1, IsESM2: Boolean;
+  FileAge1,FileAge2: Integer;
+  FileDateTime1, FileDateTime2: TDateTime;
+begin
+  IsESM1 := IsFileESM(List[Index1]);
+  IsESM2 := IsFileESM(List[Index2]);
+
+  if IsESM1 = IsESM2 then begin
+    FileAge1 := Integer(List.Objects[Index1]);
+    FileAge2 := Integer(List.Objects[Index2]);
+
+    if FileAge1 < FileAge2 then
+      Result := -1
+    else if FileAge1 > FileAge2 then
+      Result := 1
+    else begin
+      if not SameText(List[Index1], List[Index1])
+      and FileAge(List[Index1], FileDateTime1) and FileAge(List[Index2], FileDateTime2) then begin
+        if FileDateTime1 < FileDateTime2 then
+          Result := -1
+        else if FileDateTime1 > FileDateTime2 then
+          Result := 1
+        else
+          Result := 0;
+      end else
+        Result := 0;
+    end;
+
+  end else if IsESM1 then
+    Result := -1
+  else
+    Result := 1;
 end;
 
 
@@ -841,9 +949,15 @@ begin
   dictionary := TList.Create;
   blacklist := TList.Create;
 
+  // don't attempt to load dictionary if it doesn't exist
+  if not FileExists(dictionaryFilename) then begin
+    Logger.Write('No dictionary file '+dictionaryFilename);
+    exit;
+  end;
+
   // load dictionary file
   sl := TStringList.Create;
-  sl.LoadFromFile('dictionary.txt');
+  sl.LoadFromFile(dictionaryFilename);
 
   // load dictionary file into entry object
   for i := 0 to Pred(sl.Count) do begin
@@ -1057,7 +1171,7 @@ begin
   end;
 
   // save and finalize
-  json.SaveTo('merges.json');
+  json.SaveTo(wbAppName + 'Merges.json');
   json := nil;
 end;
 
@@ -1071,9 +1185,12 @@ var
   sl: TStringList;
   i: Integer;
 begin
+  // don't load file if it doesn't exist
+  if not FileExists(wbAppName + 'Merges.json') then
+    exit;
   // load file into SuperObject to parse it
   sl := TStringList.Create;
-  sl.LoadFromFile('merges.json');
+  sl.LoadFromFile(wbAppName + 'Merges.json');
   obj := SO(PChar(sl.Text));
 
   // loop through merges
@@ -1363,6 +1480,13 @@ begin
     exit;
   end;
 
+  // don't merge if mod destination directory is blank
+  if settings.mergeDirectory = '' then begin
+    Logger.Write('  Merge directory blank');
+    status := 2;
+    exit;
+  end;
+
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.MODirectory = '') then begin
     Logger.Write('  Mod Organizer Directory blank');
@@ -1477,23 +1601,40 @@ end;
 procedure TSettings.Save(const filename: string);
 var
   ini: TMemIniFile;
+  appMerging: string;
 begin
   ini := TMemIniFile.Create(filename);
-  ini.WriteString('Settings', 'Language', language);
-  ini.WriteBool('Settings', 'simpleDictionaryView', simpleDictionaryView);
-  ini.WriteBool('Settings', 'simplePluginsView', simplePluginsView);
-  ini.WriteBool('Settings', 'updateDictionary', updateDictionary);
-  ini.WriteBool('Settings', 'updateProgram', updateProgram);
-  ini.WriteBool('Settings', 'usingMO', usingMO);
-  ini.WriteString('Settings', 'MODirectory', MODirectory);
-  ini.WriteBool('Settings', 'copyGeneralAssets', copyGeneralAssets);
-  ini.WriteString('Settings', 'mergeDirectory', mergeDirectory);
-  ini.WriteBool('Settings', 'handleFaceGenData', handleFaceGenData);
-  ini.WriteBool('Settings', 'handleVoiceAssets', handleVoiceAssets);
-  ini.WriteBool('Settings', 'handleMCMTranslations', handleMCMTranslations);
-  ini.WriteBool('Settings', 'handleScriptFragments', handleScriptFragments);
-  ini.WriteBool('Settings', 'extractBSAs', extractBSAs);
-  ini.WriteBool('Settings', 'buildMergedBSA', buildMergedBSA);
+  appMerging := wbAppName + 'Merging';
+
+  // save general settings
+  ini.WriteString('General', 'Language', language);
+  ini.WriteInteger('General', 'defaultGame', defaultGame);
+  ini.WriteString('General', 'tes5path', tes5path);
+  ini.WriteString('General', 'fnvpath', fnvpath);
+  ini.WriteString('General', 'tes4path', tes4path);
+  ini.WriteString('General', 'fo3path', fo3path);
+  ini.WriteString('General', 'username', username);
+  ini.WriteBool('General', 'saveReportsLocally', saveReportsLocally);
+  ini.WriteBool('General', 'simpleDictionaryView', simpleDictionaryView);
+  ini.WriteBool('General', 'simplePluginsView', simplePluginsView);
+  ini.WriteBool('General', 'updateDictionary', updateDictionary);
+  ini.WriteBool('General', 'updateProgram', updateProgram);
+
+  // save game specific settings
+  if wbAppName <> '' then begin
+    ini.WriteBool(appMerging, 'usingMO', usingMO);
+    ini.WriteString(appMerging, 'MODirectory', MODirectory);
+    ini.WriteBool(appMerging, 'copyGeneralAssets', copyGeneralAssets);
+    ini.WriteString(appMerging, 'mergeDirectory', mergeDirectory);
+    ini.WriteBool(appMerging, 'handleFaceGenData', handleFaceGenData);
+    ini.WriteBool(appMerging, 'handleVoiceAssets', handleVoiceAssets);
+    ini.WriteBool(appMerging, 'handleMCMTranslations', handleMCMTranslations);
+    ini.WriteBool(appMerging, 'handleScriptFragments', handleScriptFragments);
+    ini.WriteBool(appMerging, 'extractBSAs', extractBSAs);
+    ini.WriteBool(appMerging, 'buildMergedBSA', buildMergedBSA);
+  end;
+
+  // save file
   ini.UpdateFile;
   ini.Free;
 end;
@@ -1501,23 +1642,41 @@ end;
 procedure TSettings.Load(const filename: string);
 var
   ini: TMemIniFile;
+  appMerging, defaultMergeDirectory: string;
 begin
   ini := TMemIniFile.Create(filename);
-  language := ini.ReadString('Settings', 'Language', 'English');
-  simpleDictionaryView := ini.ReadBool('Settings', 'simpleDictionaryView', false);
-  simplePluginsView := ini.ReadBool('Settings', 'simplePluginsView', false);
-  updateDictionary := ini.ReadBool('Settings', 'updateDictionary', false);
-  updateProgram := ini.ReadBool('Settings', 'updateProgram', false);
-  usingMO := ini.ReadBool('Settings', 'usingMO', false);
-  MODirectory := ini.ReadString('Settings', 'MODirectory', '');
-  copyGeneralAssets := ini.ReadBool('Settings', 'copyGeneralAssets', false);
-  mergeDirectory := ini.ReadString('Settings', 'mergeDirectory', wbDataPath);
-  handleFaceGenData := ini.ReadBool('Settings', 'handleFaceGenData', false);
-  handleVoiceAssets := ini.ReadBool('Settings', 'handleVoiceAssets', false);
-  handleMCMTranslations := ini.ReadBool('Settings', 'handleMCMTranslations', false);
-  handleScriptFragments := ini.ReadBool('Settings', 'handleScriptFragments', false);
-  extractBSAs := ini.ReadBool('Settings', 'extractBSAs', false);
-  buildMergedBSA := ini.ReadBool('Settings', 'buildMergedBSA', false);
+  appMerging := wbAppName + 'Merging';
+  defaultMergeDirectory := ExtractFilePath(ParamStr(0)) + wbGameName + '\';
+
+  // load general settings
+  language := ini.ReadString('General', 'Language', 'English');
+  defaultGame := ini.ReadInteger('General', 'defaultGame', 0);
+  tes5path := ini.ReadString('General', 'tes5path', '');
+  fnvpath := ini.ReadString('General', 'fnvpath', '');
+  tes4path := ini.ReadString('General', 'tes4path', '');
+  fo3path := ini.ReadString('General', 'fo3path', '');
+  username := ini.ReadString('General', 'username', '');
+  saveReportsLocally := ini.ReadBool('General', 'saveReportsLocally', false);
+  simpleDictionaryView := ini.ReadBool('General', 'simpleDictionaryView', false);
+  simplePluginsView := ini.ReadBool('General', 'simplePluginsView', false);
+  updateDictionary := ini.ReadBool('General', 'updateDictionary', false);
+  updateProgram := ini.ReadBool('General', 'updateProgram', false);
+
+  // load game specific settings
+  if wbAppName <> '' then begin
+    usingMO := ini.ReadBool(appMerging, 'usingMO', false);
+    MODirectory := ini.ReadString(appMerging, 'MODirectory', '');
+    copyGeneralAssets := ini.ReadBool(appMerging, 'copyGeneralAssets', false);
+    mergeDirectory := ini.ReadString(appMerging, 'mergeDirectory', defaultMergeDirectory);
+    handleFaceGenData := ini.ReadBool(appMerging, 'handleFaceGenData', false);
+    handleVoiceAssets := ini.ReadBool(appMerging, 'handleVoiceAssets', false);
+    handleMCMTranslations := ini.ReadBool(appMerging, 'handleMCMTranslations', false);
+    handleScriptFragments := ini.ReadBool(appMerging, 'handleScriptFragments', false);
+    extractBSAs := ini.ReadBool(appMerging, 'extractBSAs', false);
+    buildMergedBSA := ini.ReadBool(appMerging, 'buildMergedBSA', false);
+  end;
+
+  // save file
   ini.UpdateFile;
   ini.Free;
 end;
