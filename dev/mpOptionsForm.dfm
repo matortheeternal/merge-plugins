@@ -259,7 +259,7 @@ object OptionsForm: TOptionsForm
         Left = 6
         Top = 125
         Width = 548
-        Height = 190
+        Height = 212
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -341,6 +341,102 @@ object OptionsForm: TOptionsForm
           Caption = 'Extract BSAs'
           TabOrder = 6
         end
+        object kbBatCopy: TCheckBox
+          Left = 12
+          Top = 184
+          Width = 117
+          Height = 17
+          Caption = 'Batch copy assets'
+          TabOrder = 7
+        end
+      end
+    end
+    object AdvancedTabSheet: TTabSheet
+      Caption = 'Advanced'
+      ImageIndex = 2
+      object gbDebug: TGroupBox
+        Left = 6
+        Top = 6
+        Width = 548
+        Height = 147
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Caption = 'Debug'
+        TabOrder = 0
+        object kbDebugRenumbering: TCheckBox
+          Left = 12
+          Top = 20
+          Width = 117
+          Height = 17
+          Caption = 'Debug renumbering'
+          TabOrder = 0
+        end
+        object kbDebugMergeStatus: TCheckBox
+          Left = 12
+          Top = 43
+          Width = 117
+          Height = 17
+          Caption = 'Debug merge status'
+          TabOrder = 1
+        end
+        object kbDebugAssetCopying: TCheckBox
+          Left = 12
+          Top = 66
+          Width = 133
+          Height = 17
+          Caption = 'Debug asset copying'
+          TabOrder = 2
+        end
+        object kbDebugRecordCopying: TCheckBox
+          Left = 12
+          Top = 89
+          Width = 133
+          Height = 17
+          Caption = 'Debug record copying'
+          TabOrder = 3
+        end
+        object kbDebugMasters: TCheckBox
+          Left = 12
+          Top = 112
+          Width = 97
+          Height = 17
+          Caption = 'Debug masters'
+          TabOrder = 4
+        end
+        object kbDebugBatchCopying: TCheckBox
+          Left = 272
+          Top = 20
+          Width = 129
+          Height = 17
+          Caption = 'Debug batch copying'
+          TabOrder = 5
+        end
+        object kbDebugBSAs: TCheckBox
+          Left = 272
+          Top = 43
+          Width = 81
+          Height = 17
+          Caption = 'Debug BSAs'
+          TabOrder = 6
+        end
+        object kbDebugTempPath: TCheckBox
+          Left = 272
+          Top = 66
+          Width = 105
+          Height = 17
+          Caption = 'Debug TempPath'
+          TabOrder = 7
+        end
+        object kbDebugLoadOrder: TCheckBox
+          Left = 272
+          Top = 89
+          Width = 105
+          Height = 17
+          Caption = 'Debug load order'
+          TabOrder = 8
+        end
       end
     end
   end
@@ -367,7 +463,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C0101010008002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

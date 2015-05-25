@@ -3,7 +3,7 @@ unit mpMerge;
 interface
 
 uses
-  Windows, SysUtils, Classes,
+  Windows, SysUtils, Classes, ShellAPI,
   mpBase, mpLogger, mpTracker,
   wbBSA,
   wbHelpers,
@@ -18,6 +18,7 @@ uses
   procedure BuildMerge(var merge: TMerge);
   procedure DeleteOldMergeFiles(var merge: TMerge);
   procedure RebuildMerge(var merge: TMerge);
+  procedure AddCopyOperation(src, dst: string);
 
 implementation
 
@@ -35,9 +36,6 @@ implementation
 
 var
   UsedFormIDs: array [0..$FFFFFF] of byte;
-
-const
-  debugRenumbering = true;
 
 function FindHighestFormID(var pluginsToMerge: TList; var merge: TMerge): Cardinal;
 var
@@ -87,40 +85,47 @@ begin
   while aRecord.ReferencedByCount > 0 do begin
     if prc = aRecord.ReferencedByCount then break;
     prc := aRecord.ReferencedByCount;
+    if settings.debugRenumbering then
+      Tracker.Write('      Changing reference on '+aRecord.ReferencedBy[0].Name);
     aRecord.ReferencedBy[0].CompareExchangeFormID(OldFormID, NewFormID);
   end;
-  for i := Pred(aRecord.OverrideCount) downto 0 do
+  if (aRecord.ReferencedByCount > 0) and settings.debugRenumbering then
+     Tracker.Write('      Couldn''t change reference: '+aRecord.ReferencedBy[0].Name);
+  for i := Pred(aRecord.OverrideCount) downto 0 do begin
+    if settings.debugRenumbering then
+      Tracker.Write('      Renumbering override in file: '+aRecord.Overrides[i]._File.Name);
     aRecord.Overrides[i].LoadOrderFormID := NewFormID;
+  end;
   aRecord.LoadOrderFormID := NewFormID;
 end;
 
 procedure RenumberBefore(var pluginsToMerge: TList; var merge: TMerge);
 var
-  i, j, rc, Index: integer;
+  i, j, rc, OldFormID, total: integer;
   plugin: TPlugin;
   aFile: IwbFile;
   aRecord: IwbMainRecord;
   Records: TList;
   renumberAll: boolean;
-  BaseFormID, NewFormID, OldFormID: cardinal;
+  BaseFormID, NewFormID: cardinal;
 begin
   // inital messages
   renumberAll := merge.renumbering = 'All';
-  if renumberAll then Tracker.Write('Renumbering All Records')
-  else Tracker.Write('Renumbering Conflicting Records');
+  if renumberAll then Tracker.Write('Renumbering All FormIDs')
+  else Tracker.Write('Renumbering Conflicting FormIDs');
 
   // initialize variables
+  total := 0;
   Records := TList.Create;
   BaseFormID := FindHighestFormID(pluginsToMerge, merge) + 128;
-  if debugRenumbering then
+  if settings.debugRenumbering then
     Tracker.Write('  BaseFormID: '+IntToHex(BaseFormID, 8));
 
   // renumber records in all pluginsToMerge
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := pluginsToMerge[i];
     aFile := plugin._File;
-    Tracker.Write('  Renumbering records in ' + plugin.filename);
-    aFile.BuildRef; // build reference table so we can renumber references
+    Tracker.Write('  Renumbering FormIDs in ' + plugin.filename);
 
     // build records array because indexed order will change
     Records.Clear;
@@ -136,28 +141,30 @@ begin
       // skip record headers and overrides
       if aRecord.Signature = 'TES4' then continue;
       if IsOverride(aRecord) then continue;
-
-      OldFormID := aRecord.LoadOrderFormID;
-      Index := LocalFormID(aRecord);
+      OldFormID := LocalFormID(aRecord);
       //Tracker.Write('    '+IntToHex(Index, 8));
       // skip records that aren't conflicting if not renumberAll
-      if (not renumberAll) and (not UsedFormIDs[Index] = 1) then begin
-        UsedFormIDs[Index] := 1;
+      if (not renumberAll) and (not UsedFormIDs[OldFormID] = 1) then begin
+        UsedFormIDs[OldFormID] := 1;
         continue;
       end;
 
       // renumber record
       NewFormID := LoadOrderPrefix(aRecord) + BaseFormID;
-      if debugRenumbering then
+      if settings.debugRenumbering then
         Tracker.Write('    Changing FormID to ['+IntToHex(NewFormID, 8)+'] on '+aRecord.Name);
-      merge.map.Add(IntToHex(OldFormID, 8)+'='+IntToHex(NewFormID, 8));
+      merge.map.Add(IntToHex(OldFormID, 8)+'='+IntToHex(BaseFormID, 8));
       RenumberRecord(aRecord, NewFormID);
 
       // increment BaseFormID, tracker position
       Inc(BaseFormID);
+      Inc(total);
       Tracker.Update(1);
     end;
   end;
+
+  if settings.debugRenumbering then
+    Tracker.Write('  Renumbered '+IntToStr(total)+' FormIDs');
 
   // free memory
   Records.Free;
@@ -201,6 +208,7 @@ var
   asNew: boolean;
 begin
   Tracker.Write('Copying records');
+  //masters := TStringList.Create;
   asNew := merge.method = 'New Records';
   // copy records from all plugins to be merged
   for i := Pred(pluginsToMerge.Count) downto 0 do begin
@@ -211,6 +219,9 @@ begin
     for j := 0 to Pred(aFile.RecordCount) do begin
       aRecord := aFile.Records[j];
       if aRecord.Signature = 'TES4' then Continue;
+      // copy record
+      if settings.debugRecordCopying then
+        Tracker.Write('    Copying record '+aRecord.Name);
       CopyRecord(aRecord, merge, asNew);
       Tracker.Update(1);
     end;
@@ -249,7 +260,8 @@ var
   index: integer;
 begin
   srcPath := srcPath + plugin.filename + '\';
-  dstPath := dstPath + plugin.filename + '\';
+  dstPath := dstPath + merge.filename + '\';
+  ForceDirectories(dstPath);
   // if no files in source path, exit
   if FindFirst(srcPath + '*', faAnyFile, info) <> 0 then
     exit;
@@ -268,8 +280,10 @@ begin
     end;
 
     // copy file
-    Tracker.Write('    Copying asset "'+srcPath+srcFile+'" to "'+dstPath+dstFile+'"');
-    CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), false);
+    if settings.debugAssetCopying then
+      Tracker.Write('    Copying asset "'+srcFile+'" to "'+dstFile+'"');
+    if settings.batCopy then AddCopyOperation(srcPath + srcFile, dstPath + dstFile)
+    else CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), false);
     merge.files.Add(dstPath + dstFile);
   until FindNext(info) <> 0;
   FindClose(info);
@@ -282,7 +296,7 @@ var
   index: integer;
 begin
   srcPath := srcPath + plugin.filename + '\';
-  dstPath := dstPath + plugin.filename + '\';
+  dstPath := dstPath + merge.filename + '\';
   // if no folders in srcPath, exit
   if FindFirst(srcPath + '*', faDirectory, folder) <> 0 then
     exit;
@@ -308,9 +322,13 @@ begin
       end;
 
       // copy file
-      Tracker.Write('    Copying asset "'+srcPath+srcFile+'" to "'+dstPath+dstFile+'"');
-      CopyFile(PChar(srcPath + srcFile), PChar(dstPath + dstFile), false);
-      merge.files.Add(dstPath + dstFile);
+      if settings.debugAssetCopying then
+        Tracker.Write('    Copying asset "'+srcFile+'" to "'+dstFile+'"');
+      srcFile := srcPath + folder.Name + '\' + srcFile;
+      dstFile := dstPath + folder.Name + '\' + dstFile;
+      if settings.batCopy then AddCopyOperation(srcFile, dstFile)
+      else CopyFile(PChar(srcFile), PChar(dstFile), false);
+      merge.files.Add(dstFile);
     until FindNext(info) <> 0;
     FindClose(info);
   until FindNext(folder) <> 0;
@@ -380,10 +398,19 @@ begin
   // soon
 end;
 
+procedure AddCopyOperation(src, dst: string);
+begin
+  batch.Add('copy /Y "'+src+'" "'+dst+'"');
+end;
+
 procedure CopyAssets(var plugin: TPlugin; var merge: TMerge);
 var
   bsaFilename: string;
 begin
+  // get plugin data path
+  plugin.GetDataPath;
+  //Tracker.Write('  dataPath: '+plugin.dataPath);
+
   // handleFaceGenData
   if settings.handleFaceGenData and (HAS_FACEDATA in plugin.flags) then begin
     // if BSA exists, extract FaceGenData from it to temp path and copy
@@ -399,9 +426,9 @@ begin
       CopyFaceGen(plugin, merge, tempPath + faceGeomPath, merge.dataPath + faceGeomPath);
     end;
 
-    // copy assets from wbDataPath
-    CopyFaceGen(plugin, merge, wbDataPath + faceTintPath, merge.dataPath + faceTintPath);
-    CopyFaceGen(plugin, merge, wbDataPath + faceGeomPath, merge.dataPath + faceGeomPath);
+    // copy assets from plugin.dataPath
+    CopyFaceGen(plugin, merge, plugin.dataPath + faceTintPath, merge.dataPath + faceTintPath);
+    CopyFaceGen(plugin, merge, plugin.dataPath + faceGeomPath, merge.dataPath + faceGeomPath);
   end;
 
   // handleVoiceAssets
@@ -413,7 +440,7 @@ begin
       ExtractBSA(bsaFilename, voicePath+plugin.filename, tempPath);
       CopyVoice(plugin, merge, tempPath + voicePath, merge.dataPath + voicePath);
     end;
-    CopyVoice(plugin, merge, wbDataPath + voicePath, merge.dataPath + voicePath);
+    CopyVoice(plugin, merge, plugin.dataPath + voicePath, merge.dataPath + voicePath);
   end;
 
   // handleMCMTranslations
@@ -425,7 +452,7 @@ begin
       ExtractBSA(bsaFilename, translationPath, tempPath);
       CopyTranslations(plugin, merge, tempPath + translationPath);
     end;
-    CopyTranslations(plugin, merge, wbDataPath + translationPath);
+    CopyTranslations(plugin, merge, plugin.dataPath + translationPath);
   end;
 
   // handleScriptFragments
@@ -437,7 +464,7 @@ begin
       ExtractBSA(bsaFilename, scriptsPath, tempPath);
       CopyScriptFragments(plugin, merge, tempPath + scriptsPath, merge.dataPath + scriptsPath);
     end;
-    CopyScriptFragments(plugin, merge, wbDataPath + scriptsPath, merge.dataPath + scriptsPath);
+    CopyScriptFragments(plugin, merge, plugin.dataPath + scriptsPath, merge.dataPath + scriptsPath);
   end;
 
   // copyGeneralAssets
@@ -472,6 +499,8 @@ begin
   // initialize
   Tracker.Write('Building merge: '+merge.name);
   time := Now;
+  if not Assigned(batch) then
+    batch := TStringList.Create;
   failed := 'Failed to merge '+merge.name;
   merge.fails.Clear;
 
@@ -532,28 +561,59 @@ begin
 
   // add required masters
   slMasters := TStringList.Create;
-  slMasters.Sorted := true;
-  slMasters.Duplicates := dupIgnore;
   Tracker.Write('Adding masters...');
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := TPlugin(pluginsToMerge[i]);
-    slMasters.Add(plugin.filename);
+    slMasters.AddObject(plugin.filename, merge.plugins.Objects[i]);
     GetMasters(plugin._File, slMasters);
   end;
   try
+    slMasters.CustomSort(MergePluginsCompare);
     AddMasters(merge.plugin._File, slMasters);
-    mergeFile.SortMasters;
+    if settings.debugMasters then begin
+      Tracker.Write('Masters added:');
+      Tracker.Write(slMasters.Text);
+      slMasters.Clear;
+      GetMasters(merge.plugin._File, slMasters);
+      Tracker.Write('Actual masters:');
+      Tracker.Write(slMasters.Text);
+    end;
+
   except on Exception do
     // nothing
   end;
   Tracker.Write('Done adding masters');
 
-  // overrides merging method
-  if merge.method = 'Overrides' then begin
-    Tracker.Write(' ');
-      RenumberBefore(pluginsToMerge, merge);
-    Tracker.Write(' ');
-    CopyRecords(pluginsToMerge, merge);
+  try
+    // overrides merging method
+    if merge.method = 'Overrides' then begin
+      Tracker.Write(' ');
+        RenumberBefore(pluginsToMerge, merge);
+      Tracker.Write(' ');
+      CopyRecords(pluginsToMerge, merge);
+    end;
+  except
+    // exception, discard changes to source plugin, free merge file, and exit
+    on x : Exception do begin
+      Tracker.Write('Exception: '+x.Message);
+      Tracker.Write(' ');
+      Tracker.Write('Discarding changes to source plugins');
+      for i := 0 to Pred(pluginsToMerge.Count) do begin
+        plugin := pluginsToMerge[i];
+        Tracker.Write('  Reloading '+plugin.filename+' from disk');
+        LoadOrder := PluginsList.IndexOf(plugin);
+        plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
+      end;
+
+      // release merge file
+      mergeFile._Release;
+      mergeFile := nil;
+
+      // exit
+      Tracker.Write(' ');
+      Tracker.Write('Merge failed.');
+      exit;
+    end;
   end;
 
   // new records merging method
@@ -622,12 +682,13 @@ begin
     end;
   end;
 
-  // update merge pluginSizes and pluginDates
-  merge.hashes.Clear;
-  for i := 0 to Pred(pluginsToMerge.Count) do begin
-    plugin := TPlugin(pluginsToMerge[i]);
-    merge.hashes.Add(plugin.hash);
-  end;
+  // update merge plugin hashes
+  merge.GetHashes;
+  // save merge map, files, fails
+  ForceDirectories(merge.dataPath + 'merge\');
+  merge.map.SaveToFile(merge.dataPath + 'merge\'+merge.filename+'_map.txt');
+  merge.files.SaveToFile(merge.dataPath + 'merge\'+merge.filename+'_files.txt');
+  merge.fails.SaveToFile(merge.dataPath + 'merge\'+merge.filename+'_fails.txt');
 
   // save merged plugin
   FileStream := TFileStream.Create(merge.dataPath + merge.filename, fmCreate);
@@ -641,7 +702,7 @@ begin
   end;
 
   // done merging
-  time := (Now - Time) * 86400;
+  time := (Now - time) * 86400;
   merge.dateBuilt := Now;
   merge.status := 5;
   Tracker.Write('Done merging '+merge.name+' ('+FormatFloat('0.###', time) + 's)');

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
-  mpTracker;
+  mpBase, mpTracker;
 
 type
   TProgressForm = class(TForm)
@@ -18,6 +18,8 @@ type
     procedure ProgressMessage(const s: string);
     procedure UpdateProgress(const i: integer);
     procedure ProcessMessages;
+    procedure SaveLog;
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     { Private declarations }
   public
@@ -25,7 +27,7 @@ type
   end;
 
 const
-  ProcessDelay = 50;
+  RepaintDelay = 50;
 
 var
   ProgressForm: TProgressForm;
@@ -51,7 +53,7 @@ end;
 
 procedure TProgressForm.ProcessMessages;
 begin
-  if GetTickCount - startTime > ProcessDelay then begin
+  if GetTickCount - startTime > RepaintDelay then begin
     Application.ProcessMessages;
     startTime := GetTickCount;
   end;
@@ -59,16 +61,34 @@ end;
 
 procedure TProgressForm.DetailsButtonClick(Sender: TObject);
 begin
+  if LogMemo.Visible then
+    exit;
   DetailsButton.Visible := false;
   LogMemo.Visible := true;
   Height := 435;
-  ProgressForm.Position := poScreenCenter;
+  Top := Top - 153;
+end;
+
+procedure TProgressForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := (fsModal in FormState);
+end;
+
+procedure TProgressForm.SaveLog;
+var
+  fdt: string;
+begin
+  ForceDirectories(logPath);
+  fdt := FormatDateTime('mmddyy_hhnnss', TDateTime(Now));
+  LogMemo.Lines.SaveToFile(logPath + 'merge_'+fdt+'.txt');
 end;
 
 procedure TProgressForm.FormCreate(Sender: TObject);
 begin
+  Height := 129;
   Tracker.OnLogEvent := ProgressMessage;
   Tracker.OnProgressEvent := UpdateProgress;
+  startTime := 0;
 end;
 
 end.

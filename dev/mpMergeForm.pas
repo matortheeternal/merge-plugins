@@ -52,13 +52,12 @@ type
     FlagList: TImageList;
     CheckforErrorsItem: TMenuItem;
     ForceRebuildItem: TMenuItem;
-    BuildAllMergesItem: TMenuItem;
-    N1: TMenuItem;
-    ReportOnMergesItem: TMenuItem;
     ReportOnMergeItem: TMenuItem;
     OpenInExplorerItem: TMenuItem;
     IgnoreRebuildItem: TMenuItem;
     EditMergeItem: TMenuItem;
+    DoubleIconList: TImageList;
+    CheckPluginsForErrorsItem: TMenuItem;
     procedure LogMessage(const s: string);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -96,16 +95,15 @@ type
     procedure MergeListViewData(Sender: TObject; Item: TListItem);
     procedure MergeListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
-    procedure DeleteMerge(Sender: TObject);
+    procedure DeleteMergeItemClick(Sender: TObject);
     procedure MergesPopupMenuPopup(Sender: TObject);
-    procedure OpenInExplorerClick(Sender: TObject);
+    procedure OpenInExplorerItemClick(Sender: TObject);
     procedure ForceRebuildItemClick(Sender: TObject);
     procedure IgnoreRebuildItemClick(Sender: TObject);
     procedure ReportOnMergeItemClick(Sender: TObject);
-    procedure ReportOnMergesItemClick(Sender: TObject);
     procedure BuildMergeItemClick(Sender: TObject);
-    procedure BuildAllMergesItemClick(Sender: TObject);
     procedure EditMergeItemClick(Sender: TObject);
+    procedure CheckPluginsForErrorsItemClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -115,6 +113,7 @@ type
 var
   MergeForm: TMergeForm;
   currentMerge: TMerge;
+  bFirstActivation: boolean;
 
 implementation
 
@@ -166,14 +165,16 @@ begin
     // INITIALIZE VARIABLES
     time := now;
     tempPath := wbProgramPath + 'temp\';
+    logPath := wbProgramPath + 'logs\';
     ForceDirectories(tempPath);
     MergesList := TList.Create;
     PluginsList := TList.Create;
+    bFirstActivation := true;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
     IconList.GetBitmap(0, NewButton.Glyph);
-    IconList.GetBitmap(1, BuildButton.Glyph);
+    DoubleIconList.GetBitmap(0, BuildButton.Glyph);
     IconList.GetBitmap(2, ReportButton.Glyph);
     IconList.GetBitmap(3, DictionaryButton.Glyph);
     IconList.GetBitmap(4, OptionsButton.Glyph);
@@ -206,6 +207,8 @@ begin
 
     // LOAD SETTINGS FOR GAME
     LoadSettings;
+    if settings.usingMO then
+      ModOrganizerInit;
 
     // LOAD DICTIONARY
     dictionaryFilename := wbAppName+'Dictionary.txt';
@@ -217,8 +220,10 @@ begin
     LoadDefinitions;
 
     // PREPARE TO LOAD PLUGINS
-    wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
-    wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
+    if settings.usingMO then
+      wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveProfile+'\plugins.txt'
+    else
+      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
     Logger.Write('Using load order '+wbPluginsFileName);
     sl := TStringList.Create;
     sl.LoadFromFile(wbPluginsFileName);
@@ -235,6 +240,12 @@ begin
         sl.Insert(0, 'Update.esm');
       if sl.IndexOf('Skyrim.esm') = -1 then
         sl.Insert(0, 'Skyrim.esm');
+    end;
+    // debug message
+    if settings.debugLoadOrder then begin
+      Logger.Write('Load order: ');
+      for i := 0 to Pred(sl.Count) do
+        Logger.Write('  ['+IntToHex(i, 2)+'] '+sl[i]);
     end;
 
 
@@ -253,6 +264,14 @@ begin
         aFile := wbFile(wbProgramPath + wbGameName + wbHardcodedDat, 0);
         aFile._AddRef;
       end;
+    end;
+
+    // BUILD REFERENCE TABLE
+    for i := 1 to Pred(PluginsList.Count) do begin
+      plugin := TPlugin(PluginsList[i]);
+      Tracker.Write('Building references for '+plugin.filename);
+      Logger.Write('Building references for '+plugin.filename);
+      plugin._File.BuildRef;
     end;
 
     // LOAD MERGES
@@ -280,15 +299,19 @@ end;
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormActivate(Sender: TObject);
 begin
-  PageControl.ActivePageIndex := 1;
-  MergeListView.Width := MergeListView.Width + 1;
-  PageControl.ActivePageIndex := 0;
-  PluginsListView.Width := PluginsListView.Width + 1;
+  if bFirstActivation then begin
+    PageControl.ActivePageIndex := 1;
+    MergeListView.Width := MergeListView.Width + 1;
+    PageControl.ActivePageIndex := 0;
+    PluginsListView.Width := PluginsListView.Width + 1;
+    bFirstActivation := false;
+  end;
 end;
 
 procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if not bDontSave then SaveMerges;
+  DeleteDirectory(tempPath);
   Action := caFree;
 end;
 
@@ -509,7 +532,6 @@ begin
   PluginsPopupMenu.Items[0].Enabled := (not blacklisted) and (not pluginInMerge);
   PluginsPopupMenu.Items[1].Enabled := (not blacklisted) and pluginInMerge;
   PluginsPopupMenu.Items[2].Enabled := not blacklisted;
-  PluginsPopupMenu.Items[3].Enabled := not blacklisted;
 end;
 
 procedure TMergeForm.UpdatePluginsPopupMenu;
@@ -557,8 +579,7 @@ begin
     plugin := TPlugin(PluginsList[i]);
     if not plugin.hasData then
       plugin.GetData;
-    merge.plugins.Add(plugin.filename);
-    merge.hashes.Add(plugin.hash);
+    merge.plugins.AddObject(plugin.filename, TObject(i));
     plugin.merge := merge.name;
   end;
 
@@ -585,15 +606,13 @@ begin
     plugin := TPlugin(PluginsList[i]);
     if not plugin.hasData then
       plugin.GetData;
-    merge.plugins.Add(plugin.filename);
-    merge.hashes.Add(plugin.hash);
+    merge.plugins.AddObject(plugin.filename, TObject(i));
     plugin.merge := merge.name;
   end;
 
-  // update merges
+  // update
   MergesList.Add(merge);
   UpdateMerges;
-  // update plugins
   UpdatePluginsPopupMenu;
   PluginsListView.Repaint;
 end;
@@ -607,7 +626,7 @@ var
   pluginsToCheck: TList;
 begin
   pluginsToCheck := TList.Create;
-  ProgressForm := TProgressForm.Create(nil);
+  ProgressForm := TProgressForm.Create(MergeForm);
   ProgressForm.Show;
   ProgressForm.ProgressBar.Max := 0;
 
@@ -616,6 +635,8 @@ begin
     if not ListItem.Selected then
       continue;
     plugin := TPlugin(PluginsList[i]);
+    if IS_BLACKLISTED in plugin.flags then
+      continue;
     ProgressForm.ProgressBar.Max := ProgressForm.ProgressBar.Max + StrToInt(plugin.numRecords);
     pluginsToCheck.Add(plugin);
   end;
@@ -632,6 +653,7 @@ begin
   ProgressForm.ShowModal;
   ProgressForm.Free;
   UpdateMerges;
+  PluginsListView.Repaint;
 end;
 
 { Remove from Merge }
@@ -681,6 +703,7 @@ var
   mergeItem: TListItem;
   merge: TMerge;
   prop: TItemProp;
+  sl: TStringList;
 begin
   // don't do anything if no item selected
   mergeItem := MergeListView.Selected;
@@ -709,7 +732,14 @@ begin
   prop.EditStyle := esPickList;
   prop.PickList.Add('Conflicting');
   prop.PickList.Add('All');
-  AddDetailsList('Files', merge.files);
+  if merge.files.Count < 500 then begin
+    sl := TStringList.Create;
+    sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
+    AddDetailsList('Files', sl);
+    sl.Free;
+  end
+  else
+    AddDetailsItem('Files', 'Too many files to display.');
   AddDetailsList('Fails', merge.fails);
 end;
 
@@ -717,14 +747,34 @@ procedure TMergeForm.UpdateMerges;
 var
   i: integer;
   merge: TMerge;
+  bMergesToBuild, bMergesToCheck: boolean;
 begin
+  bMergesToBuild := false;
+  bMergesToCheck := false;
+  // update merge count
   MergeListView.Items.Count := MergesList.Count;
-  // get status of each merge
+
   for i := 0 to Pred(MergesList.Count) do begin
     merge := TMerge(MergesList[i]);
+    // sort plugins in merge
+    merge.SortPlugins;
+    // get status of each merge
     if not (merge.status in ForcedStatuses) then
       merge.GetStatus;
+    if (merge.status in BuildStatuses) then
+      bMergesToBuild := true;
+    if (merge.status = 10) then
+      bMergesToCheck := true;
   end;
+
+  // enable build button if there are merges to build
+  BuildButton.Enabled := bMergesToBuild;
+  if not bMergesToBuild then
+    BuildButton.Hint := 'No merges to build!'
+  else if bMergesToCheck then
+    BuildButton.Hint := 'Check merges for errors'
+  else
+    BuildButton.Hint := 'Build all merges';
 end;
 
 procedure TMergeForm.MergeListViewChange(Sender: TObject; Item: TListItem;
@@ -778,8 +828,10 @@ end;
 { MergePopupMenu methods
   Methods for dealing with the popup menu for the MergesListView.
   - MergesPopupMenuPopup
-  - DeleteMerge
-  - OpenInExplorerClick
+  - EditMergeItemClick
+  - CheckPluginsForErrorsItemClick
+  - DeleteMergeItemClick
+  - OpenInExplorerItemClick
   - ForceRebuildItemClick
   - IgnoreRebuildItemClick
   - ReportOnMergeItemClick
@@ -790,138 +842,259 @@ end;
 
 procedure TMergeForm.MergesPopupMenuPopup(Sender: TObject);
 var
-  mergeSelected, neverBuilt, hasBuildStatus, hasUpToDateStatus: boolean;
+  neverBuilt, hasBuildStatus, hasUpToDateStatus,
+  hasCheckStatus: boolean;
+  merge: TMerge;
+  i, mergesSelected: Integer;
 begin
   neverBuilt := false;
   hasBuildStatus := false;
   hasUpToDateStatus := false;
+  hasCheckStatus := false;
+  mergesSelected := 0;
 
-  mergeSelected := MergeListView.ItemIndex > -1;
-  if mergeSelected then begin
-    currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-    neverBuilt := currentMerge.dateBuilt = 0;
-    hasBuildStatus := (currentMerge.status in BuildStatuses);
-    hasUpToDateStatus := (currentMerge.status in UpToDateStatuses);
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    Inc(mergesSelected);
+    neverBuilt := neverBuilt or (merge.dateBuilt = 0);
+    hasBuildStatus := hasBuildStatus or (merge.status in BuildStatuses);
+    hasUpToDateStatus := hasUpToDateStatus or (merge.status in UpToDateStatuses);
+    hasCheckStatus := hasCheckStatus or (merge.status = 10);
   end;
 
-  MergesPopupMenu.Items[1].Enabled := mergeSelected;
-  MergesPopupMenu.Items[2].Enabled := mergeSelected;
-  MergesPopupMenu.Items[3].Enabled := mergeSelected;
-  MergesPopupMenu.Items[4].Enabled := mergeSelected;
-  MergesPopupMenu.Items[5].Enabled := mergeSelected and hasUpToDateStatus;
-  MergesPopupMenu.Items[6].Enabled := mergeSelected and hasUpToDateStatus;
-  MergesPopupMenu.Items[7].Enabled := mergeSelected and hasBuildStatus;
+  MergesPopupMenu.Items[1].Enabled := (mergesSelected > 0);
+  MergesPopupMenu.Items[2].Enabled := (mergesSelected > 0) and hasCheckStatus;
+  MergesPopupMenu.Items[3].Enabled := (mergesSelected > 0);
+  MergesPopupMenu.Items[4].Enabled := (mergesSelected > 0) and not hasCheckStatus;
+  MergesPopupMenu.Items[5].Enabled := (mergesSelected > 0);
+  MergesPopupMenu.Items[6].Enabled := (mergesSelected > 0) and hasUpToDateStatus;
+  MergesPopupMenu.Items[7].Enabled := (mergesSelected > 0) and hasUpToDateStatus;
+  MergesPopupMenu.Items[8].Enabled := (mergesSelected > 0) and hasBuildStatus;
 
   // handle build/rebuild menu item
-  if neverBuilt then
-    MergesPopupMenu.Items[3].Caption := 'Build merge'
-  else if hasBuildStatus then
-    MergesPopupMenu.Items[3].Caption := 'Rebuild merge'
-  else begin
-    MergesPopupMenu.Items[3].Enabled := false;
-    MergesPopupMenu.Items[3].Caption := 'Rebuild merge';
+  if (mergesSelected = 1) then begin
+    if neverBuilt then
+      MergesPopupMenu.Items[4].Caption := 'Build merge'
+    else if hasBuildStatus then
+      MergesPopupMenu.Items[4].Caption := 'Rebuild merge'
+    else begin
+      MergesPopupMenu.Items[4].Enabled := false;
+      MergesPopupMenu.Items[4].Caption := 'Rebuild merge';
+    end;
+  end
+  else if (mergesSelected > 1) then begin
+    if neverBuilt then
+      MergesPopupMenu.Items[4].Caption := 'Build merges'
+    else if hasBuildStatus then
+      MergesPopupMenu.Items[4].Caption := 'Rebuild merges'
+    else begin
+      MergesPopupMenu.Items[4].Enabled := false;
+      MergesPopupMenu.Items[4].Caption := 'Rebuild merges';
+    end;
   end;
 end;
 
 procedure TMergeForm.EditMergeItemClick(Sender: TObject);
 var
   EditMerge: TEditForm;
-  i, mr: integer;
+  i, j, mr: integer;
   plugin: TPlugin;
+  merge: TMerge;
 begin
-  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-  // create EditForm
-  EditMerge := TEditForm.Create(nil);
-  EditMerge.merge := currentMerge;
-  mr := EditMerge.ShowModal;
-  currentMerge := EditMerge.merge;
-  EditMerge.Free;
+  // loop through merges
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    // create EditForm
+    EditMerge := TEditForm.Create(nil);
+    EditMerge.merge := merge;
+    mr := EditMerge.ShowModal;
+    merge := EditMerge.merge;
+    EditMerge.Free;
 
-  // if modal result <> mrOk then exit
-  if mr <> mrOk then
-    exit;
+    // if modal result <> mrOk then continue
+    if mr <> mrOk then
+      continue;
 
-  // update popup menus and stuff
-  UpdateMergeDetails;
-  UpdatePluginsPopupMenu;
-  for i := 0 to Pred(currentMerge.plugins.Count) do begin
-    plugin := PluginByFilename(currentMerge.plugins[i]);
-    if Assigned(plugin) then
-      plugin.merge := currentMerge.name;
+    // update popup menus and stuff
+    UpdateMergeDetails;
+    UpdatePluginsPopupMenu;
+    for j := 0 to Pred(currentMerge.plugins.Count) do begin
+      plugin := PluginByFilename(merge.plugins[j]);
+      if Assigned(plugin) then
+        plugin.merge := merge.name;
+    end;
+    MergeListView.Repaint;
   end;
-  MergeListView.Repaint;
 end;
 
-procedure TMergeForm.DeleteMerge(Sender: TObject);
+{ Check plugins in merge for errors }
+procedure TMergeForm.CheckPluginsForErrorsItemClick(Sender: TObject);
 var
-  i: Integer;
+  timeCost, i, j: Integer;
   plugin: TPlugin;
+  merge: TMerge;
+  timeCosts, merges: TList;
 begin
-  // exit if no merge selected
-  if MergeListView.ItemIndex = -1 then
-    exit;
+  timeCosts := TList.Create;
+  merges := TList.Create;
 
-  // else prompt user, delete merge and update details editor
-  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-  if MessageDlg('Are you sure you want to delete '+currentMerge.name+'?',
-    mtConfirmation, mbOKCancel, 0) = mrOK then begin
+  // get timecosts
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    if not (merge.status = 10) then
+      continue;
 
-    // remove merge from plugin merge properties
-    for i := 0 to Pred(PluginsList.Count) do begin
-      plugin := TPlugin(PluginsList[i]);
-      plugin.merge := ' ';
-    end;
-
-    // delete merge
-    currentMerge := nil;
-    MergesList.Delete(MergeListView.ItemIndex);
-
-    // clear details editor
-    DetailsEditor.OnStringsChange := nil;
-    DetailsEditor.Options := DetailsEditor.Options - [goEditing];
-    DetailsEditor.Strings.Clear;
+    // else calculate time cost and build merge
+    timeCost := merge.GetTimeCost;
+    timeCosts.Add(Pointer(timeCost));
+    merges.Add(merge);
+    Logger.Write('Time cost for '+merge.name+': '+IntToStr(timeCost));
   end;
 
-  // update merges
-  MergeListView.Items.Count := MergesList.Count;
-  UpdatePluginsPopupMenu;
+  // free and exit if no merges to check for errors
+  if merges.Count = 0 then begin
+    timeCosts.Free;
+    merges.Free;
+    exit;
+  end;
+
+  // Show progress form
+  ProgressForm := TProgressForm.Create(MergeForm);
+  ProgressForm.Show;
+  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
+  bCaptureTracker := true;
+
+  // check merges for errors
+  for i := 0 to Pred(merges.Count) do begin
+    merge := TMerge(merges[i]);
+    // check plugins for errors
+    for j := 0 to Pred(merge.plugins.Count) do begin
+      plugin := PluginByFilename(merge.plugins[j]);
+      Tracker.Write('Checking for errors in '+plugin.filename);
+      plugin.FindErrors;
+    end;
+    ProgressForm.ProgressBar.Position := IntegerListSum(timeCosts, i);
+  end;
+
+  // all done
+  Tracker.Write('All done!');
+  ProgressForm.ProgressBar.Position := ProgressForm.ProgressBar.Max;
+  ProgressForm.Visible := false;
+  ProgressForm.ShowModal;
+  ProgressForm.Free;
+  timeCosts.Free;
+  merges.Free;
+  UpdateMerges;
+  PluginsListView.Repaint;
+end;
+
+procedure TMergeForm.DeleteMergeItemClick(Sender: TObject);
+var
+  i, j: Integer;
+  plugin: TPlugin;
+  merge: TMerge;
+begin
+  // loop through merges
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    if MessageDlg('Are you sure you want to delete '+merge.name+'?',
+      mtConfirmation, mbOKCancel, 0) = mrOK then begin
+
+      // remove merge from plugin merge properties
+      for j := 0 to Pred(PluginsList.Count) do begin
+        plugin := TPlugin(PluginsList[j]);
+        plugin.merge := ' ';
+      end;
+
+      // delete merge
+      merge.Free;
+      MergesList.Delete(MergeListView.ItemIndex);
+
+      // clear details editor
+      DetailsEditor.Strings.Clear;
+    end;
+
+    // update merges
+    MergeListView.Items.Count := MergesList.Count;
+    UpdatePluginsPopupMenu;
+  end;
 end;
 
 procedure TMergeForm.BuildMergeItemClick(Sender: TObject);
 var
-  timeCost: Integer;
+  timeCost, i: Integer;
+  merge: TMerge;
+  bfn: string;
+  timeCosts, merges: TList;
 begin
-  // exit if no merge selected
-  if MergeListView.ItemIndex = -1 then
-    exit;
+  timeCosts := TList.Create;
+  merges := TList.Create;
 
-  // exit if currentMerge isn't ready to be built
-  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-  if not (currentMerge.status in BuildStatuses) then
-    exit;
+  // get timecosts
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    if not (merge.status in BuildStatuses) then
+      continue;
 
-  // else calculate time cost and build merge
-  timeCost := currentMerge.GetTimeCost;
-  Logger.Write('Time cost for '+currentMerge.name+': '+IntToStr(timeCost));
-
-  ProgressForm := TProgressForm.Create(nil);
-  ProgressForm.Show;
-  ProgressForm.ProgressBar.Max := timeCost;
-  bCaptureTracker := true;
-
-  // build merge
-  try
-    if (currentMerge.status in RebuildStatuses) then
-      RebuildMerge(currentMerge)
-    else
-      BuildMerge(currentMerge);
-  except on x : Exception do
-    Tracker.Write('Exception: '+x.Message);
+    // else calculate time cost and build merge
+    timeCost := merge.GetTimeCost * 2;
+    timeCosts.Add(Pointer(timeCost));
+    merges.Add(merge);
+    Logger.Write('Time cost for '+merge.name+': '+IntToStr(timeCost));
   end;
-  Tracker.Write(' '#13#10);
-  ProgressForm.ProgressBar.Position := timeCost;
+
+  // free and exit if no merges to check for errors
+  if merges.Count = 0 then begin
+    timeCosts.Free;
+    merges.Free;
+    exit;
+  end;
+
+  // Show progress form
+  ProgressForm := TProgressForm.Create(MergeForm);
+  ProgressForm.Show;
+  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
+  Application.ProcessMessages;
+
+  // build merges
+  for i := 0 to Pred(merges.Count) do begin
+    try
+      merge := TMerge(merges[i]);
+      if (merge.status in RebuildStatuses) then
+        RebuildMerge(merge)
+      else
+        BuildMerge(merge);
+    except on x : Exception do
+      Tracker.Write('Exception: '+x.Message);
+    end;
+    Tracker.Write(' '#13#10);
+    ProgressForm.ProgressBar.Position := IntegerListSum(timeCosts, i);
+  end;
+
+  // batch copy assets
+  if settings.batCopy and (batch.Count > 0) then begin
+    bfn := tempPath+FormatDateTime('mmddyy_hhnnss', Now)+'.bat';
+    batch.Add('pause');
+    batch.SaveToFile(bfn);
+    batch.Clear;
+    ShellExecute(Application.Handle, 'open', PChar(bfn), '', PChar(wbProgramPath), SW_SHOWNORMAL);
+  end;
+
+  // save log
+  ProgressForm.LogMemo.Lines.SaveToFile(LogPath + 'merge_'+FormatDateTime('mmddyy_hhnnss', Now)+'.txt');
+
   // display progress form after merging
-  bCaptureTracker := false;
+  ProgressForm.SaveLog;
   ProgressForm.DetailsButtonClick(nil);
   ProgressForm.Visible := false;
   ProgressForm.ShowModal;
@@ -933,72 +1106,90 @@ begin
   UpdateMerges;
   UpdateMergeDetails;
   MergeListView.Repaint;
+  DeleteDirectory(tempPath);
 end;
 
-procedure TMergeForm.OpenInExplorerClick(Sender: TObject);
+procedure TMergeForm.OpenInExplorerItemClick(Sender: TObject);
 var
+  i: Integer;
   path: string;
+  merge: TMerge;
 begin
-  // exit if no merge selected
-  if MergeListView.ItemIndex = -1 then
-    exit;
+  // loop through merges
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
 
-  // open in explorer
-  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-  path := settings.mergeDirectory + currentMerge.name;
-  ForceDirectories(path);
-  ShellExecute(TForm(MergeForm).Handle, 'open', PChar(path), '', '', SW_SHOWNORMAL);
+    // open in explorer
+    path := settings.mergeDirectory + merge.name;
+    ForceDirectories(path);
+    ShellExecute(TForm(MergeForm).Handle, 'open', PChar(path), '', '', SW_SHOWNORMAL);
+  end;
 end;
 
 procedure TMergeForm.ForceRebuildItemClick(Sender: TObject);
+var
+  i: Integer;
+  merge: TMerge;
 begin
-  // exit if no merge selected
-  if MergeListView.ItemIndex = -1 then
-    exit;
+  // loop through merges
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    if not (merge.status in UpToDateStatuses) then
+      continue;
+    merge.Status := 9;
+  end;
 
-  // force rebuild
-  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-  currentMerge.Status := 9;
-  MergeListView.Repaint;
+  // update
+  UpdateMerges;
   UpdateMergeDetails;
+  MergeListView.Repaint;
 end;
 
 procedure TMergeForm.IgnoreRebuildItemClick(Sender: TObject);
+var
+  i: Integer;
+  merge: TMerge;
 begin
-  // exit if no merge selected
-  if MergeListView.ItemIndex = -1 then
-    exit;
+  // loop through merges
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    if not (merge.status in RebuildStatuses) then
+      continue;
+    merge.Status := 6;
+  end;
 
-  // ignore rebuild
-  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-  currentMerge.Status := 6;
-  MergeListView.Repaint;
+  // update
+  UpdateMerges;
   UpdateMergeDetails;
+  MergeListView.Repaint;
 end;
 
 procedure TMergeForm.ReportOnMergeItemClick(Sender: TObject);
+var
+  i: Integer;
+  merge: TMerge;
+  merges: TList;
 begin
-  // exit if no merge selected
-  if MergeListView.ItemIndex = -1 then
-    exit;
+  merges := TList.Create;
 
-  // report on currentMerge
-  currentMerge := TMerge(MergesList[MergeListView.ItemIndex]);
-  //Report(merge);
-end;
+  // loop through merges
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    merges.Add(merge);
+  end;
 
-procedure TMergeForm.BuildAllMergesItemClick(Sender: TObject);
-begin
-  // rebuild all merges
-  RebuildButtonClick(nil);
-end;
-
-procedure TMergeForm.ReportOnMergesItemClick(Sender: TObject);
-begin
   // report on all merges
-  ReportButtonClick(nil);
+  //Report(merges);
+  merges.Free;
 end;
-
 
 {******************************************************************************}
 { QuickBar Button Events
@@ -1031,7 +1222,8 @@ var
   i, timeCost: integer;
   merge: TMerge;
   ProgressForm: TProgressForm;
-  timeCosts: TList;
+  timeCosts, merges: TList;
+  bfn: string;
 begin
   LogMessage('Rebuild merges!');
   if MergesList.Count = 0 then
@@ -1039,30 +1231,34 @@ begin
 
   // calculate time costs
   timeCosts := TList.Create;
+  merges := TList.Create;
   for i := 0 to Pred(MergesList.Count) do begin
     merge := TMerge(MergesList[i]);
     if not (merge.status in BuildStatuses) then
       continue;
-    timeCost := merge.GetTimeCost;
+    timeCost := merge.GetTimeCost * 2;
     Logger.Write('Time cost for '+merge.name+': '+IntToStr(timeCost));
+    merges.Add(merge);
     timeCosts.Add(Pointer(timeCost));
   end;
 
   // exit if no merges to build
   if timeCosts.Count = 0 then begin
     Logger.Write('No merges to build!');
+    timeCosts.Free;
+    merges.Free;
     exit;
   end;
 
   // make and show progress form
-  ProgressForm := TProgressForm.Create(nil);
+  ProgressForm := TProgressForm.Create(MergeForm);
   ProgressForm.Show;
   ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
-  bCaptureTracker := true;
+  Application.ProcessMessages;
 
   // rebuild merges
-  for i := 0 to Pred(MergesList.count) do begin
-    merge := MergesList[i];
+  for i := 0 to Pred(merges.count) do begin
+    merge := merges[i];
     if not (merge.status in BuildStatuses) then
       continue;
     try
@@ -1077,8 +1273,19 @@ begin
     ProgressForm.ProgressBar.Position := IntegerListSum(timeCosts, i);
   end;
 
+  // batch copy assets
+  if settings.batCopy and (batch.Count > 0) then begin
+    bfn := tempPath+FormatDateTime('mmddyy_hhnnss', Now)+'.bat';
+    batch.Add('pause');
+    batch.SaveToFile(bfn);
+    batch.Clear;
+    ShellExecute(Application.Handle, 'open', PChar(bfn), '', PChar(wbProgramPath), SW_SHOWNORMAL);
+  end;
+
+  // save log
+  ProgressForm.LogMemo.Lines.SaveToFile(LogPath + 'merge_'+FormatDateTime('mmddyy_hhnnss', Now)+'.txt');
+
   // display progress form after merging
-  bCaptureTracker := false;
   ProgressForm.DetailsButtonClick(nil);
   ProgressForm.Visible := false;
   ProgressForm.ShowModal;
@@ -1086,6 +1293,7 @@ begin
   // free memory
   ProgressForm.Free;
   timeCosts.Free;
+  merges.Free;
 
   // update mpMergeForm
   UpdateMerges;
@@ -1117,11 +1325,19 @@ procedure TMergeForm.OptionsButtonClick(Sender: TObject);
 var
   OptionsForm: TOptionsForm;
 begin
-  //LogMessage(TButton(Sender).Hint+' clicked!');
+  // Create and show options form
   OptionsForm := TOptionsForm.Create(nil);
   OptionsForm.ShowModal;
   OptionsForm.Free;
+
+  // initialize MO if usingMO changed
+  if settings.usingMO then
+    ModOrganizerInit;
+
+  // update owner draw if changed
   PluginsListView.OwnerDraw := not settings.simplePluginsView;
+
+  // if user selected to change game mode, restart application with -sg param
   if bChangeGameMode then begin
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
     Close;

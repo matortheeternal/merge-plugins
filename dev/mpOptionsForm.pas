@@ -49,6 +49,18 @@ type
     lblUsername: TLabel;
     edUsername: TEdit;
     kbSaveReports: TCheckBox;
+    kbBatCopy: TCheckBox;
+    AdvancedTabSheet: TTabSheet;
+    gbDebug: TGroupBox;
+    kbDebugRenumbering: TCheckBox;
+    kbDebugMergeStatus: TCheckBox;
+    kbDebugAssetCopying: TCheckBox;
+    kbDebugRecordCopying: TCheckBox;
+    kbDebugMasters: TCheckBox;
+    kbDebugBatchCopying: TCheckBox;
+    kbDebugBSAs: TCheckBox;
+    kbDebugTempPath: TCheckBox;
+    kbDebugLoadOrder: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -180,6 +192,16 @@ begin
   settings.handleScriptFragments := kbFragments.Checked;
   settings.extractBSAs := kbExtractBSAs.Checked;
   settings.buildMergedBSA := kbBuildBSA.Checked;
+  settings.batCopy := kbBatCopy.Checked;
+  settings.debugRenumbering := kbDebugRenumbering.Checked;
+  settings.debugMergeStatus := kbDebugMergeStatus.Checked;
+  settings.debugAssetCopying := kbDebugAssetCopying.Checked;
+  settings.debugRecordCopying := kbDebugRecordCopying.Checked;
+  settings.debugMasters := kbDebugMasters.Checked;
+  settings.debugBatchCopying := kbDebugBatchCopying.Checked;
+  settings.debugBSAs := kbDebugBSAs.Checked;
+  settings.debugTempPath := kbDebugTempPath.Checked;
+  settings.debugLoadOrder := kbDebugLoadOrder.Checked;
   settings.Save('settings.ini');
 end;
 
@@ -213,6 +235,16 @@ begin
   kbFragments.Checked := settings.handleScriptFragments;
   kbExtractBSAs.Checked := settings.extractBSAs;
   kbBuildBSA.Checked := settings.buildMergedBSA;
+  kbBatCopy.Checked := settings.batCopy;
+  kbDebugRenumbering.Checked := settings.debugRenumbering;
+  kbDebugMergeStatus.Checked := settings.debugMergeStatus;
+  kbDebugAssetCopying.Checked := settings.debugAssetCopying;
+  kbDebugRecordCopying.Checked := settings.debugRecordCopying;
+  kbDebugMasters.Checked := settings.debugMasters;
+  kbDebugBatchCopying.Checked := settings.debugBatchCopying;
+  kbDebugBSAs.Checked := settings.debugBSAs;
+  kbDebugTempPath.Checked := settings.debugTempPath;
+  kbDebugLoadOrder.Checked := settings.debugLoadOrder;
 
   // load valid game paths
   if GamePathValid(settings.tes5path, 1) then

@@ -61,6 +61,7 @@ begin
   end;
 
   // run main application
+  Application.Title := 'Merge Plugins';
   Application.CreateForm(TMergeForm, MergeForm);
   Application.CreateForm(TProgressForm, ProgressForm);
   Application.CreateForm(TDictionaryForm, DictionaryForm);

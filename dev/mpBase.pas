@@ -5,7 +5,7 @@ interface
 uses
   Windows, SysUtils, ShlObj, Classes, IniFiles, Dialogs,
   superobject,
-  mpLogger, mpTracker, mpProgressForm,
+  mpLogger, mpTracker,
   Registry,
   wbBSA,
   wbHelpers,
@@ -38,8 +38,8 @@ type
     color: integer;
     caption: string[64];
   end;
-  TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_TRANSLATION, HAS_FACEDATA,
-    HAS_VOICEDATA, HAS_FRAGMENTS);
+  TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_INI, HAS_TRANSLATION,
+    HAS_FACEDATA, HAS_VOICEDATA, HAS_FRAGMENTS);
   TPluginFlags = set of TPluginFlag;
   TPlugin = class(TObject)
     public
@@ -88,7 +88,10 @@ type
       function Dump: ISuperObject;
       procedure LoadDump(obj: ISuperObject);
       function GetTimeCost: integer;
+      procedure GetHashes;
       procedure GetStatus;
+      procedure GetLoadOrders;
+      procedure SortPlugins;
       function PluginsModified: boolean;
       function FilesExist: boolean;
       function GetStatusColor: integer;
@@ -118,16 +121,28 @@ type
     handleScriptFragments: boolean;
     extractBSAs: boolean;
     buildMergedBSA: boolean;
+    batCopy: boolean;
+    debugRenumbering: boolean;
+    debugMergeStatus: boolean;
+    debugAssetCopying: boolean;
+    debugRecordCopying: boolean;
+    debugMasters: boolean;
+    debugBatchCopying: boolean;
+    debugBSAs: boolean;
+    debugTempPath: boolean;
+    debugLoadOrder: boolean;
     constructor Create; virtual;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
   end;
 
+  { Initialization Methods }
   function GamePathValid(path: string; id: integer): boolean;
   procedure SetGame(id: integer);
   function GetGameID(name: string): integer;
   function GetGamePath(gameName: string): string;
   procedure LoadDefinitions;
+  { Bethesda Plugin Functions }
   function IsOverride(aRecord: IwbMainRecord): boolean;
   function LocalFormID(aRecord: IwbMainRecord): integer;
   function LoadOrderPrefix(aRecord: IwbMainRecord): integer;
@@ -135,6 +150,7 @@ type
   procedure GetMasters(aFile: IwbFile; var sl: TStringList);
   procedure AddMasters(aFile: IwbFile; var sl: TStringList);
   function BSAExists(filename: string): boolean;
+  function INIExists(filename: string): boolean;
   function TranslationExists(filename: string): boolean;
   function FaceDataExists(filename: string): boolean;
   function VoiceDataExists(filename: string): boolean;
@@ -143,26 +159,37 @@ type
   function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
   function CheckForErrors(const aIndent: Integer; const aElement: IwbElement; var errors: TStringList): Boolean;
   procedure CreateSEQFile(merge: TMerge);
+  { General functions }
   function csvText(s: string): string;
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
+  function AppendIfMissing(str, substr: string): string;
   function IntegerListSum(list: TList; maxIndex: integer): integer;
   function Wordwrap(var s: string; charCount: integer): string;
+  { Load order functions }
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
   procedure AddMissingFiles(var sl: TStringList);
   procedure GetPluginDates(var sl: TStringList);
   function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
+  { Windows API functions }
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
   function RecursiveFileSearch(aPath, aFileName: string; ignore: TStringList; maxDepth: integer): string;
+  { Mod Organizer methods }
+  procedure ModOrganizerInit;
+  function GetActiveProfile: string;
+  procedure GetActiveMods(var modlist: TStringList; profileName: string);
+  function GetModContainingFile(var modlist: TStringList; filename: string): string;
+  { Dictionary and Settings methods }
   procedure LoadSettings;
   procedure LoadDictionary;
   function GetRatingColor(rating: real): integer;
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
-  function AppendIfMissing(str, substr: string): string;
+  { Plugin and Merge methods }
+  function PluginLoadOrder(filename: string): integer;
   function PluginByFilename(filename: string): TPlugin;
   function MergeByName(merges: TList; name: string): TMerge;
   function MergeByFilename(merges: TList; filename: string): TMerge;
@@ -170,11 +197,12 @@ type
   function CreateNewPlugin(filename: string): TPlugin;
   procedure SaveMerges;
   procedure LoadMerges;
+  function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
 
 const
   ProgramVersion = '2.0';
-  flagChar = 'XEATGVF';
-  StatusArray: array[0..9] of TMergeStatus = (
+  flagChar = 'XEAITGVF';
+  StatusArray: array[0..10] of TMergeStatus = (
     ( id: 0; color: $808080; caption: 'Unknown'; ),
     ( id: 1; color: $0000FF; caption: 'No plugins to merge'; ),
     ( id: 2; color: $0000FF; caption: 'Directories invalid'; ),
@@ -184,7 +212,8 @@ const
     ( id: 6; color: $900000; caption: 'Up to date [Forced]'; ),
     ( id: 7; color: $009000; caption: 'Ready to be built'; ),
     ( id: 8; color: $009000; caption: 'Ready to be rebuilt'; ),
-    ( id: 9; color: $009000; caption: 'Ready to be rebuilt [Forced]'; )
+    ( id: 9; color: $009000; caption: 'Ready to be rebuilt [Forced]'; ),
+    ( id: 10; color: $0080ed; caption: 'Check for errors required'; )
   );
   GameArray: array[1..4] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
@@ -206,39 +235,24 @@ var
   settings: TSettings;
   handler: IwbContainerHandler;
   bDontSave, bCaptureTracker, bChangeGameMode: boolean;
-  tempPath, dictionaryFilename: string;
+  tempPath, logPath, dictionaryFilename, ActiveProfile: string;
+  batch, ActiveMods: TStringList;
 
 implementation
 
 {******************************************************************************}
-{ Bethesda Plugin Functions
-  Set of functions that read bethesda plugin files for various attributes.
+{ Initialization Methods
+  Methods that are used for initialization.
 
-  List of functions:
+  List of methods:
   - GamePathValid
   - SetGame
   - GetGameID
   - GetGamePath
   - LoadDataPath
   - LoadDefinitions
-  - IsOverride
-  - LocalFormID
-   -LoadOrderPrefix
-  - CountOverrides
-  - GetMasters
-  - AddMasters
-  - BSAExists
-  - MCMExists
-  - FaceDataExists
-  - VoiceDataExists
-  - FragmentsExist
-  - ExtractBSA
-  - CheckForErorrsLinear
-  - CheckForErrors
-  - PluginsModified
-  - CreatSEQFile
 }
-{*****************************************************************************}
+{******************************************************************************}
 
 { Check if game paths are valid }
 function GamePathValid(path: string; id: integer): boolean;
@@ -308,6 +322,31 @@ begin
   end;
 end;
 
+
+{******************************************************************************}
+{ Bethesda Plugin Functions
+  Set of functions that read bethesda plugin files for various attributes.
+
+  List of functions:
+  - IsOverride
+  - LocalFormID
+   -LoadOrderPrefix
+  - CountOverrides
+  - GetMasters
+  - AddMasters
+  - BSAExists
+  - MCMExists
+  - FaceDataExists
+  - VoiceDataExists
+  - FragmentsExist
+  - ExtractBSA
+  - CheckForErorrsLinear
+  - CheckForErrors
+  - PluginsModified
+  - CreatSEQFile
+}
+{*****************************************************************************}
+
 { Returns true if the input record is an override record }
 function IsOverride(aRecord: IwbMainRecord): boolean;
 begin
@@ -345,6 +384,7 @@ procedure GetMasters(aFile: IwbFile; var sl: TStringList);
 var
   Container, MasterFiles, MasterFile: IwbContainer;
   i: integer;
+  filename: string;
 begin
   Container := aFile as IwbContainer;
   Container := Container.Elements[0] as IwbContainer;
@@ -352,7 +392,9 @@ begin
     MasterFiles := Container.ElementByPath['Master Files'] as IwbContainer;
     for i := 0 to MasterFiles.ElementCount - 1 do begin
       MasterFile := MasterFiles.Elements[i] as IwbContainer;
-      sl.Add(MasterFile.GetElementEditValue('MAST - Filename'));
+      filename := MasterFile.GetElementEditValue('MAST - Filename');
+      if sl.IndexOf(filename) = -1 then
+        sl.AddObject(filename, TObject(PluginLoadOrder(filename)));
     end;
   end;
 end;
@@ -382,6 +424,15 @@ begin
       handler.AddBSA(ContainerName);
     Result := true;
   end;
+end;
+
+{ Check if an INI exists associated with the given filename }
+function INIExists(filename: string): boolean;
+var
+  iniFilename: string;
+begin
+  iniFilename := ChangeFileExt(filename, '.ini');
+  Result := FileExists(wbDataPath + iniFilename);
 end;
 
 { Returns true if a file exists at @path matching @filename }
@@ -496,13 +547,18 @@ var
   Container: IwbContainerElementRef;
   i: Integer;
 begin
+  if Supports(aElement, IwbMainRecord) then
+    Tracker.Update(1);
+
   Error := aElement.Check;
   if Error <> '' then begin
     Result := aElement.ContainingMainRecord;
     // first error in this record - show record's name
     if Assigned(Result) and (Result <> LastRecord) then begin
+      Tracker.Write(Result.Name);
       errors.Add(Result.Name);
     end;
+    Tracker.Write('    ' + aElement.Path + ' -> ' + Error);
     errors.Add('    ' + aElement.Path + ' -> ' + Error);
   end else
     // passing through last record with error
@@ -537,7 +593,7 @@ begin
       Result := CheckForErrors(aIndent + 1, Container.Elements[i], errors) or Result;
 
   if Result and (Error = '') then begin
-    msg := StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + aElement.Name;
+    msg := StringOfChar(' ', aIndent * 2) + 'Above errors were found in: ' + aElement.Name;
     Tracker.Write(msg);
     errors.Add(msg);
   end;
@@ -919,9 +975,109 @@ begin
   end;
 end;
 
+
+{******************************************************************************}
+{ Mod Organizer methods
+  Set of methods that allow interaction Mod Organizer settings.
+
+  List of methods:
+  - ModOrganizerInit
+  - GetActiveProfile
+  - GetActiveMods
+  - GetModContainingFile
+}
+{******************************************************************************}
+
+procedure ModOrganizerInit;
+begin
+  ActiveMods := TStringList.Create;
+  ActiveProfile := GetActiveProfile;
+  GetActiveMods(ActiveMods, ActiveProfile);
+  //Logger.Write('ActiveMods: '#13#10+ActiveMods.Text);
+end;
+
+function GetActiveProfile: string;
+var
+  ini : TMemIniFile;
+  fname : string;
+begin
+  // exit if not using MO
+  Result := '';
+  if not settings.usingMO then
+    exit;
+
+  // load ini file
+  fname := settings.MODirectory + 'ModOrganizer.ini';
+  if(not FileExists(fname)) then begin
+    Logger.Write('Mod Organizer ini file ' + fname + ' does not exist');
+    exit;
+  end;
+  ini := TMemIniFile.Create(fname);
+
+  // get selected_profile
+  Result := ini.ReadString( 'General', 'selected_profile', '');
+  ini.Free;
+end;
+
+procedure GetActiveMods(var modlist: TStringList; profileName: string);
+var
+  modlistFilePath: string;
+  s: string;
+  i: integer;
+begin
+  // exit if not using MO
+  if not settings.usingMO then
+    exit;
+
+  // prepare to load modlist
+  modlistFilePath := settings.MODirectory + 'profiles/' + profileName + '/modlist.txt';
+  modlist.Clear;
+
+  // exit if modlist file doesn't exist
+  if not (FileExists(modlistFilePath)) then begin
+    Tracker.Write('Cannot find modlist ' + modListFilePath);
+    exit;
+  end;
+
+  // load modlist
+  modlist.LoadFromFile(modlistFilePath);
+  for i := Pred(modlist.Count) downto 0 do begin
+    s := modList[i];
+    // if line starts with '+', then it's an active mod
+    if (Pos('+', s) = 1) then
+      modlist[i] := Copy(s, 2, Length(s) - 1)
+    // else it's a comment or inactive mod, so delete it
+    else
+      modlist.Delete(i);
+  end;
+end;
+
+function GetModContainingFile(var modlist: TStringList; filename: string): string;
+var
+  i: integer;
+  modName: string;
+  filePath: string;
+begin
+  // exit if not using MO
+  Result := '';
+  if not settings.usingMO then
+    exit;
+
+  // check for file in each mod folder in modlist
+  for i := 0 to Pred(modlist.Count) do begin
+    modName := modlist[i];
+    filePath := settings.MODirectory + 'mods\' + modName + '\' + filename;
+    if (FileExists(filePath)) then begin
+      Result := modName;
+      exit;
+    end;
+  end;
+end;
+
+
 {******************************************************************************}
 { Dictionary and Settings methods
-  Set of method for managing the dictionary.
+  Set of methods for managing the dictionary.
 
   List of methods:
   - LoadSettings
@@ -1037,7 +1193,8 @@ end;
   Methods for dealing with plugins and merges.
 
   List of methods:
-  - PluginByName
+  - PluginLoadOrder
+  - PluginByFilename
   - MergeByName
   - MergeByFilename
   - CreateNewMerge
@@ -1046,6 +1203,22 @@ end;
   - LoadMerges
 }
 {******************************************************************************}
+
+{ Gets the load order of the plugin matching the given name }
+function PluginLoadOrder(filename: string): integer;
+var
+  i: integer;
+  plugin: TPlugin;
+begin
+  Result := -1;
+  for i := 0 to Pred(PluginsList.Count) do begin
+    plugin := TPlugin(PluginsList[i]);
+    if plugin.filename = filename then begin
+      Result := i;
+      exit;
+    end;
+  end;
+end;
 
 { Gets a plugin matching the given name. }
 function PluginByFilename(filename: string): TPlugin;
@@ -1210,6 +1383,17 @@ begin
   sl.Free;
 end;
 
+{ Comparator for sorting plugins in merge }
+function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
+var
+  LO1, LO2: Integer;
+begin
+  LO1 := Integer(List.Objects[Index1]);
+  LO2 := Integer(List.Objects[Index2]);
+  Result := LO1 - LO2;
+end;
+
+
 {******************************************************************************}
 { Object methods
   Set of methods for objects TMerge and TPlugin
@@ -1226,6 +1410,10 @@ end;
   - TMerge.PluginsModified
   - TMerge.FilesExist
   - TMerge.GetStatus
+  - TMerge.GetHashes
+  - MergePluginsCompare
+  - TMerge.GetLoadOrders
+  - TMerge.SortPlugins
   - TEntry.Create
   - TSettings.Create
   - TSettings.Save
@@ -1255,6 +1443,8 @@ begin
     flags := flags + [HAS_ERRORS];
   if BSAExists(filename) then
     flags := flags + [HAS_BSA];
+  if INIExists(filename) then
+    flags := flags + [HAS_INI];
   if TranslationExists(filename) then
     flags := flags + [HAS_TRANSLATION];
   if FaceDataExists(filename) then
@@ -1321,8 +1511,15 @@ begin
 end;
 
 procedure TPlugin.GetDataPath;
+var
+  modName: string;
 begin
   dataPath := wbDataPath;
+  if settings.usingMO then begin
+    modName := GetModContainingFile(ActiveMods, filename);
+    if modName <> '' then
+      dataPath := settings.MODirectory + 'mods\' + modName + '\';
+  end;
 end;
 
 { Checks for errors in a plugin }
@@ -1330,8 +1527,11 @@ procedure TPlugin.FindErrors;
 begin
   errors.Clear;
   CheckForErrors(2, _File as IwbElement, errors);
+  //CheckForErrorsLinear(_File as IwbElement, _File.Records[_File.RecordCount - 1], errors);
   if errors.Count = 0 then
-    errors.Add('None.');
+    errors.Add('None.')
+  else
+    flags := flags + [HAS_ERRORS];
 end;
 
 { TMerge Constructor }
@@ -1429,13 +1629,8 @@ begin
   Result := 1;
   for i := 0 to Pred(plugins.Count) do begin
     plugin := PluginByFilename(plugins[i]);
-    if Assigned(plugin) then begin
-      if not plugin.HasData then
-        plugin.GetData;
-      Inc(Result, 2*StrToInt(plugin.numRecords));
-      if not plugin.errors.Count > 0 then
-        Inc(Result, StrToInt(plugin.numRecords));
-    end;
+    if Assigned(plugin) then
+      Inc(Result, plugin._File.RecordCount);
   end;
 end;
 
@@ -1447,12 +1642,19 @@ var
   i: integer;
 begin
   Result := false;
+  // true if number of hashes not equal to number of plugins
+  if plugins.Count <> hashes.Count then begin
+    Result := true;
+    exit;
+  end;
+  // true if any plugin hash doesn't match
   for i := 0 to Pred(plugins.count) do begin
     plugin := PluginByFilename(plugins[i]);
     if Assigned(plugin) then begin
       if plugin.hash <> hashes[i] then begin
-        Logger.Write(plugin.filename + ' has hash ' + plugin.dateModified +
-          ', '+ name + ' has '+hashes[i]);
+        if settings.debugMergeStatus then
+          Logger.Write(plugin.filename + ' has hash ' + plugin.hash + ', '+
+            name + ' has '+hashes[i]);
         Result := true;
       end;
     end;
@@ -1470,33 +1672,33 @@ var
   i: Integer;
   plugin: TPlugin;
 begin
-  Logger.Write('Getting status for '+name);
+  if settings.debugMergeStatus then Logger.Write('Getting status for '+name);
   status := 0;
 
   // don't merge if no plugins to merge
   if plugins.Count < 1 then begin
-    Logger.Write('  No plugins to merge');
+    if settings.debugMergeStatus then Logger.Write('  No plugins to merge');
     status := 1;
     exit;
   end;
 
   // don't merge if mod destination directory is blank
   if settings.mergeDirectory = '' then begin
-    Logger.Write('  Merge directory blank');
+    if settings.debugMergeStatus then Logger.Write('  Merge directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.MODirectory = '') then begin
-    Logger.Write('  Mod Organizer Directory blank');
+    if settings.debugMergeStatus then Logger.Write('  Mod Organizer Directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
   if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
-     Logger.Write('  Mod Organizer Directory invalid');
+     if settings.debugMergeStatus then Logger.Write('  Mod Organizer Directory invalid');
      status := 2;
      exit;
   end;
@@ -1507,17 +1709,20 @@ begin
 
     // see if plugin is loaded
     if not Assigned(plugin) then begin
-      Logger.Write('  Plugin '+plugins[i]+' is missing');
+      if settings.debugMergeStatus then Logger.Write('  Plugin '+plugins[i]+' is missing');
       status := 3;
       exit;
     end;
 
-    if plugin.errors.Count = 0 then
-      Logger.Write('  '+plugin.filename+' needs to be checked for errors.')
-    else if plugin.errors[0] = 'None.' then
-      Logger.Write('  No errors in '+plugin.filename)
+    if plugin.errors.Count = 0 then begin
+      if settings.debugMergeStatus then Logger.Write('  '+plugin.filename+' needs to be checked for errors.');
+      status := 10;
+    end
+    else if plugin.errors[0] = 'None.' then begin
+      if settings.debugMergeStatus then Logger.Write('  No errors in '+plugin.filename);
+    end
     else begin
-      Logger.Write('  '+plugin.filename+' has errors');
+      if settings.debugMergeStatus then Logger.Write('  '+plugin.filename+' has errors');
       status := 4;
       exit;
     end
@@ -1525,25 +1730,56 @@ begin
 
   dataPath := settings.mergeDirectory + name + '\';
   if (not PluginsModified) and FilesExist then begin
-    Logger.Write('  Up to date.');
+    if settings.debugMergeStatus then Logger.Write('  Up to date.');
     status := 5;
     exit;
   end;
 
   // status green, ready to go
   if status = 0 then begin
-    Logger.Write('  Ready to be merged.');
+    if settings.debugMergeStatus then Logger.Write('  Ready to be merged.');
     if dateBuilt = 0 then
       status := 7
     else
       status := 8;
   end;
-  Logger.Write(' ');
+  if settings.debugMergeStatus then Logger.Write(' ');
 end;
 
 function TMerge.GetStatusColor: integer;
 begin
   Result := StatusArray[status].color;
+end;
+
+{ Update the hashes list for the plugins in the merge }
+procedure TMerge.GetHashes;
+var
+  i: Integer;
+  aPlugin: TPlugin;
+begin
+  hashes.Clear;
+  for i := 0 to Pred(plugins.Count) do begin
+    aPlugin := PluginByFilename(plugins[i]);
+    if Assigned(aPlugin) then
+      hashes.Add(aPlugin.hash);
+  end;
+end;
+
+{ Get load order for plugins in merge that don't have it }
+procedure TMerge.GetLoadOrders;
+var
+  i: integer;
+begin
+  for i := 0 to Pred(plugins.Count) do
+    if not Assigned(plugins.Objects[i]) then
+      plugins.Objects[i] := TObject(PluginLoadOrder(plugins[i]));
+end;
+
+{ Sort plugins by load order position }
+procedure TMerge.SortPlugins;
+begin
+  GetLoadOrders;
+  plugins.CustomSort(MergePluginsCompare);
 end;
 
 { TEntry Constructor }
@@ -1620,6 +1856,7 @@ begin
   ini.WriteBool('General', 'updateDictionary', updateDictionary);
   ini.WriteBool('General', 'updateProgram', updateProgram);
 
+
   // save game specific settings
   if wbAppName <> '' then begin
     ini.WriteBool(appMerging, 'usingMO', usingMO);
@@ -1632,7 +1869,19 @@ begin
     ini.WriteBool(appMerging, 'handleScriptFragments', handleScriptFragments);
     ini.WriteBool(appMerging, 'extractBSAs', extractBSAs);
     ini.WriteBool(appMerging, 'buildMergedBSA', buildMergedBSA);
+    ini.WriteBool(appMerging, 'batCopy', batCopy);
   end;
+
+  // save advanced settings
+  ini.WriteBool('Advanced', 'debugRenumbering', debugRenumbering);
+  ini.WriteBool('Advanced', 'debugMergeStatus', debugMergeStatus);
+  ini.WriteBool('Advanced', 'debugAssetCopying', debugAssetCopying);
+  ini.WriteBool('Advanced', 'debugRecordCopying', debugRecordCopying);
+  ini.WriteBool('Advanced', 'debugMasters', debugMasters);
+  ini.WriteBool('Advanced', 'debugBatchCopying', debugBatchCopying);
+  ini.WriteBool('Advanced', 'debugBSAs', debugBSAs);
+  ini.WriteBool('Advanced', 'debugTempPath', debugTempPath);
+  ini.WriteBool('Advanced', 'debugLoadOrder', debugLoadOrder);
 
   // save file
   ini.UpdateFile;
@@ -1674,7 +1923,19 @@ begin
     handleScriptFragments := ini.ReadBool(appMerging, 'handleScriptFragments', false);
     extractBSAs := ini.ReadBool(appMerging, 'extractBSAs', false);
     buildMergedBSA := ini.ReadBool(appMerging, 'buildMergedBSA', false);
+    batCopy := ini.ReadBool(appMerging, 'batCopy', true);
   end;
+
+  // load advanced settings
+  debugRenumbering := ini.ReadBool('Advanced', 'debugRenumbering', false);
+  debugMergeStatus := ini.ReadBool('Advanced', 'debugMergeStatus', false);
+  debugAssetCopying := ini.ReadBool('Advanced', 'debugAssetCopying', false);
+  debugRecordCopying := ini.ReadBool('Advanced', 'debugRecordCopying', false);
+  debugMasters := ini.ReadBool('Advanced', 'debugMasters', false);
+  debugBatchCopying := ini.ReadBool('Advanced', 'debugBatchCopying', false);
+  debugBSAs := ini.ReadBool('Advanced', 'debugBSAs', false);
+  debugTempPath := ini.ReadBool('Advanced', 'debugTempPath', false);
+  debugLoadOrder := ini.ReadBool('Advanced', 'debugLoadOrder', false);
 
   // save file
   ini.UpdateFile;

@@ -2,9 +2,13 @@ object EditForm: TEditForm
   Left = 0
   Top = 0
   Caption = 'Edit Merge'
-  ClientHeight = 240
+  ClientHeight = 222
   ClientWidth = 334
   Color = clBtnFace
+  Constraints.MaxHeight = 350
+  Constraints.MaxWidth = 450
+  Constraints.MinHeight = 250
+  Constraints.MinWidth = 350
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -15,24 +19,22 @@ object EditForm: TEditForm
   OnShow = FormShow
   DesignSize = (
     334
-    240)
+    222)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl1: TPageControl
     Left = 8
     Top = 8
     Width = 318
-    Height = 193
+    Height = 175
     ActivePage = TabSheet1
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
+    ExplicitHeight = 193
     object TabSheet1: TTabSheet
       Caption = 'Edit Merge'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 281
-      ExplicitHeight = 0
+      ExplicitHeight = 165
       object lblName: TLabel
         Left = 13
         Top = 13
@@ -80,26 +82,30 @@ object EditForm: TEditForm
       end
       object edName: TEdit
         Left = 109
-        Top = 8
-        Width = 198
+        Top = 10
+        Width = 195
         Height = 21
+        Hint = 'Warning: Mod folder already exists.'
         Align = alCustom
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
+        OnChange = edNameChange
       end
       object edFilename: TEdit
         Left = 109
         Top = 39
-        Width = 198
+        Width = 195
         Height = 21
+        Hint = 'Filename invalid.'
         Align = alCustom
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
+        OnChange = edFilenameChange
       end
       object cbMethod: TComboBox
         Left = 109
-        Top = 66
-        Width = 198
+        Top = 68
+        Width = 195
         Height = 21
         Align = alCustom
         Style = csDropDownList
@@ -114,7 +120,7 @@ object EditForm: TEditForm
       object cbRenumbering: TComboBox
         Left = 109
         Top = 97
-        Width = 198
+        Width = 195
         Height = 21
         Align = alCustom
         Style = csDropDownList
@@ -130,24 +136,26 @@ object EditForm: TEditForm
   end
   object btnOk: TButton
     Left = 170
-    Top = 207
+    Top = 189
     Width = 75
     Height = 25
     Align = alCustom
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
     OnClick = btnOkClick
+    ExplicitTop = 207
   end
   object btnCancel: TButton
     Left = 251
-    Top = 207
+    Top = 189
     Width = 75
     Height = 25
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+    ExplicitTop = 207
   end
 end
