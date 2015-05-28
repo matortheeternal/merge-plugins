@@ -101,7 +101,7 @@ end;
 
 procedure RenumberBefore(var pluginsToMerge: TList; var merge: TMerge);
 var
-  i, j, rc, OldFormID, total: integer;
+  i, j, rc, OldFormID, total, fileTotal: integer;
   plugin: TPlugin;
   aFile: IwbFile;
   aRecord: IwbMainRecord;
@@ -109,6 +109,7 @@ var
   renumberAll: boolean;
   BaseFormID, NewFormID: cardinal;
 begin
+  if bProgressCancel then exit;
   // inital messages
   renumberAll := merge.renumbering = 'All';
   if renumberAll then Tracker.Write('Renumbering All FormIDs')
@@ -123,8 +124,11 @@ begin
 
   // renumber records in all pluginsToMerge
   for i := 0 to Pred(pluginsToMerge.Count) do begin
+    if bProgressCancel then exit;
     plugin := pluginsToMerge[i];
     aFile := plugin._File;
+    fileTotal := 0;
+    merge.map.Add(StringReplace(plugin.filename, '=', '-', [rfReplaceAll])+'=0');
     Tracker.Write('  Renumbering FormIDs in ' + plugin.filename);
 
     // build records array because indexed order will change
@@ -137,6 +141,7 @@ begin
 
     // renumber records in file
     for j := 0 to Pred(rc) do begin
+      if bProgressCancel then exit;
       aRecord := IwbMainRecord(Records[j]);
       // skip record headers and overrides
       if aRecord.Signature = 'TES4' then continue;
@@ -156,11 +161,15 @@ begin
       merge.map.Add(IntToHex(OldFormID, 8)+'='+IntToHex(BaseFormID, 8));
       RenumberRecord(aRecord, NewFormID);
 
-      // increment BaseFormID, tracker position
+      // increment BaseFormID, totals, tracker position
       Inc(BaseFormID);
       Inc(total);
+      Inc(fileTotal);
       Tracker.Update(1);
     end;
+
+    // update map with fileTotal
+    merge.map.Values[plugin.filename] := IntToStr(fileTotal);
   end;
 
   if settings.debugRenumbering then
@@ -207,16 +216,20 @@ var
   plugin: TPlugin;
   asNew: boolean;
 begin
+  if bProgressCancel then exit;
+  
   Tracker.Write('Copying records');
   //masters := TStringList.Create;
   asNew := merge.method = 'New Records';
   // copy records from all plugins to be merged
   for i := Pred(pluginsToMerge.Count) downto 0 do begin
+    if bProgressCancel then exit;
     plugin := TPlugin(pluginsToMerge[i]);
     aFile := plugin._File;
     // copy records from file
     Tracker.Write('  Copying records from '+plugin.filename);
     for j := 0 to Pred(aFile.RecordCount) do begin
+      if bProgressCancel then exit;
       aRecord := aFile.Records[j];
       if aRecord.Signature = 'TES4' then Continue;
       // copy record
@@ -250,7 +263,7 @@ const
   translationPath = 'interface\translations\';
   scriptsPath = 'scripts\';
 var
-  languages: TStringList;
+  languages, CopiedFrom, MergeIni: TStringList;
   translations: array[0..31] of TStringList; // 32 languages maximum
 
 procedure CopyFaceGen(var plugin: TPlugin; var merge: TMerge; srcPath, dstPath: string);
@@ -259,6 +272,7 @@ var
   oldForm, newForm, dstFile, srcFile: string;
   index: integer;
 begin
+  if bProgressCancel then exit;
   srcPath := srcPath + plugin.filename + '\';
   dstPath := dstPath + merge.filename + '\';
   ForceDirectories(dstPath);
@@ -295,6 +309,7 @@ var
   oldForm, newForm, dstFile, srcFile: string;
   index: integer;
 begin
+  if bProgressCancel then exit;
   srcPath := srcPath + plugin.filename + '\';
   dstPath := dstPath + merge.filename + '\';
   // if no folders in srcPath, exit
@@ -342,6 +357,7 @@ var
   index: integer;
   sl: TStringList;
 begin
+  if bProgressCancel then exit;
   fn := Lowercase(ChangeFileExt(plugin.filename, ''));
   if FindFirst(srcPath+'*.txt', faAnyFile, info) <> 0 then
     exit;
@@ -371,9 +387,9 @@ var
   i: integer;
   output, path: string;
 begin
-  // terminate if we have no translation files to save
-  if languages.Count = 0 then
-    exit;
+  if bProgressCancel then exit;
+  // exit if we have no translation files to save
+  if languages.Count = 0 then exit;
 
   // set destination path
   path := merge.dataPath + translationPath;
@@ -388,14 +404,84 @@ begin
   end;
 end;
 
+procedure CopyIni(var plugin: TPlugin; var merge: TMerge; srcPath: string);
+var
+  fn: string;
+  PluginIni: TStringList;
+begin
+  if bProgressCancel then exit;
+  // exit if ini doesn't exist
+  fn := plugin.dataPath + ChangeFileExt(plugin.filename, '.ini');
+  if not FileExists(fn) then exit;
+
+  // copy PluginIni file contents to MergeIni
+  Tracker.Write('    Copying INI '+ChangeFileExt(plugin.filename, '.ini'));
+  PluginIni := TStringList.Create;
+  PluginIni.LoadFromFile(fn);
+  MergeIni.Add(PluginIni.Text);
+  PluginIni.Free;
+end;
+
+procedure SaveIni(var merge: TMerge);
+begin
+  if bProgressCancel then exit;
+  // exit if we have no ini to save
+  if MergeIni.Count = 0 then exit;
+  merge.files.Add(ChangeFileExt(merge.filename, '.ini'));
+  MergeIni.SaveToFile(merge.dataPath + ChangeFileExt(merge.filename, '.ini'));
+end;
+
 procedure CopyScriptFragments(var plugin: TPlugin; var merge: TMerge; srcPath, dstPath: string);
 begin
   // soon
 end;
 
 procedure CopyGeneralAssets(var plugin: TPlugin; var merge: TMerge);
+var
+  srcPath, dstPath: string;
+  fileIgnore, dirIgnore, filesList: TStringList;
 begin
-  // soon
+  if bProgressCancel then exit;
+  // remove path delim for robocopy to work correctly
+  srcPath := RemoveFromEnd(plugin.dataPath, PathDelim);
+  dstPath := RemoveFromEnd(merge.dataPath, PathDelim);
+  // exit if we've already copyied files from the source path
+  if CopiedFrom.IndexOf(srcPath) > -1 then
+    exit;
+
+  // set up files to ignore
+  fileIgnore := TStringList.Create;
+  fileIgnore.Delimiter := ' ';
+  fileIgnore.Add('meta.ini');
+  fileIgnore.Add('*.esp');
+  fileIgnore.Add('*.esm');
+  fileIgnore.Add(ChangeFileExt(plugin.filename, '.seq'));
+  fileIgnore.Add(ChangeFileExt(plugin.filename, '.ini'));
+  if settings.extractBSAs then begin
+    fileIgnore.Add('*.bsa');
+    fileIgnore.Add('*.bsl');
+  end;
+
+  // set up directories to ignore
+  dirIgnore := TStringList.Create;
+  dirIgnore.Delimiter := ' ';
+  dirIgnore.Add(plugin.filename);
+  dirIgnore.Add('translations');
+  dirIgnore.Add('TES5Edit Backups');
+
+  // get list of files in directory
+  filesList := TStringList.Create;
+  GetFilesList(srcPath, fileIgnore, dirIgnore, filesList);
+  merge.files.Text := merge.files.Text +
+    StringReplace(filesList.Text, srcPath, dstPath, [rfReplaceAll]);
+
+  // copy files
+  CopiedFrom.Add(srcPath);
+  Tracker.Write('    Copying general assets from '+srcPath);
+  if settings.batCopy then
+    batch.Add('robocopy "'+srcPath+'" "'+dstPath+'" /e /xf '+fileIgnore.DelimitedText+' /xd '+dirIgnore.DelimitedText)
+  else
+    CopyFiles(srcPath, dstPath, filesList);
 end;
 
 procedure AddCopyOperation(src, dst: string);
@@ -407,6 +493,7 @@ procedure CopyAssets(var plugin: TPlugin; var merge: TMerge);
 var
   bsaFilename: string;
 begin
+  if bProgressCancel then exit;
   // get plugin data path
   plugin.GetDataPath;
   //Tracker.Write('  dataPath: '+plugin.dataPath);
@@ -432,6 +519,7 @@ begin
   end;
 
   // handleVoiceAssets
+  if bProgressCancel then exit;
   if settings.handleVoiceAssets and (HAS_VOICEDATA in plugin.flags) then begin
     // if BSA exists, extract voice assets from it to temp path and copy
     if HAS_BSA in plugin.flags then begin
@@ -455,7 +543,13 @@ begin
     CopyTranslations(plugin, merge, plugin.dataPath + translationPath);
   end;
 
+  // handleINI
+  if bProgressCancel then exit;
+  if settings.handleINIs and (HAS_INI in plugin.flags) then
+    CopyIni(plugin, merge, plugin.dataPath);
+
   // handleScriptFragments
+  if bProgressCancel then exit;
   if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then begin
     // if BSA exists, extract scripts from it to temp path and copy
     if HAS_BSA in plugin.flags then begin
@@ -468,6 +562,7 @@ begin
   end;
 
   // copyGeneralAssets
+  if bProgressCancel then exit;
   if settings.copyGeneralAssets then
     CopyGeneralAssets(plugin, merge);
 end;
@@ -488,7 +583,7 @@ var
   plugin: TPlugin;
   mergeFile, aFile: IwbFile;
   e, masters: IwbContainer;
-  failed, masterName, mergeDesc, desc: string;
+  failed, masterName, mergeDesc, desc, bfn, mergeFilePrefix: string;
   pluginsToMerge: TList;
   i, LoadOrder: Integer;
   usedExistingFile: boolean;
@@ -496,11 +591,14 @@ var
   FileStream: TFileStream;
   time: TDateTime;
 begin
+  if bProgressCancel then exit;
   // initialize
   Tracker.Write('Building merge: '+merge.name);
+  batch := TStringList.Create;
+  CopiedFrom := TStringList.Create;
+  mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
+  ForceDirectories(ExtractFilePath(mergeFilePrefix));
   time := Now;
-  if not Assigned(batch) then
-    batch := TStringList.Create;
   failed := 'Failed to merge '+merge.name;
   merge.fails.Clear;
 
@@ -582,6 +680,8 @@ begin
   except on Exception do
     // nothing
   end;
+  slMasters.Free;
+  if bProgressCancel then exit;
   Tracker.Write('Done adding masters');
 
   try
@@ -626,13 +726,25 @@ begin
   Tracker.Write(' ');
   Tracker.Write('Copying assets');
   languages := TStringList.Create;
-  for i := 0 to Pred(pluginsToMerge.Count) do begin
+  MergeIni := TStringList.Create;
+  for i := Pred(pluginsToMerge.Count) downto 0 do begin
     plugin := pluginsToMerge[i];
     Tracker.Write('  Copying assets for '+plugin.filename);
     CopyAssets(plugin, merge);
   end;
   SaveTranslations(merge);
+  SaveINI(merge);
   languages.Free;
+  MergeIni.Free;
+
+  // batch copy assets
+  if settings.batCopy and (batch.Count > 0) and (not bProgressCancel) then begin
+    bfn := mergeFilePrefix + '.bat';
+    batch.Add('pause');
+    batch.SaveToFile(bfn);
+    batch.Clear;
+    ShellExecute(0, 'open', PChar(bfn), '', PChar(wbProgramPath), SW_SHOWNORMAL);
+  end;
 
   // create SEQ file
   CreateSEQFile(merge);
@@ -681,14 +793,10 @@ begin
       plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
     end;
   end;
+  if bProgressCancel then exit;
 
   // update merge plugin hashes
   merge.GetHashes;
-  // save merge map, files, fails
-  ForceDirectories(merge.dataPath + 'merge\');
-  merge.map.SaveToFile(merge.dataPath + 'merge\'+merge.filename+'_map.txt');
-  merge.files.SaveToFile(merge.dataPath + 'merge\'+merge.filename+'_files.txt');
-  merge.fails.SaveToFile(merge.dataPath + 'merge\'+merge.filename+'_fails.txt');
 
   // save merged plugin
   FileStream := TFileStream.Create(merge.dataPath + merge.filename, fmCreate);
@@ -700,6 +808,11 @@ begin
   finally
     FileStream.Free;
   end;
+
+  // save merge map, files, fails
+  merge.map.SaveToFile(mergeFilePrefix+'_map.txt');
+  merge.files.SaveToFile(mergeFilePrefix+'_files.txt');
+  merge.fails.SaveToFile(mergeFilePrefix+'_fails.txt');
 
   // done merging
   time := (Now - time) * 86400;

@@ -61,6 +61,7 @@ type
     kbDebugBSAs: TCheckBox;
     kbDebugTempPath: TCheckBox;
     kbDebugLoadOrder: TCheckBox;
+    kbINIs: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -189,6 +190,7 @@ begin
   settings.handleFaceGenData := kbFaceGen.Checked;
   settings.handleVoiceAssets := kbVoiceAssets.Checked;
   settings.handleMCMTranslations := kbTranslations.Checked;
+  settings.handleINIs := kbINIs.Checked;
   settings.handleScriptFragments := kbFragments.Checked;
   settings.extractBSAs := kbExtractBSAs.Checked;
   settings.buildMergedBSA := kbBuildBSA.Checked;
@@ -232,6 +234,7 @@ begin
   kbFaceGen.Checked := settings.handleFaceGenData;
   kbVoiceAssets.Checked := settings.handleVoiceAssets;
   kbTranslations.Checked := settings.handleMCMTranslations;
+  kbINIs.Checked := settings.handleINIs;
   kbFragments.Checked := settings.handleScriptFragments;
   kbExtractBSAs.Checked := settings.extractBSAs;
   kbBuildBSA.Checked := settings.buildMergedBSA;

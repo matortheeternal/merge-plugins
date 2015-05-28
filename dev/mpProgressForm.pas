@@ -5,6 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
+  W7Taskbar,
   mpBase, mpTracker;
 
 type
@@ -17,9 +18,11 @@ type
     procedure DetailsButtonClick(Sender: TObject);
     procedure ProgressMessage(const s: string);
     procedure UpdateProgress(const i: integer);
+    procedure SetProgress(const i: integer);
     procedure ProcessMessages;
     procedure SaveLog;
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
   public
@@ -48,6 +51,14 @@ end;
 procedure TProgressForm.UpdateProgress(const i: integer);
 begin
   ProgressBar.StepBy(i);
+  SetTaskbarProgressValue(ProgressBar.Position, ProgressBar.Max);
+  ProcessMessages;
+end;
+
+procedure TProgressForm.SetProgress(const i: integer);
+begin
+  ProgressBar.Position := i;
+  SetTaskbarProgressValue(ProgressBar.Position, ProgressBar.Max);
   ProcessMessages;
 end;
 
@@ -69,9 +80,19 @@ begin
   Top := Top - 153;
 end;
 
+procedure TProgressForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  SetTaskbarProgressState(tbpsNone);
+end;
+
 procedure TProgressForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := (fsModal in FormState);
+  if not bProgressCancel then begin
+    Tracker.Write('Cancelling...');
+    bProgressCancel := true;
+    SetTaskbarProgressState(tbpsError);
+  end;
 end;
 
 procedure TProgressForm.SaveLog;
@@ -85,6 +106,8 @@ end;
 
 procedure TProgressForm.FormCreate(Sender: TObject);
 begin
+  SetTaskbarProgressState(tbpsNormal);
+  bProgressCancel := false;
   Height := 129;
   Tracker.OnLogEvent := ProgressMessage;
   Tracker.OnProgressEvent := UpdateProgress;

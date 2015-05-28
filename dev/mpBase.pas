@@ -3,7 +3,7 @@ unit mpBase;
 interface
 
 uses
-  Windows, SysUtils, ShlObj, Classes, IniFiles, Dialogs,
+  Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
   superobject,
   mpLogger, mpTracker,
   Registry,
@@ -15,6 +15,11 @@ uses
   wbDefinitionsTES5;
 
 type
+  TCallback = procedure of object;
+  TLoaderThread = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
   TGameMode = Record
     longName: string;
     gameName: string;
@@ -42,59 +47,59 @@ type
     HAS_FACEDATA, HAS_VOICEDATA, HAS_FRAGMENTS);
   TPluginFlags = set of TPluginFlag;
   TPlugin = class(TObject)
-    public
-      _File: IwbFile;
-      hasData: boolean;
-      hash: string;
-      fileSize: Int64;
-      dateModified: string;
-      flags: TPluginFlags;
-      filename: string;
-      merge: string;
-      numRecords: string;
-      numOverrides: string;
-      author: string;
-      dataPath: string;
-      entry: TEntry;
-      description: TStringList;
-      masters: TStringList;
-      errors: TStringList;
-      reports: TStringList;
-      constructor Create; virtual;
-      procedure GetData;
-      procedure GetHash;
-      procedure GetFlags;
-      function GetFlagsString: string;
-      procedure GetDataPath;
-      procedure FindErrors;
+  public
+    _File: IwbFile;
+    hasData: boolean;
+    hash: string;
+    fileSize: Int64;
+    dateModified: string;
+    flags: TPluginFlags;
+    filename: string;
+    merge: string;
+    numRecords: string;
+    numOverrides: string;
+    author: string;
+    dataPath: string;
+    entry: TEntry;
+    description: TStringList;
+    masters: TStringList;
+    errors: TStringList;
+    reports: TStringList;
+    constructor Create; virtual;
+    procedure GetData;
+    procedure GetHash;
+    procedure GetFlags;
+    function GetFlagsString: string;
+    procedure GetDataPath;
+    procedure FindErrors;
   end;
   TMerge = class(TObject)
-    public
-      name: string;
-      filename: string;
-      dateBuilt: TDateTime;
-      plugins: TStringList;
-      hashes: TStringList;
-      masters: TStringList;
-      status: integer;
-      method: string;
-      renumbering: string;
-      dataPath: string;
-      plugin: TPlugin;
-      map: TStringList;
-      files: TStringList;
-      fails: TStringList;
-      constructor Create; virtual;
-      function Dump: ISuperObject;
-      procedure LoadDump(obj: ISuperObject);
-      function GetTimeCost: integer;
-      procedure GetHashes;
-      procedure GetStatus;
-      procedure GetLoadOrders;
-      procedure SortPlugins;
-      function PluginsModified: boolean;
-      function FilesExist: boolean;
-      function GetStatusColor: integer;
+  public
+    name: string;
+    filename: string;
+    dateBuilt: TDateTime;
+    plugins: TStringList;
+    hashes: TStringList;
+    masters: TStringList;
+    status: integer;
+    method: string;
+    renumbering: string;
+    dataPath: string;
+    plugin: TPlugin;
+    map: TStringList;
+    files: TStringList;
+    fails: TStringList;
+    constructor Create; virtual;
+    function Dump: ISuperObject;
+    procedure LoadDump(obj: ISuperObject);
+    function GetTimeCost: integer;
+    procedure GetHashes;
+    procedure GetStatus;
+    procedure GetLoadOrders;
+    procedure SortPlugins;
+    function PluginsModified: boolean;
+    function FilesExist: boolean;
+    function GetStatusColor: integer;
   end;
   TSettings = class(TObject)
   public
@@ -118,6 +123,7 @@ type
     handleFaceGenData: boolean;
     handleVoiceAssets: boolean;
     handleMCMTranslations: boolean;
+    handleINIs: boolean;
     handleScriptFragments: boolean;
     extractBSAs: boolean;
     buildMergedBSA: boolean;
@@ -164,8 +170,11 @@ type
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
   function AppendIfMissing(str, substr: string): string;
+  function StrEndsWith(s1, s2: string): boolean;
+  function RemoveFromEnd(s1, s2: string): string;
   function IntegerListSum(list: TList; maxIndex: integer): integer;
   function Wordwrap(var s: string; charCount: integer): string;
+  function ContainsMatch(var sl: TStringList; const s: string): boolean;
   { Load order functions }
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
@@ -177,6 +186,9 @@ type
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
   function RecursiveFileSearch(aPath, aFileName: string; ignore: TStringList; maxDepth: integer): string;
+  procedure CopyDirectory(src, dst: string; fIgnore, dIgnore: TStringList);
+  procedure GetFilesList(path: string; var fIgnore, dIgnore, list: TStringList);
+  procedure CopyFiles(src, dst: string; var list: TStringList);
   { Mod Organizer methods }
   procedure ModOrganizerInit;
   function GetActiveProfile: string;
@@ -234,9 +246,11 @@ var
   dictionary, blacklist, PluginsList, MergesList: TList;
   settings: TSettings;
   handler: IwbContainerHandler;
-  bDontSave, bCaptureTracker, bChangeGameMode: boolean;
+  bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone,
+  bProgressCancel: boolean;
   tempPath, logPath, dictionaryFilename, ActiveProfile: string;
   batch, ActiveMods: TStringList;
+  LoaderCallback: TCallback;
 
 implementation
 
@@ -547,6 +561,7 @@ var
   Container: IwbContainerElementRef;
   i: Integer;
 begin
+  if bProgressCancel then exit;
   if Supports(aElement, IwbMainRecord) then
     Tracker.Update(1);
 
@@ -575,6 +590,11 @@ var
   Container: IwbContainerElementRef;
   i: Integer;
 begin
+  if bProgressCancel then begin
+    Result := false;
+    exit;
+  end;
+
   if Supports(aElement, IwbMainRecord) then
     Tracker.Update(1);
 
@@ -709,7 +729,15 @@ begin
   end;
 end;
 
-{ Appends a string to the end of another string if not already present }
+{
+  AppendIfMissing:
+  Appends substr to the end of str if it's not already there.
+
+  Example usage:
+  s := 'This is a sample string.';
+  Logger.Write(AppendIfMissing(s, 'string.')); //'This is a sample string.'
+  Logger.Write(AppendIfMissing(s, '  Hello.')); //'This is a sample string.  Hello.'
+}
 function AppendIfMissing(str, substr: string): string;
 begin
   Result := str;
@@ -720,6 +748,44 @@ begin
   Result := str + substr;
 end;
 
+{
+  StrEndsWith:
+  Checks to see if a string ends with an entered substring.
+
+  Example usage:
+  s := 'This is a sample string.';
+  if StrEndsWith(s, 'string.') then
+    AddMessage('It works!');
+}
+function StrEndsWith(s1, s2: string): boolean;
+var
+  n1, n2: integer;
+begin
+  Result := false;
+
+  n1 := Length(s1);
+  n2 := Length(s2);
+  if n1 < n2 then exit;
+
+  Result := (Copy(s1, n1 - n2 + 1, n2) = s2);
+end;
+
+{
+  RemoveFromEnd:
+  Creates a new string with s1 removed from the end of s2, if found.
+
+  Example usage:
+  s := 'This is a sample string.';
+  AddMessage(RemoveFromEnd(s, 'string.')); //'This is a sample '
+}
+function RemoveFromEnd(s1, s2: string): string;
+begin
+  Result := s1;
+  if StrEndsWith(s1, s2) then
+    Result := Copy(s1, 1, Length(s1) - Length(s2));
+end;
+
+{ Calculates the integer sum of all values in a TList to maxIndex }
 function IntegerListSum(list: TList; maxIndex: integer): integer;
 var
   i: Integer;
@@ -729,6 +795,7 @@ begin
     Inc(result, Integer(list[i]));
 end;
 
+{ Inserts line breaks in string @s before @charCount has been exceeded }
 function Wordwrap(var s: string; charCount: integer): string;
 var
   i, lastSpace, counter: Integer;
@@ -750,6 +817,19 @@ begin
     end;
   end;
   Result := s;
+end;
+
+{ Checks to see if any mask in @sl matches the string @s }
+function ContainsMatch(var sl: TStringList; const s: string): boolean;
+var
+  i: Integer;
+begin
+  Result := false;
+  for i := 0 to Pred(sl.Count) do
+    if MatchesMask(s, sl[i]) then begin
+      Result := true;
+      break;
+    end;
 end;
 
 
@@ -870,6 +950,48 @@ begin
     Result := 1;
 end;
 
+{ TLoaderThread }
+procedure LoaderProgress(const s: string);
+begin
+  if s <> '' then
+    Logger.Write('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Background Loader: ' + s);
+  if bForceTerminate then
+    Abort;
+end;
+
+procedure TLoaderThread.Execute;
+var
+  i: Integer;
+  f: IwbFile;
+  plugin: TPlugin;
+begin
+  wbStartTime := Now;
+  try
+    for i := 0 to Pred(PluginsList.Count) do begin
+      plugin := TPlugin(PluginsList[i]);
+      f := plugin._File;
+      if SameText(plugin.filename, wbGameName + '.esm') then
+        continue;
+      LoaderProgress('[' + plugin.filename + '] Building reference info.');
+      f.BuildRef;
+      if bForceTerminate then begin
+        LoaderProgress('Aborted.');
+        exit;
+      end;
+    end;
+  except
+    on E: Exception do begin
+      LoaderProgress('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
+      wbLoaderError := true;
+      bDontSave := true;
+    end;
+  end;
+  bLoaderDone := true;
+  LoaderProgress('finished');
+  if Assigned(LoaderCallback) then
+    LoaderCallback;
+end;
+
 
 {******************************************************************************}
 { Windows API functions
@@ -947,7 +1069,7 @@ var
   rec: TSearchRec;
 begin
   Result := '';
-  aPath := AppendIfMissing(aPath, '\');
+  aPath := AppendIfMissing(aPath, PathDelim);
   if Result <> '' then exit;
   // always ignore . and ..
   ignore.Add('.');
@@ -972,6 +1094,110 @@ begin
     until FindNext(rec) <> 0;
 
     FindClose(rec);
+  end;
+end;
+
+{
+  CopyDirectory:
+  Recursively copies all of the contents of a directory.
+
+  Example usage:
+  slIgnore := TStringList.Create;
+  slIgnore.Add('mteFunctions.pas');
+  CopyDirectory(ScriptsPath, 'C:\ScriptsBackup', slIgnore);
+}
+procedure CopyDirectory(src, dst: string; fIgnore, dIgnore: TStringList);
+var
+  info: TSearchRec;
+  isDirectory: boolean;
+begin
+  src := AppendIfMissing(src, PathDelim);
+  dst := AppendIfMissing(dst, PathDelim);
+
+  // if no files in source path, exit
+  if (FindFirst(src + '*', faAnyFile, info) <> 0) then
+    exit;
+  repeat
+    isDirectory := (info.Attr and faDirectory = faDirectory);
+    // skip . and ..
+    if (info.Name = '.') or (info.Name = '..') then
+      continue;
+
+    // skip if ignored
+    if isDirectory and ContainsMatch(dIgnore, info.Name) then
+      continue
+    else if ContainsMatch(fIgnore, info.Name) then
+      continue;
+
+    // copy the file or recurse
+    ForceDirectories(dst);
+    if isDirectory then
+      CopyDirectory(src+info.Name, dst+info.Name, fIgnore, dIgnore)
+    else
+      CopyFile(PChar(src+info.Name), PChar(dst+info.Name), false);
+  until FindNext(info) <> 0;
+
+  FindClose(info);
+end;
+
+{
+  GetFilesList:
+  Searches @path, recursively traversing subdirectories that don't match a mask
+  in @dIgnore, adding files that don't match a mask in @fIgnore to @list.
+
+  Example usage:
+  FilesList := TStringList.Create;
+  fileIgnore := TStringList.Create;
+  fileIgnore.Add('*.esp');
+  dirIgnore := TStringList.Create;
+  dirIgnore.Add('translations');
+  GetFilesList(wbDataPath, fileIgnore, dirIgnore, FilesList);
+}
+procedure GetFilesList(path: string; var fIgnore, dIgnore, list: TStringList);
+var
+  info: TSearchRec;
+  isDirectory: boolean;
+begin
+  path := AppendIfMissing(path, PathDelim);
+
+  // if no files in source path, exit
+  if (FindFirst(path + '*', faAnyFile, info) <> 0) then
+    exit;
+  repeat
+    isDirectory := (info.Attr and faDirectory = faDirectory);
+    // skip . and ..
+    if (info.Name = '.') or (info.Name = '..') then
+      continue;
+
+    // skip if ignored
+    if isDirectory and ContainsMatch(dIgnore, info.Name) then
+      continue
+    else if ContainsMatch(fIgnore, info.Name) then
+      continue;
+
+    // copy the file or recurse
+    if isDirectory then
+      GetFilesList(path + info.Name, fIgnore, dIgnore, list)
+    else
+      list.Add(path + info.Name);
+  until FindNext(info) <> 0;
+
+  FindClose(info);
+end;
+
+{ Copies files in @list from @src to @dst }
+procedure CopyFiles(src, dst: string; var list: TStringList);
+var
+  i: Integer;
+  srcFile, dstFile: string;
+begin
+  src := AppendIfMissing(src, PathDelim);
+  dst := AppendIfMissing(dst, PathDelim);
+  for i := 0 to Pred(list.Count) do begin
+    srcFile := list[i];
+    dstFile := StringReplace(srcFile, src, dst, []);
+    ForceDirectories(ExtractFilePath(dstFile));
+    CopyFile(PChar(srcFile), PChar(dstFile), false);
   end;
 end;
 
@@ -1528,7 +1754,9 @@ begin
   errors.Clear;
   CheckForErrors(2, _File as IwbElement, errors);
   //CheckForErrorsLinear(_File as IwbElement, _File.Records[_File.RecordCount - 1], errors);
-  if errors.Count = 0 then
+  if bProgressCancel then
+    exit;
+  if (errors.Count = 0) then
     errors.Add('None.')
   else
     flags := flags + [HAS_ERRORS];
@@ -1866,6 +2094,7 @@ begin
     ini.WriteBool(appMerging, 'handleFaceGenData', handleFaceGenData);
     ini.WriteBool(appMerging, 'handleVoiceAssets', handleVoiceAssets);
     ini.WriteBool(appMerging, 'handleMCMTranslations', handleMCMTranslations);
+    ini.WriteBool(appMerging, 'handleINIs', handleINIs);
     ini.WriteBool(appMerging, 'handleScriptFragments', handleScriptFragments);
     ini.WriteBool(appMerging, 'extractBSAs', extractBSAs);
     ini.WriteBool(appMerging, 'buildMergedBSA', buildMergedBSA);
@@ -1920,6 +2149,7 @@ begin
     handleFaceGenData := ini.ReadBool(appMerging, 'handleFaceGenData', false);
     handleVoiceAssets := ini.ReadBool(appMerging, 'handleVoiceAssets', false);
     handleMCMTranslations := ini.ReadBool(appMerging, 'handleMCMTranslations', false);
+    handleINIs := ini.ReadBool(appMerging, 'handleINIs', false);
     handleScriptFragments := ini.ReadBool(appMerging, 'handleScriptFragments', false);
     extractBSAs := ini.ReadBool(appMerging, 'extractBSAs', false);
     buildMergedBSA := ini.ReadBool(appMerging, 'buildMergedBSA', false);

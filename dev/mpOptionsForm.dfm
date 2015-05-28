@@ -259,7 +259,7 @@ object OptionsForm: TOptionsForm
         Left = 6
         Top = 125
         Width = 548
-        Height = 212
+        Height = 236
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -317,7 +317,7 @@ object OptionsForm: TOptionsForm
         end
         object kbBuildBSA: TCheckBox
           Left = 12
-          Top = 161
+          Top = 184
           Width = 101
           Height = 17
           Caption = 'Build Merged BSA'
@@ -326,7 +326,7 @@ object OptionsForm: TOptionsForm
         end
         object kbFragments: TCheckBox
           Left = 12
-          Top = 115
+          Top = 138
           Width = 136
           Height = 17
           Caption = 'Handle Script Fragments'
@@ -335,7 +335,7 @@ object OptionsForm: TOptionsForm
         end
         object kbExtractBSAs: TCheckBox
           Left = 12
-          Top = 138
+          Top = 161
           Width = 79
           Height = 17
           Caption = 'Extract BSAs'
@@ -343,11 +343,19 @@ object OptionsForm: TOptionsForm
         end
         object kbBatCopy: TCheckBox
           Left = 12
-          Top = 184
+          Top = 207
           Width = 117
           Height = 17
           Caption = 'Batch copy assets'
           TabOrder = 7
+        end
+        object kbINIs: TCheckBox
+          Left = 12
+          Top = 115
+          Width = 79
+          Height = 17
+          Caption = 'Handle INIs'
+          TabOrder = 8
         end
       end
     end
@@ -463,7 +471,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800380010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

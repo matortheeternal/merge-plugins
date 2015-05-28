@@ -111,6 +111,7 @@
 			<DCCReference Include="mpGameForm.pas">
 				<Form>GameForm</Form>
 			</DCCReference>
+			<DCCReference Include="W7Taskbar.pas"/>
 			<None Include="ModelSupport_MergePlugins\default.txaPackage"/>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
 			<None Include="ModelSupport_MergePlugins\mpTracker\default.txvpck"/>

@@ -29,7 +29,8 @@ uses
   mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
-  mpGameForm in 'mpGameForm.pas' {GameForm};
+  mpGameForm in 'mpGameForm.pas' {GameForm},
+  W7Taskbar in 'W7Taskbar.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

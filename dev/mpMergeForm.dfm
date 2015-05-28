@@ -15,6 +15,7 @@ object MergeForm: TMergeForm
   OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter: TSplitter
@@ -133,7 +134,7 @@ object MergeForm: TMergeForm
       Top = 7
       Width = 654
       Height = 608
-      ActivePage = PluginsTabSheet
+      ActivePage = LogTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
@@ -226,6 +227,7 @@ object MergeForm: TMergeForm
           OnChange = MergeListViewChange
           OnData = MergeListViewData
           OnDrawItem = MergeListViewDrawItem
+          OnKeyDown = MergeListViewKeyDown
         end
       end
       object LogTabSheet: TTabSheet
@@ -301,7 +303,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801180120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801280120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1366,8 +1368,8 @@ object MergeForm: TMergeForm
   end
   object PluginsPopupMenu: TPopupMenu
     OnPopup = PluginsPopupMenuPopup
-    Left = 48
-    Top = 112
+    Left = 56
+    Top = 96
     object AddToMerge: TMenuItem
       Caption = 'Add to merge'
       object NewMerge: TMenuItem
@@ -1386,11 +1388,15 @@ object MergeForm: TMergeForm
       Caption = 'Check for errors'
       OnClick = CheckForErrorsClick
     end
+    object OpenPluginLocationItem: TMenuItem
+      Caption = 'Open plugin location'
+      OnClick = OpenPluginLocationItemClick
+    end
   end
   object MergesPopupMenu: TPopupMenu
     OnPopup = MergesPopupMenuPopup
-    Left = 184
-    Top = 112
+    Left = 160
+    Top = 96
     object CreateNewMergeItem: TMenuItem
       Caption = 'Create new merge'
       OnClick = CreateMergeButtonClick
@@ -1432,7 +1438,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010108001800E00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108001800F00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1841,7 +1847,7 @@ object MergeForm: TMergeForm
     Left = 936
     Top = 8
     Bitmap = {
-      494C010101001400280040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101001400380040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100002000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

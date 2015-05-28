@@ -12,6 +12,7 @@ object ProgressForm: TProgressForm
   Font.Style = []
   OldCreateOrder = False
   Position = poDesktopCenter
+  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   DesignSize = (
