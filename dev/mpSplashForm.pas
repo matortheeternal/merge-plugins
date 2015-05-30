@@ -5,14 +5,15 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, pngimage,
-  mpTracker;
+  mpTracker, mpBase;
 
 type
   TSplashForm = class(TForm)
-    TitleLabel: TLabel;
-    SplashImage: TImage;
-    ByLabel: TLabel;
-    ProgressLabel: TLabel;
+    lblTitle: TLabel;
+    imgSplash: TImage;
+    lblAuthor: TLabel;
+    lblProgress: TLabel;
+    lblVersion: TLabel;
     procedure ProgressMessage(const s: string);
     procedure FormCreate(Sender: TObject);
   private
@@ -30,13 +31,14 @@ implementation
 
 procedure TSplashForm.ProgressMessage(const s: string);
 begin
-  ProgressLabel.Caption := s;
+  lblProgress.Caption := s;
   Application.ProcessMessages;
 end;
 
 procedure TSplashForm.FormCreate(Sender: TObject);
 begin
   Tracker.OnLogEvent := ProgressMessage;
+  lblVersion.Caption := 'v'+GetVersionMem;
 end;
 
 end.

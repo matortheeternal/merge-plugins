@@ -18,10 +18,10 @@ object SplashForm: TSplashForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object TitleLabel: TLabel
+  object lblTitle: TLabel
     Left = 40
     Top = 20
-    Width = 441
+    Width = 153
     Height = 41
     AutoSize = False
     Caption = 'Merge Plugins'
@@ -32,7 +32,7 @@ object SplashForm: TSplashForm
     Font.Style = []
     ParentFont = False
   end
-  object SplashImage: TImage
+  object imgSplash: TImage
     Left = 0
     Top = 0
     Width = 612
@@ -1398,19 +1398,32 @@ object SplashForm: TSplashForm
       9BE7C2B9FAD493DD9980AE5CB972E5AA6BA90701D6FF03878D91A1EC17259200
       00000049454E44AE426082}
   end
-  object ByLabel: TLabel
+  object lblAuthor: TLabel
     Left = 40
     Top = 48
     Width = 93
     Height = 13
     Caption = 'by matortheeternal'
   end
-  object ProgressLabel: TLabel
+  object lblProgress: TLabel
     Left = 40
     Top = 80
     Width = 481
     Height = 13
     AutoSize = False
     Caption = 'Loading...'
+  end
+  object lblVersion: TLabel
+    Left = 192
+    Top = 35
+    Width = 73
+    Height = 11
+    Caption = 'v2.0.0.136'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -9
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
   end
 end
