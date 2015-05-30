@@ -1216,12 +1216,14 @@ var
   LocalTime, SystemTime: TSystemTime;
 begin
   result := 0;
+  // exit if can't get attributes
+  if not GetFileAttributesEx(PWideChar(aFileName), GetFileExInfoStandard, @info) then
+    exit;
 
-  if NOT GetFileAttributesEx(PWideChar(aFileName), GetFileExInfoStandard, @info) then
-    EXIT;
-
+  // get last modified
   FileTime := info.ftLastWriteTime;
 
+  // convert to system time
   if not FileTimeToSystemTime(FileTime, SystemTime) then
     RaiseLastOSError;
   if not SystemTimeToTzSpecificLocalTime(nil, SystemTime, LocalTime) then

@@ -446,7 +446,7 @@ begin
   AddDetailsItem('Application', 'Merge Plugins');
   AddDetailsItem('Author', 'matortheeternal');
   AddDetailsItem('Version', GetVersionMem);
-  AddDetailsItem('Date built', '?');
+  AddDetailsItem('Date built', DateTimeToStr(GetLastModified(ParamStr(0))));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Game mode', wbGameName);
   AddDetailsItem('Language', settings.language);
@@ -482,7 +482,7 @@ begin
     value := DetailsEditor.Cells[ACol, ARow];
     if Pos(' ', value) > 0 then
       value := Copy(value, 1, Pos(' ', value));
-    if IsURL(value) and ((Now - LastURLTime) * 86400 > 0.5) then begin
+    if IsURL(value) and ((Now - LastURLTime) * 86400 > 1.0) then begin
       ShellExecute(0, 'open', PChar(value), '', '', SW_SHOWNORMAL);
       LastURLTime := Now;
     end;
