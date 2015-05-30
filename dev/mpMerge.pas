@@ -207,7 +207,7 @@ begin
   try
     aFile := merge.plugin._File;
     // see if unknown 15 flag on refr records always causes exception
-    if aRecord.ElementExists['Record Header\Record Flags\Unknown 15'] then
+    if settings.debugRecordCopying and aRecord.ElementExists['Record Header\Record Flags\Unknown 15'] then
       Tracker.Write('    ['+aRecord.Signature+':'+IntToHex(aRecord.LoadOrderFormID, 8)+'] Unknown 15 flag set!');
     wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
   except on x : Exception do begin
@@ -275,6 +275,32 @@ var
   languages, CopiedFrom, MergeIni: TStringList;
   translations: array[0..31] of TStringList; // 32 languages maximum
 
+function GetMapIndex(var merge: TMerge; fn: string; oldForm: string): integer;
+var
+  i, max: integer;
+begin
+  // start one entry after the plugin's filename
+  Result := merge.map.IndexOfName(fn) + 1;
+
+  // get maximum index to search to - index of next plugin in the map
+  i := merge.plugins.IndexOf(fn) + 1;
+  if i = merge.plugins.Count then
+    max := merge.map.Count
+  else
+    max := merge.map.IndexOfName(merge.plugins[i]);
+
+  // loop until we reach max
+  while (Result < max) do begin
+    // look for oldForm
+    if SameText(merge.map.Names[Result], oldForm) then
+      exit;
+    Inc(Result);
+  end;
+
+  // return -1 if not found
+  Result := -1;
+end;
+
 procedure CopyFaceGen(var plugin: TPlugin; var merge: TMerge; srcPath, dstPath: string);
 var
   info: TSearchRec;
@@ -296,9 +322,9 @@ begin
     srcFile := info.Name;
     dstFile := srcFile;
     oldForm := Copy(srcFile, 1, 8);
-    index := merge.map.IndexOfName(oldForm);
+    index := GetMapIndex(merge, plugin.filename, oldForm);
     if (index > -1) then begin
-      newForm := '00' + Copy(merge.map.Values[oldForm], 3, 6);
+      newForm := merge.map.ValueFromIndex[index];
       dstFile := StringReplace(srcFile, oldForm, newForm, []);
     end;
 
@@ -339,9 +365,9 @@ begin
       srcFile := info.Name;
       dstFile := srcFile;
       oldForm := Copy(srcFile, 1, 8);
-      index := merge.map.IndexOfName(oldForm);
+      index := GetMapIndex(merge, plugin.filename, oldForm);
       if (index > -1) then begin
-        newForm := '00' + Copy(merge.map.Values[oldForm], 3, 6);
+        newForm := merge.map.ValueFromIndex[index];
         dstFile := StringReplace(srcFile, oldForm, newForm, []);
       end;
 

@@ -936,7 +936,7 @@ begin
   prop.EditStyle := esPickList;
   prop.PickList.Add('Conflicting');
   prop.PickList.Add('All');
-  if merge.files.Count < 500 then begin
+  if merge.files.Count < 250 then begin
     sl := TStringList.Create;
     sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
     AddDetailsList('Files', sl);
@@ -944,7 +944,10 @@ begin
   end
   else
     AddDetailsItem('Files', 'Too many files to display.');
-  AddDetailsList('Fails', merge.fails);
+  if merge.fails.Count < 250 then
+    AddDetailsList('Fails', merge.fails)
+  else
+    AddDetailsItem('Fails', 'Too many fails to display.');
 end;
 
 procedure TMergeForm.UpdateMerges;
