@@ -1462,7 +1462,7 @@ begin
     merge := TMerge(MergesList[i]);
     // if force rebuild, set to Up to date
     if merge.status = 9 then
-      merge.status = 5
+      merge.status := 5
     // if normal rebuild, set to Up to date [Forced]
     else if merge.status = 8 then
       merge.Status := 6;
