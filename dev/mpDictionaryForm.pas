@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, ComCtrls, Grids, ValEdit,
+  Dialogs, StdCtrls, ExtCtrls, ComCtrls, Grids, ValEdit, CommCtrl,
   mpBase, mpLogger;
 
 type
@@ -199,16 +199,18 @@ procedure TDictionaryForm.ListView1DrawItem(Sender: TCustomListView;
   Item: TListItem; Rect: TRect; State: TOwnerDrawState);
 var
   i, x, y: integer;
+  lv: TListView;
 begin
+  lv := TListView(Sender);
   if Item.Selected then begin
-    TListView(Sender).Canvas.Brush.Color := $FFEEDD;
-    TListView(Sender).Canvas.FillRect(Rect);
+    lv.Canvas.Brush.Color := $FFEEDD;
+    lv.Canvas.FillRect(Rect);
   end;
   x := Rect.Left + 3;
-  y := (Rect.Bottom - Rect.Top - TListView(Sender).Canvas.TextHeight('Hg')) div 2 + Rect.Top;
-  TListView(Sender).Canvas.TextOut(x, y, Item.Caption);
+  y := (Rect.Bottom - Rect.Top - lv.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
+  lv.Canvas.TextOut(x, y, Item.Caption);
   for i := 0 to Item.SubItems.Count - 1 do begin
-    inc(x, TListView(Sender).Columns[i].Width);
+    Inc(x, ListView_GetColumnWidth(lv.Handle, lv.Columns[i + 1].Index));
     TListView(Sender).Canvas.TextOut(x, y, Item.SubItems[i]);
   end;
 end;

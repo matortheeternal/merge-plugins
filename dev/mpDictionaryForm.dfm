@@ -18,16 +18,16 @@ object DictionaryForm: TDictionaryForm
   object Panel1: TPanel
     Left = 3
     Top = 3
-    Width = 1254
-    Height = 675
+    Width = 1256
+    Height = 676
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'Panel1'
     TabOrder = 0
     object Splitter1: TSplitter
-      Left = 852
+      Left = 854
       Top = 1
-      Height = 673
+      Height = 674
       Align = alRight
       ExplicitLeft = 715
       ExplicitTop = -4
@@ -36,8 +36,8 @@ object DictionaryForm: TDictionaryForm
     object ListView1: TListView
       Left = 1
       Top = 1
-      Width = 851
-      Height = 673
+      Width = 853
+      Height = 674
       Align = alClient
       Columns = <
         item
@@ -73,15 +73,19 @@ object DictionaryForm: TDictionaryForm
       OnColumnClick = ListView1ColumnClick
       OnData = ListView1Data
       OnDrawItem = ListView1DrawItem
+      ExplicitWidth = 851
+      ExplicitHeight = 673
     end
     object Panel2: TPanel
-      Left = 855
+      Left = 857
       Top = 1
       Width = 398
-      Height = 673
+      Height = 674
       Align = alRight
       Caption = 'Panel2'
       TabOrder = 1
+      ExplicitLeft = 855
+      ExplicitHeight = 673
       object Panel3: TPanel
         Left = 1
         Top = 1
@@ -120,10 +124,11 @@ object DictionaryForm: TDictionaryForm
         Left = 1
         Top = 204
         Width = 396
-        Height = 468
+        Height = 469
         Align = alClient
         Caption = 'Panel4'
         TabOrder = 1
+        ExplicitHeight = 468
         object Label2: TLabel
           Left = 5
           Top = 6
@@ -135,12 +140,13 @@ object DictionaryForm: TDictionaryForm
           Left = 3
           Top = 25
           Width = 388
-          Height = 439
+          Height = 440
           Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
           ReadOnly = True
           ScrollBars = ssVertical
           TabOrder = 0
+          ExplicitHeight = 439
         end
       end
     end
