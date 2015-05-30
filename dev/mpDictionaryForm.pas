@@ -210,7 +210,7 @@ begin
   y := (Rect.Bottom - Rect.Top - lv.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
   lv.Canvas.TextOut(x, y, Item.Caption);
   for i := 0 to Item.SubItems.Count - 1 do begin
-    Inc(x, ListView_GetColumnWidth(lv.Handle, lv.Columns[i + 1].Index));
+    Inc(x, ListView_GetColumnWidth(lv.Handle, lv.Columns[i].Index));
     TListView(Sender).Canvas.TextOut(x, y, Item.SubItems[i]);
   end;
 end;
