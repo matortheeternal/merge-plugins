@@ -1436,9 +1436,12 @@ begin
     if not MergeListView.Items[i].Selected then
       continue;
     merge := TMerge(MergesList[i]);
-    if not (merge.status in UpToDateStatuses) then
-      continue;
-    merge.Status := 9;
+    // if forced up to date, set to Ready to be rebuilt
+    if merge.status = 6 then
+      merge.status := 8
+    // if normal up to date, set to Ready to rebuilt [forced]
+    else if merge.status = 5 then
+      merge.Status := 9;
   end;
 
   // update
@@ -1457,9 +1460,12 @@ begin
     if not MergeListView.Items[i].Selected then
       continue;
     merge := TMerge(MergesList[i]);
-    if not (merge.status in RebuildStatuses) then
-      continue;
-    merge.Status := 6;
+    // if force rebuild, set to Up to date
+    if merge.status = 9 then
+      merge.status = 5
+    // if normal rebuild, set to Up to date [Forced]
+    else if merge.status = 8 then
+      merge.Status := 6;
   end;
 
   // update
