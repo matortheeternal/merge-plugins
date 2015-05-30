@@ -58,3 +58,6 @@ __history/
 dev/TES5Merges.json
 dev/*.dcu
 dev/Imaging/*.dcu
+dev/settings.ini
+dev/statistics.ini
+dev/TES5Errors.json

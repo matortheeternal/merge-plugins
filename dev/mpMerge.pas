@@ -100,6 +100,8 @@ begin
 end;
 
 procedure RenumberBefore(var pluginsToMerge: TList; var merge: TMerge);
+const
+  debugSkips = false;
 var
   i, j, rc, OldFormID, total, fileTotal: integer;
   plugin: TPlugin;
@@ -119,6 +121,8 @@ begin
   total := 0;
   Records := TList.Create;
   BaseFormID := FindHighestFormID(pluginsToMerge, merge) + 128;
+  for i := 0 to High(UsedFormIDs) do
+    UsedFormIDs[i] := 0;
   if settings.debugRenumbering then
     Tracker.Write('  BaseFormID: '+IntToHex(BaseFormID, 8));
 
@@ -147,10 +151,12 @@ begin
       if aRecord.Signature = 'TES4' then continue;
       if IsOverride(aRecord) then continue;
       OldFormID := LocalFormID(aRecord);
-      //Tracker.Write('    '+IntToHex(Index, 8));
       // skip records that aren't conflicting if not renumberAll
-      if (not renumberAll) and (not UsedFormIDs[OldFormID] = 1) then begin
+      if (not renumberAll) and (UsedFormIDs[OldFormID] = 0) then begin
         UsedFormIDs[OldFormID] := 1;
+        Tracker.Update(1);
+        if settings.debugRenumbering and debugSkips then
+          Tracker.Write('    Skipping FormID '+IntToHex(OldFormID, 8));
         continue;
       end;
 
@@ -200,10 +206,13 @@ var
 begin
   try
     aFile := merge.plugin._File;
+    // see if unknown 15 flag on refr records always causes exception
+    if aRecord.ElementExists['Record Header\Record Flags\Unknown 15'] then
+      Tracker.Write('    ['+IntToHex(aRecord.FormID, 8)+'] Unknown 15 flag set!');
     wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
   except on x : Exception do begin
       Tracker.Write('    Exception copying '+aRecord.Name+': '+x.Message);
-      merge.fails.Add(aRecord.FullPath+': '+x.Message);
+      merge.fails.Add(aRecord.Name+': '+x.Message);
     end;
   end;
 end;
@@ -427,7 +436,7 @@ begin
   if bProgressCancel then exit;
   // exit if we have no ini to save
   if MergeIni.Count = 0 then exit;
-  merge.files.Add(ChangeFileExt(merge.filename, '.ini'));
+  merge.files.Add(merge.name+'\'+ChangeFileExt(merge.filename, '.ini'));
   MergeIni.SaveToFile(merge.dataPath + ChangeFileExt(merge.filename, '.ini'));
 end;
 
@@ -579,6 +588,8 @@ end;
 {******************************************************************************}
 
 procedure BuildMerge(var merge: TMerge);
+const
+  bPauseBatch = false;
 var
   plugin: TPlugin;
   mergeFile, aFile: IwbFile;
@@ -610,6 +621,7 @@ begin
     if not Assigned(plugin) then begin
       Tracker.Write(failed + ', couldn''t find plugin '+merge.plugins[i]);
       pluginsToMerge.Free;
+      merge.status := 11;
       exit;
     end;
     pluginsToMerge.Add(plugin);
@@ -634,6 +646,7 @@ begin
   // don't merge if mergeFile not assigned
   if not Assigned(merge.plugin) then begin
     Tracker.Write(failed + ', couldn''t assign merge file.');
+    merge.status := 11;
     exit;
   end;
 
@@ -647,6 +660,7 @@ begin
         Tracker.Write(failed + ', '+plugin.filename +
           ' is at a lower load order position than '+merge.filename);
         pluginsToMerge.Free;
+        merge.status := 11;
         exit;
       end;
     end;
@@ -712,6 +726,7 @@ begin
       // exit
       Tracker.Write(' ');
       Tracker.Write('Merge failed.');
+      merge.status := 11;
       exit;
     end;
   end;
@@ -740,10 +755,10 @@ begin
   // batch copy assets
   if settings.batCopy and (batch.Count > 0) and (not bProgressCancel) then begin
     bfn := mergeFilePrefix + '.bat';
-    batch.Add('pause');
+    if bPauseBatch then batch.Add('pause');
     batch.SaveToFile(bfn);
     batch.Clear;
-    ShellExecute(0, 'open', PChar(bfn), '', PChar(wbProgramPath), SW_SHOWNORMAL);
+    ShellExecute(0, 'open', PChar(bfn), '', PChar(wbProgramPath), SW_SHOWMINNOACTIVE);
   end;
 
   // create SEQ file
@@ -796,7 +811,7 @@ begin
   if bProgressCancel then exit;
 
   // update merge plugin hashes
-  merge.GetHashes;
+  merge.UpdateHashes;
 
   // save merged plugin
   FileStream := TFileStream.Create(merge.dataPath + merge.filename, fmCreate);
@@ -813,6 +828,11 @@ begin
   merge.map.SaveToFile(mergeFilePrefix+'_map.txt');
   merge.files.SaveToFile(mergeFilePrefix+'_files.txt');
   merge.fails.SaveToFile(mergeFilePrefix+'_fails.txt');
+
+  // update statistics
+  if merge.status = 7 then
+    Inc(statistics.pluginsMerged, merge.plugins.Count);
+  Inc(statistics.mergesBuilt);
 
   // done merging
   time := (Now - time) * 86400;

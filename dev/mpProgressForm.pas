@@ -21,6 +21,7 @@ type
     procedure SetProgress(const i: integer);
     procedure ProcessMessages;
     procedure SaveLog;
+    procedure SetTitle(title: string);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
@@ -101,7 +102,12 @@ var
 begin
   ForceDirectories(logPath);
   fdt := FormatDateTime('mmddyy_hhnnss', TDateTime(Now));
-  LogMemo.Lines.SaveToFile(logPath + 'merge_'+fdt+'.txt');
+  LogMemo.Lines.SaveToFile(logPath + 'log_'+fdt+'.txt');
+end;
+
+procedure TProgressForm.SetTitle(title: string);
+begin
+  Caption := title;
 end;
 
 procedure TProgressForm.FormCreate(Sender: TObject);

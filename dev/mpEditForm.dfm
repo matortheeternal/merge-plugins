@@ -1,6 +1,7 @@
 object EditForm: TEditForm
   Left = 0
   Top = 0
+  ActiveControl = edName
   Caption = 'Edit Merge'
   ClientHeight = 222
   ClientWidth = 334
@@ -31,10 +32,8 @@ object EditForm: TEditForm
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    ExplicitHeight = 193
     object TabSheet1: TTabSheet
       Caption = 'Edit Merge'
-      ExplicitHeight = 165
       object lblName: TLabel
         Left = 13
         Top = 13
@@ -82,7 +81,7 @@ object EditForm: TEditForm
       end
       object edName: TEdit
         Left = 109
-        Top = 10
+        Top = 12
         Width = 195
         Height = 21
         Hint = 'Warning: Mod folder already exists.'
@@ -90,6 +89,7 @@ object EditForm: TEditForm
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = edNameChange
+        OnKeyDown = edNameKeyDown
       end
       object edFilename: TEdit
         Left = 109
@@ -101,6 +101,7 @@ object EditForm: TEditForm
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
         OnChange = edFilenameChange
+        OnKeyDown = edFilenameKeyDown
       end
       object cbMethod: TComboBox
         Left = 109
@@ -145,7 +146,6 @@ object EditForm: TEditForm
     ModalResult = 1
     TabOrder = 1
     OnClick = btnOkClick
-    ExplicitTop = 207
   end
   object btnCancel: TButton
     Left = 251
@@ -156,6 +156,5 @@ object EditForm: TEditForm
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 207
   end
 end

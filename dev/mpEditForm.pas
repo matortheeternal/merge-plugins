@@ -27,6 +27,9 @@ type
     procedure btnOkClick(Sender: TObject);
     procedure edNameChange(Sender: TObject);
     procedure edFilenameChange(Sender: TObject);
+    procedure edNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure edFilenameKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     { Private declarations }
   public
@@ -123,6 +126,26 @@ begin
     edName.Font.Color := $0000ff
   else
     edName.Font.Color := clWindowText;
+end;
+
+{ Save merge by pressing enter in edName }
+procedure TEditForm.edNameKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (HiWord(GetKeyState(vk_Return)) <> 0) and btnOk.Enabled then begin
+    btnOkClick(nil);
+    ModalResult := mrOk;
+  end;
+end;
+
+{ Save merge by pressing enter in edFilename }
+procedure TEditForm.edFilenameKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (HiWord(GetKeyState(vk_Return)) <> 0) and btnOk.Enabled then begin
+    btnOkClick(nil);
+    ModalResult := mrOk;
+  end;
 end;
 
 procedure TEditForm.FormShow(Sender: TObject);

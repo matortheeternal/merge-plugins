@@ -44,7 +44,9 @@ const
 var
   bSelectGame: boolean;
 begin
+  // set important vars
   SysUtils.FormatSettings.DecimalSeparator := '.';
+  Application.HintHidePause := 8000;
 
   // get command line arguments
   bSelectGame := FindCmdLineSwitch('sg');
@@ -52,6 +54,7 @@ begin
   // initialize application, load settings
   Application.Initialize;
   LoadSettings;
+  LoadStatistics;
 
   // have user select game mode
   if (bSelectGame) or (settings.defaultGame = 0) then begin
@@ -62,6 +65,7 @@ begin
   end;
 
   // run main application
+  Inc(statistics.timesRun);
   Application.Title := 'Merge Plugins';
   Application.CreateForm(TMergeForm, MergeForm);
   Application.CreateForm(TProgressForm, ProgressForm);

@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
+  Controls, Registry,
   superobject,
   mpLogger, mpTracker,
-  Registry,
   wbBSA,
   wbHelpers,
   wbInterface,
@@ -41,11 +41,16 @@ type
   TMergeStatus = Record
     id: integer;
     color: integer;
-    caption: string[64];
+    desc: string[64];
   end;
-  TPluginFlag = (IS_BLACKLISTED, HAS_ERRORS, HAS_BSA, HAS_INI, HAS_TRANSLATION,
-    HAS_FACEDATA, HAS_VOICEDATA, HAS_FRAGMENTS);
-  TPluginFlags = set of TPluginFlag;
+  TPluginFlag = Record
+    id: integer;
+    char: char;
+    desc: string[128];
+  end;
+  TPluginFlagID = (IS_BLACKLISTED, HAS_ERRORS, NO_ERRORS, HAS_BSA,
+    HAS_FACEDATA, HAS_VOICEDATA, HAS_TRANSLATION, HAS_INI, HAS_FRAGMENTS );
+  TPluginFlags = set of TPluginFlagID;
   TPlugin = class(TObject)
   public
     _File: IwbFile;
@@ -70,8 +75,11 @@ type
     procedure GetHash;
     procedure GetFlags;
     function GetFlagsString: string;
+    function GetFlagsDescription: string;
     procedure GetDataPath;
     procedure FindErrors;
+    procedure LoadErrorDump(obj: ISuperObject);
+    function ErrorDump: ISuperObject;
   end;
   TMerge = class(TObject)
   public
@@ -93,7 +101,7 @@ type
     function Dump: ISuperObject;
     procedure LoadDump(obj: ISuperObject);
     function GetTimeCost: integer;
-    procedure GetHashes;
+    procedure UpdateHashes;
     procedure GetStatus;
     procedure GetLoadOrders;
     procedure SortPlugins;
@@ -141,6 +149,17 @@ type
     procedure Save(const filename: string);
     procedure Load(const filename: string);
   end;
+  TStatistics = class(TObject)
+  public
+    timesRun: integer;
+    mergesBuilt: integer;
+    pluginsChecked: integer;
+    pluginsMerged: integer;
+    reportsSubmitted: integer;
+    constructor Create; virtual;
+    procedure Save(const filename: string);
+    procedure Load(const filename: string);
+  end;
 
   { Initialization Methods }
   function GamePathValid(path: string; id: integer): boolean;
@@ -148,6 +167,7 @@ type
   function GetGameID(name: string): integer;
   function GetGamePath(gameName: string): string;
   procedure LoadDefinitions;
+  function GetVersionMem: string;
   { Bethesda Plugin Functions }
   function IsOverride(aRecord: IwbMainRecord): boolean;
   function LocalFormID(aRecord: IwbMainRecord): integer;
@@ -160,7 +180,7 @@ type
   function TranslationExists(filename: string): boolean;
   function FaceDataExists(filename: string): boolean;
   function VoiceDataExists(filename: string): boolean;
-  function FragmentsExist(filename: string): boolean;
+  function FragmentsExist(f: IwbFile): boolean;
   procedure ExtractBSA(ContainerName, folder, destination: string);
   function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
   function CheckForErrors(const aIndent: Integer; const aElement: IwbElement; var errors: TStringList): Boolean;
@@ -175,6 +195,7 @@ type
   function IntegerListSum(list: TList; maxIndex: integer): integer;
   function Wordwrap(var s: string; charCount: integer): string;
   function ContainsMatch(var sl: TStringList; const s: string): boolean;
+  function IsURL(s: string): boolean;
   { Load order functions }
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
@@ -196,6 +217,7 @@ type
   function GetModContainingFile(var modlist: TStringList; filename: string): string;
   { Dictionary and Settings methods }
   procedure LoadSettings;
+  procedure LoadStatistics;
   procedure LoadDictionary;
   function GetRatingColor(rating: real): integer;
   function GetEntry(pluginName, numRecords, version: string): TEntry;
@@ -209,24 +231,53 @@ type
   function CreateNewPlugin(filename: string): TPlugin;
   procedure SaveMerges;
   procedure LoadMerges;
+  procedure SavePluginErorrs;
+  procedure LoadPluginErrors;
   function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
 
 const
+  // IMPORTANT CONSTANTS
   ProgramVersion = '2.0';
-  flagChar = 'XEAITGVF';
-  StatusArray: array[0..10] of TMergeStatus = (
-    ( id: 0; color: $808080; caption: 'Unknown'; ),
-    ( id: 1; color: $0000FF; caption: 'No plugins to merge'; ),
-    ( id: 2; color: $0000FF; caption: 'Directories invalid'; ),
-    ( id: 3; color: $0000FF; caption: 'Plugins not loaded'; ),
-    ( id: 4; color: $0000FF; caption: 'Errors in plugins'; ),
-    ( id: 5; color: $900000; caption: 'Up to date'; ),
-    ( id: 6; color: $900000; caption: 'Up to date [Forced]'; ),
-    ( id: 7; color: $009000; caption: 'Ready to be built'; ),
-    ( id: 8; color: $009000; caption: 'Ready to be rebuilt'; ),
-    ( id: 9; color: $009000; caption: 'Ready to be rebuilt [Forced]'; ),
-    ( id: 10; color: $0080ed; caption: 'Check for errors required'; )
+  ProgramTesters = 'bla08, hishy, keithinhanoi, mindw0rk2, steve25469, Teabag, '+
+    'Thalioden, zilav';
+  ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
+  xEditVersion = '3.1.1';
+
+  // PLUGIN FLAGS
+  FlagsArray: array[0..8] of TPluginFlag = (
+    ( id: 0; char: 'X'; desc: 'Is blacklisted'; ),
+    ( id: 1; char: 'E'; desc: 'Has errors'; ),
+    ( id: 2; char: 'N'; desc: 'Has no errors'; ),
+    ( id: 3; char: 'A'; desc: 'Has a BSA file'; ),
+    ( id: 4; char: 'G'; desc: 'Has FaceGenData'; ),
+    ( id: 5; char: 'V'; desc: 'Has Voice Data'; ),
+    ( id: 6; char: 'T'; desc: 'Has MCM Translations'; ),
+    ( id: 7; char: 'I'; desc: 'Has an INI file'; ),
+    ( id: 8; char: 'F'; desc: 'Has Script fragments'; )
   );
+
+  // MERGE STATUSES
+  StatusArray: array[0..11] of TMergeStatus = (
+    ( id: 0; color: $808080; desc: 'Unknown'; ),
+    ( id: 1; color: $0000FF; desc: 'No plugins to merge'; ),
+    ( id: 2; color: $0000FF; desc: 'Directories invalid'; ),
+    ( id: 3; color: $0000FF; desc: 'Plugins not loaded'; ),
+    ( id: 4; color: $0000FF; desc: 'Errors in plugins'; ),
+    ( id: 5; color: $900000; desc: 'Up to date'; ),
+    ( id: 6; color: $900000; desc: 'Up to date [Forced]'; ),
+    ( id: 7; color: $009000; desc: 'Ready to be built'; ),
+    ( id: 8; color: $009000; desc: 'Ready to be rebuilt'; ),
+    ( id: 9; color: $009000; desc: 'Ready to be rebuilt [Forced]'; ),
+    ( id: 10; color: $0080ed; desc: 'Check for errors required'; ),
+    ( id: 11; color: $0000FF; desc: 'Merge failed'; )
+  );
+  // STATUS TYPES
+  UpToDateStatuses = [5, 6];
+  BuildStatuses = [7, 8, 9];
+  RebuildStatuses = [8, 9];
+  ForcedStatuses = [6, 9];
+
+  // GAME MODES
   GameArray: array[1..4] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
       appName: 'TES5'; exeName: 'TESV.exe'; ),
@@ -237,14 +288,11 @@ const
     ( longName: 'Fallout 3'; gameName: 'Fallout3'; gameMode: gmFO3;
       appName: 'FO3'; exeName: 'Fallout3.exe'; )
   );
-  UpToDateStatuses = [5, 6];
-  BuildStatuses = [7, 8, 9];
-  RebuildStatuses = [8, 9];
-  ForcedStatuses = [6, 9];
 
 var
   dictionary, blacklist, PluginsList, MergesList: TList;
   settings: TSettings;
+  statistics: TStatistics;
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone,
   bProgressCancel: boolean;
@@ -333,6 +381,35 @@ begin
     gmFNV: DefineFNV;
     gmTES4: DefineTES4;
     gmFO3: DefineTES3;
+  end;
+end;
+
+{ Get program version from memory }
+function GetVersionMem: string;
+var
+  verblock: PVSFIXEDFILEINFO;
+  versionMS, versionLS, verlen: cardinal;
+  rs: TResourceStream;
+  m: TMemoryStream;
+begin
+  m := TMemoryStream.Create;
+  try
+    rs := TResourceStream.CreateFromID(HInstance, 1, RT_VERSION);
+    try
+      m.CopyFrom(rs, rs.Size);
+    finally
+      rs.Free;
+    end;
+    m.Position := 0;
+    if VerQueryValue(m.Memory, '\', Pointer(verblock), verlen) then begin
+      VersionMS := verblock.dwFileVersionMS;
+      VersionLS := verblock.dwFileVersionLS;
+      Result := Format('%s.%s.%s.%s', [IntToStr(versionMS shr 16),
+        IntToStr(versionMS and $FFFF), IntToStr(VersionLS shr 16),
+        IntToStr(VersionLS and $FFFF)]);
+    end;
+  finally
+    m.Free;
   end;
 end;
 
@@ -531,10 +608,107 @@ begin
   end;
 end;
 
-{ Return true if file-specific Script Fragments for @filename are found }
-function FragmentsExist(filename: string): boolean;
+{ Returns true if Topic Info Fragments exist in @f }
+function TopicInfoFragmentsExist(f: IwbFile): boolean;
+const
+  infoFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Info VMAD\Script Fragments Info';
+var
+  group: IwbGroupRecord;
+  rec, subgroup, container: IwbContainer;
+  element, fragments: IwbElement;
+  i, j: Integer;
+  fn: string;
 begin
   Result := false;
+  // exit if no DIAL records in file
+  if not f.HasGroup('DIAL') then
+    exit;
+
+  // find all DIAL records
+  group := f.GroupBySignature['DIAL'];
+  for i := 0 to Pred(group.ElementCount) do begin
+    element := group.Elements[i];
+    // find all INFO records
+    if not Supports(element, IwbContainer, subgroup) then
+      continue;
+    for j := 0 to Pred(subgroup.ElementCount) do begin
+      rec := subgroup.Elements[j] as IwbContainer;
+      fragments := rec.ElementByPath[infoFragmentsPath];
+      if not Assigned(fragments) then
+        continue;
+      if not Supports(fragments, IwbContainer, container) then
+        continue;
+      fn := container.ElementValues['fileName'];
+      Result := Result or (Pos('TIF_', fn) = 1);
+    end;
+  end;
+end;
+
+{ Returns true if Quest Fragments exist in @f }
+function QuestFragmentsExist(f: IwbFile): boolean;
+const
+  questFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
+var
+  group: IwbGroupRecord;
+  rec, container: IwbContainer;
+  fragments: IwbElement;
+  i: Integer;
+  fn: string;
+begin
+  Result := false;
+  // exit if no QUST records in file
+  if not f.HasGroup('QUST') then
+    exit;
+
+  // find all QUST records
+  group := f.GroupBySignature['QUST'];
+  for i := 0 to Pred(group.ElementCount) do begin
+    rec := group.Elements[i] as IwbContainer;
+    fragments := rec.ElementByPath[questFragmentsPath];
+    if not Assigned(fragments) then
+      continue;
+    if not Supports(fragments, IwbContainer, container) then
+      continue;
+    fn := container.ElementValues['fileName'];
+    Result := Result or (Pos('QF_', fn) = 1);
+  end;
+end;
+
+{ Returns true if Quest Fragments exist in @f }
+function SceneFragmentsExist(f: IwbFile): boolean;
+const
+  sceneFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
+var
+  group: IwbGroupRecord;
+  rec, container: IwbContainer;
+  fragments: IwbElement;
+  i: Integer;
+  fn: string;
+begin
+  Result := false;
+  // exit if no SCEN records in file
+  if not f.HasGroup('SCEN') then
+    exit;
+
+  // find all SCEN records
+  group := f.GroupBySignature['SCEN'];
+  for i := 0 to Pred(group.ElementCount) do begin
+    rec := group.Elements[i] as IwbContainer;
+    fragments := rec.ElementByPath[sceneFragmentsPath];
+    if not Assigned(fragments) then
+      continue;
+    if not Supports(fragments, IwbContainer, container) then
+      continue;
+    fn := container.ElementValues['fileName'];
+    Result := Result or (Pos('SF_', fn) = 1);
+  end;
+end;
+
+{ Returns true if file-specific Script Fragments for @f are found }
+function FragmentsExist(f: IwbFile): boolean;
+begin
+  Result := TopicInfoFragmentsExist(f) or QuestFragmentsExist(f)
+    or SceneFragmentsExist(f);
 end;
 
 { Extracts assets from @folder in the BSA @filename to @destination }
@@ -830,6 +1004,12 @@ begin
       Result := true;
       break;
     end;
+end;
+
+{ Returns true if the string is an http:// or https:// url }
+function IsURL(s: string): boolean;
+begin
+  Result := (Pos('http://', s) = 1) or (Pos('https://', s) = 1);
 end;
 
 
@@ -1321,6 +1501,12 @@ begin
   settings.Load('settings.ini');
 end;
 
+procedure LoadStatistics;
+begin
+  statistics := TStatistics.Create;
+  statistics.Load('statistics.ini');
+end;
+
 procedure LoadDictionary;
 var
   i: Integer;
@@ -1427,6 +1613,9 @@ end;
   - CreateNewPlugin
   - SaveMerges
   - LoadMerges
+  - SavePluginErrors
+  - LoadPluginErrors
+  - MergePluginsCompare
 }
 {******************************************************************************}
 
@@ -1564,12 +1753,18 @@ begin
   json.O['merges'] := SA([]);
 
   // loop through merges
+  Tracker.Write('Dumping merges to JSON');
   for i := 0 to Pred(MergesList.Count) do begin
-    merge := MergesList[i];
+    Tracker.Update(1);
+    merge := TMerge(MergesList[i]);
+    Tracker.Write('  Dumping '+merge.name);
     json.A['merges'].Add(merge.Dump);
   end;
 
   // save and finalize
+  Tracker.Write(' ');
+  Tracker.Write('Saving to '+wbAppName+'Merges.json');
+  Tracker.Update(1);
   json.SaveTo(wbAppName + 'Merges.json');
   json := nil;
 end;
@@ -1609,6 +1804,68 @@ begin
   sl.Free;
 end;
 
+procedure SavePluginErorrs;
+var
+  i: Integer;
+  plugin: TPlugin;
+  json: ISuperObject;
+begin
+  // initialize json
+  json := SO;
+  json.O['plugins'] := SA([]);
+
+  // loop through plugins
+  Tracker.Write('Dumping plugin errors to JSON');
+  for i := 0 to Pred(PluginsList.Count) do begin
+    plugin := PluginsList[i];
+    Tracker.Update(1);
+    if (plugin.errors.Count = 0) then
+      continue;
+    Tracker.Write('  Dumping '+plugin.filename);
+    json.A['plugins'].Add(plugin.ErrorDump);
+  end;
+
+  // save and finalize
+  Tracker.Write(' ');
+  Tracker.Write('Saving to '+wbAppName+'Errors.json');
+  Tracker.Update(1);
+  json.SaveTo(wbAppName + 'Errors.json');
+  json := nil;
+end;
+
+procedure LoadPluginErrors;
+var
+  plugin: TPlugin;
+  obj, pluginItem: ISuperObject;
+  sl: TStringList;
+  fn, hash: string;
+begin
+  // don't load file if it doesn't exist
+  if not FileExists(wbAppName + 'Errors.json') then
+    exit;
+  // load file into SuperObject to parse it
+  sl := TStringList.Create;
+  sl.LoadFromFile(wbAppName + 'Errors.json');
+  obj := SO(PChar(sl.Text));
+
+  // loop through merges
+  for pluginItem in obj['plugins'] do begin
+    fn := pluginItem.AsObject.S['filename'];
+    hash := pluginItem.AsObject.S['hash'];
+    plugin := PluginByFileName(fn);
+    if not Assigned(plugin) then
+      exit;
+    if plugin.hash = hash then begin
+      plugin.LoadErrorDump(pluginItem);
+      plugin.GetFlags;
+    end;
+  end;
+
+  // finalize
+  obj := nil;
+  sl.Free;
+end;
+
 { Comparator for sorting plugins in merge }
 function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
@@ -1629,6 +1886,9 @@ end;
   - TPlugin.GetFlags
   - TPlugin.GetFlagsString
   - TPlugin.GetData
+  - TPlugin.GetHash
+  - TPlugin.GetDataPath
+  - TPlugin.FindErrors
   - TMerge.Create
   - TMerge.Dump
   - TMerge.LoadDump
@@ -1637,7 +1897,6 @@ end;
   - TMerge.FilesExist
   - TMerge.GetStatus
   - TMerge.GetHashes
-  - MergePluginsCompare
   - TMerge.GetLoadOrders
   - TMerge.SortPlugins
   - TEntry.Create
@@ -1661,12 +1920,17 @@ end;
 { Gets the flag values for a TPlugin }
 procedure TPlugin.GetFlags;
 begin
+  flags := [];
   if IsBlacklisted(filename) then begin
     flags := flags + [IS_BLACKLISTED];
     exit;
   end;
-  if errors.Count > 0 then
-    flags := flags + [HAS_ERRORS];
+  if (errors.Count > 0) then begin
+    if (errors[0] = 'None.') then
+      flags := flags + [NO_ERRORS]
+    else
+      flags := flags + [HAS_ERRORS];
+  end;
   if BSAExists(filename) then
     flags := flags + [HAS_BSA];
   if INIExists(filename) then
@@ -1677,18 +1941,36 @@ begin
     flags := flags + [HAS_FACEDATA];
   if VoiceDataExists(filename) then
     flags := flags + [HAS_VOICEDATA];
-  if FragmentsExist(filename) then
+  if FragmentsExist(_File) then
     flags := flags + [HAS_FRAGMENTS];
 end;
 
 { Returns a string representing the flags in a plugin }
 function TPlugin.GetFlagsString: string;
 var
-  flag: TPluginFlag;
+  id: TPluginFlagID;
 begin
   Result := '';
-  for flag in flags do
-     Result := Result + flagChar[Ord(flag) + 1];
+  for id in flags do
+     Result := Result + FlagsArray[Ord(id)].char;
+end;
+
+{ Get a detailed flags description from a flags string @flags }
+function TPlugin.GetFlagsDescription: string;
+var
+  flag: TPluginFlag;
+  id: TPluginFlagId;
+begin
+  Result := '';
+  // result is empty string if flags empty
+  if flags = [] then exit;
+
+  // get flags
+  for id in flags do begin
+    flag := FlagsArray[Ord(id)];
+    Result := Result+'['+flag.char+'] '+flag.desc+#13#10;
+  end;
+  Result := Trim(Result);
 end;
 
 { Fetches data associated with a plugin. }
@@ -1751,15 +2033,45 @@ end;
 { Checks for errors in a plugin }
 procedure TPlugin.FindErrors;
 begin
+  // clear errors, then check
   errors.Clear;
   CheckForErrors(2, _File as IwbElement, errors);
   //CheckForErrorsLinear(_File as IwbElement, _File.Records[_File.RecordCount - 1], errors);
+
   if bProgressCancel then
     exit;
   if (errors.Count = 0) then
-    errors.Add('None.')
-  else
-    flags := flags + [HAS_ERRORS];
+    errors.Add('None.');
+
+  // update flags, statistics
+  GetFlags;
+  Inc(statistics.pluginsChecked);
+end;
+
+function TPlugin.ErrorDump: ISuperObject;
+var
+  obj: ISuperObject;
+  i: integer;
+begin
+  obj := SO;
+
+  // filename, hash, errors
+  obj.S['filename'] := filename;
+  obj.S['hash'] := hash;
+  obj.O['errors'] := SA([]);
+  for i := 0 to Pred(errors.Count) do
+    obj.A['errors'].S[i] := errors[i];
+
+  Result := obj;
+end;
+
+procedure TPlugin.LoadErrorDump(obj: ISuperObject);
+var
+  item: ISuperObject;
+begin
+  errors.Clear;
+  for item in obj['errors'] do
+    errors.Add(item.AsString);
 end;
 
 { TMerge Constructor }
@@ -1980,7 +2292,7 @@ begin
 end;
 
 { Update the hashes list for the plugins in the merge }
-procedure TMerge.GetHashes;
+procedure TMerge.UpdateHashes;
 var
   i: Integer;
   aPlugin: TPlugin;
@@ -2042,7 +2354,7 @@ begin
   end;
 end;
 
-{ TSetting.Create }
+{ TSettings constructor }
 constructor TSettings.Create;
 begin
   language := 'English';
@@ -2171,5 +2483,49 @@ begin
   ini.UpdateFile;
   ini.Free;
 end;
+
+{ TStatistics constructor }
+constructor TStatistics.Create;
+begin
+  timesRun := 0;
+  mergesBuilt := 0;
+  pluginsChecked := 0;
+  pluginsMerged := 0;
+  reportsSubmitted := 0;
+end;
+
+procedure TStatistics.Save(const filename: string);
+var
+  ini: TMemIniFile;
+begin
+  ini := TMemIniFile.Create(filename);
+  ini.WriteInteger('Statistics', 'timesRun', timesRun);
+  ini.WriteInteger('Statistics', 'mergesBuilt', mergesBuilt);
+  ini.WriteInteger('Statistics', 'pluginsChecked', pluginsChecked);
+  ini.WriteInteger('Statistics', 'pluginsMerged', pluginsMerged);
+  ini.WriteInteger('Statistics', 'reportsSubmitted', reportsSubmitted);
+
+  // save file
+  ini.UpdateFile;
+  ini.Free;
+end;
+
+procedure TStatistics.Load(const filename: string);
+var
+  ini: TMemIniFile;
+begin
+  ini := TMemIniFile.Create(filename);
+  timesRun := ini.ReadInteger('Statistics', 'timesRun', 0);
+  mergesBuilt := ini.ReadInteger('Statistics', 'mergesBuilt', 0);
+  pluginsChecked := ini.ReadInteger('Statistics', 'pluginsChecked', 0);
+  pluginsMerged := ini.ReadInteger('Statistics', 'pluginsMerged', 0);
+  reportsSubmitted := ini.ReadInteger('Statistics', 'reportsSubmitted', 0);
+
+  // save file
+  ini.UpdateFile;
+  ini.Free;
+end;
+
+
 
 end.
