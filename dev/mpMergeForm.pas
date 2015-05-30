@@ -80,7 +80,8 @@ type
     procedure AddDetailsList(name: string; sl: TStringList; editable: boolean = false);
     procedure PageControlChange(Sender: TObject);
     procedure UpdateApplicationDetails;
-    procedure DetailsEditorClick(Sender: TObject);
+    procedure DetailsEditorMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     {procedure DetailsEditorSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);}
     // PLUGINS LIST VIEW EVENTS
@@ -467,14 +468,16 @@ begin
 end;
 
 { Handle user clicking URL }
-procedure TMergeForm.DetailsEditorClick(Sender: TObject);
+procedure TMergeForm.DetailsEditorMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
 var
-  pt: TPoint;
   ACol, ARow: integer;
   value: string;
 begin
-  pt := DetailsEditor.ScreenToClient(Mouse.CursorPos);
-  DetailsEditor.MouseToCell(pt.X, pt.Y, ACol, ARow);
+  // only process left clicks
+  if Button <> mbLeft then
+    exit;
+  DetailsEditor.MouseToCell(X, Y, ACol, ARow);
   try
     value := DetailsEditor.Cells[ACol, ARow];
     if Pos(' ', value) > 0 then

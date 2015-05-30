@@ -208,7 +208,7 @@ begin
     aFile := merge.plugin._File;
     // see if unknown 15 flag on refr records always causes exception
     if aRecord.ElementExists['Record Header\Record Flags\Unknown 15'] then
-      Tracker.Write('    ['+IntToHex(aRecord.FormID, 8)+'] Unknown 15 flag set!');
+      Tracker.Write('    ['+aRecord.Signature+':'+IntToHex(aRecord.LoadOrderFormID, 8)+'] Unknown 15 flag set!');
     wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
   except on x : Exception do begin
       Tracker.Write('    Exception copying '+aRecord.Name+': '+x.Message);

@@ -288,7 +288,7 @@ object MergeForm: TMergeForm
       TitleCaptions.Strings = (
         'Name'
         'Value')
-      OnClick = DetailsEditorClick
+      OnMouseUp = DetailsEditorMouseUp
       ColWidths = (
         150
         435)
