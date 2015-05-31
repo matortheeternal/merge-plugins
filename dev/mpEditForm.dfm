@@ -16,7 +16,7 @@ object EditForm: TEditForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poScreenCenter
   OnShow = FormShow
   DesignSize = (
     334

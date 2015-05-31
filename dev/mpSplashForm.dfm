@@ -14,7 +14,7 @@ object SplashForm: TSplashForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poScreenCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -1416,7 +1416,7 @@ object SplashForm: TSplashForm
   object lblVersion: TLabel
     Left = 192
     Top = 35
-    Width = 73
+    Width = 45
     Height = 11
     Caption = 'v2.0.0.136'
     Font.Charset = DEFAULT_CHARSET

@@ -11,7 +11,7 @@ object DictionaryForm: TDictionaryForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poScreenCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -73,8 +73,6 @@ object DictionaryForm: TDictionaryForm
       OnColumnClick = ListView1ColumnClick
       OnData = ListView1Data
       OnDrawItem = ListView1DrawItem
-      ExplicitWidth = 851
-      ExplicitHeight = 673
     end
     object Panel2: TPanel
       Left = 857
@@ -84,8 +82,6 @@ object DictionaryForm: TDictionaryForm
       Align = alRight
       Caption = 'Panel2'
       TabOrder = 1
-      ExplicitLeft = 855
-      ExplicitHeight = 673
       object Panel3: TPanel
         Left = 1
         Top = 1
@@ -128,7 +124,6 @@ object DictionaryForm: TDictionaryForm
         Align = alClient
         Caption = 'Panel4'
         TabOrder = 1
-        ExplicitHeight = 468
         object Label2: TLabel
           Left = 5
           Top = 6
@@ -146,7 +141,6 @@ object DictionaryForm: TDictionaryForm
           ReadOnly = True
           ScrollBars = ssVertical
           TabOrder = 0
-          ExplicitHeight = 439
         end
       end
     end
