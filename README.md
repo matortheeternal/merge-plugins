@@ -2,7 +2,7 @@
 Merge Plugins is a standalone application for merging bethesda plugin files.  This application is still under development and should be considered pre-alpha.  I am not responsible for any damages this application may cause and cannot provide any guarantees on the usefulness or functionality it provides.  This application is purely experimental and is still under active development.
 
 # Compiling
-This project can be compiled with RAD Studio Delphi XE, or newer.  You can download a compiled build from the link below:
+This project can be compiled with RAD Studio Delphi XE, or newer.  You can download a compiled build here:
 [Merge Plugins v2.0.0.136](http://puu.sh/i5APL.zip)
 
 # Usage
@@ -12,4 +12,4 @@ The exectutable will automatically detect load orders for Skyrim, Oblivion, Fall
 Merge Plugins uses the xEdit API, which was designed by zilav, hlp, Sharlikran and ElminsterAU.  Merge Plugins also uses the superobject library for handling json cleanly and efficiently.
 
 # License
-Merge Plugins is licensed under the MPL.  Please see license.txt for more details.
+Merge Plugins is licensed under the MIT license.  Please see license.txt for more details.
