@@ -13,4 +13,4 @@ The exectutable will automatically detect load orders for Skyrim, Oblivion, Fall
 Merge Plugins uses the xEdit API, which was designed by zilav, hlp, Sharlikran and ElminsterAU.  Merge Plugins also uses the superobject library for handling json cleanly and efficiently.
 
 # License
-Merge Plugins is licensed under the MIT license.  Please see license.txt for more details.
+Merge Plugins is licensed under the MPL.  Please see license.txt for more details.
