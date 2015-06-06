@@ -30,6 +30,7 @@ type
   TEntry = class(TObject)
   public
     pluginName: string;
+    hash: string;
     records: string;
     version: string;
     rating: string;

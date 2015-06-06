@@ -1,4 +1,4 @@
-{*******************************************************************************
+﻿{*******************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -30,7 +30,8 @@ uses
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpGameForm in 'mpGameForm.pas' {GameForm},
-  W7Taskbar in 'W7Taskbar.pas';
+  W7Taskbar in 'W7Taskbar.pas',
+  mpReportForm in 'mpReportForm.pas' {Form1};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -74,5 +75,6 @@ begin
   Application.CreateForm(TGameForm, GameForm);
   Application.CreateForm(TOptionsForm, OptionsForm);
   Application.CreateForm(TSplashForm, SplashForm);
+  Application.CreateForm(TReportForm, ReportForm);
   Application.Run;
 end.

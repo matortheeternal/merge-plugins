@@ -11,7 +11,7 @@ uses
   superobject, W7Taskbar,
   // mp units
   mpBase, mpMerge, mpLogger, mpDictionaryForm, mpOptionsForm, mpProgressForm,
-  mpTracker, mpSplashForm, mpEditForm, mpGameForm,
+  mpTracker, mpSplashForm, mpEditForm, mpGameForm, mpReportForm,
   // tes5edit units
   wbBSA, wbHelpers, wbInterface, wbImplementation;
 
@@ -1388,23 +1388,35 @@ end;
 
 procedure TMergeForm.ReportOnMergeItemClick(Sender: TObject);
 var
-  i: Integer;
+  i, j: Integer;
   merge: TMerge;
-  merges: TList;
+  pluginsList: TList;
+  plugin: TPlugin;
+  ReportForm: TReportForm;
 begin
-  merges := TList.Create;
+  pluginsList := TList.Create;
 
   // loop through merges
   for i := 0 to Pred(MergeListView.Items.Count) do begin
     if not MergeListView.Items[i].Selected then
       continue;
     merge := TMerge(MergesList[i]);
-    merges.Add(merge);
+    for j := 0 to Pred(merge.plugins.Count) do begin
+      plugin := PluginByFilename(merge.plugins[j]);
+      pluginsList.Add(plugin);
+    end;
   end;
 
   // report on all merges
-  //Report(merges);
-  merges.Free;
+  ReportForm := TReportForm.Create(Self);
+  if pluginsList.Count > 0 then begin
+    ReportForm.pluginsList := pluginsList;
+    ReportForm.ShowModal;
+  end;
+
+  // clean up
+  ReportForm.Free;
+  pluginsList.Free;
 end;
 
 procedure TMergeForm.OpenInExplorerItemClick(Sender: TObject);
