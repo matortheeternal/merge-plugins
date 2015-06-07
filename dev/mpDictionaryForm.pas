@@ -9,29 +9,52 @@ uses
 
 type
   TDictionaryForm = class(TForm)
-    ListView1: TListView;
-    Memo1: TMemo;
-    Splitter1: TSplitter;
-    Panel1: TPanel;
-    Panel2: TPanel;
-    Panel3: TPanel;
-    ValueListEditor1: TValueListEditor;
-    Panel4: TPanel;
-    Label1: TLabel;
-    Label2: TLabel;
+    lvEntries: TListView;
+    meNotes: TMemo;
+    Splitter: TSplitter;
+    pnlEntries: TPanel;
+    pnlDetails: TPanel;
+    pnlDictionaryInfo: TPanel;
+    vl: TValueListEditor;
+    pnlReportNotes: TPanel;
+    lblDictionary: TLabel;
+    lblNotes: TLabel;
+    gbFiltering: TGroupBox;
+    lblFilename: TLabel;
+    edFilename: TEdit;
+    lblRecords: TLabel;
+    cbVersion: TComboBox;
+    edRating: TEdit;
+    lblVersion: TLabel;
+    cbReports: TComboBox;
+    edRecords: TEdit;
+    lblRating: TLabel;
+    cbRecords: TComboBox;
+    edVersion: TEdit;
+    edReports: TEdit;
+    cbRating: TComboBox;
+    lblReports: TLabel;
     procedure FormCreate(Sender: TObject);
-    procedure ListView1Change(Sender: TObject; Item: TListItem;
+    procedure FormShow(Sender: TObject);
+    procedure lvEntriesChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
-    procedure ListView1Data(Sender: TObject; Item: TListItem);
-    procedure ValueListEditor1DrawCell(Sender: TObject; ACol, ARow: Integer;
+    procedure lvEntriesData(Sender: TObject; Item: TListItem);
+    procedure vlDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
-    procedure ListView1ColumnClick(Sender: TObject; Column: TListColumn);
-    procedure ListView1DrawItem(Sender: TCustomListView; Item: TListItem;
+    procedure lvEntriesColumnClick(Sender: TObject; Column: TListColumn);
+    procedure lvEntriesDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
+    function MatchesFilters(entry: TEntry): boolean;
+    procedure ApplyFiltering;
+    procedure cbChange(Sender: TObject);
+    procedure edExit(Sender: TObject);
+    procedure edKeyPress(Sender: TObject; var Key: Char);
+    procedure SplitterMoved(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
+    FilterFilename: string;
   end;
 
 const
@@ -43,22 +66,13 @@ var
   DictionaryForm: TDictionaryForm;
   columnToSort: integer;
   ascending: boolean;
+  tempDictionary: TList;
 
 implementation
 
 {$R *.dfm}
 
-procedure TDictionaryForm.ValueListEditor1DrawCell(Sender: TObject; ACol, ARow: Integer;
-      Rect: TRect; State: TGridDrawState);
-begin
-  ValueListEditor1.Canvas.Brush.Color := clWhite;
-  ValueListEditor1.Canvas.FillRect(Rect);
-  Rect.Left := Rect.Left + 2;
-  DrawText(ValueListEditor1.Canvas.Handle,
-    PChar(ValueListEditor1.Cells[aCol, ARow]), -1, Rect,
-    DT_SINGLELINE or DT_LEFT OR DT_VCENTER or DT_NOPREFIX);
-end;
-
+// returns the number of unique plugins in a dictionary
 function PluginCount(var list: TList): integer;
 var
   i: Integer;
@@ -70,12 +84,13 @@ begin
   sl.Duplicates := dupIgnore;
   for i := 0 to Pred(list.Count) do begin
     entry := TEntry(list[i]);
-    sl.Add(entry.pluginName);
+    sl.Add(entry.filename);
   end;
   Result := sl.Count;
   sl.Free;
 end;
 
+// return the number of reports in a dictionary
 function ReportCount(var list: TList): integer;
 var
   i: Integer;
@@ -89,40 +104,63 @@ begin
 end;
 
 procedure TDictionaryForm.FormCreate(Sender: TObject);
-var
-  s: string;
 begin
-  // initialize listview
+  // initialize list view, dictionary list
+  tempDictionary := TList.Create;
   columnToSort := -1;
-  ListView1.OwnerDraw := not settings.simpleDictionaryView;
-  ListView1.Items.Count := dictionary.Count;
+  lvEntries.OwnerDraw := not settings.simpleDictionaryView;
+  lvEntries.Items.Count := tempDictionary.Count;
 
-  // read dictionary details
-  ValueListEditor1.InsertRow('Filename', dictionaryFilename, true);
-  s := FormatByteSize(GetFileSize(dictionaryFilename));
-  ValueListEditor1.InsertRow('File size', s, true);
-  s := DateTimeToStr(GetLastModified('dictionary.txt'));
-  ValueListEditor1.InsertRow('Date modified', s, true);
-  s := IntToStr(dictionary.Count);
-  ValueListEditor1.InsertRow('Number of entries', s, true);
-  s := IntToStr(PluginCount(dictionary));
-  ValueListEditor1.InsertRow('Number of plugins', s, true);
-  s := IntToStr(ReportCount(dictionary));
-  ValueListEditor1.InsertRow('Number of reports', s, true);
-  s := IntToStr(blacklist.Count);
-  ValueListEditor1.InsertRow('Blacklist size', s, true);
+  // initialize dictionary details
+  vl.InsertRow('Filename', dictionaryFilename, true);
+  vl.InsertRow('File size', FormatByteSize(GetFileSize(dictionaryFilename)), true);
+  vl.InsertRow('Date modified', DateTimeToStr(GetLastModified(dictionaryFilename)), true);
+  vl.InsertRow('Number of entries', IntToStr(dictionary.Count), true);
+  vl.InsertRow('Number of plugins', IntToStr(PluginCount(dictionary)), true);
+  vl.InsertRow('Number of reports', IntToStr(ReportCount(dictionary)), true);
+  vl.InsertRow('Blacklist size', IntToStr(blacklist.Count), true);
+
+  // autosize filename column
+  lvEntries.Columns[0].AutoSize := true;
 end;
 
-procedure TDictionaryForm.ListView1Change(Sender: TObject; Item: TListItem;
+procedure TDictionaryForm.FormShow(Sender: TObject);
+begin
+  // initialize list of entries
+  edFilename.Text := FilterFilename;
+  if FilterFilename <> '' then
+    Self.FocusControl(lvEntries);
+  ApplyFiltering;
+
+// force lvEntries to autosize columns
+  lvEntries.Width := lvEntries.Width - 1;
+  lvEntries.Width := lvEntries.Width + 1;
+end;
+
+// custom ValueListEditor draw for unselectable cells
+procedure TDictionaryForm.vlDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+begin
+  vl.Canvas.Brush.Color := clWhite;
+  vl.Canvas.FillRect(Rect);
+  Rect.Left := Rect.Left + 2;
+  DrawText(vl.Canvas.Handle, PChar(vl.Cells[aCol, ARow]), -1, Rect,
+    DT_SINGLELINE or DT_LEFT OR DT_VCENTER or DT_NOPREFIX);
+end;
+
+// update meNotes when user changes entry
+procedure TDictionaryForm.lvEntriesChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 var
   entry: TEntry;
 begin
-  if ListView1.ItemIndex = -1 then
+  if lvEntries.ItemIndex = -1 then begin
+    meNotes.Text := '';
     exit;
+  end;
 
-  entry := TEntry(dictionary[ListView1.ItemIndex]);
-  Memo1.Text := StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]);
+  entry := TEntry(tempDictionary[lvEntries.ItemIndex]);
+  meNotes.Text := StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]);
 end;
 
 function CompareAsFloat(s1, s2: string): Integer;
@@ -157,7 +195,7 @@ begin
   entry2 := TEntry(P2);
 
   if columnToSort = 0 then
-    Result := AnsiCompareText(entry1.pluginName, entry2.pluginName)
+    Result := AnsiCompareText(entry1.filename, entry2.filename)
   else if columnToSort = 1 then
     Result := StrToInt(entry1.records) - StrToInt(entry2.records)
   else if columnToSort = 2 then
@@ -171,31 +209,31 @@ begin
     Result := -Result;
 end;
 
-procedure TDictionaryForm.ListView1ColumnClick(Sender: TObject;
+procedure TDictionaryForm.lvEntriesColumnClick(Sender: TObject;
   Column: TListColumn);
 begin
   ascending := (columnToSort = Column.Index) and (not ascending);
   columnToSort := Column.Index;
-  dictionary.Sort(CompareEntries);
-  ListView1.Repaint;
-  ListView1Change(nil, nil, TItemChange(nil));
+  tempDictionary.Sort(CompareEntries);
+  lvEntries.Repaint;
+  lvEntriesChange(nil, nil, TItemChange(nil));
 end;
 
-procedure TDictionaryForm.ListView1Data(Sender: TObject; Item: TListItem);
+procedure TDictionaryForm.lvEntriesData(Sender: TObject; Item: TListItem);
 var
   entry: TEntry;
 begin
-  entry := TEntry(dictionary[Item.Index]);
-  Item.Caption := entry.pluginName;
+  entry := TEntry(tempDictionary[Item.Index]);
+  Item.Caption := entry.filename;
   Item.SubItems.Add(entry.records);
   Item.SubItems.Add(entry.version);
   Item.SubItems.Add(entry.rating);
   Item.SubItems.Add(entry.reports);
-  ListView1.Canvas.Font.Color := GetRatingColor(StrToFloat(entry.rating));
-  ListView1.Canvas.Font.Style := ListView1.Canvas.Font.Style + [fsBold];
+  lvEntries.Canvas.Font.Color := GetRatingColor(StrToFloat(entry.rating));
+  lvEntries.Canvas.Font.Style := [fsBold];
 end;
 
-procedure TDictionaryForm.ListView1DrawItem(Sender: TCustomListView;
+procedure TDictionaryForm.lvEntriesDrawItem(Sender: TCustomListView;
   Item: TListItem; Rect: TRect; State: TOwnerDrawState);
 var
   i, x, y: integer;
@@ -212,6 +250,109 @@ begin
   for i := 0 to Item.SubItems.Count - 1 do begin
     Inc(x, ListView_GetColumnWidth(lv.Handle, lv.Columns[i].Index));
     lv.Canvas.TextOut(x, y, ' '+Item.SubItems[i]);
+  end;
+end;
+
+{******************************************************************************}
+{ Filtering methods:
+  Methods for filtering the dictionary.
+  - IsNumericMatch
+  - MatchesFilters
+  - ApplyFilter
+  - cbChange
+  - edExit
+  - edKeyDown
+}
+{******************************************************************************}
+
+// evaluates whether @val @op @req is true.  E.g 130 > 100, or 1.75 = 1.75
+function IsNumericMatch(op, req, val: string): boolean;
+var
+  f1, f2: Real;
+  bGreater, bLess, bEqual: boolean;
+begin
+  try
+    f1 := StrToFloat(req);
+    f2 := StrToFloat(val);
+    bGreater := (op = '>') and (f2 > f1);
+    bLess := (op = '<') and (f2 < f1);
+    bEqual := (op = '=') and (f2 = f1);
+    Result := bGreater or bLess or bEqual;
+  except on Exception do
+    Result := true;
+  end;
+end;
+
+function TDictionaryForm.MatchesFilters(entry: TEntry): boolean;
+var
+  bFilenameMatch, bRecordsMatch, bVersionMatch, bRatingMatch, bReportsMatch: boolean;
+begin
+  // get filter results
+  bFilenameMatch := (Length(Trim(edFilename.Text)) = 0)
+    or (Pos(Lowercase(edFilename.Text), Lowercase(entry.filename)) > 0);
+  bRecordsMatch := (Length(Trim(edRecords.Text)) = 0)
+    or IsNumericMatch(cbRecords.Text, edRecords.Text, entry.records);
+  bVersionMatch := (Length(Trim(edVersion.Text)) = 0)
+    or IsNumericMatch(cbVersion.Text, edVersion.Text, entry.version);
+  bRatingMatch := (Length(Trim(edRating.Text)) = 0)
+    or IsNumericMatch(cbRating.Text, edRating.Text, entry.rating);
+  bReportsMatch := (Length(Trim(edReports.Text)) = 0)
+    or IsNumericMatch(cbReports.Text, edReports.Text, entry.reports);
+  // must match all filters
+  Result := bFilenameMatch and bRecordsMatch and bVersionMatch
+    and bRatingMatch and bReportsMatch;
+end;
+
+// repaint when splitter is moved
+procedure TDictionaryForm.SplitterMoved(Sender: TObject);
+begin
+  Self.Repaint;
+end;
+
+procedure TDictionaryForm.ApplyFiltering;
+var
+  i: Integer;
+  entry: TEntry;
+begin
+  // prepare to change the entries displayed
+  lvEntries.Items.Count := 0;
+  tempDictionary.Clear;
+
+  // loop through the dictionary and add
+  for i := 0 to Pred(dictionary.Count) do begin
+    entry := TEntry(dictionary[i]);
+    if MatchesFilters(entry) then
+      TempDictionary.Add(entry);
+  end;
+
+  // sort after filtering
+  tempDictionary.Sort(CompareEntries);
+
+  // update entries count and repaint
+  lvEntries.Items.Count := tempDictionary.Count;
+  //Logger.Write(IntToStr(tempDictionary.Count) + ' entries found!');
+  lvEntriesChange(nil, nil, TItemChange(nil));
+  lvEntries.Repaint;
+end;
+
+// re-filter when the user changes a filter TComboBox
+procedure TDictionaryForm.cbChange(Sender: TObject);
+begin
+  ApplyFiltering;
+end;
+
+// re-filter when the user exits a filter TEdit
+procedure TDictionaryForm.edExit(Sender: TObject);
+begin
+  ApplyFiltering;
+end;
+
+// re-filter when the user presses enter in a filter TEdit
+procedure TDictionaryForm.edKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then begin
+    ApplyFiltering;
+    Key := #0;
   end;
 end;
 

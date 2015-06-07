@@ -29,7 +29,7 @@ type
   end;
   TEntry = class(TObject)
   public
-    pluginName: string;
+    filename: string;
     hash: string;
     records: string;
     version: string;
@@ -1581,7 +1581,7 @@ begin
   Result := TEntry.Create;
   for i := 0 to Pred(dictionary.Count) do begin
     entry := TEntry(dictionary[i]);
-    if entry.pluginName = pluginName then begin
+    if entry.filename = pluginName then begin
       Result := entry;
       exit;
     end;
@@ -1596,7 +1596,7 @@ begin
   Result := false;
   for i := 0 to Pred(blacklist.Count) do begin
     entry := TEntry(blacklist[i]);
-    if entry.pluginName = filename then begin
+    if entry.filename = filename then begin
       Result := true;
       break;
     end;
@@ -2328,6 +2328,7 @@ end;
 { TEntry Constructor }
 constructor TEntry.Create;
 begin
+  reports := '0';
   rating := 'No rating';
 end;
 
@@ -2340,7 +2341,7 @@ begin
   for i := 1 to Length(s) do begin
     if s[i] = ';' then begin
       if ct = 0 then
-        pluginName := Copy(s, lastIndex, i - lastIndex)
+        filename := Copy(s, lastIndex, i - lastIndex)
       else if ct = 1 then
         records := Copy(s, lastIndex, i - lastIndex)
       else if ct = 2 then

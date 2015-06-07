@@ -318,6 +318,7 @@ begin
   end;
 end;
 
+// Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
   // START BACKGROUND LOADER
@@ -342,7 +343,6 @@ begin
   UpdateMerges;
 end;
 
-// Force PluginsListView to autosize columns
 procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   ProgressForm: TProgressForm;
