@@ -62,6 +62,8 @@ type
     kbDebugTempPath: TCheckBox;
     kbDebugLoadOrder: TCheckBox;
     kbINIs: TCheckBox;
+    btnRegister: TButton;
+    lblStatus: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -69,6 +71,8 @@ type
     procedure kbUsingMOClick(Sender: TObject);
     procedure btnDetectClick(Sender: TObject);
     procedure btnUpdateGameModeClick(Sender: TObject);
+    procedure edUsernameChange(Sender: TObject);
+    procedure btnRegisterClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -204,7 +208,49 @@ begin
   settings.debugBSAs := kbDebugBSAs.Checked;
   settings.debugTempPath := kbDebugTempPath.Checked;
   settings.debugLoadOrder := kbDebugLoadOrder.Checked;
-  settings.Save('settings.ini');
+  SaveSettings;
+end;
+
+procedure TOptionsForm.btnRegisterClick(Sender: TObject);
+begin
+  if not TCPClient.Connected then begin
+    lblStatus.Caption := 'Server unavailable';
+    lblStatus.Font.Color := clRed;
+    lblStatus.Hint := 'Sorry, the server is unavailable, try again later.';
+    btnRegister.Enabled := false;
+    exit;
+  end;
+
+  if (btnRegister.Caption = 'Register') then begin
+    settings.username := edUsername.Text;
+    if RegisterUser then begin
+      settings.registered := true;
+      SaveSettings;
+      lblStatus.Caption := 'Registered';
+      lblStatus.Font.Color := clGreen;
+      lblStatus.Hint := '';
+      edUsername.Enabled := false;
+      btnRegister.Enabled := false;
+    end
+    else begin
+      lblStatus.Caption := 'Failed to register';
+      lblStatus.Font.Color := clRed;
+      lblStatus.Hint := 'Oops.  Something went wrong.  o_o';
+    end;
+  end
+  else begin
+    if UsernameAvailable then begin
+      lblStatus.Caption := 'Username available!';
+      lblStatus.Font.Color := clBlue;
+      lblStatus.Hint := 'Click register to claim it.';
+      btnRegister.Caption := 'Register';
+    end
+    else begin
+      lblStatus.Caption := 'Username unavailable, sorry';
+      lblStatus.Font.Color := clRed;
+      lblStatus.Hint := 'Someone beat ya to it, try another.';
+    end;
+  end;
 end;
 
 procedure TOptionsForm.btnUpdateGameModeClick(Sender: TObject);
@@ -212,6 +258,32 @@ begin
   bChangeGameMode := true;
   btnOKClick(nil);
   Close;
+end;
+
+procedure TOptionsForm.edUsernameChange(Sender: TObject);
+begin
+  if not TCPClient.Connected then begin
+    lblStatus.Caption := 'Server unavailable';
+    lblStatus.Font.Color := clRed;
+    lblStatus.Hint := 'Sorry, the server is unavailable, try again later.';
+    btnRegister.Enabled := false;
+    exit;
+  end;
+
+  btnRegister.Caption := 'Check';
+  if Length(edUsername.Text) < 4 then begin
+    lblStatus.Caption := 'Invalid username';
+    lblStatus.Font.Color := clRed;
+    lblStatus.Hint := 'Username must be 4 or more characters.';
+    btnRegister.Enabled := false;
+  end
+  else begin
+    lblStatus.Caption := 'Valid, is it available?';
+    lblStatus.Font.Color := clBlack;
+    lblStatus.Hint := 'Click the check button to check if '#13+
+      'the username is available';
+    btnRegister.Enabled := true;
+  end;
 end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);
@@ -265,6 +337,15 @@ begin
 
   // disable controls if not using mod organizer
   kbUsingMOClick(nil);
+
+  // if already registered, lock registering controls
+  if settings.registered then begin
+    edUsername.Enabled := false;
+    btnRegister.Enabled := false;
+    lblStatus.Caption := 'Registered.';
+    lblStatus.Font.Color := clGreen;
+    lblStatus.Hint := '';
+  end;
 
   // set up buttons
   btnBrowseMO.Flat := true;

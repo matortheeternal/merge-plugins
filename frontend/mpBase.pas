@@ -5,16 +5,45 @@ interface
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
   Controls, Registry,
+  // indy components
+  IdTCPClient, IdGlobal,
+  // superobject json library
   superobject,
+  // mp components
   mpLogger, mpTracker,
-  wbBSA,
-  wbHelpers,
-  wbInterface,
-  wbImplementation,
+  // xEdit components
+  wbBSA, wbHelpers, wbInterface, wbImplementation,
   wbDefinitionsFNV, wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4,
   wbDefinitionsTES5;
 
 type
+  TmpMessage = class(TObject)
+  public
+    id: integer;
+    username: string;
+    auth: string;
+    data: string;
+    constructor Create(id: integer; username, auth, data: string); Overload;
+    function ToJson: string;
+    procedure FromJson(json: string);
+  end;
+  TReport = class(TObject)
+  public
+    game: string;
+    username: string;
+    filename: string;
+    hash: string;
+    recordCount: integer;
+    rating: integer;
+    mergeVersion: string;
+    notes: TStringList;
+    dateSubmitted: TDateTime;
+    constructor Create; Overload;
+    function ToJson: string;
+    procedure FromJson(json: string);
+    procedure Save(const filename: string);
+    procedure Load(const filename: string);
+  end;
   TCallback = procedure of object;
   TLoaderThread = class(TThread)
   protected
@@ -120,6 +149,8 @@ type
     tes4path: string;
     fo3path: string;
     username: string;
+    key: string;
+    registered: boolean;
     saveReportsLocally: boolean;
     simpleDictionaryView: boolean;
     simplePluginsView: boolean;
@@ -149,6 +180,7 @@ type
     constructor Create; virtual;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
+    procedure GenerateKey;
   end;
   TStatistics = class(TObject)
   public
@@ -190,6 +222,8 @@ type
   function csvText(s: string): string;
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
+  function DateTimeToSQL(date: TDateTime): string;
+  function SQLToDateTime(date: string): TDateTime;
   function AppendIfMissing(str, substr: string): string;
   function StrEndsWith(s1, s2: string): boolean;
   function RemoveFromEnd(s1, s2: string): string;
@@ -218,12 +252,15 @@ type
   function GetModContainingFile(var modlist: TStringList; filename: string): string;
   { Dictionary and Settings methods }
   procedure LoadSettings;
+  procedure SaveSettings;
   procedure LoadStatistics;
+  procedure SaveStatistics;
   procedure LoadDictionary;
   function GetRatingColor(rating: real): integer;
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
-  { Plugin and Merge methods }
+  procedure SaveReports(var lst: TList; path: string);
+  { Plugin and merge methods }
   function PluginLoadOrder(filename: string): integer;
   function PluginByFilename(filename: string): TPlugin;
   function MergeByName(merges: TList; name: string): TMerge;
@@ -235,6 +272,13 @@ type
   procedure SavePluginErorrs;
   procedure LoadPluginErrors;
   function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
+  { Client methods }
+  procedure InitializeClient;
+  procedure ConnectToServer;
+  function UsernameAvailable: boolean;
+  function RegisterUser: boolean;
+  function SendReports(var lst: TList): boolean;
+
 
 const
   // IMPORTANT CONSTANTS
@@ -243,6 +287,15 @@ const
     'Thalioden, zilav';
   ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
   xEditVersion = '3.1.1';
+
+  // MSG IDs
+  MSG_NOTIFY = 0;
+  MSG_REGISTER = 1;
+  MSG_AUTH_RESET = 2;
+  MSG_STATISTICS = 3;
+  MSG_STATUS = 4;
+  MSG_REQUEST = 5;
+  MSG_REPORT = 6;
 
   // PLUGIN FLAGS
   FlagsArray: array[0..8] of TPluginFlag = (
@@ -300,6 +353,7 @@ var
   tempPath, logPath, dictionaryFilename, ActiveProfile: string;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
+  TCPClient: TidTCPClient;
 
 implementation
 
@@ -904,6 +958,23 @@ begin
   end;
 end;
 
+function DateTimeToSQL(date: TDateTime): string;
+begin
+  Result := FormatDateTime('yyyy-mm-dd hh:mm:ss', date);
+end;
+
+function SQLToDateTime(date: string): TDateTime;
+var
+  fs: TFormatSettings;
+begin
+  GetLocaleFormatSettings(GetThreadLocale, fs);
+  fs.DateSeparator := '-';
+  fs.ShortDateFormat := 'yyyy-mm-dd';
+  fs.TimeSeparator := ':';
+  fs.LongTimeFormat := 'hh:nn:ss';
+  Result := StrToDateTime(date, fs);
+end;
+
 {
   AppendIfMissing:
   Appends substr to the end of str if it's not already there.
@@ -1485,11 +1556,12 @@ end;
 
 
 {******************************************************************************}
-{ Dictionary and Settings methods
+{ Dictionary, Settings, and Statistics methods
   Set of methods for managing the dictionary.
 
   List of methods:
   - LoadSettings
+  - LoadStatistics
   - LoadDictionary
   - GetRatingColor
   - GetRating
@@ -1501,13 +1573,23 @@ end;
 procedure LoadSettings;
 begin
   settings := TSettings.Create;
-  settings.Load('settings.ini');
+  settings.Load('user\settings.ini');
+end;
+
+procedure SaveSettings;
+begin
+  settings.Save('user\settings.ini');
 end;
 
 procedure LoadStatistics;
 begin
   statistics := TStatistics.Create;
-  statistics.Load('statistics.ini');
+  statistics.Load('user\statistics.ini');
+end;
+
+procedure SaveStatistics;
+begin
+  statistics.Save('user\statistics.ini');
 end;
 
 procedure LoadDictionary;
@@ -1602,6 +1684,19 @@ begin
     end;
   end;
 end;
+
+procedure SaveReports(var lst: TList; path: string);
+var
+  i: Integer;
+  report: TReport;
+begin
+  for i := 0 to Pred(lst.Count) do begin
+    report := TReport(lst[i]);
+    report.dateSubmitted := Now;
+    report.Save(path+ChangeFileExt(report.filename, '.txt'));
+  end;
+end;
+
 
 {******************************************************************************}
 { Plugin and Merge methods
@@ -1750,6 +1845,7 @@ var
   i: Integer;
   merge: TMerge;
   json: ISuperObject;
+  filename: string;
 begin
   // initialize json
   json := SO;
@@ -1765,10 +1861,11 @@ begin
   end;
 
   // save and finalize
+  filename := 'user\' + wbAppName + 'Merges.json';
   Tracker.Write(' ');
-  Tracker.Write('Saving to '+wbAppName+'Merges.json');
+  Tracker.Write('Saving to ' + filename);
   Tracker.Update(1);
-  json.SaveTo(wbAppName + 'Merges.json');
+  json.SaveTo(filename);
   json := nil;
 end;
 
@@ -1781,13 +1878,15 @@ var
   obj, mergeItem: ISuperObject;
   sl: TStringList;
   i: Integer;
+  filename: string;
 begin
   // don't load file if it doesn't exist
-  if not FileExists(wbAppName + 'Merges.json') then
+  filename := 'user\' + wbAppName + 'Merges.json';
+  if not FileExists(filename) then
     exit;
   // load file into SuperObject to parse it
   sl := TStringList.Create;
-  sl.LoadFromFile(wbAppName + 'Merges.json');
+  sl.LoadFromFile(filename);
   obj := SO(PChar(sl.Text));
 
   // loop through merges
@@ -1812,6 +1911,7 @@ var
   i: Integer;
   plugin: TPlugin;
   json: ISuperObject;
+  filename: string;
 begin
   // initialize json
   json := SO;
@@ -1830,9 +1930,10 @@ begin
 
   // save and finalize
   Tracker.Write(' ');
-  Tracker.Write('Saving to '+wbAppName+'Errors.json');
+  filename := 'user\' + wbAppName + 'Errors.json';
+  Tracker.Write('Saving to '+filename);
   Tracker.Update(1);
-  json.SaveTo(wbAppName + 'Errors.json');
+  json.SaveTo(filename);
   json := nil;
 end;
 
@@ -1841,21 +1942,23 @@ var
   plugin: TPlugin;
   obj, pluginItem: ISuperObject;
   sl: TStringList;
-  fn, hash: string;
+  filename, hash: string;
 begin
   // don't load file if it doesn't exist
-  if not FileExists(wbAppName + 'Errors.json') then
+  filename := 'user\' + wbAppName + 'Errors.json';
+  if not FileExists(filename) then
     exit;
   // load file into SuperObject to parse it
   sl := TStringList.Create;
-  sl.LoadFromFile(wbAppName + 'Errors.json');
+  sl.LoadFromFile(filename);
   obj := SO(PChar(sl.Text));
 
   // loop through merges
+  filename := '';
   for pluginItem in obj['plugins'] do begin
-    fn := pluginItem.AsObject.S['filename'];
+    filename := pluginItem.AsObject.S['filename'];
     hash := pluginItem.AsObject.S['hash'];
-    plugin := PluginByFileName(fn);
+    plugin := PluginByFileName(filename);
     if not Assigned(plugin) then
       exit;
     if plugin.hash = hash then begin
@@ -1881,10 +1984,140 @@ end;
 
 
 {******************************************************************************}
+{ Client methods
+  Set of methods for communicating with the Merge Plugins server.
+  - InitializeClient
+  - TCPClient.Connected
+  - UsernameAvailable
+  - RegisterUser
+  - SaveReports
+  - SendReports
+}
+{******************************************************************************}
+
+procedure InitializeClient;
+begin
+  TCPClient := TidTCPClient.Create(nil);
+  TCPClient.Host := '127.0.0.1';
+  TCPClient.Port := 950;
+  TCPClient.ReadTimeout := 5000;
+  TCPClient.ConnectTimeout := 5000;
+end;
+
+procedure ConnectToServer;
+begin
+  try
+    TCPClient.Connect;
+  except on Exception do
+    Logger.Write('Server unavailable.');
+  end;
+end;
+
+function UsernameAvailable: boolean;
+var
+  msg, response: TmpMessage;
+  msgJson, line: string;
+begin
+  Result := false;
+  Logger.Write('Checking username availability: '+settings.username);
+
+  // attempt to register user
+  // throws exception if server is unavailable
+  try
+    // send register request to server
+    msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, 'Check');
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    response := TmpMessage.Create;
+    response.FromJson(line);
+    Logger.Write('  Response: '+response.data);
+    Result := response.data = 'Available';
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception checking username: '+x.Message);
+    end;
+  end;
+end;
+
+function RegisterUser: boolean;
+var
+  msg, response: TmpMessage;
+  msgJson, line: string;
+begin
+  Result := false;
+  Logger.Write('Registering username: '+settings.username);
+
+  // attempt to register user
+  // throws exception if server is unavailable
+  try
+    // send register request to server
+    msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, '');
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    response := TmpMessage.Create;
+    response.FromJson(line);
+    Logger.Write('  Response: '+response.data);
+    Result := response.data = ('Registered ' + settings.username);
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception registering username: '+x.Message);
+    end;
+  end;
+end;
+
+function SendReports(var lst: TList): boolean;
+var
+  i: integer;
+  report: TReport;
+  msg, response: TmpMessage;
+  reportJson, msgJson, LLine: string;
+begin
+  Result := false;
+
+  // attempt to send reports
+  // throws exception if server is unavailable
+  try
+    // send all reports in @lst
+    for i := 0 to Pred(lst.Count) do begin
+      report := TReport(lst[i]);
+      reportJson := report.ToJson;
+      Logger.Write('Sending report: '+report.filename);
+
+      // send report to server
+      msg := TmpMessage.Create(MSG_REPORT, settings.username, settings.key, reportJson);
+      msgJson := msg.ToJson;
+      TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+      // get response
+      LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+      response := TmpMessage.Create;
+      response.FromJson(LLine);
+      Logger.Write('  Response: '+response.data);
+      Inc(statistics.reportsSubmitted);
+    end;
+    Result := true;
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception sending reports: '+x.Message);
+    end;
+  end;
+end;
+
+
+{******************************************************************************}
 { Object methods
   Set of methods for objects TMerge and TPlugin
 
   List of methods:
+  - TmpMessage.Create
+  - TReport.Create
+  - TReport.ToJson
   - TPlugin.Create
   - TPlugin.GetFlags
   - TPlugin.GetFlagsString
@@ -1909,7 +2142,109 @@ end;
 }
 {******************************************************************************}
 
+{ TmpMessage Constructor }
+Constructor TmpMessage.Create(id: integer; username, auth, data: string);
+begin
+  self.id := id;
+  self.username := username;
+  self.auth := auth;
+  self.data := data;
+end;
 
+{ TmpMessage to json string }
+function TmpMessage.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO;
+
+  // filename, hash, errors
+  obj.I['id'] := id;
+  obj.S['username'] := username;
+  obj.S['auth'] := auth;
+  obj.S['data'] := data;
+
+  Result := obj.AsJSon;
+end;
+
+{ Json string to TmpMessage }
+procedure TmpMessage.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  id := obj.I['id'];
+  username := obj.S['username'];
+  auth := obj.S['auth'];
+  data := obj.S['data'];
+end;
+
+{ TReport Constructor }
+constructor TReport.Create;
+begin
+  notes := TStringList.Create;
+end;
+
+{ TReport to json string }
+function TReport.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO;
+
+  obj.S['game'] := game;
+  obj.S['username'] := username;
+  obj.S['filename'] := filename;
+  obj.S['hash'] := hash;
+  obj.I['recordCount'] := recordCount;
+  obj.I['rating'] := rating;
+  obj.S['mergeVersion'] := mergeVersion;
+  obj.S['notes'] := StringReplace(notes.Text, #13#10, '@13', [rfReplaceAll]);
+  obj.S['dateSubmitted'] := DateTimeToSQL(dateSubmitted);
+
+  Result := obj.AsJSon;
+end;
+
+{ Json string to TReport }
+procedure TReport.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  game := obj.S['game'];
+  username := obj.S['username'];
+  filename := obj.S['filename'];
+  hash := obj.S['hash'];
+  recordCount := obj.I['recordCount'];
+  rating := obj.I['rating'];
+  mergeVersion := obj.S['mergeVersion'];
+  notes.Text := obj.S['notes'];
+  dateSubmitted := SQLToDateTime(obj.S['dateSubmitted']);
+end;
+
+procedure TReport.Save(const filename: string);
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  sl.Text := ToJson;
+  sl.SaveToFile(filename);
+  sl.Free;
+end;
+
+procedure TReport.Load(const filename: string);
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  sl.LoadFromFile(filename);
+  FromJson(sl.Text);
+  sl.Free;
+end;
+
+{ TPlugin Constructor }
 constructor TPlugin.Create;
 begin
   hasData := false;
@@ -2376,6 +2711,9 @@ begin
   handleScriptFragments := false;
   extractBSAs := false;
   buildMergedBSA := false;
+
+  // generate a new secure key
+  GenerateKey;
 end;
 
 procedure TSettings.Save(const filename: string);
@@ -2394,6 +2732,8 @@ begin
   ini.WriteString('General', 'tes4path', tes4path);
   ini.WriteString('General', 'fo3path', fo3path);
   ini.WriteString('General', 'username', username);
+  ini.WriteString('General', 'key', key);
+  ini.WriteBool('General', 'registered', registered);
   ini.WriteBool('General', 'saveReportsLocally', saveReportsLocally);
   ini.WriteBool('General', 'simpleDictionaryView', simpleDictionaryView);
   ini.WriteBool('General', 'simplePluginsView', simplePluginsView);
@@ -2450,6 +2790,8 @@ begin
   tes4path := ini.ReadString('General', 'tes4path', '');
   fo3path := ini.ReadString('General', 'fo3path', '');
   username := ini.ReadString('General', 'username', '');
+  key := ini.ReadString('General', 'key', key);
+  registered := ini.ReadBool('General', 'registered', false);
   saveReportsLocally := ini.ReadBool('General', 'saveReportsLocally', false);
   simpleDictionaryView := ini.ReadBool('General', 'simpleDictionaryView', false);
   simplePluginsView := ini.ReadBool('General', 'simplePluginsView', false);
@@ -2486,6 +2828,17 @@ begin
   // save file
   ini.UpdateFile;
   ini.Free;
+end;
+
+procedure TSettings.GenerateKey;
+const
+  chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+var
+  i: Integer;
+begin
+  key := '';
+  for i := 0 to 31 do
+    key := key + chars[Random(64)];
 end;
 
 { TStatistics constructor }

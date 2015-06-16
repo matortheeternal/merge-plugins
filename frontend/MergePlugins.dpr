@@ -44,16 +44,19 @@ const
 
 var
   bSelectGame: boolean;
+  ProgramPath: string;
 begin
   // set important vars
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.HintHidePause := 8000;
+  ProgramPath := ExtractFilePath(ParamStr(0));
 
   // get command line arguments
   bSelectGame := FindCmdLineSwitch('sg');
 
   // initialize application, load settings
   Application.Initialize;
+  ForceDirectories(ProgramPath+'user');
   LoadSettings;
   LoadStatistics;
 

@@ -27,7 +27,7 @@ type
     lblViewDetails: TLabel;
     lblExRatingValue: TLabel;
     lblExReportsvalue: TLabel;
-    procedure DisplayCurrentEntry;
+    procedure DisplayCurrentReport;
     procedure btnNextClick(Sender: TObject);
     procedure btnPrevClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -41,6 +41,8 @@ type
   public
     { Public declarations }
     pluginsList: TList;
+    reportsList: TList;
+    AppName: string;
   end;
 
 const
@@ -67,7 +69,6 @@ const
 
 var
   ReportForm: TReportForm;
-  entryList: TList;
   currentPlugin: integer;
   PreviousNotes: string;
 
@@ -75,34 +76,37 @@ implementation
 
 {$R *.dfm}
 
-procedure TReportForm.DisplayCurrentEntry;
+procedure TReportForm.DisplayCurrentReport;
 var
-  entry, existingEntry: TEntry;
+  report: TReport;
+  existingEntry: TEntry;
   plugin: TPlugin;
 begin
   plugin := TPlugin(pluginsList[currentPlugin]);
 
   // create next entry
-  if currentPlugin = entryList.Count then begin
-    entry := TEntry.Create;
-    entry.filename := plugin.filename;
-    entry.hash := plugin.hash;
-    entry.records := plugin.numRecords;
-    entry.rating := '4';
-    entry.notes := PreviousNotes;
-    entryList.Add(entry);
+  if currentPlugin = reportsList.Count then begin
+    report := TReport.Create;
+    report.game := AppName;
+    report.filename := plugin.filename;
+    report.hash := plugin.hash;
+    report.recordCount := StrToInt(plugin.numRecords);
+    report.rating := 4;
+    report.mergeVersion := ProgramVersion;
+    report.notes.Text := PreviousNotes;
+    reportsList.Add(report);
   end;
 
   // set pnlTitle labels to entry details
-  entry := entryList[currentPlugin];
-  lblFilename.Caption := StringReplace(entry.filename, '&', '&&', [rfReplaceAll]);
-  lblHash.Caption := 'HASH: '+entry.hash;
-  lblRecords.Caption := 'RECORDS: '+entry.records;
+  report := reportsList[currentPlugin];
+  lblFilename.Caption := StringReplace(report.filename, '&', '&&', [rfReplaceAll]);
+  lblHash.Caption := 'HASH: '+report.hash;
+  lblRecords.Caption := 'RECORDS: '+IntToStr(report.recordCount);
   lblFlags.Caption := 'FLAGS: '+plugin.GetFlagsString;
   lblFlags.Hint := plugin.GetFlagsDescription;
 
   // load existing entry details
-  existingEntry := GetEntry(entry.filename, '', '');
+  existingEntry := GetEntry(report.filename, '', '');
   lblExRatingValue.Caption := existingEntry.rating;
   lblExReportsValue.Caption := existingEntry.reports;
   // view details label control
@@ -116,8 +120,8 @@ begin
   end;
 
   // load user's report details
-  cbRating.ItemIndex := StrToInt(entry.rating) + 1;
-  meNotes.Lines.Text := entry.notes;
+  cbRating.ItemIndex := report.rating + 1;
+  meNotes.Lines.Text := report.notes.Text;
   // activate rating hint
   cbRatingChange(nil);
 
@@ -127,7 +131,7 @@ end;
 
 procedure TReportForm.btnNextClick(Sender: TObject);
 var
-  entry: TEntry;
+  report: TReport;
 begin
   // if at last plugin, close form with modal result
   if currentPlugin = Pred(pluginsList.Count) then begin
@@ -136,10 +140,10 @@ begin
   end;
 
   // save settings in current entry
-  entry := entryList[currentPlugin];
-  entry.rating := IntToStr(cbRating.ItemIndex - 1);
-  entry.notes := meNotes.Lines.Text;
-  PreviousNotes := entry.notes;
+  report := TReport(reportsList[currentPlugin]);
+  report.rating := cbRating.ItemIndex - 1;
+  report.notes.Text := Trim(meNotes.Lines.Text);
+  PreviousNotes := report.notes.Text;
 
   // go to next plugin
   Inc(currentPlugin);
@@ -148,17 +152,17 @@ begin
     btnNext.Caption := 'Done';
 
   // display entry
-  DisplayCurrentEntry;
+  DisplayCurrentReport;
 end;
 
 procedure TReportForm.btnPrevClick(Sender: TObject);
 var
-  entry: TEntry;
+  report: TReport;
 begin
   // save settings in current entry
-  entry := entryList[currentPlugin];
-  entry.rating := IntToStr(cbRating.ItemIndex - 1);
-  entry.notes := meNotes.Lines.Text;
+  report := TReport(reportsList[currentPlugin]);
+  report.rating := cbRating.ItemIndex - 1;
+  report.notes.Text := Trim(meNotes.Lines.Text);
 
   // go to previous plugin
   Dec(currentPlugin);
@@ -166,7 +170,7 @@ begin
   btnNext.Caption := 'Next';
 
   // display entry
-  DisplayCurrentEntry;
+  DisplayCurrentReport;
 end;
 
 procedure TReportForm.cbRatingChange(Sender: TObject);
@@ -179,7 +183,7 @@ procedure TReportForm.FormShow(Sender: TObject);
 begin
   // initialize vars
   currentPlugin := 0;
-  entryList := TList.Create;
+  reportsList := TList.Create;
 
   // deal with special cases
   if not Assigned(pluginsList) then
@@ -190,13 +194,13 @@ begin
   end;
 
   // display entry
-  DisplayCurrentEntry;
+  DisplayCurrentReport;
 end;
 
 procedure TReportForm.lblViewDetailsClick(Sender: TObject);
 var
   DictionaryForm: TDictionaryForm;
-  entry: TEntry;
+  report: TReport;
 begin
   // don't display if number of reports is 0
   if lblExReportsValue.Caption = '0' then
@@ -204,8 +208,8 @@ begin
 
   // create dictionary form filtered by plugin filename
   DictionaryForm := TDictionaryForm.Create(Self.Parent);
-  entry := TEntry(entryList[currentPlugin]);
-  DictionaryForm.FilterFilename := entry.filename;
+  report := TReport(reportsList[currentPlugin]);
+  DictionaryForm.FilterFilename := report.filename;
   DictionaryForm.ShowModal;
   DictionaryForm.Free;
 end;

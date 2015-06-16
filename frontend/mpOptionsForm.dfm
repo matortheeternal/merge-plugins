@@ -170,13 +170,31 @@ object OptionsForm: TOptionsForm
           Height = 13
           Caption = 'Username'
         end
+        object lblStatus: TLabel
+          Left = 274
+          Top = 45
+          Width = 187
+          Height = 13
+          Hint = 'Username must be 4 or more characters'
+          Alignment = taCenter
+          AutoSize = False
+          Caption = 'Invalid username'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clRed
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          ParentShowHint = False
+          ShowHint = True
+        end
         object edUsername: TEdit
           Left = 274
           Top = 18
-          Width = 268
+          Width = 187
           Height = 21
-          Margins.Right = 6
           TabOrder = 0
+          OnChange = edUsernameChange
         end
         object kbSaveReports: TCheckBox
           Left = 12
@@ -186,15 +204,24 @@ object OptionsForm: TOptionsForm
           Caption = 'Save reports locally'
           TabOrder = 1
         end
+        object btnRegister: TButton
+          Left = 467
+          Top = 16
+          Width = 75
+          Height = 25
+          Hint = 'Check if username is available'
+          Margins.Right = 6
+          Caption = 'Check'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 2
+          OnClick = btnRegisterClick
+        end
       end
     end
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -366,10 +393,6 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbDebug: TGroupBox
         Left = 6
         Top = 6
@@ -479,7 +502,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C0101010008003C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -39,13 +39,17 @@ const
 
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
+var
+  ProgramPath: string;
 begin
   // set important vars
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.HintHidePause := 8000;
+  ProgramPath := ExtractFilePath(ParamStr(0));
 
   // initialize application, load settings
   Application.Initialize;
+  ForceDirectories(ProgramPath+'user');
   LoadSettings;
   LoadStatistics;
 

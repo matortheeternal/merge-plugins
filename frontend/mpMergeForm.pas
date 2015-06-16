@@ -13,7 +13,8 @@ uses
   mpBase, mpMerge, mpLogger, mpDictionaryForm, mpOptionsForm, mpProgressForm,
   mpTracker, mpSplashForm, mpEditForm, mpGameForm, mpReportForm,
   // tes5edit units
-  wbBSA, wbHelpers, wbInterface, wbImplementation;
+  wbBSA, wbHelpers, wbInterface, wbImplementation, IdBaseComponent, IdComponent,
+  IdTCPConnection, IdTCPClient;
 
 type
   TMergeForm = class(TForm)
@@ -41,7 +42,7 @@ type
     PluginsTabSheet: TTabSheet;
     MergesTabSheet: TTabSheet;
     LogTabSheet: TTabSheet;
-    Memo1: TMemo;
+    LogMemo: TMemo;
     PluginsListView: TListView;
     MergeListView: TListView;
     // PLUGINS POPUP MENU
@@ -67,6 +68,7 @@ type
     DetailsLabel: TLabel;
     DetailsEditor: TValueListEditor;
     RemoveBadPluginsItem: TMenuItem;
+    Timer: TTimer;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const s: string);
@@ -74,6 +76,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure LoaderDone;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure OnTimer(Sender: TObject);
+    procedure Disconnected(Sender: TObject);
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string; editable: boolean = false):
       TItemProp;
@@ -165,8 +169,8 @@ implementation
 { Prints a message to the log memo }
 procedure TMergeForm.LogMessage(const s: string);
 begin
-  Memo1.Lines.Add(s);
-  SendMessage(Memo1.Handle, EM_LINESCROLL, 0, Memo1.Lines.Count);
+  LogMemo.Lines.Add(s);
+  SendMessage(LogMemo.Handle, EM_LINESCROLL, 0, LogMemo.Lines.Count);
 end;
 
 procedure ProgressMessage(const s: string);
@@ -200,6 +204,11 @@ begin
     MergesList := TList.Create;
     PluginsList := TList.Create;
     bLoaderDone := false;
+
+    // INITIALIZE CLIENT
+    InitializeClient;
+    ConnectToServer;
+    TCPClient.OnDisconnected := Disconnected;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
@@ -347,6 +356,10 @@ procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   ProgressForm: TProgressForm;
 begin
+  // disconnect from server
+  TCPClient.Disconnect;
+
+  // save if bDontSave is false
   if not bDontSave then begin
     // show progress form
     ProgressForm := TProgressForm.Create(Self);
@@ -370,11 +383,26 @@ begin
     Enabled := true;
   end;
 
+  // save statistics and settings
+  SaveStatistics;
+  SaveSettings;
+
   // delete temppath
   DeleteDirectory(tempPath);
-  // save statistics
-  statistics.Save('statistics.ini');
   Action := caFree;
+end;
+
+procedure TMergeForm.OnTimer(Sender: TObject);
+begin
+  if not TCPClient.Connected then
+    ConnectToServer;
+  if TCPClient.Connected then
+    Timer.Enabled := false;
+end;
+
+procedure TMergeForm.Disconnected(Sender: TObject);
+begin
+  Timer.Enabled := true;
 end;
 
 {******************************************************************************}
@@ -1393,6 +1421,7 @@ var
   pluginsList: TList;
   plugin: TPlugin;
   ReportForm: TReportForm;
+  bReportsSent: boolean;
 begin
   pluginsList := TList.Create;
 
@@ -1411,7 +1440,19 @@ begin
   ReportForm := TReportForm.Create(Self);
   if pluginsList.Count > 0 then begin
     ReportForm.pluginsList := pluginsList;
+    ReportForm.AppName := wbAppName;
     ReportForm.ShowModal;
+  end;
+
+  // Send reports to backend
+  bReportsSent := SendReports(ReportForm.reportsList);
+  if not bReportsSent then begin
+    Logger.Write('Saving reports locally');
+    SaveReports(ReportForm.reportsList, 'user\reports\');
+  end
+  else if settings.saveReportsLocally then begin
+    Logger.Write('Saving reports locally');
+    SaveReports(ReportForm.reportsList, 'user\reports\submitted\Submitted-');
   end;
 
   // clean up

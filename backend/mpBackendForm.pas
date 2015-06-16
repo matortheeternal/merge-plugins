@@ -7,6 +7,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl,
   Menus, Grids, ValEdit, ShlObj, ShellAPI,
+  // indy components
+  IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer,
+  IdGlobal, IdSync,
   // third party libraries
   superobject, W7Taskbar,
   // mp units
@@ -52,6 +55,7 @@ type
     UnapproveReportItem: TMenuItem;
     EditReportItem: TMenuItem;
     ViewDictionaryEntryItem: TMenuItem;
+    TCPServer: TIdTCPServer;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const s: string);
@@ -92,6 +96,13 @@ type
     procedure OptionsButtonClick(Sender: TObject);
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
+    // SERVER EVENTS
+    procedure TCPServerConnect(AContext: TIdContext);
+    procedure TCPServerDisconnect(AContext: TIdContext);
+    procedure TCPServerException(AContext: TIdContext; AException: Exception);
+    procedure HandleMessage(msg: TmpMessage; AContext: TIdContext);
+    procedure WriteMessage(msg: TmpMessage; ip: string);
+    procedure TCPServerExecute(AContext: TIdContext);
   private
     { Private declarations }
   public
@@ -149,6 +160,7 @@ begin
     logPath := ProgramPath + 'logs\';
     ForceDirectories(tempPath);
     Logger.OnLogEvent := LogMessage;
+    LoadUsers;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
@@ -194,8 +206,11 @@ begin
   // update statistics
   statistics.totalUptime := statistics.totalUptime + GetSessionUptime;
   statistics.totalBandwidth := statistics.totalBandwidth + sessionBandwidth;
-  // save statistics
-  statistics.Save('statistics.ini');
+
+  // save statistics, settings, users
+  SaveStatistics;
+  SaveUsers;
+  // SaveSettings;
 end;
 
 {******************************************************************************}
@@ -653,6 +668,139 @@ begin
   ApprovedListView.Repaint;
   UnapprovedListView.Repaint;
 end;
+
+
+{******************************************************************************}
+{ TCP Server Events
+  Events associated with the TCP server.
+  - TCPServerConnect
+  - TCPServerDisconnect
+  - TCPServerException
+  - TCPServerExecute
+}
+{******************************************************************************}
+
+procedure TBackendForm.TCPServerConnect(AContext: TIdContext);
+var
+  ip: string;
+begin
+  ip := AContext.Connection.Socket.Binding.PeerIP;
+  Logger.Write('[SERVER] '+ip+' connected.');
+end;
+
+procedure TBackendForm.TCPServerDisconnect(AContext: TIdContext);
+begin
+  Logger.Write('[SERVER] '+AContext.Connection.Socket.Binding.PeerIP+' disconnected.');
+end;
+
+procedure TBackendForm.TCPServerException(AContext: TIdContext;
+  AException: Exception);
+begin
+  if AException.Message = 'Connection Closed Gracefully.' then
+    exit;
+
+  Logger.Write('[SERVER] '+AContext.Connection.Socket.Binding.PeerIP+
+    ' Exception: '+' '+AException.Message);
+end;
+
+procedure TBackendForm.HandleMessage(msg: TmpMessage; AContext: TIdContext);
+var
+  report: TReport;
+  response: TmpMessage;
+  note, ip: string;
+  user: TUser;
+begin
+  ip := AContext.Connection.Socket.Binding.PeerIP;
+  WriteMessage(msg, ip);
+  case msg.id of
+    MSG_REGISTER: begin
+      note := 'Username unavailable';
+      if Authorized(msg.username, msg.auth) then begin
+        if msg.data = 'Check' then
+          note := 'Available'
+        else begin
+          user := TUser.Create(msg.username, ip, msg.auth);
+          UsersList.Add(user);
+          note := 'Registered '+msg.username;
+        end;
+      end;
+
+      // respond to user
+      response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
+      AContext.Connection.IOHandler.WriteLn(response.ToJson);
+      Logger.Write('[RESPONSE] '+note);
+    end;
+
+    MSG_AUTH_RESET:  begin
+      note := 'Failed';
+      if ResetAuth(msg.username, ip, msg.auth) then
+        note := 'Success';
+
+      // respond to user
+      response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
+      AContext.Connection.IOHandler.WriteLn(response.ToJson);
+      Logger.Write('[RESPONSE] '+note);
+    end;
+
+    MSG_STATISTICS:  begin
+       // TODO: Handle user statistics
+    end;
+
+    MSG_STATUS:  begin
+      response := TmpMessage.Create(MSG_NOTIFY, '', '', status.ToJson);
+      AContext.Connection.IOHandler.WriteLn(response.ToJson);
+    end;
+
+    MSG_REQUEST:  begin
+      // TODO: Handle dictionary, program requests
+    end;
+
+    MSG_REPORT: begin
+      note := 'Not authorized';
+      if Authorized(msg.username, msg.auth) then try
+        report := TReport.Create;
+        report.FromJson(msg.data);
+        report.username := msg.username;
+        report.dateSubmitted := Now;
+        report.notes.Text := StringReplace(report.notes.Text, '@13', #13#10, [rfReplaceAll]);
+        // add report to gui
+        UnapprovedReports.Add(report);
+        UnapprovedListView.Items.Count := UnapprovedReports.Count;
+        // add report to sql
+        AddReport(report, 'unapproved_reports');
+        note := 'Report accepted.';
+      except
+        on x : Exception do
+          note := 'Failed to load report.';
+      end;
+
+      // respond to user
+      response := TmpMessage.Create(MSG_NOTIFY, 'Server', '0', note);
+      AContext.Connection.IOHandler.WriteLn(response.ToJson);
+      Logger.Write('[RESPONSE] '+note);
+    end;
+  end;
+end;
+
+procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
+begin
+  Logger.Write('[SERVER] '+ip+' Message Recieved');
+  Logger.Write('  ID: '+IntToStr(msg.id));
+  Logger.Write('  Username: '+msg.username);
+  Logger.Write('  Data: '+msg.data);
+end;
+
+procedure TBackendForm.TCPServerExecute(AContext: TIdContext);
+var
+  msg: TmpMessage;
+  LLine: string;
+begin
+  LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
+  msg := TmpMessage.Create;
+  msg.FromJson(LLine);
+  HandleMessage(msg, AContext);
+end;
+
 
 {******************************************************************************}
 { QuickBar Button Events

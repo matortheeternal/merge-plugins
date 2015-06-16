@@ -181,7 +181,6 @@ object ReportForm: TReportForm
     Enabled = False
     TabOrder = 2
     OnClick = btnNextClick
-    ExplicitTop = 387
   end
   object btnPrev: TButton
     Left = 8
@@ -193,7 +192,6 @@ object ReportForm: TReportForm
     Enabled = False
     TabOrder = 3
     OnClick = btnPrevClick
-    ExplicitTop = 387
   end
   object gbUserReports: TGroupBox
     Left = 8

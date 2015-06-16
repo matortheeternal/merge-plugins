@@ -15,6 +15,37 @@ uses
   mpLogger, mpTracker;
 
 type
+  TUser = class(TObject)
+  public
+    username: string;
+    ip: string;
+    auth: string;
+    constructor Create(username, ip, auth: string); Overload;
+    function Dump: ISuperObject;
+    procedure LoadDump(obj: ISuperObject);
+  end;
+  TmpMessage = class(TObject)
+  public
+    id: integer;
+    username: string;
+    auth: string;
+    data: string;
+    constructor Create(id: integer; username, auth, data: string); Overload;
+    function ToJson: string;
+    procedure FromJson(json: string);
+  end;
+  TmpStatus = class(TObjecT)
+  public
+    programVersion: string;
+    tes5Hash: string;
+    tes4Hash: string;
+    fnvHash: string;
+    fo3Hash: string;
+    function ToJson: string;
+    procedure FromJson(json: string);
+    procedure Save(const filename: string);
+    procedure Load(const filename: string);
+  end;
   TReport = class(TObject)
   public
     game: string;
@@ -28,6 +59,8 @@ type
     dateSubmitted: TDateTime;
     constructor Create; Overload;
     constructor Create(const fields: TFields); Overload;
+    function ToJson: string;
+    procedure FromJson(json: string);
   end;
   TEntry = class(TObject)
   public
@@ -104,9 +137,17 @@ type
   procedure CopyDirectory(src, dst: string; fIgnore, dIgnore: TStringList);
   procedure GetFilesList(path: string; var fIgnore, dIgnore, list: TStringList);
   procedure CopyFiles(src, dst: string; var list: TStringList);
-  { Dictionary and Settings methods }
-  procedure LoadStatistics;
+  { Data methods }
   procedure LoadSettings;
+  procedure SaveSettings;
+  procedure LoadStatus;
+  procedure SaveStatus;
+  procedure LoadStatistics;
+  procedure SaveStatistics;
+  procedure LoadUsers;
+  procedure SaveUsers;
+  function Authorized(username, auth: string): boolean;
+  function ResetAuth(username, ip, auth: string): boolean;
   procedure LoadDictionary(var lst: TList; filename: string);
   procedure LoadBlacklist(var lst, dictionary: TList);
   function GetRatingColor(rating: real): integer;
@@ -115,11 +156,21 @@ type
 const
   ReportColumns = 'game,username,filename,hash,record_count,rating,merge_version,notes,date_submitted';
 
+  // MSG IDs
+  MSG_NOTIFY = 0;
+  MSG_REGISTER = 1;
+  MSG_AUTH_RESET = 2;
+  MSG_STATISTICS = 3;
+  MSG_STATUS = 4;
+  MSG_REQUEST = 5;
+  MSG_REPORT = 6;
+
 var
   TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary,
-  ApprovedReports, UnapprovedReports: TList;
+  ApprovedReports, UnapprovedReports, UsersList: TList;
   statistics: TStatistics;
   settings: TSettings;
+  status: TmpStatus;
   TempPath, LogPath, ProgramPath: string;
   bLoginSuccess, bProgressCancel: boolean;
   wbStartTime: TDateTime;
@@ -345,10 +396,23 @@ begin
   end;
 end;
 
-
+{ Converts a TdateTime to an SQL-compatible string }
 function DateTimeToSQL(date: TDateTime): string;
 begin
   Result := FormatDateTime('yyyy-mm-dd hh:mm:ss', date);
+end;
+
+{ Converts an SQL-compatible date time string to a TDateTime }
+function SQLToDateTime(date: string): TDateTime;
+var
+  fs: TFormatSettings;
+begin
+  GetLocaleFormatSettings(GetThreadLocale, fs);
+  fs.DateSeparator := '-';
+  fs.ShortDateFormat := 'yyyy-mm-dd';
+  fs.TimeSeparator := ':';
+  fs.LongTimeFormat := 'hh:nn:ss';
+  Result := StrToDateTime(date, fs);
 end;
 
 { Converts a TDateTime to a time string, e.g. 19d 20h 3m 30s }
@@ -714,12 +778,14 @@ end;
 
 
 {******************************************************************************}
-{ Dictionary and Settings methods
-  Set of methods for managing the dictionary.
+{ Data methods
+  Set of methods for working with data.
 
   List of methods:
-  - LoadStatistics
   - LoadSettings
+  - SaveSettings
+  - LoadStatistics
+  - SaveStatistics
   - LoadDictionary
   - GetRatingColor
   - GetRating
@@ -728,16 +794,127 @@ end;
 }
 {******************************************************************************}
 
+procedure LoadSettings;
+begin
+  settings := TSettings.Create;
+  settings.Load('settings.ini');
+end;
+
+procedure SaveSettings;
+begin
+  settings.Save('settings.ini');
+end;
+
+procedure LoadStatus;
+begin
+  status := TmpStatus.Create;
+  status.Load('status.json');
+end;
+
+procedure SaveStatus;
+begin
+  status.Save('status.json');
+end;
+
 procedure LoadStatistics;
 begin
   statistics := TStatistics.Create;
   statistics.Load('statistics.ini');
 end;
 
-procedure LoadSettings;
+procedure SaveStatistics;
 begin
-  settings := TSettings.Create;
-  settings.Load('settings.json');
+  statistics.Save('statistics.ini');
+end;
+
+procedure LoadUsers;
+var
+  user: TUser;
+  obj, userItem: ISuperObject;
+  sl: TStringList;
+  filename: string;
+begin
+  UsersList := TList.Create;
+  // don't load file if it doesn't exist
+  filename := 'users.json';
+  if not FileExists(filename) then
+    exit;
+  // load file into SuperObject to parse it
+  sl := TStringList.Create;
+  sl.LoadFromFile(filename);
+  obj := SO(PChar(sl.Text));
+
+  // loop through merges
+  for userItem in obj['users'] do begin
+    user := TUser.Create;
+    user.LoadDump(userItem);
+    UsersList.Add(user);
+  end;
+
+  // finalize
+  obj := nil;
+  sl.Free;
+end;
+
+procedure SaveUsers;
+var
+  i: Integer;
+  user: TUser;
+  json: ISuperObject;
+  filename: string;
+begin
+  // initialize json
+  json := SO;
+  json.O['users'] := SA([]);
+
+  // loop through merges
+  Tracker.Write('Dumping users to JSON');
+  for i := 0 to Pred(UsersList.Count) do begin
+    Tracker.Update(1);
+    user := TUser(UsersList[i]);
+    Tracker.Write('  Dumping '+user.username);
+    json.A['users'].Add(user.Dump);
+  end;
+
+  // save and finalize
+  filename := 'users.json';
+  Tracker.Write(' ');
+  Tracker.Write('Saving to ' + filename);
+  Tracker.Update(1);
+  json.SaveTo(filename);
+  json := nil;
+end;
+
+function Authorized(username, auth: string): boolean;
+var
+  i: Integer;
+  user: TUser;
+begin
+  Result := true;
+  for i := 0 to Pred(UsersList.Count) do begin
+    user := TUser(UsersList[i]);
+    if SameText(user.username, username) then begin
+      Result := SameText(user.auth, auth);
+      exit;
+    end;
+  end;
+end;
+
+function ResetAuth(username, ip, auth: string): boolean;
+var
+  i: Integer;
+  user: TUser;
+begin
+  Result := false;
+  for i := 0 to Pred(UsersList.Count) do begin
+    user := TUser(UsersList[i]);
+    if SameText(user.username, username) then begin
+      Result := SameText(user.ip, ip);
+      if Result then
+        user.auth := auth;
+      exit;
+    end;
+  end;
 end;
 
 procedure LoadDictionary(var lst: TList; filename: string);
@@ -830,13 +1007,145 @@ end;
   Set of methods for objects TMerge and TPlugin
 
   List of methods:
-  - TReport.Create;
+  - TUser.Create
+  - TUser.Dump
+  - TUser.LoadDump
+  - TmpMessage.Create
+  - TmpMessage.ToJson
+  - TmpMessage.FromJson
+  - TmpStatus.ToJson
+  - TmpStatus.FromJson
+  - TmpStatus.Save
+  - TmpStatus.Load
+  - TReport.Create
+  - TReport.Create
+  - TReport.ToJson
+  - TReport.FromJson
   - TEntry.Create
   - TSettings.Create
   - TSettings.Save
   - TSettings.Load
+  - TStatistics.Create
+  - TStatistics.Save
+  - TStatistics.Load
 }
 {******************************************************************************}
+
+
+constructor TUser.Create(username, ip, auth: string);
+begin
+  self.username := username;
+  self.ip := ip;
+  self.auth := auth;
+end;
+
+function TUser.Dump: ISuperObject;
+var
+  obj: ISuperObject;
+begin
+  obj := SO;
+  obj.S['username'] := username;
+  obj.S['ip'] := ip;
+  obj.S['auth'] := auth;
+
+  Result := obj;
+end;
+
+procedure TUser.LoadDump(obj: ISuperObject);
+begin
+  username := obj.AsObject.S['username'];
+  ip := obj.AsObject.S['ip'];
+  auth := obj.AsObject.S['auth'];
+end;
+
+{ TmpMessage Constructor }
+constructor TmpMessage.Create(id: integer; username, auth, data: string);
+begin
+  self.id := id;
+  self.username := username;
+  self.auth := auth;
+  self.data := data;
+end;
+
+{ TmpMessage to json string }
+function TmpMessage.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO;
+
+  // filename, hash, errors
+  obj.I['id'] := id;
+  obj.S['username'] := username;
+  obj.S['auth'] := auth;
+  obj.S['data'] := data;
+
+  Result := obj.AsJSon;
+end;
+
+{ Json string to TmpMessage }
+procedure TmpMessage.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  id := obj.I['id'];
+  username := obj.S['username'];
+  auth := obj.S['auth'];
+  data := obj.S['data'];
+end;
+
+{ TmpStatus to json string }
+function TmpStatus.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO;
+
+  // filename, hash, errors
+  obj.S['programVersion'] := programVersion;
+  obj.S['tes5Hash'] := tes5Hash;
+  obj.S['tes4Hash'] := tes4Hash;
+  obj.S['fnvHash'] := fnvHash;
+  obj.S['fo3Hash'] := fo3Hash;
+
+  Result := obj.AsJSon;
+end;
+
+procedure TmpStatus.Save(const filename: string);
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  sl.Text := ToJson;
+  sl.SaveToFile(filename);
+  sl.Free;
+end;
+
+procedure TmpStatus.Load(const filename: string);
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  sl.LoadFromFile(filename);
+  FromJson(sl.Text);
+  sl.Free;
+end;
+
+{ Json string to TmpStatus }
+procedure TmpStatus.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  programVersion := obj.S['programVersion'];
+  tes5Hash := obj.S['tes5Hash'];
+  tes4Hash := obj.S['tes4Hash'];
+  fnvHash := obj.S['fnvHash'];
+  fo3Hash := obj.S['fo3Hash'];
+end;
 
 { TReport Constructor }
 constructor TReport.Create;
@@ -859,6 +1168,44 @@ begin
   s := StringReplace(fields[7].AsString, '@13', #13#10, [rfReplaceAll]);
   notes.Text := Wordwrap(s, 70);
   dateSubmitted := fields[8].AsDateTime;
+end;
+
+{ TReport to json string }
+function TReport.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO;
+
+  obj.S['game'] := game;
+  obj.S['username'] := username;
+  obj.S['filename'] := filename;
+  obj.S['hash'] := hash;
+  obj.I['recordCount'] := recordCount;
+  obj.I['rating'] := rating;
+  obj.S['mergeVersion'] := mergeVersion;
+  obj.S['notes'] := StringReplace(notes.Text, #13#10, '@13', [rfReplaceAll]);
+  obj.S['dateSubmitted'] := DateTimeToSQL(dateSubmitted);
+
+  Result := obj.AsJSon;
+end;
+
+{ Json string to TReport }
+procedure TReport.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  game := obj.S['game'];
+  username := obj.S['username'];
+  filename := obj.S['filename'];
+  hash := obj.S['hash'];
+  recordCount := obj.I['recordCount'];
+  rating := obj.I['rating'];
+  mergeVersion := obj.S['mergeVersion'];
+  notes.Text := obj.S['notes'];
+  dateSubmitted := SQLToDateTime(obj.S['dateSubmitted']);
 end;
 
 { TEntry Constructor }

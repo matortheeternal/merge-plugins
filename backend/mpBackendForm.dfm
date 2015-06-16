@@ -127,7 +127,6 @@ object BackendForm: TBackendForm
     Caption = 'MainPanel'
     Constraints.MinWidth = 200
     TabOrder = 1
-    ExplicitHeight = 617
     object PageControl: TPageControl
       Left = 3
       Top = 7
@@ -138,14 +137,12 @@ object BackendForm: TBackendForm
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
       OnChange = PageControlChange
-      ExplicitHeight = 607
       object UnapprovedTabSheet: TTabSheet
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Caption = 'New Reports'
-        ExplicitHeight = 579
         object UnapprovedListView: TListView
           Left = 3
           Top = 3
@@ -186,13 +183,15 @@ object BackendForm: TBackendForm
           ViewStyle = vsReport
           OnChange = UnapprovedListViewChange
           OnData = UnapprovedListViewData
-          ExplicitHeight = 573
         end
       end
       object ApprovedTabSheet: TTabSheet
         Caption = 'Approved Reports'
         ImageIndex = 1
-        ExplicitHeight = 579
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object ApprovedListView: TListView
           Left = 3
           Top = 3
@@ -233,13 +232,15 @@ object BackendForm: TBackendForm
           OnChange = ApprovedListViewChange
           OnColumnClick = ApprovedListViewColumnClick
           OnData = ApprovedListViewData
-          ExplicitHeight = 573
         end
       end
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitHeight = 579
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           646
           577)
@@ -255,7 +256,6 @@ object BackendForm: TBackendForm
           ScrollBars = ssBoth
           TabOrder = 0
           WordWrap = False
-          ExplicitHeight = 573
         end
       end
     end
@@ -269,7 +269,6 @@ object BackendForm: TBackendForm
     BevelOuter = bvNone
     Constraints.MinWidth = 200
     TabOrder = 2
-    ExplicitHeight = 617
     object DetailsLabel: TLabel
       Left = 6
       Top = 10
@@ -294,7 +293,6 @@ object BackendForm: TBackendForm
         'Name'
         'Value')
       OnMouseUp = DetailsEditorMouseUp
-      ExplicitHeight = 586
       ColWidths = (
         150
         435)
@@ -308,7 +306,6 @@ object BackendForm: TBackendForm
     Panels = <>
     SimplePanel = True
     SimpleText = 'Welcome to the backend!'
-    ExplicitTop = 662
   end
   object XPManifest: TXPManifest
     Left = 1120
@@ -320,7 +317,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F8017C0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801880120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1412,5 +1409,20 @@ object BackendForm: TBackendForm
       Caption = 'View dictionary entry'
       OnClick = ViewDictionaryEntryItemClick
     end
+  end
+  object TCPServer: TIdTCPServer
+    Active = True
+    Bindings = <
+      item
+        IP = '127.0.0.1'
+        Port = 950
+      end>
+    DefaultPort = 950
+    OnConnect = TCPServerConnect
+    OnDisconnect = TCPServerDisconnect
+    OnException = TCPServerException
+    OnExecute = TCPServerExecute
+    Left = 1000
+    Top = 8
   end
 end
