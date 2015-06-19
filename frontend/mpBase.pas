@@ -275,6 +275,8 @@ type
   { Client methods }
   procedure InitializeClient;
   procedure ConnectToServer;
+  function Authorized: boolean;
+  procedure ResetAuth;
   function UsernameAvailable: boolean;
   function RegisterUser: boolean;
   function SendReports(var lst: TList): boolean;
@@ -349,7 +351,7 @@ var
   statistics: TStatistics;
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone,
-  bProgressCancel: boolean;
+  bProgressCancel, bAuthorized: boolean;
   tempPath, logPath, dictionaryFilename, ActiveProfile: string;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
@@ -2010,6 +2012,65 @@ begin
     TCPClient.Connect;
   except on Exception do
     Logger.Write('Server unavailable.');
+  end;
+end;
+
+function Authorized: boolean;
+var
+  msg, response: TmpMessage;
+  msgJson, line: string;
+begin
+  Result := false;
+  Logger.Write('Checking if authenticated as: '+settings.username);
+
+  // attempt to check authorization
+  // throws exception if server is unavailable
+  try
+    // send notify request to server
+    msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, 'Authorized?');
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    response := TmpMessage.Create;
+    response.FromJson(line);
+    Logger.Write('  Response: '+response.data);
+    Result := response.data = 'Yes';
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception authorizing user: '+x.Message);
+    end;
+  end;
+
+  // set bAuthorized boolean
+  bAuthorized := Result;
+end;
+
+procedure ResetAuth;
+var
+  msg, response: TmpMessage;
+  msgJson, line: string;
+begin
+  Logger.Write('Resetting authentication as: '+settings.username);
+
+  // attempt to reset authorization
+  // throws exception if server is unavailable
+  try
+    // send auth reset request to server
+    msg := TmpMessage.Create(MSG_AUTH_RESET, settings.username, settings.key, '');
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    response := TmpMessage.Create;
+    response.FromJson(line);
+    Logger.Write('  Response: '+response.data);
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception resetting authentication: '+x.Message);
+    end;
   end;
 end;
 

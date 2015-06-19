@@ -21,6 +21,8 @@ object OptionsForm: TOptionsForm
     Width = 568
     Height = 401
     ActivePage = GeneralTabSheet
+    Align = alCustom
+    Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
@@ -34,6 +36,7 @@ object OptionsForm: TOptionsForm
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
+        Align = alCustom
         Caption = 'Language'
       end
       object cbLanguage: TComboBox
@@ -45,7 +48,9 @@ object OptionsForm: TOptionsForm
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
+        Align = alCustom
         Style = csDropDownList
+        Anchors = [akTop, akRight]
         ItemIndex = 0
         TabOrder = 0
         Text = 'English'
@@ -58,13 +63,14 @@ object OptionsForm: TOptionsForm
       end
       object gbStyle: TGroupBox
         Left = 6
-        Top = 122
+        Top = 133
         Width = 548
         Height = 71
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
+        Align = alCustom
         Caption = 'Style'
         TabOrder = 1
         object kbSimpleDictionary: TCheckBox
@@ -72,6 +78,7 @@ object OptionsForm: TOptionsForm
           Top = 20
           Width = 133
           Height = 17
+          Align = alCustom
           Caption = 'Simple dictionary view'
           TabOrder = 0
         end
@@ -80,47 +87,112 @@ object OptionsForm: TOptionsForm
           Top = 43
           Width = 133
           Height = 17
+          Align = alCustom
           Caption = 'Simple plugins list'
           TabOrder = 1
         end
       end
       object gbUpdating: TGroupBox
         Left = 6
-        Top = 205
+        Top = 216
         Width = 548
-        Height = 72
+        Height = 82
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
         Caption = 'Updating'
         TabOrder = 2
+        object Label1: TLabel
+          Left = 274
+          Top = 23
+          Width = 142
+          Height = 13
+          Align = alCustom
+          Alignment = taCenter
+          Anchors = [akLeft, akTop, akRight]
+          AutoSize = False
+          Caption = 'Up to date'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clGreen
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+        end
+        object Label2: TLabel
+          Left = 274
+          Top = 52
+          Width = 142
+          Height = 13
+          Align = alCustom
+          Alignment = taCenter
+          Anchors = [akLeft, akTop, akRight]
+          AutoSize = False
+          Caption = 'Up to date'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clGreen
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+        end
         object kbUpdateDictionary: TCheckBox
           Left = 12
-          Top = 20
+          Top = 22
           Width = 173
           Height = 17
+          Align = alCustom
           Caption = 'Update dictionary automatically'
           TabOrder = 0
         end
         object kbUpdateProgram: TCheckBox
           Left = 12
-          Top = 43
+          Top = 51
           Width = 173
           Height = 17
+          Align = alCustom
           Caption = 'Update program automatically'
           TabOrder = 1
+        end
+        object btnUpdateDictionary: TButton
+          Left = 422
+          Top = 16
+          Width = 120
+          Height = 25
+          Margins.Right = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Update dictionary'
+          Enabled = False
+          TabOrder = 2
+        end
+        object btnUpdateProgram: TButton
+          Left = 422
+          Top = 47
+          Width = 120
+          Height = 25
+          Margins.Right = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Update program'
+          Enabled = False
+          TabOrder = 3
         end
       end
       object gbGameMode: TGroupBox
         Left = 6
-        Top = 289
+        Top = 310
         Width = 548
         Height = 54
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
         Caption = 'Game mode'
         TabOrder = 3
         object lblGameMode: TLabel
@@ -156,11 +228,12 @@ object OptionsForm: TOptionsForm
         Left = 6
         Top = 39
         Width = 548
-        Height = 71
+        Height = 82
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
+        Align = alCustom
         Caption = 'Reports'
         TabOrder = 4
         object lblUsername: TLabel
@@ -168,6 +241,7 @@ object OptionsForm: TOptionsForm
           Top = 20
           Width = 48
           Height = 13
+          Align = alCustom
           Caption = 'Username'
         end
         object lblStatus: TLabel
@@ -176,7 +250,9 @@ object OptionsForm: TOptionsForm
           Width = 187
           Height = 13
           Hint = 'Username must be 4 or more characters'
+          Align = alCustom
           Alignment = taCenter
+          Anchors = [akLeft, akTop, akRight]
           AutoSize = False
           Caption = 'Invalid username'
           Font.Charset = DEFAULT_CHARSET
@@ -193,6 +269,7 @@ object OptionsForm: TOptionsForm
           Top = 18
           Width = 187
           Height = 21
+          Align = alCustom
           TabOrder = 0
           OnChange = edUsernameChange
         end
@@ -201,6 +278,7 @@ object OptionsForm: TOptionsForm
           Top = 40
           Width = 117
           Height = 17
+          Align = alCustom
           Caption = 'Save reports locally'
           TabOrder = 1
         end
@@ -211,12 +289,27 @@ object OptionsForm: TOptionsForm
           Height = 25
           Hint = 'Check if username is available'
           Margins.Right = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
           Caption = 'Check'
           ParentShowHint = False
           ShowHint = True
           TabOrder = 2
           OnClick = btnRegisterClick
         end
+      end
+      object btnReset: TButton
+        Left = 473
+        Top = 84
+        Width = 75
+        Height = 25
+        Margins.Right = 6
+        Align = alCustom
+        Anchors = [akTop, akRight]
+        Caption = 'Reset'
+        Enabled = False
+        TabOrder = 5
+        OnClick = btnResetClick
       end
     end
     object MergingTabSheet: TTabSheet
@@ -290,12 +383,12 @@ object OptionsForm: TOptionsForm
         Left = 6
         Top = 125
         Width = 548
-        Height = 236
+        Height = 164
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
-        Caption = 'Asset Copying'
+        Caption = 'Asset Handling'
         TabOrder = 1
         object lblMergeDestination: TLabel
           Left = 12
@@ -314,7 +407,7 @@ object OptionsForm: TOptionsForm
         end
         object kbFaceGen: TCheckBox
           Left = 12
-          Top = 46
+          Top = 54
           Width = 117
           Height = 17
           Margins.Top = 6
@@ -330,7 +423,7 @@ object OptionsForm: TOptionsForm
         end
         object kbVoiceAssets: TCheckBox
           Left = 12
-          Top = 69
+          Top = 77
           Width = 117
           Height = 17
           Caption = 'Handle Voice Assets'
@@ -338,7 +431,7 @@ object OptionsForm: TOptionsForm
         end
         object kbTranslations: TCheckBox
           Left = 12
-          Top = 92
+          Top = 100
           Width = 139
           Height = 17
           Caption = 'Handle MCM Translations'
@@ -347,8 +440,8 @@ object OptionsForm: TOptionsForm
           TabOrder = 3
         end
         object kbBuildBSA: TCheckBox
-          Left = 12
-          Top = 184
+          Left = 272
+          Top = 100
           Width = 101
           Height = 17
           Caption = 'Build Merged BSA'
@@ -356,8 +449,8 @@ object OptionsForm: TOptionsForm
           TabOrder = 4
         end
         object kbFragments: TCheckBox
-          Left = 12
-          Top = 138
+          Left = 272
+          Top = 54
           Width = 136
           Height = 17
           Caption = 'Handle Script Fragments'
@@ -365,16 +458,16 @@ object OptionsForm: TOptionsForm
           TabOrder = 5
         end
         object kbExtractBSAs: TCheckBox
-          Left = 12
-          Top = 161
+          Left = 272
+          Top = 77
           Width = 79
           Height = 17
           Caption = 'Extract BSAs'
           TabOrder = 6
         end
         object kbBatCopy: TCheckBox
-          Left = 12
-          Top = 207
+          Left = 272
+          Top = 123
           Width = 117
           Height = 17
           Caption = 'Batch copy assets'
@@ -382,7 +475,7 @@ object OptionsForm: TOptionsForm
         end
         object kbINIs: TCheckBox
           Left = 12
-          Top = 115
+          Top = 123
           Width = 79
           Height = 17
           Caption = 'Handle INIs'
@@ -393,6 +486,7 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
+      ExplicitLeft = 6
       object gbDebug: TGroupBox
         Left = 6
         Top = 6
@@ -476,6 +570,42 @@ object OptionsForm: TOptionsForm
           Caption = 'Debug load order'
           TabOrder = 8
         end
+        object kbDebugClient: TCheckBox
+          Left = 272
+          Top = 112
+          Width = 81
+          Height = 17
+          Caption = 'Debug client'
+          TabOrder = 9
+        end
+      end
+      object gbPrivacy: TGroupBox
+        Left = 6
+        Top = 165
+        Width = 548
+        Height = 76
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Caption = 'Privacy'
+        TabOrder = 1
+        object kbNoStatistics: TCheckBox
+          Left = 12
+          Top = 20
+          Width = 213
+          Height = 17
+          Caption = 'Don'#39't send anonymous usage statistics'
+          TabOrder = 0
+        end
+      end
+      object kbNoPersistentConnection: TCheckBox
+        Left = 18
+        Top = 208
+        Width = 223
+        Height = 17
+        Caption = 'Only connect to the server when required'
+        TabOrder = 2
       end
     end
   end
@@ -484,6 +614,8 @@ object OptionsForm: TOptionsForm
     Top = 415
     Width = 75
     Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
@@ -493,6 +625,8 @@ object OptionsForm: TOptionsForm
     Top = 415
     Width = 75
     Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 2
@@ -502,7 +636,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

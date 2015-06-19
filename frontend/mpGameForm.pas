@@ -87,7 +87,7 @@ begin
   settings.fnvpath := LabeledEdit2.Text;
   settings.tes4path := LabeledEdit3.Text;
   settings.fo3path := LabeledEdit4.Text;
-  settings.Save('settings.ini');
+  SaveSettings;
 end;
 
 procedure TGameForm.FormActivate(Sender: TObject);

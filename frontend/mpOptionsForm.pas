@@ -64,6 +64,15 @@ type
     kbINIs: TCheckBox;
     btnRegister: TButton;
     lblStatus: TLabel;
+    btnReset: TButton;
+    btnUpdateDictionary: TButton;
+    btnUpdateProgram: TButton;
+    Label1: TLabel;
+    Label2: TLabel;
+    gbPrivacy: TGroupBox;
+    kbNoStatistics: TCheckBox;
+    kbNoPersistentConnection: TCheckBox;
+    kbDebugClient: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -73,6 +82,7 @@ type
     procedure btnUpdateGameModeClick(Sender: TObject);
     procedure edUsernameChange(Sender: TObject);
     procedure btnRegisterClick(Sender: TObject);
+    procedure btnResetClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -253,6 +263,20 @@ begin
   end;
 end;
 
+procedure TOptionsForm.btnResetClick(Sender: TObject);
+begin
+  if settings.registered and not bAuthorized then begin
+    ResetAuth;
+    Authorized;
+    if bAuthorized then begin
+      btnReset.Enabled := false;
+      lblStatus.Caption := 'Registered';
+      lblStatus.Font.Color := clGreen;
+      lblStatus.Hint := '';
+    end;
+  end;
+end;
+
 procedure TOptionsForm.btnUpdateGameModeClick(Sender: TObject);
 begin
   bChangeGameMode := true;
@@ -342,9 +366,21 @@ begin
   if settings.registered then begin
     edUsername.Enabled := false;
     btnRegister.Enabled := false;
-    lblStatus.Caption := 'Registered.';
-    lblStatus.Font.Color := clGreen;
-    lblStatus.Hint := '';
+    // if not authorized then enabled reset button
+    if not bAuthorized then begin
+      btnReset.Enabled := true;
+      lblStatus.Caption := 'Authorization failed!';
+      lblStatus.Font.Color := clRed;
+      lblStatus.Hint := 'Click reset to reset your authentication key.'#13+
+        'NOTE: This will fail if your IP has changed since you last logged in.'#13+
+        'If you can''t recover your username you can either make a new one or '#13+
+        'contact support.';
+    end
+    else begin
+      lblStatus.Caption := 'Registered.';
+      lblStatus.Font.Color := clGreen;
+      lblStatus.Hint := '';
+    end;
   end;
 
   // set up buttons

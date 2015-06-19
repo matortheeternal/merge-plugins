@@ -78,6 +78,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure OnTimer(Sender: TObject);
     procedure Disconnected(Sender: TObject);
+    procedure ShowAuthorizationMessage;
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string; editable: boolean = false):
       TItemProp;
@@ -396,13 +397,26 @@ procedure TMergeForm.OnTimer(Sender: TObject);
 begin
   if not TCPClient.Connected then
     ConnectToServer;
-  if TCPClient.Connected then
+  if TCPClient.Connected then begin
     Timer.Enabled := false;
+    Authorized;
+    ShowAuthorizationMessage;
+  end;
 end;
 
 procedure TMergeForm.Disconnected(Sender: TObject);
 begin
   Timer.Enabled := true;
+end;
+
+procedure TMergeForm.ShowAuthorizationMessage;
+begin
+  if bAuthorized then begin
+    Logger.Write('Authorized');
+  end
+  else begin
+    Logger.Write('Not authorized');
+  end;
 end;
 
 {******************************************************************************}

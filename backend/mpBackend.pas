@@ -146,7 +146,7 @@ type
   procedure SaveStatistics;
   procedure LoadUsers;
   procedure SaveUsers;
-  function Authorized(username, auth: string): boolean;
+  function Authorized(username, ip, auth: string): boolean;
   function ResetAuth(username, ip, auth: string): boolean;
   procedure LoadDictionary(var lst: TList; filename: string);
   procedure LoadBlacklist(var lst, dictionary: TList);
@@ -885,7 +885,7 @@ begin
   json := nil;
 end;
 
-function Authorized(username, auth: string): boolean;
+function Authorized(username, ip, auth: string): boolean;
 var
   i: Integer;
   user: TUser;
@@ -895,6 +895,8 @@ begin
     user := TUser(UsersList[i]);
     if SameText(user.username, username) then begin
       Result := SameText(user.auth, auth);
+      if Result then
+        user.ip := ip;
       exit;
     end;
   end;

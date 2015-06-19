@@ -686,6 +686,8 @@ var
 begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
   Logger.Write('[SERVER] '+ip+' connected.');
+  if settings.uniqueIPs.IndexOf(ip) = -1 then
+    settings.uniqueIPs.Add(ip);
 end;
 
 procedure TBackendForm.TCPServerDisconnect(AContext: TIdContext);
@@ -713,9 +715,20 @@ begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
   WriteMessage(msg, ip);
   case msg.id of
+    MSG_NOTIFY: begin
+      note := 'No';
+      if Authorized(msg.username, ip, msg.auth) then
+        note := 'Yes';
+
+      // respond to user
+      response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
+      AContext.Connection.IOHandler.WriteLn(response.ToJson);
+      Logger.Write('[RESPONSE] '+note);
+    end;
+
     MSG_REGISTER: begin
       note := 'Username unavailable';
-      if Authorized(msg.username, msg.auth) then begin
+      if Authorized(msg.username, ip, msg.auth) then begin
         if msg.data = 'Check' then
           note := 'Available'
         else begin
@@ -757,7 +770,7 @@ begin
 
     MSG_REPORT: begin
       note := 'Not authorized';
-      if Authorized(msg.username, msg.auth) then try
+      if Authorized(msg.username, ip, msg.auth) then try
         report := TReport.Create;
         report.FromJson(msg.data);
         report.username := msg.username;
@@ -769,6 +782,7 @@ begin
         // add report to sql
         AddReport(report, 'unapproved_reports');
         note := 'Report accepted.';
+        Inc(statistics.reportsRecieved);
       except
         on x : Exception do
           note := 'Failed to load report.';
@@ -784,9 +798,7 @@ end;
 
 procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
 begin
-  Logger.Write('[SERVER] '+ip+' Message Recieved');
-  Logger.Write('  ID: '+IntToStr(msg.id));
-  Logger.Write('  Username: '+msg.username);
+  Logger.Write('[SERVER] '+ip+' ('+msg.username+') Sent Message ['+IntToStr(msg.id)+']');
   Logger.Write('  Data: '+msg.data);
 end;
 
@@ -798,6 +810,7 @@ begin
   LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
   msg := TmpMessage.Create;
   msg.FromJson(LLine);
+  Inc(sessionBandwidth, Length(LLine));
   HandleMessage(msg, AContext);
 end;
 
