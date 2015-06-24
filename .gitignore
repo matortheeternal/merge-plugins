@@ -66,3 +66,4 @@ backend/statistics.ini
 *.json
 frontend/user/settings.ini
 *.ini
+*.zip

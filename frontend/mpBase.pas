@@ -208,14 +208,6 @@ type
     procedure Save(const filename: string);
     procedure Load(const filename: string);
   end;
-  TTemplate = class(TObject)
-  public
-    sOpen: string;
-    sClose: string;
-    FormatString: string;
-    constructor Create(f: string); overload;
-    function Apply(const ArgsList: array of string): string;
-  end;
 
   { Initialization Methods }
   function GamePathValid(path: string; id: integer): boolean;
@@ -308,8 +300,7 @@ type
   function VersionCompare(v1, v2: string): boolean;
   procedure CompareStatuses;
   function UpdateDictionary: boolean;
-  procedure PrepareUpdateScripts;
-  procedure UpdateProgram;
+  function UpdateProgram: boolean;
   function DownloadProgram: boolean;
   function SendReports(var lst: TList): boolean;
 
@@ -321,35 +312,6 @@ const
     'Thalioden, zilav';
   ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
   xEditVersion = '3.1.1';
-
-  // TEMPLATES
-  sUpdateTemplate = '@echo off'#13#10+
-    ':loop'#13#10+
-    'tasklist /FI "IMAGENAME eq MergePlugins.exe" | findstr ":" > NUL'#13#10+
-    'if errorlevel 1 goto loop'#13#10+
-    'unzip "{{path}}MergePlugins.zip" "{{path}}"'#13#10+
-    'if errorlevel 1 goto fail'#13#10+
-    'start MergePlugins.exe'#13#10+
-    'del MergePlugins.zip'#13#10+
-    'del unzip.vbs'#13#10+
-    'del update.bat'#13#10+
-    'exit /b'#13#10+
-    'fail:'#13#10+
-    'del unzip.vbs'#13#10+
-    'del update.bat'#13#10+
-    'START cmd /c "ECHO Merge Plugins installation failed.  '+
-    'Please extract the ZIP archive manually. && PAUSE"'#13#10+
-    'explorer .'#13#10+
-    'exit /b';
-  sUnzipTemplate = 'Set objArgs = WScript.Arguments'#13#10+
-    'strZipFile = objArgs(0)'#13#10+
-    'outFolder = objArgs(1)'#13#10+
-    #13#10+
-    'Set objShell = CreateObject( "Shell.Application" )'#13#10+
-    'Set objSource = objShell.NameSpace(strZipFile).Items()'#13#10+
-    'Set objTarget = objShell.NameSpace(outFolder)'#13#10+
-    'intOptions = 20'#13#10+
-    'objTarget.CopyHere objSource, intOptions';
 
   // MSG IDs
   MSG_NOTIFY = 0;
@@ -415,7 +377,6 @@ var
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate: boolean;
   tempPath, logPath, ProgramPath, dictionaryFilename, ActiveProfile: string;
-  UpdateTemplate, UnzipTemplate: TTemplate;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
@@ -2351,20 +2312,15 @@ begin
   end;
 end;
 
-procedure PrepareUpdateScripts;
-var
-  UnzipScript, UpdateScript: string;
-begin
-  UnzipScript := UnzipTemplate.Apply(['']);
-  SaveStringToFile(UnzipScript, 'unzip.vbs');
-  UpdateScript := UpdateTemplate.Apply(['path', wbProgramPath]);
-  SaveStringToFile(UpdateScript, 'update.bat');
-end;
-
-procedure UpdateProgram;
+function UpdateProgram: boolean;
 var
   archive: TZipForge;
 begin
+  // check if zip for updating exists
+  Result := false;
+  if not FileExists('MergePlugins.zip') then
+    exit;
+
   // rename program
   if FileExists('MergePlugins.exe.bak') then
     DeleteFile('MergePlugins.exe.bak');
@@ -2383,11 +2339,17 @@ begin
       // Extract all files from the archive to current directory
       ExtractFiles('*.*');
       CloseArchive();
+      Result := true;
     end;
   except
-    on x: Exception do
+    on x: Exception do begin
       Logger.Write('Exception: ' + x.Message);
+      exit;
+    end;
   end;
+
+  // clean up
+  DeleteFile('MergePlugins.zip');
 end;
 
 function DownloadProgram: boolean;
@@ -3284,33 +3246,6 @@ begin
   // save file
   ini.UpdateFile;
   ini.Free;
-end;
-
-constructor TTemplate.Create(f: string);
-begin
-  sOpen := '{{';
-  sClose := '}}';
-  FormatString := f;
-end;
-
-function TTemplate.Apply(const ArgsList: array of string): string;
-var
-  i: Integer;
-  name, value: string;
-begin
-  Result := FormatString;
-
-  // loop through args list
-  i := 0;
-  while i + 1 < Length(ArgsList) do begin
-    // handle name and value
-    name := ArgsList[i];
-    value := ArgsList[i + 1];
-
-    // do replace
-    Result := StringReplace(Result, sOpen + name + sClose, value, [rfReplaceAll, rfIgnoreCase]);
-    Inc(i, 2);
-  end;
 end;
 
 

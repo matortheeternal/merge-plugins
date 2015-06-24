@@ -207,10 +207,6 @@ begin
     bLoaderDone := false;
     Status := TmpStatus.Create;
 
-    // INITIALIZE TEMPLATES
-    UpdateTemplate := TTemplate.Create(sUpdateTemplate);
-    UnzipTemplate := TTemplate.Create(sUnzipTemplate);
-
     // INITIALIZE CLIENT
     InitializeClient;
     ConnectToServer;
@@ -396,6 +392,13 @@ begin
   // delete temppath
   DeleteDirectory(tempPath);
   Action := caFree;
+
+  // restart program if update applied
+  if bInstallUpdate then
+    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
+  // restart program if game mode changed
+  if bChangeGameMode then
+    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
 end;
 
 procedure TMergeForm.OnTimer(Sender: TObject);
@@ -1715,13 +1718,11 @@ begin
     Close;
   end;
 
-  // if user select to update program, restart application
+  // if user selected to update program, restart application
   if bInstallUpdate then begin
-    //PrepareUpdateScripts;
-    //ShellExecute(Application.Handle, 'runas', PChar(wbProgramPath + 'update.bat'), '', '', SW_HIDE);
-    UpdateProgram;
-    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
-    Close;
+    bInstallUpdate := UpdateProgram;
+    if bInstallUpdate then
+      Close;
   end;
 end;
 
@@ -1729,13 +1730,11 @@ end;
 procedure TMergeForm.UpdateButtonClick(Sender: TObject);
 begin
   if bProgramUpdate and TCPClient.Connected then begin
-    if DownloadProgram then begin
-      //PrepareUpdateScripts;
-      //ShellExecute(Application.Handle, 'runas', PChar(wbProgramPath + 'update.bat'), '', '', SW_SHOWNORMAL);
-      UpdateProgram;
-      ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
+    if not DownloadProgram then
+      exit;
+    bInstallUpdate := UpdateProgram;
+    if bInstallUpdate then
       Close;
-    end;
   end;
 end;
 
