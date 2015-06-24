@@ -205,6 +205,11 @@ begin
     MergesList := TList.Create;
     PluginsList := TList.Create;
     bLoaderDone := false;
+    Status := TmpStatus.Create;
+
+    // INITIALIZE TEMPLATES
+    UpdateTemplate := TTemplate.Create(sUpdateTemplate);
+    UnzipTemplate := TTemplate.Create(sUnzipTemplate);
 
     // INITIALIZE CLIENT
     InitializeClient;
@@ -399,7 +404,9 @@ begin
     ConnectToServer;
   if TCPClient.Connected then begin
     Timer.Enabled := false;
-    Authorized;
+    CheckAuthorization;
+    GetStatus;
+    CompareStatuses;
     ShowAuthorizationMessage;
   end;
 end;
@@ -1707,12 +1714,29 @@ begin
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
     Close;
   end;
+
+  // if user select to update program, restart application
+  if bInstallUpdate then begin
+    //PrepareUpdateScripts;
+    //ShellExecute(Application.Handle, 'runas', PChar(wbProgramPath + 'update.bat'), '', '', SW_HIDE);
+    UpdateProgram;
+    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
+    Close;
+  end;
 end;
 
 { Update }
 procedure TMergeForm.UpdateButtonClick(Sender: TObject);
 begin
-  //LogMessage(TButton(Sender).Hint+' clicked!');
+  if bProgramUpdate and TCPClient.Connected then begin
+    if DownloadProgram then begin
+      //PrepareUpdateScripts;
+      //ShellExecute(Application.Handle, 'runas', PChar(wbProgramPath + 'update.bat'), '', '', SW_SHOWNORMAL);
+      UpdateProgram;
+      ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
+      Close;
+    end;
+  end;
 end;
 
 { Help }

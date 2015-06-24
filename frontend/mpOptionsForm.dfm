@@ -27,6 +27,10 @@ object OptionsForm: TOptionsForm
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblLanguage: TLabel
         Left = 6
         Top = 9
@@ -105,7 +109,7 @@ object OptionsForm: TOptionsForm
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Updating'
         TabOrder = 2
-        object Label1: TLabel
+        object lblDictionaryStatus: TLabel
           Left = 274
           Top = 23
           Width = 142
@@ -121,8 +125,10 @@ object OptionsForm: TOptionsForm
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
+          ParentShowHint = False
+          ShowHint = True
         end
-        object Label2: TLabel
+        object lblProgramStatus: TLabel
           Left = 274
           Top = 52
           Width = 142
@@ -138,6 +144,8 @@ object OptionsForm: TOptionsForm
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
+          ParentShowHint = False
+          ShowHint = True
         end
         object kbUpdateDictionary: TCheckBox
           Left = 12
@@ -168,6 +176,7 @@ object OptionsForm: TOptionsForm
           Caption = 'Update dictionary'
           Enabled = False
           TabOrder = 2
+          OnClick = btnUpdateDictionaryClick
         end
         object btnUpdateProgram: TButton
           Left = 422
@@ -180,6 +189,7 @@ object OptionsForm: TOptionsForm
           Caption = 'Update program'
           Enabled = False
           TabOrder = 3
+          OnClick = btnUpdateProgramClick
         end
       end
       object gbGameMode: TGroupBox
@@ -315,6 +325,10 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -486,7 +500,10 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbDebug: TGroupBox
         Left = 6
         Top = 6
@@ -636,7 +653,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008005C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

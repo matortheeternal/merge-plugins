@@ -9,6 +9,10 @@ uses
   IdTCPClient, IdGlobal,
   // superobject json library
   superobject,
+  // zipforge
+  ZipForge,
+  // CRC32
+  CRC32,
   // mp components
   mpLogger, mpTracker,
   // xEdit components
@@ -24,6 +28,17 @@ type
     auth: string;
     data: string;
     constructor Create(id: integer; username, auth, data: string); Overload;
+    function ToJson: string;
+    procedure FromJson(json: string);
+  end;
+  TmpStatus = class(TObject)
+  public
+    programVersion: string;
+    tes5Hash: string;
+    tes4Hash: string;
+    fnvHash: string;
+    fo3Hash: string;
+    constructor Create; Overload;
     function ToJson: string;
     procedure FromJson(json: string);
   end;
@@ -193,6 +208,14 @@ type
     procedure Save(const filename: string);
     procedure Load(const filename: string);
   end;
+  TTemplate = class(TObject)
+  public
+    sOpen: string;
+    sClose: string;
+    FormatString: string;
+    constructor Create(f: string); overload;
+    function Apply(const ArgsList: array of string): string;
+  end;
 
   { Initialization Methods }
   function GamePathValid(path: string; id: integer): boolean;
@@ -201,6 +224,7 @@ type
   function GetGamePath(gameName: string): string;
   procedure LoadDefinitions;
   function GetVersionMem: string;
+  function FileVersion(const FileName: string): String;
   { Bethesda Plugin Functions }
   function IsOverride(aRecord: IwbMainRecord): boolean;
   function LocalFormID(aRecord: IwbMainRecord): integer;
@@ -231,6 +255,7 @@ type
   function Wordwrap(var s: string; charCount: integer): string;
   function ContainsMatch(var sl: TStringList; const s: string): boolean;
   function IsURL(s: string): boolean;
+  procedure SaveStringToFile(s: string; fn: string);
   { Load order functions }
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
@@ -275,10 +300,17 @@ type
   { Client methods }
   procedure InitializeClient;
   procedure ConnectToServer;
-  function Authorized: boolean;
+  function CheckAuthorization: boolean;
   procedure ResetAuth;
   function UsernameAvailable: boolean;
   function RegisterUser: boolean;
+  function GetStatus: boolean;
+  function VersionCompare(v1, v2: string): boolean;
+  procedure CompareStatuses;
+  function UpdateDictionary: boolean;
+  procedure PrepareUpdateScripts;
+  procedure UpdateProgram;
+  function DownloadProgram: boolean;
   function SendReports(var lst: TList): boolean;
 
 
@@ -289,6 +321,35 @@ const
     'Thalioden, zilav';
   ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
   xEditVersion = '3.1.1';
+
+  // TEMPLATES
+  sUpdateTemplate = '@echo off'#13#10+
+    ':loop'#13#10+
+    'tasklist /FI "IMAGENAME eq MergePlugins.exe" | findstr ":" > NUL'#13#10+
+    'if errorlevel 1 goto loop'#13#10+
+    'unzip "{{path}}MergePlugins.zip" "{{path}}"'#13#10+
+    'if errorlevel 1 goto fail'#13#10+
+    'start MergePlugins.exe'#13#10+
+    'del MergePlugins.zip'#13#10+
+    'del unzip.vbs'#13#10+
+    'del update.bat'#13#10+
+    'exit /b'#13#10+
+    'fail:'#13#10+
+    'del unzip.vbs'#13#10+
+    'del update.bat'#13#10+
+    'START cmd /c "ECHO Merge Plugins installation failed.  '+
+    'Please extract the ZIP archive manually. && PAUSE"'#13#10+
+    'explorer .'#13#10+
+    'exit /b';
+  sUnzipTemplate = 'Set objArgs = WScript.Arguments'#13#10+
+    'strZipFile = objArgs(0)'#13#10+
+    'outFolder = objArgs(1)'#13#10+
+    #13#10+
+    'Set objShell = CreateObject( "Shell.Application" )'#13#10+
+    'Set objSource = objShell.NameSpace(strZipFile).Items()'#13#10+
+    'Set objTarget = objShell.NameSpace(outFolder)'#13#10+
+    'intOptions = 20'#13#10+
+    'objTarget.CopyHere objSource, intOptions';
 
   // MSG IDs
   MSG_NOTIFY = 0;
@@ -349,10 +410,12 @@ var
   dictionary, blacklist, PluginsList, MergesList: TList;
   settings: TSettings;
   statistics: TStatistics;
+  status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
-  bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone,
-  bProgressCancel, bAuthorized: boolean;
-  tempPath, logPath, dictionaryFilename, ActiveProfile: string;
+  bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
+  bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate: boolean;
+  tempPath, logPath, ProgramPath, dictionaryFilename, ActiveProfile: string;
+  UpdateTemplate, UnzipTemplate: TTemplate;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
@@ -467,6 +530,32 @@ begin
     end;
   finally
     m.Free;
+  end;
+end;
+
+{ Get program version from disk }
+function FileVersion(const FileName: string): String;
+var
+  VerInfoSize: Cardinal;
+  VerValueSize: Cardinal;
+  Dummy: Cardinal;
+  PVerInfo: Pointer;
+  PVerValue: PVSFixedFileInfo;
+begin
+  Result := '';
+  VerInfoSize := GetFileVersionInfoSize(PChar(FileName), Dummy);
+  GetMem(PVerInfo, VerInfoSize);
+  try
+    if GetFileVersionInfo(PChar(FileName), 0, VerInfoSize, PVerInfo) then
+      if VerQueryValue(PVerInfo, '\', Pointer(PVerValue), VerValueSize) then
+        with PVerValue^ do
+          Result := Format('%d.%d.%d.%d', [
+            HiWord(dwFileVersionMS), //Major
+            LoWord(dwFileVersionMS), //Minor
+            HiWord(dwFileVersionLS), //Release
+            LoWord(dwFileVersionLS)]); //Build
+  finally
+    FreeMem(PVerInfo, VerInfoSize);
   end;
 end;
 
@@ -1084,6 +1173,17 @@ end;
 function IsURL(s: string): boolean;
 begin
   Result := (Pos('http://', s) = 1) or (Pos('https://', s) = 1);
+end;
+
+{ Saves a string @s to a file at @fn }
+procedure SaveStringToFile(s: string; fn: string);
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  sl.Text := s;
+  sl.SaveToFile(fn);
+  sl.Free;
 end;
 
 
@@ -2015,7 +2115,7 @@ begin
   end;
 end;
 
-function Authorized: boolean;
+function CheckAuthorization: boolean;
 var
   msg, response: TmpMessage;
   msgJson, line: string;
@@ -2132,6 +2232,204 @@ begin
   end;
 end;
 
+function GetStatus: boolean;
+var
+  msg, response: TmpMessage;
+  msgJson, LLine: string;
+begin
+  Result := false;
+  Logger.Write('Getting status');
+
+  // attempt to get a status update
+  // throws exception if server is unavailable
+  try
+    // send status request to server
+    msg := TmpMessage.Create(MSG_STATUS, settings.username, settings.key, '');
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    response := TmpMessage.Create;
+    response.FromJson(LLine);
+    RemoteStatus := TmpStatus.Create;
+    RemoteStatus.FromJson(response.data);
+    Logger.Write('  Response: '+response.data);
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception getting status: '+x.Message);
+    end;
+  end;
+end;
+
+function VersionCompare(v1, v2: string): boolean;
+var
+  sl1, sl2: TStringList;
+  i, c1, c2: integer;
+begin
+  Result := false;
+
+  // parse versions with . as delimiter
+  sl1 := TStringList.Create;
+  sl1.LineBreak := '.';
+  sl1.Text := v1;
+  sl2 := TStringList.Create;
+  sl2.LineBreak := '.';
+  sl2.Text := v2;
+
+  // look through each version clause and perform comparisons
+  i := 0;
+  while (i < sl1.Count) and (i < sl2.Count) do begin
+    c1 := StrToInt(sl1[i]);
+    c2 := StrToInt(sl2[i]);
+    if (c1 < c2) then begin
+      Result := true;
+      break;
+    end
+    else if (c1 > c2) then begin
+      Result := false;
+      break;
+    end;
+    Inc(i);
+  end;
+
+  // free ram
+  sl1.Free;
+  sl2.Free;
+end;
+
+procedure CompareStatuses;
+begin
+  if not Assigned(RemoteStatus) then
+    exit;
+
+  // handle program update
+  // TODO: split string on . and do a greater than comparison for each clause
+  bProgramUpdate := VersionCompare(status.programVersion, RemoteStatus.programVersion);
+
+  // handle dictionary update based on gamemode
+  case wbGameMode of
+    gmTES5: bDictionaryUpdate := status.tes5Hash <> RemoteStatus.tes5Hash;
+    gmTES4: bDictionaryUpdate := status.tes4Hash <> RemoteStatus.tes4Hash;
+    gmFNV: bDictionaryUpdate := status.fnvHash <> RemoteStatus.fnvHash;
+    gmFO3: bDictionaryUpdate := status.fo3Hash <> RemoteStatus.fo3Hash;
+  end;
+end;
+
+function UpdateDictionary: boolean;
+var
+  msg: TmpMessage;
+  msgJson, filename: string;
+  stream: TFileStream;
+begin
+  Result := false;
+  filename := wbAppName+'Dictionary.txt';
+  Logger.Write('Updating '+filename);
+
+  // attempt to request dictionary
+  // throws exception if server is unavailable
+  try
+    // send request to server
+    msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, filename);
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    stream := TFileStream.Create(filename, fmCreate + fmShareDenyNone);
+    TCPClient.IOHandler.LargeStream := True;
+    TCPClient.IOHandler.ReadStream(stream, -1, False);
+
+    // load dictionary from response
+    Logger.Write('  '+filename+' recieved.  (Size: '+FormatByteSize(stream.Size)+')');
+    stream.Free;
+    LoadDictionary;
+    Result := true;
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception updating dictionary: '+x.Message);
+    end;
+  end;
+end;
+
+procedure PrepareUpdateScripts;
+var
+  UnzipScript, UpdateScript: string;
+begin
+  UnzipScript := UnzipTemplate.Apply(['']);
+  SaveStringToFile(UnzipScript, 'unzip.vbs');
+  UpdateScript := UpdateTemplate.Apply(['path', wbProgramPath]);
+  SaveStringToFile(UpdateScript, 'update.bat');
+end;
+
+procedure UpdateProgram;
+var
+  archive: TZipForge;
+begin
+  // rename program
+  if FileExists('MergePlugins.exe.bak') then
+    DeleteFile('MergePlugins.exe.bak');
+  RenameFile('MergePlugins.exe', 'MergePlugins.exe.bak');
+
+  // Create an instance of the TZipForge class
+  archive := TZipForge.Create(nil);
+  try
+    with archive do begin
+      // The name of the ZIP file to unzip
+      FileName := wbProgramPath + 'MergePlugins.zip';
+      // Open an existing archive
+      OpenArchive(fmOpenRead);
+      // Set base (default) directory for all archive operations
+      BaseDir := wbProgramPath;
+      // Extract all files from the archive to current directory
+      ExtractFiles('*.*');
+      CloseArchive();
+    end;
+  except
+    on x: Exception do
+      Logger.Write('Exception: ' + x.Message);
+  end;
+end;
+
+function DownloadProgram: boolean;
+var
+  msg: TmpMessage;
+  msgJson, filename: string;
+  stream: TFileStream;
+begin
+  Result := false;
+  filename := 'MergePlugins.zip';
+  if FileExists(filename) then begin
+    MessageDlg('You already have a pending program update!', mtInformation, [mbOk], 0);
+    exit;
+  end;
+
+  Logger.Write('Updating Program to v'+RemoteStatus.programVersion);
+
+  // attempt to request dictionary
+  // throws exception if server is unavailable
+  try
+    // send request to server
+    msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, 'Program');
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    Logger.Write('  Downloading '+filename);
+    stream := TFileStream.Create('MergePlugins.zip', fmCreate + fmShareDenyNone);
+    TCPClient.IOHandler.LargeStream := True;
+    TCPClient.IOHandler.ReadStream(stream, -1, False);
+
+    // load dictionary from response
+    Logger.Write('  '+filename+' recieved.  (Size: '+FormatByteSize(stream.Size)+')');
+    stream.Free;
+    Result := true;
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception updating program: '+x.Message);
+    end;
+  end;
+end;
+
 function SendReports(var lst: TList): boolean;
 var
   i: integer;
@@ -2239,6 +2537,50 @@ begin
   username := obj.S['username'];
   auth := obj.S['auth'];
   data := obj.S['data'];
+end;
+
+{ Constructor for TmpStatus }
+constructor TmpStatus.Create;
+begin
+  ProgramVersion := GetVersionMem;
+  if FileExists('TES5Dictionary.txt') then
+    TES5Hash := GetCRC32('TES5Dictionary.txt');
+  if FileExists('TES4Dictionary.txt') then
+    TES4Hash := GetCRC32('TES4Dictionary.txt');
+  if FileExists('FNVDictionary.txt') then
+    FNVHash := GetCRC32('FNVDictionary.txt');
+  if FileExists('FO3Dictionary.txt') then
+    FO3Hash := GetCRC32('FO3Dictionary.txt');
+end;
+
+{ TmpStatus to json string }
+function TmpStatus.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO;
+
+  obj.S['ProgramVersion'] := ProgramVersion;
+  obj.S['TES5Hash'] := TES5Hash;
+  obj.S['TES4Hash'] := TES4Hash;
+  obj.S['FNVHash'] := FNVHash;
+  obj.S['FO3Hash'] := FO3Hash;
+
+  Result := obj.AsJSon;
+end;
+
+{ Json string to TmpStatus }
+procedure TmpStatus.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  ProgramVersion := obj.S['ProgramVersion'];
+  TES5Hash := obj.S['TES5Hash'];
+  TES4Hash := obj.S['TES4Hash'];
+  FNVHash := obj.S['FNVHash'];
+  FO3Hash := obj.S['FO3Hash'];
 end;
 
 { TReport Constructor }
@@ -2944,6 +3286,32 @@ begin
   ini.Free;
 end;
 
+constructor TTemplate.Create(f: string);
+begin
+  sOpen := '{{';
+  sClose := '}}';
+  FormatString := f;
+end;
+
+function TTemplate.Apply(const ArgsList: array of string): string;
+var
+  i: Integer;
+  name, value: string;
+begin
+  Result := FormatString;
+
+  // loop through args list
+  i := 0;
+  while i + 1 < Length(ArgsList) do begin
+    // handle name and value
+    name := ArgsList[i];
+    value := ArgsList[i + 1];
+
+    // do replace
+    Result := StringReplace(Result, sOpen + name + sClose, value, [rfReplaceAll, rfIgnoreCase]);
+    Inc(i, 2);
+  end;
+end;
 
 
 end.

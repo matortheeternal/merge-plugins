@@ -67,8 +67,8 @@ type
     btnReset: TButton;
     btnUpdateDictionary: TButton;
     btnUpdateProgram: TButton;
-    Label1: TLabel;
-    Label2: TLabel;
+    lblDictionaryStatus: TLabel;
+    lblProgramStatus: TLabel;
     gbPrivacy: TGroupBox;
     kbNoStatistics: TCheckBox;
     kbNoPersistentConnection: TCheckBox;
@@ -83,6 +83,8 @@ type
     procedure edUsernameChange(Sender: TObject);
     procedure btnRegisterClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
+    procedure btnUpdateDictionaryClick(Sender: TObject);
+    procedure btnUpdateProgramClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -267,12 +269,36 @@ procedure TOptionsForm.btnResetClick(Sender: TObject);
 begin
   if settings.registered and not bAuthorized then begin
     ResetAuth;
-    Authorized;
+    CheckAuthorization;
     if bAuthorized then begin
       btnReset.Enabled := false;
       lblStatus.Caption := 'Registered';
       lblStatus.Font.Color := clGreen;
       lblStatus.Hint := '';
+    end;
+  end;
+end;
+
+procedure TOptionsForm.btnUpdateDictionaryClick(Sender: TObject);
+begin
+  if TCPClient.Connected then begin
+    if UpdateDictionary then begin
+      status := TmpStatus.Create;
+      CompareStatuses;
+      btnUpdateDictionary.Enabled := false;
+      lblDictionaryStatus.Caption := 'Up to date';
+      lblDictionaryStatus.Font.Color := clGreen;
+    end;
+  end;
+end;
+
+procedure TOptionsForm.btnUpdateProgramClick(Sender: TObject);
+begin
+  if TCPClient.Connected then begin
+    if DownloadProgram then begin
+      bInstallUpdate := true;
+      btnOKClick(nil);
+      Close;
     end;
   end;
 end;
@@ -381,6 +407,22 @@ begin
       lblStatus.Font.Color := clGreen;
       lblStatus.Hint := '';
     end;
+  end;
+
+  // dictionary update
+  if bDictionaryUpdate then begin
+    btnUpdateDictionary.Enabled := bDictionaryUpdate;
+    lblDictionaryStatus.Caption := 'Update available!';
+    lblDictionaryStatus.Font.Color := clOrange;
+  end;
+
+  // program update
+  if bProgramUpdate then begin
+    btnUpdateProgram.Enabled := bProgramUpdate;
+    lblProgramStatus.Caption := 'Update available!';
+    lblProgramStatus.Hint := 'Current Version: '+status.programVersion+
+      #13#10'New Version: '+RemoteStatus.programVersion;
+    lblProgramStatus.Font.Color := clOrange;
   end;
 
   // set up buttons

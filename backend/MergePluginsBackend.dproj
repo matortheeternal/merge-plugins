@@ -118,6 +118,7 @@
 				<Form>LoginForm</Form>
 			</DCCReference>
 			<DCCReference Include="W7Taskbar.pas"/>
+			<DCCReference Include="CRC32.pas"/>
 			<None Include="ModelSupport_MergePlugins\default.txaPackage"/>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
 			<None Include="ModelSupport_MergePlugins\mpTracker\default.txvpck"/>
@@ -176,7 +177,7 @@
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">71</VersionInfo>
+						<VersionInfo Name="Build">80</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -188,7 +189,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.0.0.71</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.0.0.80</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

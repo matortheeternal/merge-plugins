@@ -28,7 +28,8 @@ uses
   mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpLoginForm in 'mpLoginForm.pas' {LoginForm},
-  W7Taskbar in 'W7Taskbar.pas';
+  W7Taskbar in 'W7Taskbar.pas',
+  CRC32 in 'CRC32.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

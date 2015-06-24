@@ -63,3 +63,6 @@ dev/statistics.ini
 dev/TES5Errors.json
 backend/users.json
 backend/statistics.ini
+*.json
+frontend/user/settings.ini
+*.ini

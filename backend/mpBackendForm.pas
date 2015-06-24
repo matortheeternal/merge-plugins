@@ -160,6 +160,7 @@ begin
     logPath := ProgramPath + 'logs\';
     ForceDirectories(tempPath);
     Logger.OnLogEvent := LogMessage;
+    status := TmpStatus.Create;
     LoadUsers;
 
     // GUI ICONS
@@ -177,10 +178,10 @@ begin
     TES4Dictionary := TList.Create;
     FO3Dictionary := TList.Create;
     FNVDictionary := TList.Create;
-    LoadDictionary(TES5Dictionary, 'TES5Dictionary.txt');
-    LoadDictionary(TES4Dictionary, 'TES4Dictionary.txt');
-    LoadDictionary(FO3Dictionary, 'FO3Dictionary.txt');
-    LoadDictionary(FNVDictionary, 'FNVDictionary.txt');
+    LoadDictionary(TES5Dictionary, slTES5Dictionary, 'TES5Dictionary.txt');
+    LoadDictionary(TES4Dictionary, slTES4Dictionary, 'TES4Dictionary.txt');
+    LoadDictionary(FO3Dictionary, slFO3Dictionary, 'FO3Dictionary.txt');
+    LoadDictionary(FNVDictionary, slFNVDictionary, 'FNVDictionary.txt');
 
     // LOAD REPORTS
     QueryReports;
@@ -711,6 +712,7 @@ var
   response: TmpMessage;
   note, ip: string;
   user: TUser;
+  stream: TMemoryStream;
 begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
   WriteMessage(msg, ip);
@@ -723,7 +725,8 @@ begin
       // respond to user
       response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
       AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[RESPONSE] '+note);
+      Logger.Write('[SERVER] Response: '+note);
+      response.Free;
     end;
 
     MSG_REGISTER: begin
@@ -741,7 +744,8 @@ begin
       // respond to user
       response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
       AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[RESPONSE] '+note);
+      Logger.Write('[SERVER] Response: '+note);
+      response.Free;
     end;
 
     MSG_AUTH_RESET:  begin
@@ -752,7 +756,8 @@ begin
       // respond to user
       response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
       AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[RESPONSE] '+note);
+      Logger.Write('[SERVER] Response: '+note);
+      response.Free;
     end;
 
     MSG_STATISTICS:  begin
@@ -760,12 +765,36 @@ begin
     end;
 
     MSG_STATUS:  begin
-      response := TmpMessage.Create(MSG_NOTIFY, '', '', status.ToJson);
+      response := TmpMessage.Create(MSG_STATUS, '', '', status.ToJson);
       AContext.Connection.IOHandler.WriteLn(response.ToJson);
+      response.Free;
     end;
 
     MSG_REQUEST:  begin
-      // TODO: Handle dictionary, program requests
+      if (Pos('Dictionary', msg.data) > 0) then begin
+        if FileExists(msg.data) then begin
+          stream := TMemoryStream.Create;
+          stream.LoadFromFile(msg.data);
+          AContext.Connection.IOHandler.LargeStream := True;
+          AContext.Connection.IOHandler.Write(stream, 0, true);
+          Inc(sessionBandwidth, stream.Size);
+          Logger.Write('[SERVER] Response: Sent '+msg.data+' '+ GetDictionaryHash(msg.data));
+          stream.Free;
+        end;
+      end
+      else if msg.data = 'Program' then begin
+        if FileExists('MergePlugins.zip') then begin
+          stream := TMemoryStream.Create;
+          stream.LoadFromFile('MergePlugins.zip');
+          AContext.Connection.IOHandler.LargeStream := True;
+          AContext.Connection.IOHandler.Write(stream, 0, true);
+          Inc(sessionBandwidth, stream.Size);
+          Logger.Write('[SERVER] Response: Sent '+msg.data+' '+ status.programVersion);
+          stream.Free;
+        end
+        else
+          Logger.Write('[SERVER] ERROR: MergePlugins.zip doesn''t exist!');
+      end;
     end;
 
     MSG_REPORT: begin
@@ -791,7 +820,8 @@ begin
       // respond to user
       response := TmpMessage.Create(MSG_NOTIFY, 'Server', '0', note);
       AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[RESPONSE] '+note);
+      Logger.Write('[SERVER] Response: '+note);
+      response.Free;
     end;
   end;
 end;
@@ -799,7 +829,8 @@ end;
 procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
 begin
   Logger.Write('[SERVER] '+ip+' ('+msg.username+') Sent Message ['+IntToStr(msg.id)+']');
-  Logger.Write('  Data: '+msg.data);
+  if (msg.data <> '') then
+    Logger.Write('[SERVER]   Data: '+msg.data);
 end;
 
 procedure TBackendForm.TCPServerExecute(AContext: TIdContext);
@@ -810,8 +841,11 @@ begin
   LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
   msg := TmpMessage.Create;
   msg.FromJson(LLine);
-  Inc(sessionBandwidth, Length(LLine));
+  Inc(sessionBandwidth, SizeOf(LLine));
   HandleMessage(msg, AContext);
+
+  // free message
+  msg.Free;
 end;
 
 

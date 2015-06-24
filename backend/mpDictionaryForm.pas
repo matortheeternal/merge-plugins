@@ -112,6 +112,7 @@ end;
 procedure TDictionaryForm.GetDictionary;
 var
   dictionaryFilename: string;
+  sl: TStringList;
 begin
   // prepare to reload
   vlInfo.Strings.Clear;
@@ -120,8 +121,9 @@ begin
   // initialize dictionary details
   dictionary := TList.Create;
   blacklist := TList.Create;
+  sl := TStringList.Create;
   dictionaryFilename := cbGame.Text + 'Dictionary.txt';
-  LoadDictionary(dictionary, dictionaryFilename);
+  LoadDictionary(dictionary, sl, dictionaryFilename);
   LoadBlacklist(blacklist, dictionary);
   vlInfo.InsertRow('Filename', dictionaryFilename, true);
   vlInfo.InsertRow('File size', FormatByteSize(GetFileSize(dictionaryFilename)), true);
@@ -133,6 +135,9 @@ begin
 
   // autosize filename column
   lvEntries.Columns[0].AutoSize := true;
+
+  // free
+  sl.Free;
 end;
 
 procedure TDictionaryForm.FormCreate(Sender: TObject);

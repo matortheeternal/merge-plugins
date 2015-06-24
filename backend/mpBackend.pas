@@ -11,6 +11,8 @@ uses
   ComCtrls, ZDbcInterbase6, ZSqlMonitor, ZAbstractDataset, ZSequence,
   // superobject
   superobject,
+  // crc32
+  CRC32,
   // mp components
   mpLogger, mpTracker;
 
@@ -34,17 +36,16 @@ type
     function ToJson: string;
     procedure FromJson(json: string);
   end;
-  TmpStatus = class(TObjecT)
+  TmpStatus = class(TObject)
   public
     programVersion: string;
     tes5Hash: string;
     tes4Hash: string;
     fnvHash: string;
     fo3Hash: string;
+    constructor Create; Overload;
     function ToJson: string;
     procedure FromJson(json: string);
-    procedure Save(const filename: string);
-    procedure Load(const filename: string);
   end;
   TReport = class(TObject)
   public
@@ -129,6 +130,7 @@ type
   function IsURL(s: string): boolean;
   function GetSessionUptime: TDateTime;
   function GetVersionMem: string;
+  function FileVersion(const FileName: string): String;
   { Windows API functions }
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
@@ -140,15 +142,16 @@ type
   { Data methods }
   procedure LoadSettings;
   procedure SaveSettings;
-  procedure LoadStatus;
-  procedure SaveStatus;
   procedure LoadStatistics;
   procedure SaveStatistics;
   procedure LoadUsers;
   procedure SaveUsers;
   function Authorized(username, ip, auth: string): boolean;
   function ResetAuth(username, ip, auth: string): boolean;
-  procedure LoadDictionary(var lst: TList; filename: string);
+  function GetProgram: string;
+  function GetDictionary(name: string): string;
+  function GetDictionaryHash(name: string): string;
+  procedure LoadDictionary(var lst: TList; var sl: TStringList; filename: string);
   procedure LoadBlacklist(var lst, dictionary: TList);
   function GetRatingColor(rating: real): integer;
   function GetEntry(var dictionary: TList; pluginName, numRecords, version: string): TEntry;
@@ -168,6 +171,7 @@ const
 var
   TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary,
   ApprovedReports, UnapprovedReports, UsersList: TList;
+  slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary: TStringList;
   statistics: TStatistics;
   settings: TSettings;
   status: TmpStatus;
@@ -565,6 +569,32 @@ begin
   end;
 end;
 
+{ Get program version from disk }
+function FileVersion(const FileName: string): String;
+var
+  VerInfoSize: Cardinal;
+  VerValueSize: Cardinal;
+  Dummy: Cardinal;
+  PVerInfo: Pointer;
+  PVerValue: PVSFixedFileInfo;
+begin
+  Result := '';
+  VerInfoSize := GetFileVersionInfoSize(PChar(FileName), Dummy);
+  GetMem(PVerInfo, VerInfoSize);
+  try
+    if GetFileVersionInfo(PChar(FileName), 0, VerInfoSize, PVerInfo) then
+      if VerQueryValue(PVerInfo, '\', Pointer(PVerValue), VerValueSize) then
+        with PVerValue^ do
+          Result := Format('%d.%d.%d.%d', [
+            HiWord(dwFileVersionMS), //Major
+            LoWord(dwFileVersionMS), //Minor
+            HiWord(dwFileVersionLS), //Release
+            LoWord(dwFileVersionLS)]); //Build
+  finally
+    FreeMem(PVerInfo, VerInfoSize);
+  end;
+end;
+
 
 {******************************************************************************}
 { Windows API functions
@@ -805,17 +835,6 @@ begin
   settings.Save('settings.ini');
 end;
 
-procedure LoadStatus;
-begin
-  status := TmpStatus.Create;
-  status.Load('status.json');
-end;
-
-procedure SaveStatus;
-begin
-  status.Save('status.json');
-end;
-
 procedure LoadStatistics;
 begin
   statistics := TStatistics.Create;
@@ -919,11 +938,39 @@ begin
   end;
 end;
 
-procedure LoadDictionary(var lst: TList; filename: string);
+function GetProgram: string;
+begin
+  Result := '';
+end;
+
+function GetDictionary(name: string): string;
+begin
+  if name = 'TES5Dictionary.txt' then
+    Result := slTES5Dictionary.Text
+  else if name = 'TES4Dictionary.txt' then
+    Result := slTES4Dictionary.Text
+  else if name = 'FNVDictionary.txt' then
+    Result := slFNVDictionary.Text
+  else if name = 'FO3Dictionary.txt' then
+    Result := slFO3Dictionary.Text;
+end;
+
+function GetDictionaryHash(name: string): string;
+begin
+  if name = 'TES5Dictionary.txt' then
+    Result := status.tes5hash
+  else if name = 'TES4Dictionary.txt' then
+    Result := status.tes4hash
+  else if name = 'FNVDictionary.txt' then
+    Result := status.fnvhash
+  else if name = 'FO3Dictionary.txt' then
+    Result := status.fo3hash;
+end;
+
+procedure LoadDictionary(var lst: TList; var sl: TStringList; filename: string);
 var
   i: Integer;
   entry: TEntry;
-  sl: TStringList;
 begin
   // don't attempt to load dictionary if it doesn't exist
   if not FileExists(filename) then begin
@@ -940,9 +987,6 @@ begin
     entry := TEntry.Create(sl[i]);
     lst.Add(entry);
   end;
-
-  // free temporary stringlist
-  sl.Free;
 end;
 
 procedure LoadBlacklist(var lst, dictionary: TList);
@@ -1017,8 +1061,6 @@ end;
   - TmpMessage.FromJson
   - TmpStatus.ToJson
   - TmpStatus.FromJson
-  - TmpStatus.Save
-  - TmpStatus.Load
   - TReport.Create
   - TReport.Create
   - TReport.ToJson
@@ -1098,6 +1140,28 @@ begin
   data := obj.S['data'];
 end;
 
+{ Constructor for TmpStatus }
+constructor TmpStatus.Create;
+begin
+  if FileExists('MergePlugins.exe') then
+    ProgramVersion := FileVersion('MergePlugins.exe');
+  if FileExists('TES5Dictionary.txt') then
+    TES5Hash := GetCRC32('TES5Dictionary.txt');
+  if FileExists('TES4Dictionary.txt') then
+    TES4Hash := GetCRC32('TES4Dictionary.txt');
+  if FileExists('FNVDictionary.txt') then
+    FNVHash := GetCRC32('FNVDictionary.txt');
+  if FileExists('FO3Dictionary.txt') then
+    FO3Hash := GetCRC32('FO3Dictionary.txt');
+
+  // log it all
+  Logger.Write('[INIT] Client Version: '+ProgramVersion);
+  Logger.Write('[INIT] TES5Dictionary Hash: '+TES5Hash);
+  Logger.Write('[INIT] TES4Dictionary Hash: '+TES4Hash);
+  Logger.Write('[INIT] FNVDictionary Hash: '+FNVHash);
+  Logger.Write('[INIT] FO3Dictionary Hash: '+FO3Hash);
+end;
+
 { TmpStatus to json string }
 function TmpStatus.ToJson: string;
 var
@@ -1105,34 +1169,13 @@ var
 begin
   obj := SO;
 
-  // filename, hash, errors
-  obj.S['programVersion'] := programVersion;
-  obj.S['tes5Hash'] := tes5Hash;
-  obj.S['tes4Hash'] := tes4Hash;
-  obj.S['fnvHash'] := fnvHash;
-  obj.S['fo3Hash'] := fo3Hash;
+  obj.S['ProgramVersion'] := ProgramVersion;
+  obj.S['TES5Hash'] := TES5Hash;
+  obj.S['TES4Hash'] := TES4Hash;
+  obj.S['FNVHash'] := FNVHash;
+  obj.S['FO3Hash'] := FO3Hash;
 
   Result := obj.AsJSon;
-end;
-
-procedure TmpStatus.Save(const filename: string);
-var
-  sl: TStringList;
-begin
-  sl := TStringList.Create;
-  sl.Text := ToJson;
-  sl.SaveToFile(filename);
-  sl.Free;
-end;
-
-procedure TmpStatus.Load(const filename: string);
-var
-  sl: TStringList;
-begin
-  sl := TStringList.Create;
-  sl.LoadFromFile(filename);
-  FromJson(sl.Text);
-  sl.Free;
 end;
 
 { Json string to TmpStatus }
@@ -1142,11 +1185,11 @@ var
 begin
   obj := SO(PChar(json));
 
-  programVersion := obj.S['programVersion'];
-  tes5Hash := obj.S['tes5Hash'];
-  tes4Hash := obj.S['tes4Hash'];
-  fnvHash := obj.S['fnvHash'];
-  fo3Hash := obj.S['fo3Hash'];
+  ProgramVersion := obj.S['ProgramVersion'];
+  TES5Hash := obj.S['TES5Hash'];
+  TES4Hash := obj.S['TES4Hash'];
+  FNVHash := obj.S['FNVHash'];
+  FO3Hash := obj.S['FO3Hash'];
 end;
 
 { TReport Constructor }

@@ -4,8 +4,8 @@ object LoginForm: TLoginForm
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Login to MySQL'
-  ClientHeight = 208
-  ClientWidth = 291
+  ClientHeight = 212
+  ClientWidth = 294
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object LoginForm: TLoginForm
   TextHeight = 13
   object btnLogin: TButton
     Left = 63
-    Top = 175
+    Top = 179
     Width = 75
     Height = 25
     Caption = 'Login'
@@ -27,7 +27,7 @@ object LoginForm: TLoginForm
   end
   object btnCancel: TButton
     Left = 152
-    Top = 175
+    Top = 179
     Width = 75
     Height = 25
     Caption = 'Cancel'
@@ -37,8 +37,8 @@ object LoginForm: TLoginForm
   object gbLogin: TGroupBox
     Left = 8
     Top = 8
-    Width = 273
-    Height = 161
+    Width = 278
+    Height = 165
     Caption = 'Login'
     TabOrder = 2
     object lblUserID: TLabel
