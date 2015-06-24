@@ -1712,13 +1712,11 @@ begin
   // update owner draw if changed
   PluginsListView.OwnerDraw := not settings.simplePluginsView;
 
-  // if user selected to change game mode, restart application with -sg param
-  if bChangeGameMode then begin
-    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
+  // if user selected to change game mode, close application
+  if bChangeGameMode then
     Close;
-  end;
 
-  // if user selected to update program, restart application
+  // if user selected to update program, close application
   if bInstallUpdate then begin
     bInstallUpdate := UpdateProgram;
     if bInstallUpdate then

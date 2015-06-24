@@ -389,23 +389,26 @@ begin
   kbUsingMOClick(nil);
 
   // if already registered, lock registering controls
+  edUsernameChange(nil);
   if settings.registered then begin
     edUsername.Enabled := false;
     btnRegister.Enabled := false;
     // if not authorized then enabled reset button
-    if not bAuthorized then begin
-      btnReset.Enabled := true;
-      lblStatus.Caption := 'Authorization failed!';
-      lblStatus.Font.Color := clRed;
-      lblStatus.Hint := 'Click reset to reset your authentication key.'#13+
-        'NOTE: This will fail if your IP has changed since you last logged in.'#13+
-        'If you can''t recover your username you can either make a new one or '#13+
-        'contact support.';
-    end
-    else begin
-      lblStatus.Caption := 'Registered.';
-      lblStatus.Font.Color := clGreen;
-      lblStatus.Hint := '';
+    if TCPClient.Connected then begin
+      if not bAuthorized then begin
+        btnReset.Enabled := true;
+        lblStatus.Caption := 'Authorization failed!';
+        lblStatus.Font.Color := clRed;
+        lblStatus.Hint := 'Click reset to reset your authentication key.'#13+
+          'NOTE: This will fail if your IP has changed since you last logged in.'#13+
+          'If you can''t recover your username you can either make a new one or '#13+
+          'contact support.';
+      end
+      else begin
+        lblStatus.Caption := 'Registered.';
+        lblStatus.Font.Color := clGreen;
+        lblStatus.Hint := '';
+      end;
     end;
   end;
 
