@@ -311,7 +311,6 @@ object DictionaryForm: TDictionaryForm
       Height = 203
       Align = alTop
       TabOrder = 0
-      ExplicitTop = 1
       object lblDictionary: TLabel
         Left = 8
         Top = 8
@@ -347,8 +346,6 @@ object DictionaryForm: TDictionaryForm
       Height = 438
       Align = alClient
       TabOrder = 1
-      ExplicitTop = 204
-      ExplicitHeight = 477
       object lblNotes: TLabel
         Left = 5
         Top = 6
@@ -367,7 +364,6 @@ object DictionaryForm: TDictionaryForm
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitHeight = 448
       end
     end
   end

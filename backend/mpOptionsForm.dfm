@@ -12,6 +12,7 @@ object OptionsForm: TOptionsForm
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object SettingsPageControl: TPageControl
@@ -19,11 +20,472 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = GeneralTabSheet
+    ActivePage = UsersTabsheet
     TabOrder = 0
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
+      object gbStatus: TGroupBox
+        Left = 6
+        Top = 6
+        Width = 548
+        Height = 107
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Status'
+        TabOrder = 0
+        object lblVersion: TLabel
+          Left = 12
+          Top = 20
+          Width = 108
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'Client Program Version'
+        end
+        object lblTES5Hash: TLabel
+          Left = 12
+          Top = 53
+          Width = 102
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'TES5 Dictionary Hash'
+        end
+        object lblTES4Hash: TLabel
+          Left = 12
+          Top = 78
+          Width = 102
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'TES4 Dictionary Hash'
+        end
+        object lblTES4HashValue: TLabel
+          Left = 190
+          Top = 78
+          Width = 63
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '$01234567'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblFNVHash: TLabel
+          Left = 295
+          Top = 53
+          Width = 97
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'FNV Dictionary Hash'
+        end
+        object lblFNVHashValue: TLabel
+          Left = 473
+          Top = 53
+          Width = 63
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 12
+          Margins.Bottom = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = '$01234567'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblFO3Hash: TLabel
+          Left = 295
+          Top = 78
+          Width = 98
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'FO3 Dictionary Hash'
+        end
+        object lblFO3HashValue: TLabel
+          Left = 473
+          Top = 78
+          Width = 63
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 12
+          Margins.Bottom = 6
+          Caption = '$01234567'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblVersionValue: TLabel
+          Left = 190
+          Top = 20
+          Width = 37
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '2.0.0.0'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblTES5HashValue: TLabel
+          Left = 190
+          Top = 53
+          Width = 63
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '$01234567'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnUpdateStatus: TButton
+          Left = 436
+          Top = 16
+          Width = 106
+          Height = 25
+          Margins.Left = 6
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Update Status'
+          TabOrder = 0
+          OnClick = btnUpdateStatusClick
+        end
+      end
+      object gbColoring: TGroupBox
+        Left = 6
+        Top = 235
+        Width = 548
+        Height = 107
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Log Coloring'
+        TabOrder = 1
+        object lblServerColor: TLabel
+          Left = 12
+          Top = 20
+          Width = 32
+          Height = 13
+          Caption = 'Server'
+        end
+        object lblInitColor: TLabel
+          Left = 12
+          Top = 47
+          Width = 16
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 11
+          Caption = 'Init'
+        end
+        object lblSQLColor: TLabel
+          Left = 12
+          Top = 74
+          Width = 19
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 11
+          Caption = 'SQL'
+        end
+        object lblDictionaryColor: TLabel
+          Left = 274
+          Top = 20
+          Width = 48
+          Height = 13
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Dictionary'
+        end
+        object lblJavaColor: TLabel
+          Left = 274
+          Top = 47
+          Width = 23
+          Height = 13
+          Margins.Top = 11
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Java'
+        end
+        object lblErrorColor: TLabel
+          Left = 274
+          Top = 74
+          Width = 29
+          Height = 13
+          Margins.Top = 11
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Errors'
+        end
+        object cbServerColor: TColorBox
+          Left = 88
+          Top = 17
+          Width = 145
+          Height = 22
+          Selected = clBlue
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          TabOrder = 0
+        end
+        object cbInitColor: TColorBox
+          Left = 88
+          Top = 45
+          Width = 145
+          Height = 22
+          Selected = clGreen
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          TabOrder = 1
+        end
+        object cbSQLColor: TColorBox
+          Left = 88
+          Top = 73
+          Width = 145
+          Height = 22
+          Selected = clSkyBlue
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          TabOrder = 2
+        end
+        object cbDictionaryColor: TColorBox
+          Left = 392
+          Top = 17
+          Width = 145
+          Height = 22
+          Align = alCustom
+          Selected = 52479
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          Anchors = [akTop, akRight]
+          TabOrder = 3
+        end
+        object cbJavaColor: TColorBox
+          Left = 392
+          Top = 45
+          Width = 145
+          Height = 22
+          Align = alCustom
+          Selected = 33023
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          Anchors = [akTop, akRight]
+          TabOrder = 4
+        end
+        object cbErrorColor: TColorBox
+          Left = 392
+          Top = 73
+          Width = 145
+          Height = 22
+          Align = alCustom
+          Selected = clRed
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          Anchors = [akTop, akRight]
+          TabOrder = 5
+        end
+      end
+      object gbStyle: TGroupBox
+        Left = 6
+        Top = 125
+        Width = 548
+        Height = 98
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Style'
+        TabOrder = 2
+        object kbSimpleReports: TCheckBox
+          Left = 12
+          Top = 20
+          Width = 117
+          Height = 17
+          Caption = 'Simple reports list'
+          TabOrder = 0
+        end
+        object kbSimpleLog: TCheckBox
+          Left = 12
+          Top = 43
+          Width = 97
+          Height = 17
+          Caption = 'Simple log view'
+          TabOrder = 1
+        end
+        object kbSimpleDictionary: TCheckBox
+          Left = 12
+          Top = 66
+          Width = 125
+          Height = 17
+          Caption = 'Simple dictionary view'
+          TabOrder = 2
+        end
+      end
+    end
+    object UsersTabsheet: TTabSheet
+      Caption = 'Users'
+      ImageIndex = 2
+      object gbBlacklist: TGroupBox
+        Left = 6
+        Top = 6
+        Width = 548
+        Height = 169
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Blacklist'
+        TabOrder = 0
+        object lvBlacklist: TListView
+          Left = 12
+          Top = 20
+          Width = 524
+          Height = 133
+          Margins.Left = 12
+          Margins.Top = 20
+          Margins.Right = 12
+          Margins.Bottom = 6
+          Align = alCustom
+          Anchors = [akLeft, akTop, akRight]
+          Columns = <
+            item
+              Caption = 'IP Address'
+              Width = 120
+            end
+            item
+              AutoSize = True
+              Caption = 'Username'
+            end
+            item
+              Caption = 'Created'
+              Width = 120
+            end
+            item
+              Caption = 'Expires'
+              Width = 120
+            end>
+          DoubleBuffered = True
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          MultiSelect = True
+          OwnerData = True
+          RowSelect = True
+          ParentDoubleBuffered = False
+          ParentFont = False
+          PopupMenu = pmBlacklist
+          TabOrder = 0
+          ViewStyle = vsReport
+          OnData = lvBlacklistData
+        end
+      end
+      object GroupBox1: TGroupBox
+        Left = 6
+        Top = 187
+        Width = 548
+        Height = 167
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Unique Users'
+        TabOrder = 1
+        object lvUsers: TListView
+          Left = 12
+          Top = 20
+          Width = 524
+          Height = 133
+          Margins.Left = 12
+          Margins.Top = 20
+          Margins.Right = 12
+          Margins.Bottom = 6
+          Align = alCustom
+          Anchors = [akLeft, akTop, akRight]
+          Columns = <
+            item
+              Caption = 'IP Address'
+              Width = 120
+            end
+            item
+              AutoSize = True
+              Caption = 'Username'
+            end
+            item
+              Caption = 'First seen'
+              Width = 120
+            end
+            item
+              Caption = 'Last seen'
+              Width = 120
+            end>
+          DoubleBuffered = True
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          MultiSelect = True
+          OwnerData = True
+          RowSelect = True
+          ParentDoubleBuffered = False
+          ParentFont = False
+          PopupMenu = pmUsers
+          TabOrder = 0
+          ViewStyle = vsReport
+          OnData = lvUsersData
+        end
+      end
     end
   end
   object btnCancel: TButton
@@ -49,7 +511,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800500010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -187,5 +649,34 @@ object OptionsForm: TOptionsForm
       0007000000000000000700000000000000FF00000000000001FF000000000000
       FFFF000000000000FFFF00000000000000000000000000000000000000000000
       000000000000}
+  end
+  object pmBlacklist: TPopupMenu
+    OnPopup = pmBlacklistPopup
+    Left = 72
+    Top = 400
+    object UnblacklistItem: TMenuItem
+      Caption = 'Unblacklist'
+      OnClick = UnblacklistItemClick
+    end
+    object ChangeExpirationItem: TMenuItem
+      Caption = 'Change expiration date'
+    end
+  end
+  object pmUsers: TPopupMenu
+    OnPopup = pmUsersPopup
+    Left = 136
+    Top = 400
+    object ViewUserItem: TMenuItem
+      Caption = 'View user details'
+      OnClick = ViewUserItemClick
+    end
+    object BlacklistUserItem: TMenuItem
+      Caption = 'Blacklist user'
+      OnClick = BlacklistUserItemClick
+    end
+    object DeleteUserItem: TMenuItem
+      Caption = 'Delete user'
+      OnClick = DeleteUserItemClick
+    end
   end
 end

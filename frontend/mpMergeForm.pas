@@ -607,6 +607,8 @@ procedure TMergeForm.PluginsListViewData(Sender: TObject; Item: TListItem);
 var
   plugin: TPlugin;
 begin
+  if Item.Index > Pred(PluginsList.Count) then
+    exit;
   plugin := TPlugin(PluginsList[Item.Index]);
   Item.Caption := IntToHex(Item.Index, 2);
   Item.SubItems.Add(plugin.filename);
@@ -1048,6 +1050,8 @@ procedure TMergeForm.MergeListViewData(Sender: TObject; Item: TListItem);
 var
   merge: TMerge;
 begin
+  if Item.Index > Pred(MergesList.Count) then
+    exit;
   merge := TMerge(MergesList[Item.Index]);
   Item.Caption := IntToHex(Item.Index, 2);
   Item.SubItems.Add(merge.name);

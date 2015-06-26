@@ -132,7 +132,7 @@ object BackendForm: TBackendForm
       Top = 7
       Width = 654
       Height = 605
-      ActivePage = UnapprovedTabSheet
+      ActivePage = LogTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
@@ -188,10 +188,6 @@ object BackendForm: TBackendForm
       object ApprovedTabSheet: TTabSheet
         Caption = 'Approved Reports'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object ApprovedListView: TListView
           Left = 3
           Top = 3
@@ -237,25 +233,40 @@ object BackendForm: TBackendForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
-        DesignSize = (
-          646
-          577)
-        object LogMemo: TMemo
+        object LogListView: TListView
           Left = 3
           Top = 3
           Width = 640
           Height = 571
+          Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
+          Columns = <
+            item
+              Caption = 'Time'
+              Width = 80
+            end
+            item
+              Caption = 'Group'
+              Width = 80
+            end
+            item
+              Caption = 'Label'
+              Width = 80
+            end
+            item
+              AutoSize = True
+              Caption = 'Text'
+            end>
+          ColumnClick = False
           DoubleBuffered = True
-          ParentDoubleBuffered = False
+          OwnerData = True
           ReadOnly = True
-          ScrollBars = ssBoth
+          ParentDoubleBuffered = False
+          ShowColumnHeaders = False
           TabOrder = 0
-          WordWrap = False
+          ViewStyle = vsReport
+          OnData = LogListViewData
+          OnDrawItem = LogListViewDrawItem
         end
       end
     end
@@ -317,7 +328,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801A40120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801B00120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2

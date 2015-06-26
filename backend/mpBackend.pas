@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
-  Controls, Registry, DateUtils,
+  Controls, Registry, DateUtils, Graphics,
   // zeosdbo components
   ZConnection, ZDataset,
   ZDbcCache, ZAbstractRODataset, ZDbcMySQL, ZDbcPostgreSQL, DB, ZSqlUpdate,
@@ -17,14 +17,40 @@ uses
   mpLogger, mpTracker;
 
 type
+  TLogMessage = class (TOBject)
+  public
+    time: string;
+    group: string;
+    &label: string;
+    text: string;
+    constructor Create(time, group, &label, text: string); Overload;
+  end;
   TUser = class(TObject)
   public
-    username: string;
     ip: string;
+    username: string;
     auth: string;
-    constructor Create(username, ip, auth: string); Overload;
-    function Dump: ISuperObject;
-    procedure LoadDump(obj: ISuperObject);
+    firstSeen: TDateTime;
+    lastSeen: TDateTime;
+    timesSeen: integer;
+    download: Int64;
+    upload: Int64;
+    timesRun: integer;
+    mergesBuilt: integer;
+    pluginsChecked: integer;
+    pluginsMerged: integer;
+    reportsSubmitted: integer;
+    constructor Create(ip: string); Overload;
+    constructor Create(const fields: TFields); Overload;
+  end;
+  TBlacklistEntry = class(TObject)
+  public
+    ip: string;
+    username: string;
+    created: TDateTime;
+    expires: TDateTime;
+    constructor Create(ip, username: string; duration: real); Overload;
+    constructor Create(const fields: TFields); Overload;
   end;
   TmpMessage = class(TObject)
   public
@@ -77,8 +103,15 @@ type
   end;
   TSettings = class(TObject)
   public
-    uniqueIPs: TStringList;
-    blacklistedIPs: TStringList;
+    simpleLogView: boolean;
+    simpleReportsView: boolean;
+    simpleDictionaryView: boolean;
+    serverMessageColor: TColor;
+    initMessageColor: TColor;
+    SQLMessageColor: TColor;
+    dictionaryMessageColor: TColor;
+    javaMessageColor: TColor;
+    errorMessageColor: TColor;
     constructor Create; Overload;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
@@ -109,6 +142,24 @@ type
 
   { MySQL methods }
   procedure DoLogin(userID, password, database, host, port: string);
+  procedure SQLQuery(query: string);
+  //==USERS==
+  procedure QueryUsers;
+  function UserWhereClause(user: TUser): string;
+  function UserSetClause(user: TUser): string;
+  function UserValuesClause(user: TUser): string;
+  procedure UpdateUser(SetClause, WhereClause: string); Overload;
+  procedure AddUser(user: TUser); Overload;
+  procedure RemoveUser(user: TUser);
+  //==BLACKLSIT==
+  procedure QueryBlacklist;
+  function BlacklistWhereClause(entry: TBlacklistEntry): string;
+  function BlacklistSetClause(entry: TBlacklistEntry): string;
+  function BlacklistValuesClause(entry: TBlacklistEntry): string;
+  procedure UpdateBlacklist(SetClause, WhereClause: string);
+  procedure AddBlacklist(entry: TBlacklistEntry);
+  procedure RemoveBlacklist(entry: TBlacklistEntry);
+  //==REPORTS==
   procedure QueryReports;
   function ReportWhereClause(report: TReport): string;
   function ReportSetClause(report: TReport): string;
@@ -144,10 +195,6 @@ type
   procedure SaveSettings;
   procedure LoadStatistics;
   procedure SaveStatistics;
-  procedure LoadUsers;
-  procedure SaveUsers;
-  function Authorized(username, ip, auth: string): boolean;
-  function ResetAuth(username, ip, auth: string): boolean;
   function GetProgram: string;
   function GetDictionary(name: string): string;
   function GetDictionaryHash(name: string): string;
@@ -155,9 +202,21 @@ type
   procedure LoadBlacklist(var lst, dictionary: TList);
   function GetRatingColor(rating: real): integer;
   function GetEntry(var dictionary: TList; pluginName, numRecords, version: string): TEntry;
+  { User methods }
+  function Authorized(ip, username, auth: string): boolean;
+  function ResetAuth(ip, username, auth: string): boolean;
+  function GetUser(ip, username, auth: string): TUser; Overload;
+  function GetUser(ip: string): TUser; Overload;
+  function AddUser(ip: string): TUser; Overload;
+  procedure UpdateUser(ip, username, auth: string); Overload;
+  function IsBlacklisted(ip: string): boolean;
 
 const
-  ReportColumns = 'game,username,filename,hash,record_count,rating,merge_version,notes,date_submitted';
+  ReportColumns = 'game,username,filename,hash,record_count,rating,'+
+    'merge_version,notes,date_submitted';
+  UserColumns = 'ip,username,auth,firstSeen,lastSeen,timesSeen,download,'+
+    'upload,timesRun,mergesBuilt,pluginsChecked,pluginsMerged,reportsSubmitted';
+  BlacklistColumns = 'ip,username,created,expires';
 
   // MSG IDs
   MSG_NOTIFY = 0;
@@ -168,9 +227,20 @@ const
   MSG_REQUEST = 5;
   MSG_REPORT = 6;
 
+  // MSG Strings
+  MSG_STRINGS: array[0..6] of string = (
+    'MSG_NOTIFY',
+    'MSG_REGISTER',
+    'MSG_AUTH_RESET',
+    'MSG_STATISTICS',
+    'MSG_STATUS',
+    'MSG_REQUEST',
+    'MSG_REPORT'
+  );
+
 var
   TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary,
-  ApprovedReports, UnapprovedReports, UsersList: TList;
+  ApprovedReports, UnapprovedReports, Users, Blacklist, Log: TList;
   slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary: TStringList;
   statistics: TStatistics;
   settings: TSettings;
@@ -189,8 +259,25 @@ implementation
 
   List of methods:
   - DoLogin
-  - QueryReports
   - SQLQuery
+  ==USERS==
+  - QueryUsers
+  - UserWhereClause
+  - UserSetClause
+  - UserValuesClause
+  - UpdateUser
+  - AddUser
+  - RemoveUser
+  ==BLACKLIST==
+  - QueryBlacklist
+  - BlacklistWhereClause
+  - BlacklistSetClause
+  - BlacklistValuesClause
+  - UpdateBlacklist
+  - AddBlacklist
+  - RemoveBlacklist
+  ==REPORTS==
+  - QueryReports
   - ReportWhereClause
   - ReportSetClause
   - ReportValuesClause
@@ -224,6 +311,212 @@ begin
     end;
   end;
 end;
+
+procedure SQLQuery(query: string);
+var
+  SQLQuery: TZQuery;
+begin
+  Logger.Write('SQL', 'Query', query);
+  SQLQuery := TZQuery.Create(nil);
+  SQLQuery.Connection := Connection;
+  SQLQuery.Fields.Clear;
+  SQLQuery.SQL.Add(query);
+  SQLQuery.ExecSQL;
+  SQLQuery.Free;
+end;
+
+//========================================
+// USERS
+//========================================
+
+procedure QueryUsers;
+var
+  Dataset: TZQuery;
+  user: TUser;
+begin
+  Users := TList.Create;
+
+  // get users
+  Dataset := TZQuery.Create(nil);
+  Dataset.Connection := Connection;
+  Dataset.Fields.Clear;
+  Dataset.SQL.Add('SELECT '+UserColumns+' FROM users');
+  Dataset.ExecSQL;
+  Dataset.Open;
+
+  // load into Users list
+  Dataset.First;
+  while not Dataset.EOF do begin
+    user := TUser.Create(Dataset.Fields);
+    Users.Add(user);
+    Dataset.Next;
+  end;
+
+  // clean up
+  Dataset.Close;
+  Dataset.Free;
+end;
+
+function UserWhereClause(user: TUser): string;
+begin
+  Result := 'WHERE '+
+    'ip='''+user.ip+'''';
+end;
+
+function UserSetClause(user: TUser): string;
+begin
+  Result := 'SET '+
+    'ip='''+user.ip+''', '+
+    'username='''+user.username+''', '+
+    'auth='''+user.auth+''', '+
+    'firstSeen='''+DateTimeToSQL(user.firstSeen)+''', '+
+    'lastSeen='''+DateTimeToSQL(user.lastSeen)+''', '+
+    'timesSeen='+IntToStr(user.timesSeen)+', '+
+    'download='+IntToStr(user.download)+', '+
+    'upload='+IntToStr(user.upload)+', '+
+    'timesRun='+IntToStr(user.timesRun)+', '+
+    'mergesBuilt='+IntToStr(user.mergesBuilt)+', '+
+    'pluginsChecked='+IntToStr(user.pluginsChecked)+', '+
+    'pluginsMerged='+IntToStr(user.pluginsMerged)+', '+
+    'reportsSubmitted='+IntToStr(user.reportsSubmitted);
+end;
+
+function UserValuesClause(user: TUser): string;
+begin
+  Result := '('+UserColumns+') '+
+    'VALUES ('''+
+    user.ip+''','''+
+    user.username+''','''+
+    user.auth+''','''+
+    DateTimeToSQL(user.firstSeen)+''','''+
+    DateTimeToSQL(user.lastSeen)+''','+
+    IntToStr(user.timesSeen)+','+
+    IntToStr(user.download)+','+
+    IntToStr(user.upload)+','+
+    IntToStr(user.timesRun)+','+
+    IntToStr(user.mergesBuilt)+','+
+    IntToStr(user.pluginsChecked)+','+
+    IntToStr(user.pluginsMerged)+','+
+    IntToStr(user.reportsSubmitted)+')';
+end;
+
+procedure UpdateUser(SetClause, WhereClause: string);
+var
+  query: string;
+begin
+  query := 'UPDATE users '+SetClause+' '+WhereClause+';';
+  SQLQuery(query);
+end;
+
+procedure AddUser(user: TUser);
+var
+  query, ValuesClause: string;
+begin
+  // execute SQL
+  ValuesClause := UserValuesClause(user);
+  query := 'INSERT INTO users '+ValuesClause+';';
+  SQLQuery(query);
+end;
+
+procedure RemoveUser(user: TUser);
+var
+  query, WhereClause: string;
+begin
+  // execute SQL
+  WhereClause := UserWhereClause(user);
+  query := 'DELETE FROM users '+WhereClause+';';
+  SQLQuery(query);
+end;
+
+//========================================
+// BLACKLIST
+//========================================
+
+procedure QueryBlacklist;
+var
+  Dataset: TZQuery;
+  entry: TBlacklistEntry;
+begin
+  Blacklist := TList.Create;
+
+  // get blacklist
+  Dataset := TZQuery.Create(nil);
+  Dataset.Connection := Connection;
+  Dataset.Fields.Clear;
+  Dataset.SQL.Add('SELECT '+BlacklistColumns+' FROM blacklist');
+  Dataset.ExecSQL;
+  Dataset.Open;
+
+  // load into Blacklist
+  Dataset.First;
+  while not Dataset.EOF do begin
+    entry := TBlacklistEntry.Create(Dataset.Fields);
+    Blacklist.Add(entry);
+    Dataset.Next;
+  end;
+
+  // clean up
+  Dataset.Close;
+  Dataset.Free;
+end;
+
+function BlacklistWhereClause(entry: TBlacklistEntry): string;
+begin
+  Result := 'WHERE '+
+    'ip='''+entry.ip+''' AND '+
+    'username='''+entry.username+'''';
+end;
+
+function BlacklistSetClause(entry: TBlacklistEntry): string;
+begin
+  Result := 'SET '+
+    'ip='''+entry.ip+''', '+
+    'username='''+entry.username+''', '+
+    'created='''+DateTimeToSQL(entry.created)+''', '+
+    'expires='''+DateTimeToSQL(entry.expires)+'''';
+end;
+
+function BlacklistValuesClause(entry: TBlacklistEntry): string;
+begin
+  Result := '('+BlacklistColumns+') '+
+    'VALUES ('''+
+    entry.ip+''','''+
+    entry.username+''','''+
+    DateTimeToSQL(entry.created)+''','''+
+    DateTimeToSQL(entry.expires)+''')';
+end;
+
+procedure UpdateBlacklist(SetClause, WhereClause: string);
+var
+  query: string;
+begin
+  query := 'UPDATE blacklist '+SetClause+' '+WhereClause+';';
+  SQLQuery(query);
+end;
+
+procedure AddBlacklist(entry: TBlacklistEntry);
+var
+  query, ValuesClause: string;
+begin
+  // execute SQL
+  ValuesClause := BlacklistValuesClause(entry);
+  query := 'INSERT INTO blacklist '+ValuesClause+';';
+  SQLQuery(query);
+end;
+
+procedure RemoveBlacklist(entry: TBlacklistEntry);
+var
+  query, WhereClause: string;
+begin
+  // execute SQL
+  WhereClause := BlacklistWhereClause(entry);
+  query := 'DELETE FROM blacklist '+WhereClause+';';
+  SQLQuery(query);
+end;
+
+//========================================
+// REPORTS
+//========================================
 
 { Query database for Approved and Unapproved reports }
 procedure QueryReports;
@@ -269,19 +562,6 @@ begin
   end;
   Dataset.Close;
   Dataset.Free;
-end;
-
-procedure SQLQuery(query: string);
-var
-  SQLQuery: TZQuery;
-begin
-  Logger.Write('[SQL] '+query);
-  SQLQuery := TZQuery.Create(nil);
-  SQLQuery.Connection := Connection;
-  SQLQuery.Fields.Clear;
-  SQLQuery.SQL.Add(query);
-  SQLQuery.ExecSQL;
-  SQLQuery.Free;
 end;
 
 function ReportWhereClause(report: TReport): string;
@@ -846,98 +1126,6 @@ begin
   statistics.Save('statistics.ini');
 end;
 
-procedure LoadUsers;
-var
-  user: TUser;
-  obj, userItem: ISuperObject;
-  sl: TStringList;
-  filename: string;
-begin
-  UsersList := TList.Create;
-  // don't load file if it doesn't exist
-  filename := 'users.json';
-  if not FileExists(filename) then
-    exit;
-  // load file into SuperObject to parse it
-  sl := TStringList.Create;
-  sl.LoadFromFile(filename);
-  obj := SO(PChar(sl.Text));
-
-  // loop through merges
-  for userItem in obj['users'] do begin
-    user := TUser.Create;
-    user.LoadDump(userItem);
-    UsersList.Add(user);
-  end;
-
-  // finalize
-  obj := nil;
-  sl.Free;
-end;
-
-procedure SaveUsers;
-var
-  i: Integer;
-  user: TUser;
-  json: ISuperObject;
-  filename: string;
-begin
-  // initialize json
-  json := SO;
-  json.O['users'] := SA([]);
-
-  // loop through merges
-  Tracker.Write('Dumping users to JSON');
-  for i := 0 to Pred(UsersList.Count) do begin
-    Tracker.Update(1);
-    user := TUser(UsersList[i]);
-    Tracker.Write('  Dumping '+user.username);
-    json.A['users'].Add(user.Dump);
-  end;
-
-  // save and finalize
-  filename := 'users.json';
-  Tracker.Write(' ');
-  Tracker.Write('Saving to ' + filename);
-  Tracker.Update(1);
-  json.SaveTo(filename);
-  json := nil;
-end;
-
-function Authorized(username, ip, auth: string): boolean;
-var
-  i: Integer;
-  user: TUser;
-begin
-  Result := true;
-  for i := 0 to Pred(UsersList.Count) do begin
-    user := TUser(UsersList[i]);
-    if SameText(user.username, username) then begin
-      Result := SameText(user.auth, auth);
-      if Result then
-        user.ip := ip;
-      exit;
-    end;
-  end;
-end;
-
-function ResetAuth(username, ip, auth: string): boolean;
-var
-  i: Integer;
-  user: TUser;
-begin
-  Result := false;
-  for i := 0 to Pred(UsersList.Count) do begin
-    user := TUser(UsersList[i]);
-    if SameText(user.username, username) then begin
-      Result := SameText(user.ip, ip);
-      if Result then
-        user.auth := auth;
-      exit;
-    end;
-  end;
-end;
-
 function GetProgram: string;
 begin
   Result := '';
@@ -974,7 +1162,7 @@ var
 begin
   // don't attempt to load dictionary if it doesn't exist
   if not FileExists(filename) then begin
-    Logger.Write('[INIT] No dictionary file '+filename);
+    Logger.Write('INIT', 'Error', 'No dictionary file '+filename);
     exit;
   end;
 
@@ -1047,12 +1235,141 @@ begin
   end;
 end;
 
+{******************************************************************************}
+{ User methods
+  Set of methods for handling users.
+
+  List of method:
+  - Authorized
+  - ResetAuth
+  - GetUser
+  - GetUser
+}
+{******************************************************************************}
+
+
+function Authorized(ip, username, auth: string): boolean;
+var
+  i: Integer;
+  user: TUser;
+  WhereClause, SetClause: string;
+begin
+  Result := false;
+  for i := 0 to Pred(Users.Count) do begin
+    user := TUser(Users[i]);
+    if SameText(user.username, username) then begin
+      Result := SameText(user.auth, auth);
+      if Result and not SameText(user.ip, ip) then begin
+        WhereClause := UserWhereClause(user);
+        user.ip := ip;
+        SetClause := UserSetClause(user);
+        UpdateUser(SetClause, WhereClause);
+      end;
+      exit;
+    end;
+  end;
+end;
+
+function ResetAuth(ip, username, auth: string): boolean;
+var
+  i: Integer;
+  user: TUser;
+  SetClause, WhereClause: string;
+begin
+  Result := false;
+  for i := 0 to Pred(Users.Count) do begin
+    user := TUser(Users[i]);
+    if SameText(user.username, username) then begin
+      Result := SameText(user.ip, ip);
+      if Result then begin
+        WhereClause := UserWhereClause(user);
+        user.auth := auth;
+        SetClause := UserSetClause(user);
+        UpdateUser(SetClause, WhereClause);
+      end;
+      exit;
+    end;
+  end;
+end;
+
+function GetUser(ip, username, auth: string): TUser;
+var
+  i: Integer;
+  user: TUser;
+begin
+  Result := nil;
+  for i := 0 to Pred(Users.Count) do begin
+    user := TUser(Users[i]);
+    if SameText(user.username, username) then begin
+      if SameText(user.auth, auth) and SameText(user.ip, ip) then
+        Result := user;
+      exit; // exit if user auth or ip differs with stored values
+    end;
+  end;
+end;
+
+function GetUser(ip: string): TUser;
+var
+  i: Integer;
+  user: TUser;
+begin
+  Result := nil;
+  for i := 0 to Pred(Users.Count) do begin
+    user := TUser(Users[i]);
+    if SameText(user.ip, ip) then begin
+      Result := user;
+      exit;
+    end;
+  end;
+end;
+
+function AddUser(ip: string): TUser;
+var
+  user: TUser;
+begin
+  user := TUser.Create(ip);
+  Users.Add(user);
+  AddUser(user);
+  Result := user;
+end;
+
+procedure UpdateUser(ip, username, auth: string);
+var
+  WhereClause, SetClause: string;
+  user: TUser;
+begin
+  user := GetUser(ip);
+  WhereClause := UserWhereClause(user);
+  user.username := username;
+  user.auth := auth;
+  SetClause := UserSetClause(user);
+  UpdateUser(SetClause, WhereClause);
+end;
+
+function IsBlacklisted(ip: string): boolean;
+var
+  i: Integer;
+  entry: TBlacklistEntry;
+begin
+  Result := false;
+  for i := 0 to Pred(Blacklist.Count) do begin
+    entry := TBlacklistEntry(Blacklist[i]);
+    if SameText(ip, entry.ip) then begin
+      Result := true;
+      exit;
+    end;
+  end;
+end;
+
 
 {******************************************************************************}
 { Object methods
   Set of methods for objects TMerge and TPlugin
 
   List of methods:
+  - TLogMessage.Create
+  - TBlacklistEntry.Create
+  - TBlacklistEntry.Create
   - TUser.Create
   - TUser.Dump
   - TUser.LoadDump
@@ -1075,31 +1392,52 @@ end;
 }
 {******************************************************************************}
 
-
-constructor TUser.Create(username, ip, auth: string);
+constructor TLogMessage.Create(time, group, &label, text: string);
 begin
-  self.username := username;
+  self.time := time;
+  self.group := group;
+  self.&label := &label;
+  self.text := text;
+end;
+
+constructor TBlacklistEntry.Create(ip, username: string; duration: real);
+begin
   self.ip := ip;
-  self.auth := auth;
+  self.username := username;
+  created := Now;
+  expires := created + duration;
 end;
 
-function TUser.Dump: ISuperObject;
-var
-  obj: ISuperObject;
+constructor TBlacklistEntry.Create(const fields: TFields);
 begin
-  obj := SO;
-  obj.S['username'] := username;
-  obj.S['ip'] := ip;
-  obj.S['auth'] := auth;
-
-  Result := obj;
+  ip := fields[0].AsString;
+  username := fields[1].AsString;
+  created := fields[2].AsDateTime;
+  expires := fields[3].AsDateTime;
 end;
 
-procedure TUser.LoadDump(obj: ISuperObject);
+constructor TUser.Create(ip: string);
 begin
-  username := obj.AsObject.S['username'];
-  ip := obj.AsObject.S['ip'];
-  auth := obj.AsObject.S['auth'];
+  self.ip := ip;
+  firstSeen := Now;
+  lastSeen := Now;
+end;
+
+constructor TUser.Create(const fields: TFields);
+begin
+  ip := fields[0].AsString;
+  username := fields[1].AsString;
+  auth := fields[2].AsString;
+  firstSeen := fields[3].AsDateTime;
+  lastSeen := fields[4].AsDateTime;
+  timesSeen := fields[5].AsInteger;
+  download := fields[6].AsLargeInt;
+  upload := fields[7].AsLargeInt;
+  timesRun := fields[8].AsInteger;
+  mergesBuilt := fields[9].AsInteger;
+  pluginsChecked := fields[10].AsInteger;
+  pluginsMerged := fields[11].AsInteger;
+  reportsSubmitted := fields[12].AsInteger;
 end;
 
 { TmpMessage Constructor }
@@ -1155,11 +1493,11 @@ begin
     FO3Hash := GetCRC32('FO3Dictionary.txt');
 
   // log it all
-  Logger.Write('[INIT] Client Version: '+ProgramVersion);
-  Logger.Write('[INIT] TES5Dictionary Hash: '+TES5Hash);
-  Logger.Write('[INIT] TES4Dictionary Hash: '+TES4Hash);
-  Logger.Write('[INIT] FNVDictionary Hash: '+FNVHash);
-  Logger.Write('[INIT] FO3Dictionary Hash: '+FO3Hash);
+  Logger.Write('INIT', 'Status', 'Client Version: '+ProgramVersion);
+  Logger.Write('INIT', 'Status', 'TES5Dictionary Hash: '+TES5Hash);
+  Logger.Write('INIT', 'Status', 'TES4Dictionary Hash: '+TES4Hash);
+  Logger.Write('INIT', 'Status', 'FNVDictionary Hash: '+FNVHash);
+  Logger.Write('INIT', 'Status', 'FO3Dictionary Hash: '+FO3Hash);
 end;
 
 { TmpStatus to json string }
@@ -1289,14 +1627,18 @@ end;
 { TSettings constructor }
 constructor TSettings.Create;
 begin
-  uniqueIPs := TStringList.Create;
-  blacklistedIPs := TStringList.Create;
+  serverMessageColor := clBlue;
+  initMessageColor := clGreen;
+  SQLMessageColor := clSkyBlue;
+  dictionaryMessageColor := $0000CCFF;
+  javaMessageColor := $000080FF;
+  errorMessageColor := clRed;
 end;
 
 { Load settings from settings.json }
 procedure TSettings.Load(const filename: string);
 var
-  obj, item: ISuperObject;
+  obj: ISuperObject;
   sl: TStringList;
 begin
   // don't load file if it doesn't exist
@@ -1308,13 +1650,18 @@ begin
   sl.LoadFromFile(filename);
   obj := SO(PChar(sl.Text));
 
-  // loop through unique IPs
-  for item in obj['uniqueIPs'] do
-    uniqueIPs.Add(item.AsString);
+  // load log colors
+  serverMessageColor := TColor(obj.I['serverMessageColor']);
+  initMessageColor := TColor(obj.I['initMessageColor']);
+  SQLMessageColor := TColor(obj.I['SQLMessageColor']);
+  dictionaryMessageColor := TColor(obj.I['dictionaryMessageColor']);
+  javaMessageColor := TColor(obj.I['javaMessageColor']);
+  errorMessageColor := TColor(obj.I['errorMessageColor']);
 
-  // loop through blacklisted IPs
-  for item in obj['blacklistedIPs'] do
-    blacklistedIPs.Add(item.AsString);
+  // load style choices
+  simpleLogView := obj.B['simpleLogView'];
+  simpleDictionaryView := obj.B['simpleDictionaryView'];
+  simpleReportsView := obj.B['simpleReportsView'];
 
   // finalize
   obj := nil;
@@ -1324,29 +1671,29 @@ end;
 { Save settings to settings.json }
 procedure TSettings.Save(const filename: string);
 var
-  i: Integer;
-  json: ISuperObject;
+  obj: ISuperObject;
 begin
   // initialize json
-  json := SO;
-  json.O['uniqueIPs'] := SA([]);
-  json.O['blacklistedIPs'] := SA([]);
+  obj := SO;
 
-  // dump unique IPs
-  Tracker.Write('Dumping unique IPs to JSON');
-  for i := 0 to Pred(uniqueIPs.Count) do
-    json.A['uniqueIPs'].S[i] := uniqueIPs[i];
+  // save log colors
+  obj.I['serverMessageColor'] := Integer(serverMessageColor);
+  obj.I['initMessageColor'] := Integer(initMessageColor);
+  obj.I['SQLMessageColor'] := Integer(SQLMessageColor);
+  obj.I['dictionaryMessageColor'] := Integer(dictionaryMessageColor);
+  obj.I['javaMessageColor'] := Integer(javaMessageColor);
+  obj.I['errorMessageColor'] := Integer(errorMessageColor);
 
-  // dump blacklisted IPs
-  Tracker.Write('Dumping blacklisted IPs to JSON');
-  for i := 0 to Pred(blacklistedIPs.Count) do
-    json.A['blacklistedIPs'].S[i] := blacklistedIPs[i];
+  // save style choices
+  obj.B['simpleLogView'] := simpleLogView;
+  obj.B['simpleDictionaryView'] := simpleDictionaryView;
+  obj.B['simpleReportsView'] := simpleReportsView;
 
   // save and finalize
   Tracker.Write(' ');
   Tracker.Write('Saving to '+filename);
-  json.SaveTo(filename);
-  json := nil;
+  obj.SaveTo(filename);
+  obj := nil;
 end;
 
 { TStatistics constructor }

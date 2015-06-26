@@ -408,6 +408,7 @@ begin
         lblStatus.Caption := 'Registered.';
         lblStatus.Font.Color := clGreen;
         lblStatus.Hint := '';
+        bAuthorized := true;
       end;
     end;
   end;

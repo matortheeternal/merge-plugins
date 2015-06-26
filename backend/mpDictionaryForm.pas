@@ -72,7 +72,7 @@ var
   DictionaryForm: TDictionaryForm;
   columnToSort: integer;
   ascending: boolean;
-  tempDictionary, dictionary, blacklist: TList;
+  tempDictionary, dictionary, pluginBlacklist: TList;
 
 implementation
 
@@ -120,18 +120,18 @@ begin
 
   // initialize dictionary details
   dictionary := TList.Create;
-  blacklist := TList.Create;
+  pluginBlacklist := TList.Create;
   sl := TStringList.Create;
   dictionaryFilename := cbGame.Text + 'Dictionary.txt';
   LoadDictionary(dictionary, sl, dictionaryFilename);
-  LoadBlacklist(blacklist, dictionary);
+  LoadBlacklist(pluginBlacklist, dictionary);
   vlInfo.InsertRow('Filename', dictionaryFilename, true);
   vlInfo.InsertRow('File size', FormatByteSize(GetFileSize(dictionaryFilename)), true);
   vlInfo.InsertRow('Date modified', DateTimeToStr(GetLastModified(dictionaryFilename)), true);
   vlInfo.InsertRow('Number of entries', IntToStr(dictionary.Count), true);
   vlInfo.InsertRow('Number of plugins', IntToStr(PluginCount(dictionary)), true);
   vlInfo.InsertRow('Number of reports', IntToStr(ReportCount(dictionary)), true);
-  vlInfo.InsertRow('Blacklist size', IntToStr(blacklist.Count), true);
+  vlInfo.InsertRow('Blacklist size', IntToStr(pluginBlacklist.Count), true);
 
   // autosize filename column
   lvEntries.Columns[0].AutoSize := true;

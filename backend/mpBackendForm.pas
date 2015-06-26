@@ -42,7 +42,7 @@ type
     LogTabSheet: TTabSheet;
     UnapprovedListView: TListView;
     ApprovedListView: TListView;
-    LogMemo: TMemo;
+    LogListView: TListView;
     // DETAILS EDITOR
     DetailsLabel: TLabel;
     DetailsEditor: TValueListEditor;
@@ -58,7 +58,7 @@ type
     TCPServer: TIdTCPServer;
 
     // MERGE FORM EVENTS
-    procedure LogMessage(const s: string);
+    procedure LogMessage(const group, &label, text: string);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -100,9 +100,13 @@ type
     procedure TCPServerConnect(AContext: TIdContext);
     procedure TCPServerDisconnect(AContext: TIdContext);
     procedure TCPServerException(AContext: TIdContext; AException: Exception);
-    procedure HandleMessage(msg: TmpMessage; AContext: TIdContext);
+    procedure SendResponse(user: TUser; AContext: TIdContext; id: integer; data: string; bLog: boolean = true);
+    procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
+    procedure LogListViewData(Sender: TObject; Item: TListItem);
+    procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem;
+      Rect: TRect; State: TOwnerDrawState);
   private
     { Private declarations }
   public
@@ -122,8 +126,8 @@ implementation
 
 
 {******************************************************************************}
-{ Merge Form Events
-  Events for the Merge Form.
+{ Backend Form Events
+  Events for the Backend Form.
   - LogMessage
   - ProgressMessage
   - FormCreate
@@ -134,17 +138,11 @@ implementation
 {******************************************************************************}
 
 { Prints a message to the log memo }
-procedure TBackendForm.LogMessage(const s: string);
+procedure TBackendForm.LogMessage(const group, &label, text: string);
 begin
-  LogMemo.Lines.Add(s);
-  SendMessage(LogMemo.Handle, EM_LINESCROLL, 0, LogMemo.Lines.Count);
-end;
-
-procedure ProgressMessage(const s: string);
-begin
-  if s = '' then
-    exit;
-  BackendForm.LogMessage(s);
+  Log.Add(TLogMessage.Create(FormatDateTime('nn:ss', Now - wbStartTime), group, &label, text));
+  LogListView.Items.Count := Log.Count;
+  SendMessage(LogListView.Handle, EM_LINESCROLL, 0, LogListView.Items.Count);
 end;
 
 { Initialize form, initialize TES5Edit API, and load plugins }
@@ -154,14 +152,14 @@ begin
   SetTaskbarProgressState(tbpsIndeterminate);
   try
     // INITIALIZE VARIABLES
+    Log := TList.Create;
     wbStartTime := Now;
+    Logger.OnLogEvent := LogMessage;
     ProgramPath := ExtractFilePath(ParamStr(0));
     tempPath := ProgramPath + 'temp\';
     logPath := ProgramPath + 'logs\';
     ForceDirectories(tempPath);
-    Logger.OnLogEvent := LogMessage;
     status := TmpStatus.Create;
-    LoadUsers;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
@@ -183,13 +181,21 @@ begin
     LoadDictionary(FO3Dictionary, slFO3Dictionary, 'FO3Dictionary.txt');
     LoadDictionary(FNVDictionary, slFNVDictionary, 'FNVDictionary.txt');
 
-    // LOAD REPORTS
+    // QUERY DATA FROM MYSQL
     QueryReports;
+    QueryUsers;
+    QueryBlacklist;
+
+    // PREPARE LIST VIEWS
+    LogListView.OwnerDraw := not settings.simpleLogView;
+    LogListView.ShowColumnHeaders := not settings.simpleLogView;
+    UnapprovedListView.OwnerDraw := not settings.simpleReportsView;
+    ApprovedListView.OwnerDraw := not settings.simpleReportsView;
     UnapprovedListView.Items.Count := UnapprovedReports.Count;
     ApprovedListView.Items.Count := ApprovedReports.Count;
   except
     on x: Exception do
-      LogMessage('Exception: '+x.Message);
+      LogMessage('INIT', 'Exception', x.Message);
   end;
 end;
 
@@ -200,6 +206,7 @@ begin
   UnapprovedListView.Width := UnapprovedListView.Width + 1;
   PageControl.ActivePageIndex := 0;
   ApprovedListView.Width := ApprovedListView.Width + 1;
+  PageControl.ActivePageIndex := 2;
 end;
 
 procedure TBackendForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -208,10 +215,9 @@ begin
   statistics.totalUptime := statistics.totalUptime + GetSessionUptime;
   statistics.totalBandwidth := statistics.totalBandwidth + sessionBandwidth;
 
-  // save statistics, settings, users
+  // save statistics, settings
   SaveStatistics;
-  SaveUsers;
-  // SaveSettings;
+  SaveSettings;
 end;
 
 {******************************************************************************}
@@ -345,8 +351,8 @@ begin
   AddDetailsItem('Date built', DateTimeToStr(GetLastModified(ParamStr(0))));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Times run', IntToStr(statistics.timesRun));
-  AddDetailsItem('Unique IPs', IntToStr(settings.uniqueIPs.Count));
-  AddDetailsItem('Blacklisted IPs', IntToStr(settings.blacklistedIPs.Count));
+  AddDetailsItem('Unique users', IntToStr(Users.Count));
+  AddDetailsItem('Blacklist size', IntToStr(Blacklist.Count));
   AddDetailsItem('Dictionary updates', IntToStr(statistics.dictionaryUpdates));
   AddDetailsItem('Program updates', IntToStr(statistics.programUpdates));
   AddDetailsItem('Reports recieved', IntToStr(statistics.reportsRecieved));
@@ -368,7 +374,7 @@ begin
   AddDetailsItem('Total uptime', TimeStr(statistics.totalUptime + sessionUptime));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Website', 'http://www.nexusmods.com/skyrim/mods/37981');
-  AddDetailsItem('API Credits', 'superobject, xEdit');
+  AddDetailsItem('API Credits', 'superobject, ZeosDBO, xEdit');
 end;
 
 { Handle user clicking URL }
@@ -397,6 +403,7 @@ end;
 
 {******************************************************************************}
 { List View events
+  - NotesListViewData
   - CompareReports
   - UnapprovedListViewChange
   - UnapprovedListViewData
@@ -405,6 +412,79 @@ end;
   - ApprovedListViewData
 }
 {******************************************************************************}
+
+procedure TBackendForm.LogListViewData(Sender: TObject; Item: TListItem);
+var
+  msg: TLogMessage;
+begin
+  if (Item.Index > Pred(Log.Count)) then
+    exit;
+  msg := TLogMessage(Log[Item.Index]);
+  Item.Caption := msg.time;
+  Item.SubItems.Add(msg.group);
+  Item.SubItems.Add(msg.&label);
+  Item.SubItems.Add(msg.text);
+
+  // handle coloring
+  if (msg.group = 'SERVER') then
+    LogListView.Canvas.Font.Color := settings.serverMessageColor
+  else if (msg.group = 'INIT') then
+    LogListView.Canvas.Font.Color := settings.initMessageColor
+  else if (msg.group = 'SQL') then
+    LogListView.Canvas.Font.Color := settings.SQLMessageColor
+  else if (msg.group = 'DICTIONARY') then
+    LogListView.Canvas.Font.Color := settings.dictionaryMessageColor
+  else if (msg.group = 'JAVA') then
+    LogListView.Canvas.Font.Color := settings.javaMessageColor
+  else if (msg.group = 'ERROR') then
+    LogListView.Canvas.Font.Color := settings.errorMessageColor;
+end;
+
+procedure TBackendForm.LogListViewDrawItem(Sender: TCustomListView;
+  Item: TListItem; Rect: TRect; State: TOwnerDrawState);
+var
+  i, x, y: integer;
+  ListView: TListView;
+  R: TRect;
+  msg, FormatString: string;
+  ItemArray: array of TVarRec;
+  Column: TListColumn;
+begin
+  ListView := TListView(Sender);
+
+  // prepare format string
+  FormatString := '';
+  for i := 0 to Pred(ListView.Columns.Count) do begin
+    Column := ListView.Columns[i];
+    if Column.Caption = 'Time' then
+      FormatString := FormatString + '[%s] ';
+    if Column.Caption = 'Group' then
+      FormatString := FormatString + '(%s) ';
+    if Column.Caption = 'Label' then
+      FormatString := FormatString + '%s: ';
+    if Column.Caption = 'Text' then
+      FormatString := FormatString + '%s';
+  end;
+
+  // prepare item array
+  SetLength(ItemArray, 1 + Item.SubItems.Count);
+  ItemArray[0].VType := vtUnicodeString;
+  ItemArray[0].VUnicodeString := Pointer(Item.Caption);
+  for i := 0 to Pred(Item.SubItems.Count) do begin
+    ItemArray[i + 1].VType := vtUnicodeString;
+    ItemArray[i + 1].VUnicodeString := Pointer(Item.SubItems[i]);
+  end;
+
+  // prepare text rect
+  R := Rect;
+  R.Right := R.Left + ListView.Width - 3;
+  x := Rect.Left + 3;
+  y := (Rect.Bottom - Rect.Top - ListView.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
+
+  // draw message
+  msg := Format(FormatString, ItemArray);
+  ListView.Canvas.TextRect(R, x, y, msg);
+end;
 
 function CompareReports(P1, P2: Pointer): Integer;
 var
@@ -684,16 +764,30 @@ end;
 procedure TBackendForm.TCPServerConnect(AContext: TIdContext);
 var
   ip: string;
+  user: TUser;
 begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
-  Logger.Write('[SERVER] '+ip+' connected.');
-  if settings.uniqueIPs.IndexOf(ip) = -1 then
-    settings.uniqueIPs.Add(ip);
+  // handle blacklisted ip
+  if IsBlacklisted(ip) then begin
+    LogMessage('SERVER', 'Terminated', ip);
+    AContext.Connection.Disconnect;
+    exit;
+  end;
+
+  // handle connection
+  LogMessage('SERVER', 'Connected', ip);
+  user := GetUser(ip);
+  if not Assigned(user) then
+    user := AddUser(ip);
+  Inc(user.timesSeen);
 end;
 
 procedure TBackendForm.TCPServerDisconnect(AContext: TIdContext);
+var
+  ip: string;
 begin
-  Logger.Write('[SERVER] '+AContext.Connection.Socket.Binding.PeerIP+' disconnected.');
+  ip := AContext.Connection.Socket.Binding.PeerIP;
+  LogMessage('SERVER', 'Disconnected', ip);
 end;
 
 procedure TBackendForm.TCPServerException(AContext: TIdContext;
@@ -702,72 +796,90 @@ begin
   if AException.Message = 'Connection Closed Gracefully.' then
     exit;
 
-  Logger.Write('[SERVER] '+AContext.Connection.Socket.Binding.PeerIP+
-    ' Exception: '+' '+AException.Message);
+  LogMessage('SERVER', 'Exception', AContext.Connection.Socket.Binding.PeerIP+
+    ' '+AException.Message);
 end;
 
-procedure TBackendForm.HandleMessage(msg: TmpMessage; AContext: TIdContext);
+procedure TBackendForm.SendResponse(user: TUser; AContext: TIdContext;
+  id: integer; data: string; bLog: boolean = true);
+var
+  json: string;
+  response: TmpMessage;
+begin
+  response := TmpMessage.Create(id, '', '', data);
+  json := response.ToJson;
+  Inc(user.download, SizeOf(json));
+  AContext.Connection.IOHandler.WriteLn(json);
+  if bLog then LogMessage('SERVER', 'Response', response.data);
+  response.Free;
+end;
+
+procedure TBackendForm.HandleMessage(msg: TmpMessage; size: integer;
+  AContext: TIdContext);
 var
   report: TReport;
-  response: TmpMessage;
   note, ip: string;
   user: TUser;
   stream: TMemoryStream;
+  bAuthorized: boolean;
 begin
+  // get ip, authorization
   ip := AContext.Connection.Socket.Binding.PeerIP;
+  bAuthorized := Authorized(ip, msg.username, msg.auth);
+
+  // get user and update values
+  if bAuthorized then
+    user := GetUser(ip, msg.username, msg.auth)
+  else
+    user := GetUser(ip);
+  if not Assigned(user) then
+    user := AddUser(ip);
+
+  user.lastSeen := Now;
+  Inc(user.upload, size);
+
+  // write message to log
   WriteMessage(msg, ip);
+
+  // handle message by id
   case msg.id of
     MSG_NOTIFY: begin
       note := 'No';
-      if Authorized(msg.username, ip, msg.auth) then
+      if bAuthorized then
         note := 'Yes';
-
       // respond to user
-      response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
-      AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[SERVER] Response: '+note);
-      response.Free;
+      SendResponse(user, AContext, MSG_NOTIFY, note);
     end;
 
     MSG_REGISTER: begin
       note := 'Username unavailable';
-      if Authorized(msg.username, ip, msg.auth) then begin
+      if (GetUser(ip, msg.username, msg.auth) = nil) then begin
         if msg.data = 'Check' then
           note := 'Available'
         else begin
-          user := TUser.Create(msg.username, ip, msg.auth);
-          UsersList.Add(user);
+          UpdateUser(ip, msg.username, msg.auth);
           note := 'Registered '+msg.username;
         end;
       end;
-
       // respond to user
-      response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
-      AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[SERVER] Response: '+note);
-      response.Free;
+      SendResponse(user, AContext, MSG_NOTIFY, note);
     end;
 
     MSG_AUTH_RESET:  begin
       note := 'Failed';
-      if ResetAuth(msg.username, ip, msg.auth) then
+      if ResetAuth(ip, msg.username, msg.auth) then
         note := 'Success';
-
       // respond to user
-      response := TmpMessage.Create(MSG_NOTIFY, '', '', note);
-      AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[SERVER] Response: '+note);
-      response.Free;
+      SendResponse(user, AContext, MSG_NOTIFY, note);
     end;
 
     MSG_STATISTICS:  begin
        // TODO: Handle user statistics
     end;
 
-    MSG_STATUS:  begin
-      response := TmpMessage.Create(MSG_STATUS, '', '', status.ToJson);
-      AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      response.Free;
+    MSG_STATUS: begin
+      SendResponse(user, AContext, MSG_STATUS, status.ToJson, false);
+      LogMessage('SERVER', 'Response', 'Current status');
     end;
 
     MSG_REQUEST:  begin
@@ -778,7 +890,7 @@ begin
           AContext.Connection.IOHandler.LargeStream := True;
           AContext.Connection.IOHandler.Write(stream, 0, true);
           Inc(sessionBandwidth, stream.Size);
-          Logger.Write('[SERVER] Response: Sent '+msg.data+' '+ GetDictionaryHash(msg.data));
+          LogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ GetDictionaryHash(msg.data));
           stream.Free;
         end;
       end
@@ -789,17 +901,17 @@ begin
           AContext.Connection.IOHandler.LargeStream := True;
           AContext.Connection.IOHandler.Write(stream, 0, true);
           Inc(sessionBandwidth, stream.Size);
-          Logger.Write('[SERVER] Response: Sent '+msg.data+' '+ status.programVersion);
+          LogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ status.programVersion);
           stream.Free;
         end
         else
-          Logger.Write('[SERVER] ERROR: MergePlugins.zip doesn''t exist!');
+          LogMessage('SERVER', 'Error', 'MergePlugins.zip doesn''t exist!');
       end;
     end;
 
     MSG_REPORT: begin
       note := 'Not authorized';
-      if Authorized(msg.username, ip, msg.auth) then try
+      if bAuthorized then try
         report := TReport.Create;
         report.FromJson(msg.data);
         report.username := msg.username;
@@ -818,31 +930,30 @@ begin
       end;
 
       // respond to user
-      response := TmpMessage.Create(MSG_NOTIFY, 'Server', '0', note);
-      AContext.Connection.IOHandler.WriteLn(response.ToJson);
-      Logger.Write('[SERVER] Response: '+note);
-      response.Free;
+      SendResponse(user, AContext, MSG_NOTIFY, note);
     end;
   end;
 end;
 
 procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
 begin
-  Logger.Write('[SERVER] '+ip+' ('+msg.username+') Sent Message ['+IntToStr(msg.id)+']');
+  LogMessage('SERVER', 'Message', ip+' ('+msg.username+')  '+MSG_STRINGS[msg.id]);
   if (msg.data <> '') then
-    Logger.Write('[SERVER]   Data: '+msg.data);
+    LogMessage('SERVER', 'Message', msg.data);
 end;
 
 procedure TBackendForm.TCPServerExecute(AContext: TIdContext);
 var
   msg: TmpMessage;
   LLine: string;
+  size: integer;
 begin
   LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
   msg := TmpMessage.Create;
   msg.FromJson(LLine);
-  Inc(sessionBandwidth, SizeOf(LLine));
-  HandleMessage(msg, AContext);
+  size := SizeOf(LLine);
+  Inc(sessionBandwidth, size);
+  HandleMessage(msg, size, AContext);
 
   // free message
   msg.Free;
@@ -905,8 +1016,12 @@ begin
 end;
 
 procedure TBackendForm.OptionsButtonClick(Sender: TObject);
+var
+  OptionsForm: TOptionsForm;
 begin
-  // comment
+  OptionsForm := TOptionsForm.Create(Self);
+  OptionsForm.ShowModal;
+  OptionsForm.Free;
 end;
 
 procedure TBackendForm.UpdateButtonClick(Sender: TObject);
