@@ -100,7 +100,7 @@ type
     procedure TCPServerConnect(AContext: TIdContext);
     procedure TCPServerDisconnect(AContext: TIdContext);
     procedure TCPServerException(AContext: TIdContext; AException: Exception);
-    procedure SendResponse(user: TUser; AContext: TIdContext; id: integer; data: string; bLog: boolean = true);
+    procedure SendResponse(var user: TUser; var AContext: TIdContext; id: integer; data: string; bLog: boolean = true);
     procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
@@ -142,7 +142,7 @@ procedure TBackendForm.LogMessage(const group, &label, text: string);
 begin
   Log.Add(TLogMessage.Create(FormatDateTime('nn:ss', Now - wbStartTime), group, &label, text));
   LogListView.Items.Count := Log.Count;
-  SendMessage(LogListView.Handle, EM_LINESCROLL, 0, LogListView.Items.Count);
+  LogListView.Items[Pred(Log.Count)].MakeVisible(false);
 end;
 
 { Initialize form, initialize TES5Edit API, and load plugins }
@@ -188,7 +188,8 @@ begin
 
     // PREPARE LIST VIEWS
     LogListView.OwnerDraw := not settings.simpleLogView;
-    LogListView.ShowColumnHeaders := not settings.simpleLogView;
+    LogListView.ShowColumnHeaders := settings.simpleLogView;
+    ShowScrollBar(LogListView.Handle, SB_BOTH, true);
     UnapprovedListView.OwnerDraw := not settings.simpleReportsView;
     ApprovedListView.OwnerDraw := not settings.simpleReportsView;
     UnapprovedListView.Items.Count := UnapprovedReports.Count;
@@ -363,10 +364,10 @@ begin
   AddDetailsItem('TES4 logins', IntToStr(statistics.tes4Logins));
   AddDetailsItem('FNV logins', IntToStr(statistics.fnvLogins));
   AddDetailsItem('FO3 logins', IntToStr(statistics.fo3Logins));
-  AddDetailsItem('TES5 reports recieved', IntToStr(statistics.tes5ReportsRecieved));
-  AddDetailsItem('TES4 reports recieved', IntToStr(statistics.tes4ReportsRecieved));
-  AddDetailsItem('FNV reports recieved', IntToStr(statistics.fnvReportsRecieved));
-  AddDetailsItem('FO3 reports recieved', IntToStr(statistics.fo3ReportsRecieved));
+  AddDetailsItem('TES5 reports recieved', IntToStr(statistics.tes5Reports));
+  AddDetailsItem('TES4 reports recieved', IntToStr(statistics.tes4Reports));
+  AddDetailsItem('FNV reports recieved', IntToStr(statistics.fnvReports));
+  AddDetailsItem('FO3 reports recieved', IntToStr(statistics.fo3Reports));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Session bandwidth', FormatByteSize(sessionBandwidth));
   AddDetailsItem('Session uptime', TimeStr(sessionUptime));
@@ -800,7 +801,7 @@ begin
     ' '+AException.Message);
 end;
 
-procedure TBackendForm.SendResponse(user: TUser; AContext: TIdContext;
+procedure TBackendForm.SendResponse(var user: TUser; var AContext: TIdContext;
   id: integer; data: string; bLog: boolean = true);
 var
   json: string;
@@ -808,7 +809,8 @@ var
 begin
   response := TmpMessage.Create(id, '', '', data);
   json := response.ToJson;
-  Inc(user.download, SizeOf(json));
+  Inc(user.download, Length(json));
+  Inc(sessionBandwidth, Length(json));
   AContext.Connection.IOHandler.WriteLn(json);
   if bLog then LogMessage('SERVER', 'Response', response.data);
   response.Free;
@@ -818,7 +820,7 @@ procedure TBackendForm.HandleMessage(msg: TmpMessage; size: integer;
   AContext: TIdContext);
 var
   report: TReport;
-  note, ip: string;
+  note, ip, WhereClause, SetClause: string;
   user: TUser;
   stream: TMemoryStream;
   bAuthorized: boolean;
@@ -835,8 +837,10 @@ begin
   if not Assigned(user) then
     user := AddUser(ip);
 
+  WhereClause := UserWhereClause(user);
   user.lastSeen := Now;
   Inc(user.upload, size);
+  Inc(sessionBandwidth, size);
 
   // write message to log
   WriteMessage(msg, ip);
@@ -844,11 +848,22 @@ begin
   // handle message by id
   case msg.id of
     MSG_NOTIFY: begin
-      note := 'No';
-      if bAuthorized then
-        note := 'Yes';
-      // respond to user
-      SendResponse(user, AContext, MSG_NOTIFY, note);
+      if msg.data = 'Authorized?' then begin
+        note := 'No';
+        if bAuthorized then
+          note := 'Yes';
+        // respond to user
+        SendResponse(user, AContext, MSG_NOTIFY, note);
+      end
+      // game based logins
+      else if msg.data = 'TES5' then
+        Inc(statistics.tes5Logins)
+      else if msg.data = 'TES4' then
+        Inc(statistics.tes4Logins)
+      else if msg.data = 'FNV' then
+        Inc(statistics.fnvLogins)
+      else if msg.data = 'FO3' then
+        Inc(statistics.fo3Logins);
     end;
 
     MSG_REGISTER: begin
@@ -890,6 +905,8 @@ begin
           AContext.Connection.IOHandler.LargeStream := True;
           AContext.Connection.IOHandler.Write(stream, 0, true);
           Inc(sessionBandwidth, stream.Size);
+          Inc(user.download, stream.Size);
+          Inc(statistics.dictionaryUpdates);
           LogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ GetDictionaryHash(msg.data));
           stream.Free;
         end;
@@ -901,6 +918,8 @@ begin
           AContext.Connection.IOHandler.LargeStream := True;
           AContext.Connection.IOHandler.Write(stream, 0, true);
           Inc(sessionBandwidth, stream.Size);
+          Inc(user.download, stream.Size);
+          Inc(statistics.programUpdates);
           LogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ status.programVersion);
           stream.Free;
         end
@@ -924,6 +943,15 @@ begin
         AddReport(report, 'unapproved_reports');
         note := 'Report accepted.';
         Inc(statistics.reportsRecieved);
+        // update statistics based on game
+        if report.game = 'TES5' then
+          Inc(statistics.tes5Reports)
+        else if report.game = 'TES4' then
+          Inc(statistics.tes4Reports)
+        else if report.game = 'FNV' then
+          Inc(statistics.fnvLogins)
+        else if report.game = 'FO3' then
+          Inc(statistics.fo3Reports);
       except
         on x : Exception do
           note := 'Failed to load report.';
@@ -933,6 +961,10 @@ begin
       SendResponse(user, AContext, MSG_NOTIFY, note);
     end;
   end;
+
+  // update user
+  SetClause := UserSetClause(user);
+  UpdateUser(SetClause, WhereClause);
 end;
 
 procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
@@ -951,7 +983,7 @@ begin
   LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
   msg := TmpMessage.Create;
   msg.FromJson(LLine);
-  size := SizeOf(LLine);
+  size := Length(LLine);
   Inc(sessionBandwidth, size);
   HandleMessage(msg, size, AContext);
 
@@ -1022,6 +1054,7 @@ begin
   OptionsForm := TOptionsForm.Create(Self);
   OptionsForm.ShowModal;
   OptionsForm.Free;
+  LogListView.Repaint;
 end;
 
 procedure TBackendForm.UpdateButtonClick(Sender: TObject);

@@ -69,6 +69,7 @@ type
     DetailsEditor: TValueListEditor;
     RemoveBadPluginsItem: TMenuItem;
     Timer: TTimer;
+    StatusIcons: TImageList;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const s: string);
@@ -139,6 +140,8 @@ type
     procedure OptionsButtonClick(Sender: TObject);
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
+    procedure StatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
+      const Rect: TRect);
   private
     { Private declarations }
   public
@@ -149,6 +152,7 @@ var
   MergeForm: TMergeForm;
   LastHint: string;
   LastURLTime: double;
+  bMergesToBuild, bMergesToCheck: boolean;
 
 implementation
 
@@ -199,6 +203,7 @@ begin
     SetTaskbarProgressState(tbpsIndeterminate);
 
     // INITIALIZE VARIABLES
+    ProgramVersion := GetVersionMem;
     tempPath := wbProgramPath + 'temp\';
     logPath := wbProgramPath + 'logs\';
     ForceDirectories(tempPath);
@@ -221,6 +226,10 @@ begin
     IconList.GetBitmap(4, OptionsButton.Glyph);
     IconList.GetBitmap(5, UpdateButton.Glyph);
     IconList.GetBitmap(6, HelpButton.Glyph);
+
+    // STATUSBAR VALUES
+    StatusBar.Panels[7].Text := settings.language;
+    StatusBar.Panels[8].Text := 'v'+ProgramVersion;
 
     // INITIALIZE TES5EDIT API
     wbDisplayLoadOrderFormID := True;
@@ -408,6 +417,7 @@ begin
   if TCPClient.Connected then begin
     Timer.Enabled := false;
     CheckAuthorization;
+    SendGameMode;
     GetStatus;
     CompareStatuses;
     ShowAuthorizationMessage;
@@ -426,6 +436,47 @@ begin
   end
   else begin
     Logger.Write('Not authorized');
+  end;
+end;
+
+procedure TMergeForm.StatusBarDrawPanel(StatusBar: TStatusBar;
+  Panel: TStatusPanel; const Rect: TRect);
+var
+  icon: TIcon;
+begin
+  icon := TIcon.Create;
+  case Panel.Index of
+    2: begin
+      if not bLoaderDone then begin
+        StatusIcons.GetIcon(0, icon);
+        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
+      end;
+    end;
+    3: begin
+      if TCPClient.Connected then
+        StatusIcons.GetIcon(1, icon)
+      else
+        StatusIcons.GetIcon(2, icon);
+      StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
+    end;
+    4: begin
+      if bLoaderDone and bMergesToBuild then begin
+        StatusIcons.GetIcon(3, icon);
+        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
+      end;
+    end;
+    5: begin
+      if bDictionaryUpdate then begin
+        StatusIcons.GetIcon(4, icon);
+        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
+      end;
+    end;
+    6: begin
+      if bProgramUpdate then begin
+        StatusIcons.GetIcon(5, icon);
+        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
+      end;
+    end;
   end;
 end;
 
@@ -497,7 +548,7 @@ begin
   // add details items
   AddDetailsItem('Application', 'Merge Plugins');
   AddDetailsItem('Author', 'matortheeternal');
-  AddDetailsItem('Version', GetVersionMem);
+  AddDetailsItem('Version', ProgramVersion);
   AddDetailsItem('Date built', DateTimeToStr(GetLastModified(ParamStr(0))));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Game mode', wbGameName);
@@ -1008,7 +1059,6 @@ procedure TMergeForm.UpdateMerges;
 var
   i: integer;
   merge: TMerge;
-  bMergesToBuild, bMergesToCheck: boolean;
 begin
   bMergesToBuild := false;
   bMergesToCheck := false;

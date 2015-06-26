@@ -293,6 +293,7 @@ type
   procedure InitializeClient;
   procedure ConnectToServer;
   function CheckAuthorization: boolean;
+  procedure SendGameMode;
   procedure ResetAuth;
   function UsernameAvailable: boolean;
   function RegisterUser: boolean;
@@ -307,7 +308,6 @@ type
 
 const
   // IMPORTANT CONSTANTS
-  ProgramVersion = '2.0';
   ProgramTesters = 'bla08, hishy, keithinhanoi, mindw0rk2, steve25469, Teabag, '+
     'Thalioden, zilav';
   ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
@@ -376,7 +376,8 @@ var
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate: boolean;
-  tempPath, logPath, ProgramPath, dictionaryFilename, ActiveProfile: string;
+  tempPath, logPath, ProgramPath, dictionaryFilename, ActiveProfile,
+  ProgramVersion: string;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
@@ -2106,6 +2107,32 @@ begin
 
   // set bAuthorized boolean
   bAuthorized := Result;
+end;
+
+procedure SendGameMode;
+var
+  msg, response: TmpMessage;
+  msgJson: string;
+  line: string;
+begin
+  // attempt to check authorization
+  // throws exception if server is unavailable
+  try
+    // send notify request to server
+    msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, wbAppName);
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    response := TmpMessage.Create;
+    response.FromJson(line);
+    Logger.Write('  Response: '+response.data);
+  except
+    on x : Exception do begin
+      Logger.Write('  Exception sending game mode: '+x.Message);
+    end;
+  end;
 end;
 
 procedure ResetAuth;

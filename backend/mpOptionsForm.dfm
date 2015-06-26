@@ -20,7 +20,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = UsersTabsheet
+    ActivePage = GeneralTabSheet
     TabOrder = 0
     TabWidth = 70
     object GeneralTabSheet: TTabSheet

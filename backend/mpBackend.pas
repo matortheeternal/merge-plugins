@@ -127,10 +127,10 @@ type
     reportsDenied: integer;
     totalBandwidth: Int64;
     totalUptime: TDateTime;
-    tes5ReportsRecieved: integer;
-    tes4ReportsRecieved: integer;
-    fnvReportsRecieved: integer;
-    fo3ReportsRecieved: integer;
+    tes5Reports: integer;
+    tes4Reports: integer;
+    fnvReports: integer;
+    fo3Reports: integer;
     tes5Logins: integer;
     tes4Logins: integer;
     fnvLogins: integer;
@@ -316,7 +316,7 @@ procedure SQLQuery(query: string);
 var
   SQLQuery: TZQuery;
 begin
-  Logger.Write('SQL', 'Query', query);
+  //Logger.Write('SQL', 'Query', query);
   SQLQuery := TZQuery.Create(nil);
   SQLQuery.Connection := Connection;
   SQLQuery.Fields.Clear;
@@ -333,6 +333,7 @@ procedure QueryUsers;
 var
   Dataset: TZQuery;
   user: TUser;
+  count: integer;
 begin
   Users := TList.Create;
 
@@ -345,12 +346,15 @@ begin
   Dataset.Open;
 
   // load into Users list
+  count := 0;
   Dataset.First;
   while not Dataset.EOF do begin
+    Inc(count);
     user := TUser.Create(Dataset.Fields);
     Users.Add(user);
     Dataset.Next;
   end;
+  Logger.Write('SQL', 'Users', 'Loaded '+IntToStr(count)+' records');
 
   // clean up
   Dataset.Close;
@@ -360,7 +364,8 @@ end;
 function UserWhereClause(user: TUser): string;
 begin
   Result := 'WHERE '+
-    'ip='''+user.ip+'''';
+    'ip='''+user.ip+''' AND '+
+    'username='''+user.username+'''';
 end;
 
 function UserSetClause(user: TUser): string;
@@ -404,6 +409,7 @@ procedure UpdateUser(SetClause, WhereClause: string);
 var
   query: string;
 begin
+  Logger.Write('SQL', 'Users', 'Update '+WhereClause);
   query := 'UPDATE users '+SetClause+' '+WhereClause+';';
   SQLQuery(query);
 end;
@@ -413,6 +419,7 @@ var
   query, ValuesClause: string;
 begin
   // execute SQL
+  Logger.Write('SQL', 'Users', 'Add '+user.ip+' ('+user.username+')');
   ValuesClause := UserValuesClause(user);
   query := 'INSERT INTO users '+ValuesClause+';';
   SQLQuery(query);
@@ -424,6 +431,7 @@ var
 begin
   // execute SQL
   WhereClause := UserWhereClause(user);
+  Logger.Write('SQL', 'Users', 'Delete '+user.ip+' ('+user.username+')');
   query := 'DELETE FROM users '+WhereClause+';';
   SQLQuery(query);
 end;
@@ -436,6 +444,7 @@ procedure QueryBlacklist;
 var
   Dataset: TZQuery;
   entry: TBlacklistEntry;
+  count: integer;
 begin
   Blacklist := TList.Create;
 
@@ -449,11 +458,14 @@ begin
 
   // load into Blacklist
   Dataset.First;
+  count := 0;
   while not Dataset.EOF do begin
+    Inc(count);
     entry := TBlacklistEntry.Create(Dataset.Fields);
     Blacklist.Add(entry);
     Dataset.Next;
   end;
+  Logger.Write('SQL', 'Blacklist', 'Loaded '+IntToStr(count)+' records');
 
   // clean up
   Dataset.Close;
@@ -491,6 +503,7 @@ var
   query: string;
 begin
   query := 'UPDATE blacklist '+SetClause+' '+WhereClause+';';
+  Logger.Write('SQL', 'Blacklist', 'Update '+WhereClause);
   SQLQuery(query);
 end;
 
@@ -501,6 +514,7 @@ begin
   // execute SQL
   ValuesClause := BlacklistValuesClause(entry);
   query := 'INSERT INTO blacklist '+ValuesClause+';';
+  Logger.Write('SQL', 'Blacklist', 'Add '+entry.ip+' ('+entry.username+')');
   SQLQuery(query);
 end;
 
@@ -511,6 +525,7 @@ begin
   // execute SQL
   WhereClause := BlacklistWhereClause(entry);
   query := 'DELETE FROM blacklist '+WhereClause+';';
+  Logger.Write('SQL', 'Blacklist', 'Delete '+entry.ip+' ('+entry.username+')');
   SQLQuery(query);
 end;
 
@@ -523,6 +538,7 @@ procedure QueryReports;
 var
   Dataset: TZQuery;
   report: TReport;
+  count: integer;
 begin
   // initialize lists
   ApprovedReports := TList.Create;
@@ -537,12 +553,15 @@ begin
   Dataset.Open;
 
   // load into ApprovedReports list
+  count := 0;
   Dataset.First;
   while not Dataset.EOF do begin
+    Inc(count);
     report := TReport.Create(Dataset.Fields);
     ApprovedReports.Add(report);
     Dataset.Next;
   end;
+  Logger.Write('SQL', 'approved_reports', 'Loaded '+IntToStr(count)+' records');
   Dataset.Close;
 
   // get unapproved_reports
@@ -554,12 +573,15 @@ begin
   Dataset.Open;
 
   // load into UnapprovedReports list
+  count := 0;
   Dataset.First;
   while not Dataset.EOF do begin
+    Inc(count);
     report := TReport.Create(Dataset.Fields);
     UnapprovedReports.Add(report);
     Dataset.Next;
   end;
+  Logger.Write('SQL', 'unapproved_reports', 'Loaded '+IntToStr(count)+' records');
   Dataset.Close;
   Dataset.Free;
 end;
@@ -606,6 +628,7 @@ var
   query: string;
 begin
   query := 'UPDATE approved_reports '+SetClause+' '+WhereClause+';';
+  Logger.Write('SQL', 'approved_reports', 'Update '+WhereClause);
   SQLQuery(query);
 end;
 
@@ -616,6 +639,7 @@ begin
   // execute SQL
   ValuesClause := ReportValuesClause(report);
   query := 'INSERT INTO '+table+' '+ValuesClause+';';
+  Logger.Write('SQL', table, 'Add '+report.game+', '+report.username+', '+report.filename);
   SQLQuery(query);
 end;
 
@@ -626,6 +650,7 @@ begin
   // execute SQL
   WhereClause := ReportWhereClause(report);
   query := 'DELETE FROM '+table+' '+WhereClause+';';
+  Logger.Write('SQL', table, 'Delete '+report.game+', '+report.username+', '+report.filename);
   SQLQuery(query);
 end;
 
@@ -1707,10 +1732,10 @@ begin
   reportsDenied := 0;
   totalBandwidth := 0;
   totalUptime := 0;
-  tes5ReportsRecieved := 0;
-  tes4ReportsRecieved := 0;
-  fnvReportsRecieved := 0;
-  fo3ReportsRecieved := 0;
+  tes5Reports := 0;
+  tes4Reports := 0;
+  fnvReports := 0;
+  fo3Reports := 0;
   tes5Logins := 0;
   tes4Logins := 0;
   fnvLogins := 0;
@@ -1730,10 +1755,10 @@ begin
   ini.WriteInteger('Statistics', 'reportsDenied', reportsDenied);
   ini.WriteInteger('Statistics', 'totalBandwidth', totalBandwidth);
   ini.WriteFloat('Statistics', 'totalUptime', totalUptime);
-  ini.WriteInteger('Statistics', 'tes5ReportsRecieved', tes5ReportsRecieved);
-  ini.WriteInteger('Statistics', 'tes4ReportsRecieved', tes4ReportsRecieved);
-  ini.WriteInteger('Statistics', 'fnvReportsRecieved', fnvReportsRecieved);
-  ini.WriteInteger('Statistics', 'fo3ReportsRecieved', fo3ReportsRecieved);
+  ini.WriteInteger('Statistics', 'tes5ReportsRecieved', tes5Reports);
+  ini.WriteInteger('Statistics', 'tes4ReportsRecieved', tes4Reports);
+  ini.WriteInteger('Statistics', 'fnvReportsRecieved', fnvReports);
+  ini.WriteInteger('Statistics', 'fo3ReportsRecieved', fo3Reports);
   ini.WriteInteger('Statistics', 'tes5Logins', tes5Logins);
   ini.WriteInteger('Statistics', 'tes4Logins', tes4Logins);
   ini.WriteInteger('Statistics', 'fnvLogins', fnvLogins);
@@ -1757,10 +1782,10 @@ begin
   reportsDenied := ini.ReadInteger('Statistics', 'reportsDenied', 0);
   totalBandwidth := ini.ReadInteger('Statistics', 'totalBandwidth', 0);
   totalUptime := ini.ReadFloat('Statistics', 'totalUptime', 0);
-  tes5ReportsRecieved := ini.ReadInteger('Statistics', 'tes5ReportsRecieved', 0);
-  tes4ReportsRecieved := ini.ReadInteger('Statistics', 'tes4ReportsRecieved', 0);
-  fnvReportsRecieved := ini.ReadInteger('Statistics', 'fnvReportsRecieved', 0);
-  fo3ReportsRecieved := ini.ReadInteger('Statistics', 'fo3ReportsRecieved', 0);
+  tes5Reports := ini.ReadInteger('Statistics', 'tes5ReportsRecieved', 0);
+  tes4Reports := ini.ReadInteger('Statistics', 'tes4ReportsRecieved', 0);
+  fnvReports := ini.ReadInteger('Statistics', 'fnvReportsRecieved', 0);
+  fo3Reports := ini.ReadInteger('Statistics', 'fo3ReportsRecieved', 0);
   tes5Logins := ini.ReadInteger('Statistics', 'tes5Logins', 0);
   tes4Logins := ini.ReadInteger('Statistics', 'tes4Logins', 0);
   fnvLogins := ini.ReadInteger('Statistics', 'fnvLogins', 0);

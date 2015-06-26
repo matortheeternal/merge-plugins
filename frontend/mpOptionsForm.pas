@@ -341,6 +341,9 @@ var
   index: integer;
   defaultGame: TGameMode;
 begin
+  // get status update (TEMPORARY PLEASE DELETE)
+  GetStatus;
+
   // load setting
   cbLanguage.Text := settings.language;
   edUsername.Text := settings.username;

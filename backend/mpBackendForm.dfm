@@ -254,12 +254,13 @@ object BackendForm: TBackendForm
               Width = 80
             end
             item
-              AutoSize = True
               Caption = 'Text'
+              Width = 370
             end>
           ColumnClick = False
           DoubleBuffered = True
           OwnerData = True
+          OwnerDraw = True
           ReadOnly = True
           ParentDoubleBuffered = False
           ShowColumnHeaders = False
@@ -328,7 +329,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801B00120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801B40120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
