@@ -218,12 +218,16 @@ var
   user: TUser;
   entry: TBlacklistEntry;
   duration: real;
+  sDuration: string;
 begin
   for i := Pred(lvUsers.Items.Count) downto 0 do begin
     if not lvUsers.Items[i].Selected then
       continue;
     user := TUser(Users[i]);
-    duration := StrToFloat(InputBox('Blacklist Duration', 'Duration to blacklist '+user.ip+' ('+user.username+')', '30.0'));
+    sDuration := '30.0';
+    if not InputQuery('Blacklist Duration', 'Duration to blacklist '+user.ip+' ('+user.username+')', sDuration) then
+      continue;
+    duration := StrToFloat(sDuration);
     entry := TBlacklistEntry.Create(user.ip, user.username, duration);
     Blacklist.Add(entry);
     AddBlacklist(entry);

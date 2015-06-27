@@ -727,7 +727,7 @@ end;
 { Converts a TDateTime to a time string, e.g. 19d 20h 3m 30s }
 function TimeStr(date: TDateTime): string;
 begin
-  Result := Format('%dd %dh %dm %ds', [Trunc(date), HourOf(date), MinuteOf(date), SecondOf(date)]);
+  Result := Format('%dd %dh %dm', [Trunc(date), HourOf(date), MinuteOf(date)]);
 end;
 
 {

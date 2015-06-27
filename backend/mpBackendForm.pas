@@ -56,6 +56,7 @@ type
     EditReportItem: TMenuItem;
     ViewDictionaryEntryItem: TMenuItem;
     TCPServer: TIdTCPServer;
+    Timer: TTimer;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const group, &label, text: string);
@@ -107,6 +108,9 @@ type
     procedure LogListViewData(Sender: TObject; Item: TListItem);
     procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
+    procedure ApprovedListViewDrawItem(Sender: TCustomListView; Item: TListItem;
+      Rect: TRect; State: TOwnerDrawState);
+    procedure OnTimer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -219,6 +223,13 @@ begin
   // save statistics, settings
   SaveStatistics;
   SaveSettings;
+end;
+
+
+procedure TBackendForm.OnTimer(Sender: TObject);
+begin
+  if PageControl.ActivePageIndex = 2 then
+    UpdateApplicationDetails;
 end;
 
 {******************************************************************************}
@@ -452,6 +463,10 @@ var
   Column: TListColumn;
 begin
   ListView := TListView(Sender);
+  if Item.Selected then begin
+    ListView.Canvas.Brush.Color := $FFEEDD;
+    ListView.Canvas.FillRect(Rect);
+  end;
 
   // prepare format string
   FormatString := '';
@@ -554,8 +569,36 @@ begin
   Item.SubItems.Add(DateToStr(report.dateSubmitted));
   Item.SubItems.Add(report.username);
   Item.SubItems.Add(IntToStr(report.rating));
+  ApprovedListView.Canvas.Font.Color := GetRatingColor(report.rating);
+  ApprovedListView.Canvas.Font.Style := [fsBold];
 end;
 
+procedure TBackendForm.ApprovedListViewDrawItem(Sender: TCustomListView;
+  Item: TListItem; Rect: TRect; State: TOwnerDrawState);
+var
+  ListView: TListView;
+  R: TRect;
+  x, y, i: integer;
+begin
+  ListView := TListView(Sender);
+  if Item.Selected then begin
+    ListView.Canvas.Brush.Color := $FFEEDD;
+    ListView.Canvas.FillRect(Rect);
+  end;
+
+  R := Rect;
+  R.Right := R.Left + ListView.Columns[0].Width - 3;
+  x := Rect.Left + 3;
+  y := (Rect.Bottom - Rect.Top - ListView.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
+  ListView.Canvas.TextRect(R, x, y, Item.Caption);
+  for i := 0 to Item.SubItems.Count - 1 do begin
+    R.Left := R.Right + 3;
+    // fixes drawing error
+    R.Right := R.Left + ListView_GetColumnWidth(ListView.Handle, ListView.Columns[i + 1].Index);
+    x := R.Left;
+    ListView.Canvas.TextRect(R, x, y, Item.SubItems[i]);
+  end;
+end;
 
 {******************************************************************************}
 { Approved Popup Menu events
@@ -991,7 +1034,6 @@ begin
   msg.Free;
 end;
 
-
 {******************************************************************************}
 { QuickBar Button Events
   Events involving buttons on the QuickBar.  Events include:
@@ -1054,7 +1096,13 @@ begin
   OptionsForm := TOptionsForm.Create(Self);
   OptionsForm.ShowModal;
   OptionsForm.Free;
+  // update listviews
+  LogListView.OwnerDraw := not settings.simpleLogView;
   LogListView.Repaint;
+  ApprovedListView.OwnerDraw := not settings.simpleReportsView;
+  ApprovedListView.Repaint;
+  UnapprovedListView.OwnerDraw := not settings.simpleReportsView;
+  UnapprovedListView.Repaint;
 end;
 
 procedure TBackendForm.UpdateButtonClick(Sender: TObject);

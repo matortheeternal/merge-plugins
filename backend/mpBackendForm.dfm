@@ -217,6 +217,7 @@ object BackendForm: TBackendForm
           DoubleBuffered = True
           MultiSelect = True
           OwnerData = True
+          OwnerDraw = True
           ReadOnly = True
           RowSelect = True
           ParentDoubleBuffered = False
@@ -228,6 +229,7 @@ object BackendForm: TBackendForm
           OnChange = ApprovedListViewChange
           OnColumnClick = ApprovedListViewColumnClick
           OnData = ApprovedListViewData
+          OnDrawItem = ApprovedListViewDrawItem
         end
       end
       object LogTabSheet: TTabSheet
@@ -254,14 +256,16 @@ object BackendForm: TBackendForm
               Width = 80
             end
             item
+              AutoSize = True
               Caption = 'Text'
-              Width = 370
             end>
           ColumnClick = False
           DoubleBuffered = True
+          MultiSelect = True
           OwnerData = True
           OwnerDraw = True
           ReadOnly = True
+          RowSelect = True
           ParentDoubleBuffered = False
           ShowColumnHeaders = False
           TabOrder = 0
@@ -329,7 +333,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801B40120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801B80120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1435,6 +1439,12 @@ object BackendForm: TBackendForm
     OnException = TCPServerException
     OnExecute = TCPServerExecute
     Left = 1000
+    Top = 8
+  end
+  object Timer: TTimer
+    Interval = 5000
+    OnTimer = OnTimer
+    Left = 952
     Top = 8
   end
 end
