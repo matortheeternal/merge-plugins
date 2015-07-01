@@ -55,15 +55,9 @@ __history/
 
 # Castalia statistics file
 *.stat
-dev/TES5Merges.json
-dev/*.dcu
-dev/Imaging/*.dcu
-dev/settings.ini
-dev/statistics.ini
-dev/TES5Errors.json
-backend/users.json
-backend/statistics.ini
+
+# Repository ignore
 *.json
-frontend/user/settings.ini
 *.ini
 *.zip
+backend/logs/*.txt
