@@ -29,7 +29,8 @@ uses
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpLoginForm in 'mpLoginForm.pas' {LoginForm},
   W7Taskbar in 'W7Taskbar.pas',
-  CRC32 in 'CRC32.pas';
+  CRC32 in 'CRC32.pas',
+  mpUserForm in 'mpUserForm.pas' {UserForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -71,5 +72,6 @@ begin
   Application.CreateForm(TEditForm, EditForm);
   Application.CreateForm(TLoginForm, LoginForm);
   Application.CreateForm(TOptionsForm, OptionsForm);
+  Application.CreateForm(TUserForm, UserForm);
   Application.Run;
 end.

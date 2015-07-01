@@ -5,6 +5,10 @@ object OptionsForm: TOptionsForm
   ClientHeight = 447
   ClientWidth = 584
   Color = clBtnFace
+  Constraints.MaxHeight = 600
+  Constraints.MaxWidth = 800
+  Constraints.MinHeight = 480
+  Constraints.MinWidth = 600
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -21,6 +25,8 @@ object OptionsForm: TOptionsForm
     Width = 568
     Height = 401
     ActivePage = GeneralTabSheet
+    Align = alCustom
+    Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
@@ -367,6 +373,156 @@ object OptionsForm: TOptionsForm
         end
       end
     end
+    object Dictionary: TTabSheet
+      Caption = 'Dictionary'
+      ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 28
+      object gbConsolidation: TGroupBox
+        Left = 6
+        Top = 6
+        Width = 548
+        Height = 99
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Report consolidation'
+        TabOrder = 0
+        object kbSeparateHashes: TCheckBox
+          Left = 12
+          Top = 20
+          Width = 197
+          Height = 17
+          Caption = 'Separate entries based on hashes'
+          TabOrder = 0
+        end
+        object kbSeparateVersions: TCheckBox
+          Left = 12
+          Top = 43
+          Width = 197
+          Height = 17
+          Caption = 'Separate entries based on versions'
+          TabOrder = 1
+        end
+        object kbSeparateRecords: TCheckBox
+          Left = 12
+          Top = 66
+          Width = 253
+          Height = 17
+          Caption = 'Separate entries based on number of records'
+          TabOrder = 2
+        end
+      end
+      object gbNotesformat: TGroupBox
+        Left = 6
+        Top = 117
+        Width = 548
+        Height = 180
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Entry notes'
+        TabOrder = 1
+        object lblSampleValueHash: TLabel
+          Left = 114
+          Top = 66
+          Width = 310
+          Height = 13
+          Margins.Left = 6
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '[Username: Test] [Hash: 01234567] [Version: 2.0]'
+        end
+        object lblTemplateHash: TLabel
+          Left = 12
+          Top = 20
+          Width = 93
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'Template with hash'
+        end
+        object lblSample: TLabel
+          Left = 12
+          Top = 66
+          Width = 34
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'Sample'
+        end
+        object lblSampleValueNoHash: TLabel
+          Left = 114
+          Top = 146
+          Width = 153
+          Height = 13
+          Margins.Left = 6
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '[Username: Test] [Version: 2.0]'
+        end
+        object lblSampleNoHash: TLabel
+          Left = 12
+          Top = 146
+          Width = 34
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'Sample'
+        end
+        object lblTemplateNoHash: TLabel
+          Left = 12
+          Top = 100
+          Width = 85
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'Template no hash'
+        end
+        object meTemplateHash: TMemo
+          Left = 114
+          Top = 20
+          Width = 423
+          Height = 37
+          Align = alCustom
+          Anchors = [akLeft, akTop, akRight]
+          Lines.Strings = (
+            '[Username: {{user}}] [Hash: {{hash}}] [Version: {{version}}]')
+          ScrollBars = ssVertical
+          TabOrder = 0
+          OnChange = meTemplateHashChange
+        end
+        object meTemplateNoHash: TMemo
+          Left = 114
+          Top = 100
+          Width = 423
+          Height = 37
+          Align = alCustom
+          Anchors = [akLeft, akTop, akRight]
+          Lines.Strings = (
+            '[Username: {{user}}] [Version: {{version}}]')
+          ScrollBars = ssVertical
+          TabOrder = 1
+          OnChange = meTemplateNoHashChange
+        end
+      end
+    end
     object UsersTabsheet: TTabSheet
       Caption = 'Users'
       ImageIndex = 2
@@ -429,7 +585,7 @@ object OptionsForm: TOptionsForm
           OnData = lvBlacklistData
         end
       end
-      object GroupBox1: TGroupBox
+      object gbUsers: TGroupBox
         Left = 6
         Top = 187
         Width = 548
@@ -439,8 +595,8 @@ object OptionsForm: TOptionsForm
         Margins.Right = 6
         Margins.Bottom = 6
         Align = alCustom
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'Unique Users'
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        Caption = 'Users'
         TabOrder = 1
         object lvUsers: TListView
           Left = 12
@@ -452,7 +608,7 @@ object OptionsForm: TOptionsForm
           Margins.Right = 12
           Margins.Bottom = 6
           Align = alCustom
-          Anchors = [akLeft, akTop, akRight]
+          Anchors = [akLeft, akTop, akRight, akBottom]
           Columns = <
             item
               Caption = 'IP Address'
@@ -486,6 +642,7 @@ object OptionsForm: TOptionsForm
           TabOrder = 0
           ViewStyle = vsReport
           OnData = lvUsersData
+          OnDblClick = lvUsersDblClick
         end
       end
     end
@@ -495,6 +652,8 @@ object OptionsForm: TOptionsForm
     Top = 415
     Width = 75
     Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
@@ -504,6 +663,8 @@ object OptionsForm: TOptionsForm
     Top = 415
     Width = 75
     Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 2
@@ -513,7 +674,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800540010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800600010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -9,6 +9,8 @@ uses
   ZConnection, ZDataset,
   ZDbcCache, ZAbstractRODataset, ZDbcMySQL, ZDbcPostgreSQL, DB, ZSqlUpdate,
   ComCtrls, ZDbcInterbase6, ZSqlMonitor, ZAbstractDataset, ZSequence,
+  // abbrevia components
+  AbBase, AbBrowse, AbZBrows, AbZipper, AbArcTyp,
   // superobject
   superobject,
   // crc32
@@ -69,9 +71,9 @@ type
     tes4Hash: string;
     fnvHash: string;
     fo3Hash: string;
-    constructor Create; Overload;
     function ToJson: string;
     procedure FromJson(json: string);
+    procedure Refresh;
   end;
   TReport = class(TObject)
   public
@@ -100,6 +102,7 @@ type
     notes: string;
     constructor Create; Overload;
     constructor Create(const s: string); Overload;
+    function ToText: string;
   end;
   TSettings = class(TObject)
   public
@@ -112,6 +115,11 @@ type
     dictionaryMessageColor: TColor;
     javaMessageColor: TColor;
     errorMessageColor: TColor;
+    bSeparateHashes: boolean;
+    bSeparateRecords: boolean;
+    bSeparateVersions: boolean;
+    templateHash: string;
+    templateNoHash: string;
     constructor Create; Overload;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
@@ -151,7 +159,7 @@ type
   procedure UpdateUser(SetClause, WhereClause: string); Overload;
   procedure AddUser(user: TUser); Overload;
   procedure RemoveUser(user: TUser);
-  //==BLACKLSIT==
+  //==BLACKLIST==
   procedure QueryBlacklist;
   function BlacklistWhereClause(entry: TBlacklistEntry): string;
   function BlacklistSetClause(entry: TBlacklistEntry): string;
@@ -182,6 +190,7 @@ type
   function GetSessionUptime: TDateTime;
   function GetVersionMem: string;
   function FileVersion(const FileName: string): String;
+  function ApplyTemplate(const template: string; var map: TStringList): string;
   { Windows API functions }
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
@@ -195,13 +204,18 @@ type
   procedure SaveSettings;
   procedure LoadStatistics;
   procedure SaveStatistics;
-  function GetProgram: string;
+  procedure EntryNotes(var sl: TStringList; var report: TReport);
+  procedure RebuildDictionary(game: string; var lst: TList);
+  procedure RebuildDictionaries;
+  procedure UpdateRebuildBooleans(report: TReport);
   function GetDictionary(name: string): string;
   function GetDictionaryHash(name: string): string;
   procedure LoadDictionary(var lst: TList; var sl: TStringList; filename: string);
   procedure LoadBlacklist(var lst, dictionary: TList);
   function GetRatingColor(rating: real): integer;
   function GetEntry(var dictionary: TList; pluginName, numRecords, version: string): TEntry;
+  procedure SaveLog(var Log: TList);
+  function CompareReports(P1, P2: Pointer): Integer;
   { User methods }
   function Authorized(ip, username, auth: string): boolean;
   function ResetAuth(ip, username, auth: string): boolean;
@@ -210,6 +224,7 @@ type
   function AddUser(ip: string): TUser; Overload;
   procedure UpdateUser(ip, username, auth: string); Overload;
   function IsBlacklisted(ip: string): boolean;
+  function UserString(user: TUser): string;
 
 const
   ReportColumns = 'game,username,filename,hash,record_count,rating,'+
@@ -246,10 +261,12 @@ var
   settings: TSettings;
   status: TmpStatus;
   TempPath, LogPath, ProgramPath: string;
-  bLoginSuccess, bProgressCancel: boolean;
+  bLoginSuccess, bProgressCancel, bRebuildTES5, bRebuildTES4, bRebuildFNV,
+  bRebuildFO3, bAscending: boolean;
   wbStartTime: TDateTime;
   sessionBandwidth: Int64;
   Connection: TZConnection;
+  aColumnToSort: integer;
 
 implementation
 
@@ -900,6 +917,22 @@ begin
   end;
 end;
 
+function ApplyTemplate(const template: string; var map: TStringList): string;
+const
+  openTag = '{{';
+  closeTag = '}}';
+var
+  i: Integer;
+  name, value: string;
+begin
+  Result := template;
+  for i := 0 to Pred(map.Count) do begin
+    name := map.Names[i];
+    value := map.ValueFromIndex[i];
+    Result := StringReplace(Result, openTag + name + closeTag, value, [rfReplaceAll]);
+  end;
+end;
+
 
 {******************************************************************************}
 { Windows API functions
@@ -1151,9 +1184,137 @@ begin
   statistics.Save('statistics.ini');
 end;
 
-function GetProgram: string;
+procedure EntryNotes(var sl: TStringList; var report: TReport);
+var
+  header: string;
+  slHeader: TStringList;
 begin
-  Result := '';
+  // prepare header
+  slHeader := TStringList.Create;
+  slHeader.Values['user'] := report.username;
+  slHeader.Values['hash'] := report.hash;
+  slHeader.Values['records'] := IntToStr(report.recordCount);
+  slHeader.Values['version'] := report.mergeVersion;
+  slHeader.Values['rating'] := IntToStr(report.rating);
+  slHeader.Values['date'] := DateToStr(report.dateSubmitted);
+  if (report.hash <> '0') then
+    header := ApplyTemplate(settings.templateHash, slHeader)
+  else
+    header := ApplyTemplate(settings.templateNoHash, slHeader);
+
+  // add to notes stringlist
+  sl.Add(header);
+  sl.Add(report.notes.Text);
+
+  // clean up
+  slHeader.Free;
+end;
+
+procedure SaveDictionary(game: string; var lst: TList);
+var
+  i: Integer;
+  sl: TStringList;
+  entry: TEntry;
+begin
+  sl := TStringList.Create;
+  for i := 0 to Pred(lst.Count) do begin
+    entry := TEntry(lst[i]);
+    sl.Add(entry.ToText);
+  end;
+  sl.SaveToFile(game + 'Dictionary.txt');
+  sl.Free;
+end;
+
+procedure RebuildDictionary(game: string; var lst: TList);
+var
+  i, n: integer;
+  report: TReport;
+  entry: TEntry;
+  rating: real;
+  sl: TStringList;
+  bFilenameMatch, bHashMatch, bRecordsMatch, bVersionMatch: boolean;
+begin
+  Logger.Write('DICTIONARY', 'Build', game+' Dictionary');
+  // sort reports so we can build dictionary entries faster
+  bAscending := false;
+  aColumnToSort := 1;
+  ApprovedReports.Sort(CompareReports);
+
+  // prepare to make new dictionary file
+  lst.Clear;
+  sl := TStringList.Create;
+  rating := 0;
+  n := 0;
+  bFilenameMatch := false;
+  bHashMatch := false;
+  bRecordsMatch := false;
+  bVersionMatch := false;
+  entry := nil;
+
+  // loop through approved reports
+  for i := 0 to Pred(ApprovedReports.Count) do begin
+    report := TReport(ApprovedReports[i]);
+    // skip approved reports not for the game we're making the dictionary for
+    if report.game <> game then
+      continue;
+
+    // process reports separately based on dictionary consolidation settings
+    if Assigned(entry) then begin
+      bFilenameMatch := SameText(entry.filename, report.filename);
+      bHashMatch := (not settings.bSeparateHashes) or SameText(entry.hash, report.hash);
+      bRecordsMatch := (not settings.bSeparateRecords) or (StrToInt(entry.records) = report.recordCount);
+      bVersionMatch := (not settings.bSeparateVersions) or SameText(entry.version, report.mergeVersion);
+    end;
+
+    // thanks to sorting, we can make a single dictionary entry at a time
+    if (bFilenameMatch and bHashMatch and bRecordsMatch and bVersionMatch) then begin
+      Inc(n);
+      rating := rating + report.rating;
+      EntryNotes(sl, report);
+    end
+    else begin
+      // add built entry to dictionary if it exists
+      if (entry <> nil) then begin
+        entry.rating := FormatFloat('0.##', (rating / (n * 1.0)));
+        entry.reports := IntToStr(n);
+        entry.notes := StringReplace(sl.Text, #13#10, '@13', [rfReplaceAll]);
+        sl.Clear;
+        lst.Add(entry);
+      end;
+      // prepare new entry
+      entry := TEntry.Create;
+      entry.filename := report.filename;
+      entry.hash := report.hash;
+      entry.records := IntToStr(report.recordCount);
+      entry.version := report.mergeVersion;
+      rating := report.rating;
+      EntryNotes(sl, report);
+      n := 1;
+    end;
+  end;
+
+  // clean up
+  sl.Free;
+  // save dictionary
+  SaveDictionary(game, lst);
+  // refresh status
+  status.Refresh;
+end;
+
+procedure RebuildDictionaries;
+begin
+  if bRebuildTES5 then RebuildDictionary('TES5', TES5Dictionary);
+  if bRebuildTES4 then RebuildDictionary('TES4', TES4Dictionary);
+  if bRebuildFNV then RebuildDictionary('FNV', FNVDictionary);
+  if bRebuildFO3 then RebuildDictionary('FO3', FO3Dictionary);
+end;
+
+procedure UpdateRebuildBooleans(report: TReport);
+begin
+  if report.game = 'TES5' then bRebuildTES5 := true;
+  if report.game = 'TES4' then bRebuildTES4 := true;
+  if report.game = 'FNV' then bRebuildFNV := true;
+  if report.game = 'FO3' then bRebuildFO3 := true;
 end;
 
 function GetDictionary(name: string): string;
@@ -1258,6 +1419,47 @@ begin
       exit;
     end;
   end;
+end;
+
+procedure SaveLog(var Log: TList);
+var
+  sl: TStringList;
+  i: Integer;
+  msg: TLogMessage;
+  fdt: string;
+begin
+  sl := TStringList.Create;
+  for i := 0 to Pred(Log.Count) do begin
+    msg := TLogMessage(Log[i]);
+    sl.Add(Format('[%s] (%s) %s: %s', [msg.time, msg.group, msg.&label, msg.text]));
+  end;
+  fdt := FormatDateTime('mmddyy_hhnnss', TDateTime(Now));
+  ForceDirectories(LogPath);
+  sl.SaveToFile(LogPath+'log_'+fdt+'.txt');
+  sl.Free;
+end;
+
+function CompareReports(P1, P2: Pointer): Integer;
+var
+  report1, report2: TReport;
+begin
+  Result := 0;
+  report1 := TReport(P1);
+  report2 := TReport(P2);
+
+  if aColumnToSort = 0 then
+    Result := AnsiCompareText(report1.game, report2.game)
+  else if aColumnToSort = 1 then
+    Result := AnsiCompareText(report1.filename, report2.filename)
+  else if aColumnToSort = 2 then
+    Result := Trunc(report1.dateSubmitted) - Trunc(report2.dateSubmitted)
+  else if aColumnToSort = 3 then
+    Result := AnsiCompareText(report1.username, report2.username)
+  else if aColumnToSort = 4 then
+    Result := report1.rating - report2.rating;
+
+  if bAscending then
+    Result := -Result;
 end;
 
 {******************************************************************************}
@@ -1386,6 +1588,13 @@ begin
   end;
 end;
 
+function UserString(user: TUser): string;
+begin
+  Result := user.ip;
+  if user.username <> '' then
+    Result := Result + ' ('+user.username+')';
+end;
+
 
 {******************************************************************************}
 { Object methods
@@ -1503,28 +1712,6 @@ begin
   data := obj.S['data'];
 end;
 
-{ Constructor for TmpStatus }
-constructor TmpStatus.Create;
-begin
-  if FileExists('MergePlugins.exe') then
-    ProgramVersion := FileVersion('MergePlugins.exe');
-  if FileExists('TES5Dictionary.txt') then
-    TES5Hash := GetCRC32('TES5Dictionary.txt');
-  if FileExists('TES4Dictionary.txt') then
-    TES4Hash := GetCRC32('TES4Dictionary.txt');
-  if FileExists('FNVDictionary.txt') then
-    FNVHash := GetCRC32('FNVDictionary.txt');
-  if FileExists('FO3Dictionary.txt') then
-    FO3Hash := GetCRC32('FO3Dictionary.txt');
-
-  // log it all
-  Logger.Write('INIT', 'Status', 'Client Version: '+ProgramVersion);
-  Logger.Write('INIT', 'Status', 'TES5Dictionary Hash: '+TES5Hash);
-  Logger.Write('INIT', 'Status', 'TES4Dictionary Hash: '+TES4Hash);
-  Logger.Write('INIT', 'Status', 'FNVDictionary Hash: '+FNVHash);
-  Logger.Write('INIT', 'Status', 'FO3Dictionary Hash: '+FO3Hash);
-end;
-
 { TmpStatus to json string }
 function TmpStatus.ToJson: string;
 var
@@ -1553,6 +1740,54 @@ begin
   TES4Hash := obj.S['TES4Hash'];
   FNVHash := obj.S['FNVHash'];
   FO3Hash := obj.S['FO3Hash'];
+end;
+
+procedure TmpStatus.Refresh;
+var
+  NewVersion: string;
+  Zipper: TAbZipper;
+begin
+  if FileExists('MergePlugins.exe') then begin
+    NewVersion := FileVersion('MergePlugins.exe');
+    if (ProgramVersion <> NewVersion) then begin
+      Zipper := TAbZipper.Create(nil);
+      Zipper.AutoSave := true;
+      Zipper.FileName := 'MergePlugins.zip';
+      Zipper.StoreOptions := [soStripDrive, soStripPath, soRemoveDots, soReplace];
+      Zipper.AddFiles('MergePlugins.exe', 0);
+      ProgramVersion := NewVersion;
+      Logger.Write('INIT', 'Status', 'Client Version: '+ProgramVersion);
+      Zipper.Free;
+    end;
+  end;
+  if FileExists('TES5Dictionary.txt') then begin
+    NewVersion := GetCRC32('TES5Dictionary.txt');
+    if (TES5Hash <> NewVersion) then begin
+      TES5Hash := NewVersion;
+      Logger.Write('INIT', 'Status', 'TES5Dictionary Hash: '+TES5Hash);
+    end;
+  end;
+  if FileExists('TES4Dictionary.txt') then begin
+    NewVersion := GetCRC32('TES4Dictionary.txt');
+    if (TES4Hash <> NewVersion) then begin
+      TES4Hash := NewVersion;
+      Logger.Write('INIT', 'Status', 'TES4Dictionary Hash: '+TES4Hash);
+    end;
+  end;
+  if FileExists('FNVDictionary.txt') then begin
+    NewVersion := GetCRC32('FNVDictionary.txt');
+    if (FNVHash <> NewVersion) then begin
+      FNVHash := NewVersion;
+      Logger.Write('INIT', 'Status', 'FNVDictionary Hash: '+FNVHash);
+    end;
+  end;
+  if FileExists('FO3Dictionary.txt') then begin
+    NewVersion := GetCRC32('FO3Dictionary.txt');
+    if (FO3Hash <> NewVersion) then begin
+      FO3Hash := NewVersion;
+      Logger.Write('INIT', 'Status', 'FO3Dictionary Hash: '+FO3Hash);
+    end;
+  end;
 end;
 
 { TReport Constructor }
@@ -1649,6 +1884,12 @@ begin
   end;
 end;
 
+function TEntry.ToText: string;
+begin
+  Result := filename + ';' + records + ';' + version + ';' + rating + ';' +
+    reports + ';' + notes;
+end;
+
 { TSettings constructor }
 constructor TSettings.Create;
 begin
@@ -1688,6 +1929,13 @@ begin
   simpleDictionaryView := obj.B['simpleDictionaryView'];
   simpleReportsView := obj.B['simpleReportsView'];
 
+  // load dictionary options
+  bSeparateHashes := obj.B['separateHashes'];
+  bSeparateRecords := obj.B['separateRecords'];
+  bSeparateVersions := obj.B['separateVersions'];
+  templateHash := obj.S['templateHash'];
+  templateNoHash := obj.S['templateNoHash'];
+
   // finalize
   obj := nil;
   sl.Free;
@@ -1713,6 +1961,13 @@ begin
   obj.B['simpleLogView'] := simpleLogView;
   obj.B['simpleDictionaryView'] := simpleDictionaryView;
   obj.B['simpleReportsView'] := simpleReportsView;
+
+  // save dictionary options
+  obj.B['separateHashes'] := bSeparateHashes;
+  obj.B['separateRecords'] := bSeparateRecords;
+  obj.B['separateVersions'] := bSeparateVersions;
+  obj.S['templateHash'] := templateHash;
+  obj.S['templateNoHash'] := templateNoHash;
 
   // save and finalize
   Tracker.Write(' ');

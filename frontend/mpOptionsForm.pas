@@ -343,6 +343,7 @@ var
 begin
   // get status update (TEMPORARY PLEASE DELETE)
   GetStatus;
+  CompareStatuses;
 
   // load setting
   cbLanguage.Text := settings.language;

@@ -132,7 +132,7 @@ object BackendForm: TBackendForm
       Top = 7
       Width = 654
       Height = 605
-      ActivePage = LogTabSheet
+      ActivePage = UnapprovedTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
@@ -183,11 +183,16 @@ object BackendForm: TBackendForm
           ViewStyle = vsReport
           OnChange = UnapprovedListViewChange
           OnData = UnapprovedListViewData
+          OnDrawItem = UnapprovedListViewDrawItem
         end
       end
       object ApprovedTabSheet: TTabSheet
         Caption = 'Approved Reports'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object ApprovedListView: TListView
           Left = 3
           Top = 3
@@ -235,6 +240,10 @@ object BackendForm: TBackendForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -333,7 +342,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801B80120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801C80120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2

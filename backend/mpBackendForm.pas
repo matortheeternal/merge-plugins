@@ -63,6 +63,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure OnTimer(Sender: TObject);
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string): TItemProp;
     procedure AddDetailsList(name: string; sl: TStringList);
@@ -76,10 +77,17 @@ type
     procedure UnapprovedListViewChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
     procedure UnapprovedListViewData(Sender: TObject; Item: TListItem);
+    procedure UnapprovedListViewDrawItem(Sender: TCustomListView;
+      Item: TListItem; Rect: TRect; State: TOwnerDrawState);
     procedure ApprovedListViewChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
     procedure ApprovedListViewColumnClick(Sender: TObject; Column: TListColumn);
     procedure ApprovedListViewData(Sender: TObject; Item: TListItem);
+    procedure ApprovedListViewDrawItem(Sender: TCustomListView; Item: TListItem;
+      Rect: TRect; State: TOwnerDrawState);
+    procedure LogListViewData(Sender: TObject; Item: TListItem);
+    procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem;
+      Rect: TRect; State: TOwnerDrawState);
     // APPROVED POPUP MENU EVENTS
     procedure ApprovedPopupMenuPopup(Sender: TObject);
     procedure EditReportItemClick(Sender: TObject);
@@ -105,12 +113,6 @@ type
     procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
-    procedure LogListViewData(Sender: TObject; Item: TListItem);
-    procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem;
-      Rect: TRect; State: TOwnerDrawState);
-    procedure ApprovedListViewDrawItem(Sender: TCustomListView; Item: TListItem;
-      Rect: TRect; State: TOwnerDrawState);
-    procedure OnTimer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -121,8 +123,6 @@ var
   BackendForm: TBackendForm;
   LastHint: string;
   LastURLTime: double;
-  aAscending: boolean;
-  aColumnToSort: integer;
 
 implementation
 
@@ -144,9 +144,10 @@ implementation
 { Prints a message to the log memo }
 procedure TBackendForm.LogMessage(const group, &label, text: string);
 begin
-  Log.Add(TLogMessage.Create(FormatDateTime('nn:ss', Now - wbStartTime), group, &label, text));
+  Log.Add(TLogMessage.Create(FormatDateTime('hh:nn:ss', Now), group, &label, text));
   LogListView.Items.Count := Log.Count;
-  LogListView.Items[Pred(Log.Count)].MakeVisible(false);
+  LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
+  SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
 end;
 
 { Initialize form, initialize TES5Edit API, and load plugins }
@@ -160,10 +161,12 @@ begin
     wbStartTime := Now;
     Logger.OnLogEvent := LogMessage;
     ProgramPath := ExtractFilePath(ParamStr(0));
-    tempPath := ProgramPath + 'temp\';
-    logPath := ProgramPath + 'logs\';
+    TempPath := ProgramPath + 'temp\';
+    LogPath := ProgramPath + 'logs\';
     ForceDirectories(tempPath);
+    ForceDirectories(LogPath);
     status := TmpStatus.Create;
+    status.Refresh;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
@@ -215,7 +218,26 @@ begin
 end;
 
 procedure TBackendForm.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  n: Integer;
+  AContext: TIdContext;
 begin
+  // close all active connections
+  Logger.Write('SERVER', 'Exit', 'Closing all active connections...');
+  if TCPServer.Contexts <> nil then begin
+    with TCPServer.Contexts.LockList do try
+      for n := Pred(Count) downto 0 do begin
+        AContext := TIdContext(Items[n]);
+        if AContext.Connection.Connected then begin
+          AContext.Connection.IOHandler.CloseGracefully;
+          AContext.Connection.Disconnect;
+        end;
+      end;
+    finally
+      TCPServer.Contexts.UnlockList;
+    end;
+  end;
+
   // update statistics
   statistics.totalUptime := statistics.totalUptime + GetSessionUptime;
   statistics.totalBandwidth := statistics.totalBandwidth + sessionBandwidth;
@@ -223,14 +245,17 @@ begin
   // save statistics, settings
   SaveStatistics;
   SaveSettings;
-end;
 
+  // save log
+  SaveLog(Log);
+end;
 
 procedure TBackendForm.OnTimer(Sender: TObject);
 begin
   if PageControl.ActivePageIndex = 2 then
     UpdateApplicationDetails;
 end;
+
 
 {******************************************************************************}
 { Details Editor Events
@@ -386,7 +411,7 @@ begin
   AddDetailsItem('Total uptime', TimeStr(statistics.totalUptime + sessionUptime));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Website', 'http://www.nexusmods.com/skyrim/mods/37981');
-  AddDetailsItem('API Credits', 'superobject, ZeosDBO, xEdit');
+  AddDetailsItem('API Credits', 'superobject, TurboPower Abbrevia, ZeosDBO, xEdit');
 end;
 
 { Handle user clicking URL }
@@ -502,29 +527,6 @@ begin
   ListView.Canvas.TextRect(R, x, y, msg);
 end;
 
-function CompareReports(P1, P2: Pointer): Integer;
-var
-  report1, report2: TReport;
-begin
-  Result := 0;
-  report1 := TReport(P1);
-  report2 := TReport(P2);
-
-  if aColumnToSort = 0 then
-    Result := AnsiCompareText(report1.game, report2.game)
-  else if aColumnToSort = 1 then
-    Result := AnsiCompareText(report1.filename, report2.filename)
-  else if aColumnToSort = 2 then
-    Result := Trunc(report1.dateSubmitted) - Trunc(report2.dateSubmitted)
-  else if aColumnToSort = 3 then
-    Result := AnsiCompareText(report1.username, report2.username)
-  else if aColumnToSort = 4 then
-    Result := report1.rating - report2.rating;
-
-  if aAscending then
-    Result := -Result;
-end;
-
 procedure TBackendForm.UnapprovedListViewChange(Sender: TObject;
   Item: TListItem; Change: TItemChange);
 begin
@@ -541,6 +543,36 @@ begin
   Item.SubItems.Add(DateToStr(report.dateSubmitted));
   Item.SubItems.Add(report.username);
   Item.SubItems.Add(IntToStr(report.rating));
+  UnapprovedListView.Canvas.Font.Color := GetRatingColor(report.rating);
+  UnapprovedListView.Canvas.Font.Style := [fsBold];
+end;
+
+procedure TBackendForm.UnapprovedListViewDrawItem(Sender: TCustomListView;
+  Item: TListItem; Rect: TRect; State: TOwnerDrawState);
+
+var
+  ListView: TListView;
+  R: TRect;
+  x, y, i: integer;
+begin
+  ListView := TListView(Sender);
+  if Item.Selected then begin
+    ListView.Canvas.Brush.Color := $FFEEDD;
+    ListView.Canvas.FillRect(Rect);
+  end;
+
+  R := Rect;
+  R.Right := R.Left + ListView.Columns[0].Width - 3;
+  x := Rect.Left + 3;
+  y := (Rect.Bottom - Rect.Top - ListView.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
+  ListView.Canvas.TextRect(R, x, y, Item.Caption);
+  for i := 0 to Item.SubItems.Count - 1 do begin
+    R.Left := R.Right + 3;
+    // fixes drawing error
+    R.Right := R.Left + ListView_GetColumnWidth(ListView.Handle, ListView.Columns[i + 1].Index);
+    x := R.Left;
+    ListView.Canvas.TextRect(R, x, y, Item.SubItems[i]);
+  end;
 end;
 
 procedure TBackendForm.ApprovedListViewChange(Sender: TObject; Item: TListItem;
@@ -552,7 +584,7 @@ end;
 procedure TBackendForm.ApprovedListViewColumnClick(Sender: TObject;
   Column: TListColumn);
 begin
-  aAscending := (aColumnToSort = Column.Index) and (not aAscending);
+  bAscending := (aColumnToSort = Column.Index) and (not bAscending);
   aColumnToSort := Column.Index;
   ApprovedReports.Sort(CompareReports);
   ApprovedListView.Repaint;
@@ -648,6 +680,7 @@ begin
 
     // get report data
     report := TReport(ApprovedReports[i]);
+    UpdateRebuildBooleans(report);
     WhereClause := ReportWhereClause(report);
 
     // show edit form for report
@@ -683,6 +716,7 @@ begin
       continue;
 
     report := TReport(ApprovedReports[i]);
+    UpdateRebuildBooleans(report);
     // update internal lists
     UnapprovedReports.Add(report);
     UnapprovedListView.Items.Count := UnapprovedReports.Count;
@@ -779,6 +813,7 @@ begin
       continue;
 
     report := TReport(UnapprovedReports[i]);
+    UpdateRebuildBooleans(report);
     // update internal lists
     ApprovedReports.Add(report);
     ApprovedListView.Items.Count := ApprovedReports.Count;
@@ -1055,6 +1090,7 @@ begin
   // process list items
   for i := Pred(UnapprovedListView.Items.Count) downto 0 do begin
     report := TReport(UnapprovedReports[i]);
+    UpdateRebuildBooleans(report);
     // update internal lists
     ApprovedReports.Add(report);
     ApprovedListView.Items.Count := ApprovedReports.Count;
@@ -1072,7 +1108,7 @@ end;
 
 procedure TBackendForm.RebuildButtonClick(Sender: TObject);
 begin
-  // comment
+  RebuildDictionaries;
 end;
 
 procedure TBackendForm.ReportButtonClick(Sender: TObject);

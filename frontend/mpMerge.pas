@@ -539,13 +539,13 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+faceTintPath+plugin.filename);
-      ExtractBSA(bsaFilename, faceTintPath+plugin.filename, tempPath);
+      ExtractBSA(bsaFilename, faceTintPath+plugin.filename, TempPath);
       Tracker.Write('    Extracting '+bsaFilename+'\'+faceGeomPath+plugin.filename);
-      ExtractBSA(bsaFilename, faceGeomPath+plugin.filename, tempPath);
+      ExtractBSA(bsaFilename, faceGeomPath+plugin.filename, TempPath);
 
       // copy assets from tempPath
-      CopyFaceGen(plugin, merge, tempPath + faceTintPath, merge.dataPath + faceTintPath);
-      CopyFaceGen(plugin, merge, tempPath + faceGeomPath, merge.dataPath + faceGeomPath);
+      CopyFaceGen(plugin, merge, TempPath + faceTintPath, merge.dataPath + faceTintPath);
+      CopyFaceGen(plugin, merge, TempPath + faceGeomPath, merge.dataPath + faceGeomPath);
     end;
 
     // copy assets from plugin.dataPath
@@ -560,8 +560,8 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+voicePath+plugin.filename);
-      ExtractBSA(bsaFilename, voicePath+plugin.filename, tempPath);
-      CopyVoice(plugin, merge, tempPath + voicePath, merge.dataPath + voicePath);
+      ExtractBSA(bsaFilename, voicePath+plugin.filename, TempPath);
+      CopyVoice(plugin, merge, TempPath + voicePath, merge.dataPath + voicePath);
     end;
     CopyVoice(plugin, merge, plugin.dataPath + voicePath, merge.dataPath + voicePath);
   end;
@@ -572,8 +572,8 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+translationPath);
-      ExtractBSA(bsaFilename, translationPath, tempPath);
-      CopyTranslations(plugin, merge, tempPath + translationPath);
+      ExtractBSA(bsaFilename, translationPath, TempPath);
+      CopyTranslations(plugin, merge, TempPath + translationPath);
     end;
     CopyTranslations(plugin, merge, plugin.dataPath + translationPath);
   end;
@@ -590,8 +590,8 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+scriptsPath);
-      ExtractBSA(bsaFilename, scriptsPath, tempPath);
-      CopyScriptFragments(plugin, merge, tempPath + scriptsPath, merge.dataPath + scriptsPath);
+      ExtractBSA(bsaFilename, scriptsPath, TempPath);
+      CopyScriptFragments(plugin, merge, TempPath + scriptsPath, merge.dataPath + scriptsPath);
     end;
     CopyScriptFragments(plugin, merge, plugin.dataPath + scriptsPath, merge.dataPath + scriptsPath);
   end;

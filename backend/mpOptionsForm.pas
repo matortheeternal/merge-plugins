@@ -4,8 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl,
-  mpBackend, ExtCtrls, Menus;
+  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls, Menus,
+  // mp components
+  mpBackend, mpUserForm;
 
 type
   TOptionsForm = class(TForm)
@@ -32,7 +33,7 @@ type
     UnblacklistItem: TMenuItem;
     ChangeExpirationItem: TMenuItem;
     UsersTabsheet: TTabSheet;
-    GroupBox1: TGroupBox;
+    gbUsers: TGroupBox;
     lvUsers: TListView;
     gbColoring: TGroupBox;
     lblServerColor: TLabel;
@@ -55,6 +56,20 @@ type
     BlacklistUserItem: TMenuItem;
     ViewUserItem: TMenuItem;
     DeleteUserItem: TMenuItem;
+    Dictionary: TTabSheet;
+    gbConsolidation: TGroupBox;
+    kbSeparateHashes: TCheckBox;
+    kbSeparateVersions: TCheckBox;
+    kbSeparateRecords: TCheckBox;
+    lblSampleValueHash: TLabel;
+    gbNotesformat: TGroupBox;
+    lblTemplateHash: TLabel;
+    lblSample: TLabel;
+    meTemplateHash: TMemo;
+    lblSampleValueNoHash: TLabel;
+    meTemplateNoHash: TMemo;
+    lblSampleNoHash: TLabel;
+    lblTemplateNoHash: TLabel;
     procedure btnOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnUpdateStatusClick(Sender: TObject);
@@ -66,6 +81,9 @@ type
     procedure pmUsersPopup(Sender: TObject);
     procedure pmBlacklistPopup(Sender: TObject);
     procedure UnblacklistItemClick(Sender: TObject);
+    procedure lvUsersDblClick(Sender: TObject);
+    procedure meTemplateHashChange(Sender: TObject);
+    procedure meTemplateNoHashChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -74,6 +92,7 @@ type
 
 var
   OptionsForm: TOptionsForm;
+  slSampleReport: TStringList;
 
 implementation
 
@@ -94,13 +113,23 @@ begin
   settings.simpleReportsView := kbSimpleReports.Checked;
   settings.simpleDictionaryView := kbSimpleDictionary.Checked;
 
+  // save dictionary options
+  settings.bSeparateHashes := kbSeparateHashes.Checked;
+  settings.bSeparateRecords := kbSeparateRecords.Checked;
+  settings.bSeparateVersions := kbSeparateVersions.Checked;
+  settings.templateHash := meTemplateHash.Lines.Text;
+  settings.templateNoHash := meTemplateNoHash.Lines.Text;
+
   // save to disk
   settings.Save('settings.ini');
+
+  // free sample
+  slSampleReport.Free;
 end;
 
 procedure TOptionsForm.btnUpdateStatusClick(Sender: TObject);
 begin
-  status := TmpStatus.Create;
+  status.Refresh;
 
   // load status values
   lblVersionValue.Caption := status.programVersion;
@@ -112,6 +141,15 @@ end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);
 begin
+  // prepare sample report
+  slSampleReport := TStringList.Create;
+  slSampleReport.Values['user'] := 'Test';
+  slSampleReport.Values['hash'] := '01234567';
+  slSampleReport.Values['records'] := '401';
+  slSampleReport.Values['version'] := '2.0';
+  slSampleReport.Values['rating'] := '4';
+  slSampleReport.Values['date'] := DateToStr(Now);
+
   // load status values
   lblVersionValue.Caption := status.programVersion;
   lblTES5HashValue.Caption := status.tes5Hash;
@@ -131,6 +169,16 @@ begin
   kbSimpleLog.Checked := settings.simpleLogView;
   kbSimpleDictionary.Checked := settings.simpleDictionaryView;
   kbSimpleReports.Checked := settings.simpleReportsView;
+
+  // load dictionary options
+  kbSeparateHashes.Checked := settings.bSeparateHashes;
+  kbSeparateRecords.Checked := settings.bSeparateRecords;
+  kbSeparateVersions.Checked := settings.bSeparateVersions;
+  meTemplateHash.Lines.Text := settings.templateHash;
+  meTemplateNoHash.Lines.Text := settings.templateNoHash;
+  // refresh sample labels
+  meTemplateHashChange(nil);
+  meTemplateNoHashChange(nil);
 
   // load ips
   lvBlacklist.Items.Count := Blacklist.Count;
@@ -161,6 +209,28 @@ begin
   Item.SubItems.Add(user.username);
   Item.SubItems.Add(FormatDateTime('mm/dd/yyyy hh:nn', user.firstSeen));
   Item.SubItems.Add(FormatDateTime('mm/dd/yyyy hh:nn', user.lastSeen));
+end;
+
+procedure TOptionsForm.lvUsersDblClick(Sender: TObject);
+begin
+  if Assigned(lvUsers.Selected) then
+    ViewUserItemClick(Sender);
+end;
+
+procedure TOptionsForm.meTemplateHashChange(Sender: TObject);
+var
+  template: string;
+begin
+  template := meTemplateHash.Lines.Text;
+  lblSampleValueHash.Caption := ApplyTemplate(template, slSampleReport);
+end;
+
+procedure TOptionsForm.meTemplateNoHashChange(Sender: TObject);
+var
+  template: string;
+begin
+  template := meTemplateNoHash.Lines.Text;
+  lblSampleValueNoHash.Caption := ApplyTemplate(template, slSampleReport);
 end;
 
 procedure TOptionsForm.pmBlacklistPopup(Sender: TObject);
@@ -208,8 +278,20 @@ begin
 end;
 
 procedure TOptionsForm.ViewUserItemClick(Sender: TObject);
+var
+  i: integer;
+  user: TUser;
+  UserForm: TUserForm;
 begin
-  // ?
+  for i := Pred(lvUsers.Items.Count) downto 0 do begin
+    if not lvUsers.Items[i].Selected then
+      continue;
+    user := TUser(Users[i]);
+    UserForm := TUserForm.Create(Self);
+    UserForm.user := user;
+    UserForm.ShowModal;
+    UserForm.Free;
+  end;
 end;
 
 procedure TOptionsForm.BlacklistUserItemClick(Sender: TObject);

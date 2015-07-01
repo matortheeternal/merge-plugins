@@ -9,8 +9,8 @@ uses
   IdTCPClient, IdGlobal,
   // superobject json library
   superobject,
-  // zipforge
-  ZipForge,
+  // abbrevia components
+  AbZBrows, AbUnZper, AbArcTyp, AbMeter, AbBrowse, AbBase,
   // CRC32
   CRC32,
   // mp components
@@ -376,7 +376,7 @@ var
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate: boolean;
-  tempPath, logPath, ProgramPath, dictionaryFilename, ActiveProfile,
+  TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
   ProgramVersion: string;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
@@ -462,7 +462,7 @@ begin
     gmTES5: DefineTES5;
     gmFNV: DefineFNV;
     gmTES4: DefineTES4;
-    gmFO3: DefineTES3;
+    gmFO3: DefineFO3;
   end;
 end;
 
@@ -2064,8 +2064,8 @@ begin
   TCPClient := TidTCPClient.Create(nil);
   TCPClient.Host := '127.0.0.1';
   TCPClient.Port := 950;
-  TCPClient.ReadTimeout := 5000;
-  TCPClient.ConnectTimeout := 5000;
+  TCPClient.ReadTimeout := 3000;
+  TCPClient.ConnectTimeout := 2000;
 end;
 
 procedure ConnectToServer;
@@ -2083,6 +2083,8 @@ var
   msgJson, line: string;
 begin
   Result := false;
+  if not TCPClient.Connected then
+    exit;
   Logger.Write('Checking if authenticated as: '+settings.username);
 
   // attempt to check authorization
@@ -2115,6 +2117,9 @@ var
   msgJson: string;
   line: string;
 begin
+  if not TCPClient.Connected then
+    exit;
+
   // attempt to check authorization
   // throws exception if server is unavailable
   try
@@ -2140,6 +2145,8 @@ var
   msg, response: TmpMessage;
   msgJson, line: string;
 begin
+  if not TCPClient.Connected then
+    exit;
   Logger.Write('Resetting authentication as: '+settings.username);
 
   // attempt to reset authorization
@@ -2168,6 +2175,8 @@ var
   msgJson, line: string;
 begin
   Result := false;
+  if not TCPClient.Connected then
+    exit;
   Logger.Write('Checking username availability: '+settings.username);
 
   // attempt to register user
@@ -2197,6 +2206,8 @@ var
   msgJson, line: string;
 begin
   Result := false;
+  if not TCPClient.Connected then
+    exit;
   Logger.Write('Registering username: '+settings.username);
 
   // attempt to register user
@@ -2226,6 +2237,8 @@ var
   msgJson, LLine: string;
 begin
   Result := false;
+  if not TCPClient.Connected then
+    exit;
   Logger.Write('Getting status');
 
   // attempt to get a status update
@@ -2311,6 +2324,8 @@ var
   stream: TFileStream;
 begin
   Result := false;
+  if not TCPClient.Connected then
+    exit;
   filename := wbAppName+'Dictionary.txt';
   Logger.Write('Updating '+filename);
 
@@ -2341,7 +2356,7 @@ end;
 
 function UpdateProgram: boolean;
 var
-  archive: TZipForge;
+  archive: TAbUnZipper;
 begin
   // check if zip for updating exists
   Result := false;
@@ -2354,18 +2369,15 @@ begin
   RenameFile('MergePlugins.exe', 'MergePlugins.exe.bak');
 
   // Create an instance of the TZipForge class
-  archive := TZipForge.Create(nil);
+  archive := TAbUnZipper.Create(nil);
   try
     with archive do begin
       // The name of the ZIP file to unzip
       FileName := wbProgramPath + 'MergePlugins.zip';
-      // Open an existing archive
-      OpenArchive(fmOpenRead);
       // Set base (default) directory for all archive operations
-      BaseDir := wbProgramPath;
+      BaseDirectory := wbProgramPath;
       // Extract all files from the archive to current directory
       ExtractFiles('*.*');
-      CloseArchive();
       Result := true;
     end;
   except
@@ -2376,6 +2388,7 @@ begin
   end;
 
   // clean up
+  archive.Free;
   DeleteFile('MergePlugins.zip');
 end;
 
@@ -2386,9 +2399,12 @@ var
   stream: TFileStream;
 begin
   Result := false;
+  if not TCPClient.Connected then
+    exit;
   filename := 'MergePlugins.zip';
   if FileExists(filename) then begin
     MessageDlg('You already have a pending program update!', mtInformation, [mbOk], 0);
+    Result := true;
     exit;
   end;
 

@@ -70,6 +70,7 @@ type
     RemoveBadPluginsItem: TMenuItem;
     Timer: TTimer;
     StatusIcons: TImageList;
+    Heartbeat: TTimer;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const s: string);
@@ -78,7 +79,7 @@ type
     procedure LoaderDone;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure OnTimer(Sender: TObject);
-    procedure Disconnected(Sender: TObject);
+    procedure ClientStatusChanged(ASender: TObject; const AStatus: TIdStatus; const AStatusText: string);
     procedure ShowAuthorizationMessage;
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string; editable: boolean = false):
@@ -142,6 +143,7 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure StatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
       const Rect: TRect);
+    procedure HeartbeatTimer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -204,9 +206,10 @@ begin
 
     // INITIALIZE VARIABLES
     ProgramVersion := GetVersionMem;
-    tempPath := wbProgramPath + 'temp\';
-    logPath := wbProgramPath + 'logs\';
-    ForceDirectories(tempPath);
+    TempPath := wbProgramPath + 'temp\';
+    LogPath := wbProgramPath + 'logs\';
+    ForceDirectories(TempPath);
+    ForceDirectories(LogPath);
     MergesList := TList.Create;
     PluginsList := TList.Create;
     bLoaderDone := false;
@@ -215,7 +218,7 @@ begin
     // INITIALIZE CLIENT
     InitializeClient;
     ConnectToServer;
-    TCPClient.OnDisconnected := Disconnected;
+    TCPClient.OnStatus := ClientStatusChanged;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
@@ -399,7 +402,7 @@ begin
   SaveSettings;
 
   // delete temppath
-  DeleteDirectory(tempPath);
+  DeleteDirectory(TempPath);
   Action := caFree;
 
   // restart program if update applied
@@ -412,21 +415,28 @@ end;
 
 procedure TMergeForm.OnTimer(Sender: TObject);
 begin
-  if not TCPClient.Connected then
+  if not TCPClient.Connected then begin
     ConnectToServer;
-  if TCPClient.Connected then begin
-    Timer.Enabled := false;
-    CheckAuthorization;
-    SendGameMode;
-    GetStatus;
-    CompareStatuses;
-    ShowAuthorizationMessage;
+    if TCPClient.Connected then begin
+      CheckAuthorization;
+      SendGameMode;
+      GetStatus;
+      CompareStatuses;
+      ShowAuthorizationMessage;
+      StatusBar.Repaint;
+    end;
   end;
 end;
 
-procedure TMergeForm.Disconnected(Sender: TObject);
+procedure TMergeForm.HeartbeatTimer(Sender: TObject);
 begin
-  Timer.Enabled := true;
+  TCPClient.CheckForGracefulDisconnect(false);
+  TCPClient.Connected;
+end;
+
+procedure TMergeForm.ClientStatusChanged(ASender: TObject; const AStatus: TIdStatus; const AStatusText: string);
+begin
+  StatusBar.Repaint;
 end;
 
 procedure TMergeForm.ShowAuthorizationMessage;
@@ -561,7 +571,7 @@ begin
   AddDetailsItem('Reports submitted', IntToStr(statistics.reportsSubmitted));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Website', 'http://www.nexusmods.com/skyrim/mods/37981');
-  AddDetailsItem('API Credits', 'superobject, xEdit');
+  AddDetailsItem('API Credits', 'superobject, TurboPower Abbrevia, xEdit');
   AddDetailsItem('xEdit Version', xEditVersion);
   AddDetailsItem('xEdit Credits', 'zilav, hlp, Sharlikran, ElminsterAU');
   s := ProgramTesters;
@@ -1489,7 +1499,7 @@ begin
   UpdateMerges;
   UpdateMergeDetails;
   MergeListView.Repaint;
-  DeleteDirectory(tempPath);
+  DeleteDirectory(TempPath);
 end;
 
 procedure TMergeForm.ReportOnMergeItemClick(Sender: TObject);

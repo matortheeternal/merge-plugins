@@ -100,9 +100,9 @@ procedure TProgressForm.SaveLog;
 var
   fdt: string;
 begin
-  ForceDirectories(logPath);
+  ForceDirectories(LogPath);
   fdt := FormatDateTime('mmddyy_hhnnss', TDateTime(Now));
-  LogMemo.Lines.SaveToFile(logPath + 'log_'+fdt+'.txt');
+  LogMemo.Lines.SaveToFile(LogPath + 'log_'+fdt+'.txt');
 end;
 
 procedure TProgressForm.SetTitle(title: string);

@@ -32,17 +32,17 @@ object EditForm: TEditForm
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    ExplicitWidth = 318
     object TabSheet1: TTabSheet
       Caption = 'Edit Report'
-      ExplicitWidth = 310
       object lblUsername: TLabel
         Left = 8
         Top = 13
         Width = 48
         Height = 13
         Margins.Left = 8
+        Margins.Top = 8
         Margins.Right = 8
+        Margins.Bottom = 8
         Caption = 'Username'
         Transparent = True
       end
@@ -52,16 +52,20 @@ object EditForm: TEditForm
         Width = 42
         Height = 13
         Margins.Left = 8
+        Margins.Top = 8
         Margins.Right = 8
+        Margins.Bottom = 8
         Caption = 'Filename'
       end
       object lblRecordcount: TLabel
         Left = 8
-        Top = 96
+        Top = 93
         Width = 64
         Height = 13
         Margins.Left = 8
+        Margins.Top = 8
         Margins.Right = 8
+        Margins.Bottom = 8
         Caption = 'Record count'
       end
       object lblHash: TLabel
@@ -70,7 +74,9 @@ object EditForm: TEditForm
         Width = 24
         Height = 13
         Margins.Left = 8
+        Margins.Top = 8
         Margins.Right = 8
+        Margins.Bottom = 8
         Caption = 'Hash'
         Transparent = True
       end
@@ -80,7 +86,9 @@ object EditForm: TEditForm
         Width = 31
         Height = 13
         Margins.Left = 8
+        Margins.Top = 8
         Margins.Right = 8
+        Margins.Bottom = 8
         Caption = 'Rating'
       end
       object lblMergeVersion: TLabel
@@ -89,7 +97,9 @@ object EditForm: TEditForm
         Width = 68
         Height = 13
         Margins.Left = 8
+        Margins.Top = 8
         Margins.Right = 8
+        Margins.Bottom = 8
         Caption = 'Merge version'
       end
       object lblNotes: TLabel
@@ -98,7 +108,9 @@ object EditForm: TEditForm
         Width = 28
         Height = 13
         Margins.Left = 8
+        Margins.Top = 8
         Margins.Right = 8
+        Margins.Bottom = 8
         Caption = 'Notes'
       end
       object edUsername: TEdit
@@ -111,7 +123,6 @@ object EditForm: TEditForm
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnKeyDown = edKeyDown
-        ExplicitWidth = 166
       end
       object edFilename: TEdit
         Left = 136
@@ -124,7 +135,6 @@ object EditForm: TEditForm
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
         OnKeyDown = edKeyDown
-        ExplicitWidth = 166
       end
       object edRecordCount: TEdit
         Left = 136
@@ -138,7 +148,6 @@ object EditForm: TEditForm
         NumbersOnly = True
         TabOrder = 2
         OnKeyDown = edKeyDown
-        ExplicitWidth = 166
       end
       object edHash: TEdit
         Left = 136
@@ -151,7 +160,6 @@ object EditForm: TEditForm
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 3
         OnKeyDown = edKeyDown
-        ExplicitWidth = 166
       end
       object cbRating: TComboBox
         Left = 136
@@ -172,7 +180,6 @@ object EditForm: TEditForm
           '2: Partially functional'
           '3: Tweaking required'
           '4: Perfect')
-        ExplicitWidth = 166
       end
       object edMergeVersion: TEdit
         Left = 136
@@ -184,7 +191,6 @@ object EditForm: TEditForm
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 5
         OnKeyDown = edKeyDown
-        ExplicitWidth = 225
       end
       object meNotes: TMemo
         Left = 8
@@ -201,7 +207,6 @@ object EditForm: TEditForm
           '<Notes>')
         ScrollBars = ssVertical
         TabOrder = 6
-        ExplicitWidth = 294
       end
     end
   end
@@ -216,7 +221,6 @@ object EditForm: TEditForm
     ModalResult = 1
     TabOrder = 1
     OnClick = btnOkClick
-    ExplicitLeft = 170
   end
   object btnCancel: TButton
     Left = 271
@@ -227,6 +231,5 @@ object EditForm: TEditForm
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitLeft = 251
   end
 end
