@@ -244,14 +244,14 @@ object OptionsForm: TOptionsForm
           Margins.Top = 11
           Caption = 'SQL'
         end
-        object lblDictionaryColor: TLabel
+        object lblDataColor: TLabel
           Left = 274
           Top = 20
-          Width = 48
+          Width = 23
           Height = 13
           Align = alCustom
           Anchors = [akTop, akRight]
-          Caption = 'Dictionary'
+          Caption = 'Data'
         end
         object lblJavaColor: TLabel
           Left = 274
@@ -300,7 +300,7 @@ object OptionsForm: TOptionsForm
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
           TabOrder = 2
         end
-        object cbDictionaryColor: TColorBox
+        object cbDataColor: TColorBox
           Left = 392
           Top = 17
           Width = 145
@@ -376,8 +376,6 @@ object OptionsForm: TOptionsForm
     object Dictionary: TTabSheet
       Caption = 'Dictionary'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 28
       object gbConsolidation: TGroupBox
         Left = 6
         Top = 6
@@ -432,7 +430,7 @@ object OptionsForm: TOptionsForm
         object lblSampleValueHash: TLabel
           Left = 114
           Top = 66
-          Width = 310
+          Width = 243
           Height = 13
           Margins.Left = 6
           Margins.Top = 6
@@ -674,7 +672,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800600010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

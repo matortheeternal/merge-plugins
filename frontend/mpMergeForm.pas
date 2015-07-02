@@ -68,9 +68,10 @@ type
     DetailsLabel: TLabel;
     DetailsEditor: TValueListEditor;
     RemoveBadPluginsItem: TMenuItem;
-    Timer: TTimer;
+    ReconnectTimer: TTimer;
     StatusIcons: TImageList;
     Heartbeat: TTimer;
+    RepaintTimer: TTimer;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const s: string);
@@ -143,7 +144,8 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure StatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
       const Rect: TRect);
-    procedure HeartbeatTimer(Sender: TObject);
+    procedure OnHeartbeatTimer(Sender: TObject);
+    procedure OnRepaintTimer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -213,11 +215,11 @@ begin
     MergesList := TList.Create;
     PluginsList := TList.Create;
     bLoaderDone := false;
+    LastStatusTime := 0;
     Status := TmpStatus.Create;
 
     // INITIALIZE CLIENT
     InitializeClient;
-    ConnectToServer;
     TCPClient.OnStatus := ClientStatusChanged;
 
     // GUI ICONS
@@ -415,20 +417,16 @@ end;
 
 procedure TMergeForm.OnTimer(Sender: TObject);
 begin
-  if not TCPClient.Connected then begin
+  if not TCPClient.Connected then
     ConnectToServer;
-    if TCPClient.Connected then begin
-      CheckAuthorization;
-      SendGameMode;
-      GetStatus;
-      CompareStatuses;
-      ShowAuthorizationMessage;
-      StatusBar.Repaint;
-    end;
-  end;
 end;
 
-procedure TMergeForm.HeartbeatTimer(Sender: TObject);
+procedure TMergeForm.OnRepaintTimer(Sender: TObject);
+begin
+  StatusBar.Invalidate;
+end;
+
+procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
 begin
   TCPClient.CheckForGracefulDisconnect(false);
   TCPClient.Connected;

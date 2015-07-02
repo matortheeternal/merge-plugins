@@ -356,6 +356,9 @@ const
   RebuildStatuses = [8, 9];
   ForcedStatuses = [6, 9];
 
+  // DELAYS
+  StatusDelay = 5.0 / (60.0 * 24.0); // 5 minutes
+
   // GAME MODES
   GameArray: array[1..4] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
@@ -381,6 +384,7 @@ var
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
+  LastStatusTime: TDateTime;
 
 implementation
 
@@ -2072,6 +2076,10 @@ procedure ConnectToServer;
 begin
   try
     TCPClient.Connect;
+    CheckAuthorization;
+    SendGameMode;
+    GetStatus;
+    CompareStatuses;
   except on Exception do
     Logger.Write('Server unavailable.');
   end;
@@ -2113,9 +2121,8 @@ end;
 
 procedure SendGameMode;
 var
-  msg, response: TmpMessage;
+  msg: TmpMessage;
   msgJson: string;
-  line: string;
 begin
   if not TCPClient.Connected then
     exit;
@@ -2127,12 +2134,6 @@ begin
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, wbAppName);
     msgJson := msg.ToJson;
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
-
-    // get response
-    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response.FromJson(line);
-    Logger.Write('  Response: '+response.data);
   except
     on x : Exception do begin
       Logger.Write('  Exception sending game mode: '+x.Message);
@@ -2239,6 +2240,9 @@ begin
   Result := false;
   if not TCPClient.Connected then
     exit;
+  if (Now - LastStatusTime) < StatusDelay then
+    exit;
+  LastStatusTime := Now;
   Logger.Write('Getting status');
 
   // attempt to get a status update

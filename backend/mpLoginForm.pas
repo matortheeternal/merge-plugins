@@ -49,7 +49,7 @@ end;
 procedure TLoginForm.btnLoginClick(Sender: TObject);
 begin
   // attempt to login to the mysql database
-  DoLogin(edUserID.Text, edPassword.text, edDatabase.Text, edHost.Text,
+  DBLogin(edUserID.Text, edPassword.text, edDatabase.Text, edHost.Text,
     edPort.Text);
 
   // if login successful, close form with ModalResult = mrOk

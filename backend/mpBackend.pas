@@ -53,6 +53,7 @@ type
     expires: TDateTime;
     constructor Create(ip, username: string; duration: real); Overload;
     constructor Create(const fields: TFields); Overload;
+    function IsExpired: boolean;
   end;
   TmpMessage = class(TObject)
   public
@@ -112,7 +113,7 @@ type
     serverMessageColor: TColor;
     initMessageColor: TColor;
     SQLMessageColor: TColor;
-    dictionaryMessageColor: TColor;
+    dataMessageColor: TColor;
     javaMessageColor: TColor;
     errorMessageColor: TColor;
     bSeparateHashes: boolean;
@@ -149,31 +150,31 @@ type
   end;
 
   { MySQL methods }
-  procedure DoLogin(userID, password, database, host, port: string);
+  procedure DBLogin(userID, password, database, host, port: string);
   procedure SQLQuery(query: string);
   //==USERS==
-  procedure QueryUsers;
+  procedure DBQueryUsers;
   function UserWhereClause(user: TUser): string;
   function UserSetClause(user: TUser): string;
   function UserValuesClause(user: TUser): string;
-  procedure UpdateUser(SetClause, WhereClause: string); Overload;
-  procedure AddUser(user: TUser); Overload;
-  procedure RemoveUser(user: TUser);
+  procedure DBUpdateUser(SetClause, WhereClause: string); Overload;
+  procedure DBAddUser(user: TUser); Overload;
+  procedure DBRemoveUser(user: TUser);
   //==BLACKLIST==
-  procedure QueryBlacklist;
+  procedure DBQueryBlacklist;
   function BlacklistWhereClause(entry: TBlacklistEntry): string;
   function BlacklistSetClause(entry: TBlacklistEntry): string;
   function BlacklistValuesClause(entry: TBlacklistEntry): string;
-  procedure UpdateBlacklist(SetClause, WhereClause: string);
-  procedure AddBlacklist(entry: TBlacklistEntry);
-  procedure RemoveBlacklist(entry: TBlacklistEntry);
+  procedure DBUpdateBlacklist(SetClause, WhereClause: string);
+  procedure DBAddBlacklist(entry: TBlacklistEntry);
+  procedure DBRemoveBlacklist(entry: TBlacklistEntry);
   //==REPORTS==
-  procedure QueryReports;
+  procedure DBQueryReports;
   function ReportWhereClause(report: TReport): string;
   function ReportSetClause(report: TReport): string;
-  procedure UpdateReport(report: TReport; SetClause, WhereClause: string);
-  procedure AddReport(report: TReport; table: string);
-  procedure RemoveReport(report: TReport; table: string);
+  procedure DBUpdateReport(report: TReport; SetClause, WhereClause: string);
+  procedure DBAddReport(report: TReport; table: string);
+  procedure DBRemoveReport(report: TReport; table: string);
   { General functions }
   function csvText(s: string): string;
   function FormatByteSize(const bytes: Int64): string;
@@ -211,7 +212,7 @@ type
   function GetDictionary(name: string): string;
   function GetDictionaryHash(name: string): string;
   procedure LoadDictionary(var lst: TList; var sl: TStringList; filename: string);
-  procedure LoadBlacklist(var lst, dictionary: TList);
+  procedure LoadPluginBlacklist(var lst, dictionary: TList);
   function GetRatingColor(rating: real): integer;
   function GetEntry(var dictionary: TList; pluginName, numRecords, version: string): TEntry;
   procedure SaveLog(var Log: TList);
@@ -224,6 +225,7 @@ type
   function AddUser(ip: string): TUser; Overload;
   procedure UpdateUser(ip, username, auth: string); Overload;
   function IsBlacklisted(ip: string): boolean;
+  procedure BlacklistRemoveExpired;
   function UserString(user: TUser): string;
 
 const
@@ -267,6 +269,7 @@ var
   sessionBandwidth: Int64;
   Connection: TZConnection;
   aColumnToSort: integer;
+  Yesterday: TDateTime;
 
 implementation
 
@@ -305,7 +308,7 @@ implementation
 {******************************************************************************}
 
 { Attempt to login to MySQL database }
-procedure DoLogin(userID, password, database, host, port: string);
+procedure DBLogin(userID, password, database, host, port: string);
 begin
   // attempt to connect to mysql
   bLoginSuccess := false;
@@ -346,7 +349,7 @@ end;
 // USERS
 //========================================
 
-procedure QueryUsers;
+procedure DBQueryUsers;
 var
   Dataset: TZQuery;
   user: TUser;
@@ -422,7 +425,7 @@ begin
     IntToStr(user.reportsSubmitted)+')';
 end;
 
-procedure UpdateUser(SetClause, WhereClause: string);
+procedure DBUpdateUser(SetClause, WhereClause: string);
 var
   query: string;
 begin
@@ -431,7 +434,7 @@ begin
   SQLQuery(query);
 end;
 
-procedure AddUser(user: TUser);
+procedure DBAddUser(user: TUser);
 var
   query, ValuesClause: string;
 begin
@@ -442,7 +445,7 @@ begin
   SQLQuery(query);
 end;
 
-procedure RemoveUser(user: TUser);
+procedure DBRemoveUser(user: TUser);
 var
   query, WhereClause: string;
 begin
@@ -457,7 +460,7 @@ end;
 // BLACKLIST
 //========================================
 
-procedure QueryBlacklist;
+procedure DBQueryBlacklist;
 var
   Dataset: TZQuery;
   entry: TBlacklistEntry;
@@ -515,7 +518,7 @@ begin
     DateTimeToSQL(entry.expires)+''')';
 end;
 
-procedure UpdateBlacklist(SetClause, WhereClause: string);
+procedure DBUpdateBlacklist(SetClause, WhereClause: string);
 var
   query: string;
 begin
@@ -524,7 +527,7 @@ begin
   SQLQuery(query);
 end;
 
-procedure AddBlacklist(entry: TBlacklistEntry);
+procedure DBAddBlacklist(entry: TBlacklistEntry);
 var
   query, ValuesClause: string;
 begin
@@ -535,7 +538,7 @@ begin
   SQLQuery(query);
 end;
 
-procedure RemoveBlacklist(entry: TBlacklistEntry);
+procedure DBRemoveBlacklist(entry: TBlacklistEntry);
 var
   query, WhereClause: string;
 begin
@@ -551,7 +554,7 @@ end;
 //========================================
 
 { Query database for Approved and Unapproved reports }
-procedure QueryReports;
+procedure DBQueryReports;
 var
   Dataset: TZQuery;
   report: TReport;
@@ -640,7 +643,7 @@ begin
     DateTimeToSQL(report.dateSubmitted)+''')';
 end;
 
-procedure UpdateReport(report: TReport; SetClause, WhereClause: string);
+procedure DBUpdateReport(report: TReport; SetClause, WhereClause: string);
 var
   query: string;
 begin
@@ -649,7 +652,7 @@ begin
   SQLQuery(query);
 end;
 
-procedure AddReport(report: TReport; table: string);
+procedure DBAddReport(report: TReport; table: string);
 var
   query, ValuesClause: string;
 begin
@@ -660,7 +663,7 @@ begin
   SQLQuery(query);
 end;
 
-procedure RemoveReport(report: TReport; table: string);
+procedure DBRemoveReport(report: TReport; table: string);
 var
   query, WhereClause: string;
 begin
@@ -1234,7 +1237,7 @@ var
   sl: TStringList;
   bFilenameMatch, bHashMatch, bRecordsMatch, bVersionMatch: boolean;
 begin
-  Logger.Write('DICTIONARY', 'Build', game+' Dictionary');
+  Logger.Write('DATA', 'Dictionary', 'Building '+game+' Dictionary');
   // sort reports so we can build dictionary entries faster
   bAscending := false;
   aColumnToSort := 1;
@@ -1275,7 +1278,7 @@ begin
     else begin
       // add built entry to dictionary if it exists
       if (entry <> nil) then begin
-        entry.rating := FormatFloat('0.##', (rating / (n * 1.0)));
+        entry.rating := FormatFloat('0.0#', (rating / (n * 1.0)));
         entry.reports := IntToStr(n);
         entry.notes := StringReplace(sl.Text, #13#10, '@13', [rfReplaceAll]);
         sl.Clear;
@@ -1303,10 +1306,13 @@ end;
 
 procedure RebuildDictionaries;
 begin
+  Logger.Write('DATA', 'Dictionary', 'Checking for dictionaries to rebuild');
   if bRebuildTES5 then RebuildDictionary('TES5', TES5Dictionary);
   if bRebuildTES4 then RebuildDictionary('TES4', TES4Dictionary);
   if bRebuildFNV then RebuildDictionary('FNV', FNVDictionary);
   if bRebuildFO3 then RebuildDictionary('FO3', FO3Dictionary);
+  if not (bRebuildTES5 or bRebuildTES4 or bRebuildFNV or bRebuildFO3) then
+    Logger.Write('DATA', 'Dictionary', 'No dictionaries need to be updated');
 end;
 
 procedure UpdateRebuildBooleans(report: TReport);
@@ -1363,7 +1369,7 @@ begin
   end;
 end;
 
-procedure LoadBlacklist(var lst, dictionary: TList);
+procedure LoadPluginBlacklist(var lst, dictionary: TList);
 var
   i: Integer;
   entry: TEntry;
@@ -1490,7 +1496,7 @@ begin
         WhereClause := UserWhereClause(user);
         user.ip := ip;
         SetClause := UserSetClause(user);
-        UpdateUser(SetClause, WhereClause);
+        DBUpdateUser(SetClause, WhereClause);
       end;
       exit;
     end;
@@ -1512,7 +1518,7 @@ begin
         WhereClause := UserWhereClause(user);
         user.auth := auth;
         SetClause := UserSetClause(user);
-        UpdateUser(SetClause, WhereClause);
+        DBUpdateUser(SetClause, WhereClause);
       end;
       exit;
     end;
@@ -1556,7 +1562,7 @@ var
 begin
   user := TUser.Create(ip);
   Users.Add(user);
-  AddUser(user);
+  DBAddUser(user);
   Result := user;
 end;
 
@@ -1570,7 +1576,7 @@ begin
   user.username := username;
   user.auth := auth;
   SetClause := UserSetClause(user);
-  UpdateUser(SetClause, WhereClause);
+  DBUpdateUser(SetClause, WhereClause);
 end;
 
 function IsBlacklisted(ip: string): boolean;
@@ -1584,6 +1590,21 @@ begin
     if SameText(ip, entry.ip) then begin
       Result := true;
       exit;
+    end;
+  end;
+end;
+
+procedure BlacklistRemoveExpired;
+var
+  i: Integer;
+  entry: TBlacklistEntry;
+begin
+  Logger.Write('DATA', 'Blacklist', 'Removing expired entries');
+  for i := Pred(Blacklist.Count) downto 0 do begin
+    entry := TBlacklistEntry(Blacklist[i]);
+    if entry.IsExpired then begin
+      DBRemoveBlacklist(entry);
+      Blacklist.Remove(entry);
     end;
   end;
 end;
@@ -1648,6 +1669,11 @@ begin
   username := fields[1].AsString;
   created := fields[2].AsDateTime;
   expires := fields[3].AsDateTime;
+end;
+
+function TBlacklistEntry.IsExpired: boolean;
+begin
+  Result := Now > expires;
 end;
 
 constructor TUser.Create(ip: string);
@@ -1896,7 +1922,7 @@ begin
   serverMessageColor := clBlue;
   initMessageColor := clGreen;
   SQLMessageColor := clSkyBlue;
-  dictionaryMessageColor := $0000CCFF;
+  dataMessageColor := $0000CCFF;
   javaMessageColor := $000080FF;
   errorMessageColor := clRed;
 end;
@@ -1920,7 +1946,7 @@ begin
   serverMessageColor := TColor(obj.I['serverMessageColor']);
   initMessageColor := TColor(obj.I['initMessageColor']);
   SQLMessageColor := TColor(obj.I['SQLMessageColor']);
-  dictionaryMessageColor := TColor(obj.I['dictionaryMessageColor']);
+  dataMessageColor := TColor(obj.I['dictionaryMessageColor']);
   javaMessageColor := TColor(obj.I['javaMessageColor']);
   errorMessageColor := TColor(obj.I['errorMessageColor']);
 
@@ -1953,7 +1979,7 @@ begin
   obj.I['serverMessageColor'] := Integer(serverMessageColor);
   obj.I['initMessageColor'] := Integer(initMessageColor);
   obj.I['SQLMessageColor'] := Integer(SQLMessageColor);
-  obj.I['dictionaryMessageColor'] := Integer(dictionaryMessageColor);
+  obj.I['dictionaryMessageColor'] := Integer(dataMessageColor);
   obj.I['javaMessageColor'] := Integer(javaMessageColor);
   obj.I['errorMessageColor'] := Integer(errorMessageColor);
 

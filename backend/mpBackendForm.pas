@@ -56,14 +56,15 @@ type
     EditReportItem: TMenuItem;
     ViewDictionaryEntryItem: TMenuItem;
     TCPServer: TIdTCPServer;
-    Timer: TTimer;
+    RepaintTimer: TTimer;
+    TaskTimer: TTimer;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const group, &label, text: string);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure OnTimer(Sender: TObject);
+    procedure RefreshViews(Sender: TObject);
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string): TItemProp;
     procedure AddDetailsList(name: string; sl: TStringList);
@@ -113,6 +114,7 @@ type
     procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
+    procedure OnTaskTimer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -159,6 +161,7 @@ begin
     // INITIALIZE VARIABLES
     Log := TList.Create;
     wbStartTime := Now;
+    Yesterday := Trunc(Now);
     Logger.OnLogEvent := LogMessage;
     ProgramPath := ExtractFilePath(ParamStr(0));
     TempPath := ProgramPath + 'temp\';
@@ -189,9 +192,9 @@ begin
     LoadDictionary(FNVDictionary, slFNVDictionary, 'FNVDictionary.txt');
 
     // QUERY DATA FROM MYSQL
-    QueryReports;
-    QueryUsers;
-    QueryBlacklist;
+    DBQueryReports;
+    DBQueryUsers;
+    DBQueryBlacklist;
 
     // PREPARE LIST VIEWS
     LogListView.OwnerDraw := not settings.simpleLogView;
@@ -250,7 +253,7 @@ begin
   SaveLog(Log);
 end;
 
-procedure TBackendForm.OnTimer(Sender: TObject);
+procedure TBackendForm.RefreshViews(Sender: TObject);
 begin
   if PageControl.ActivePageIndex = 2 then
     UpdateApplicationDetails;
@@ -469,8 +472,8 @@ begin
     LogListView.Canvas.Font.Color := settings.initMessageColor
   else if (msg.group = 'SQL') then
     LogListView.Canvas.Font.Color := settings.SQLMessageColor
-  else if (msg.group = 'DICTIONARY') then
-    LogListView.Canvas.Font.Color := settings.dictionaryMessageColor
+  else if (msg.group = 'DATA') then
+    LogListView.Canvas.Font.Color := settings.dataMessageColor
   else if (msg.group = 'JAVA') then
     LogListView.Canvas.Font.Color := settings.javaMessageColor
   else if (msg.group = 'ERROR') then
@@ -694,7 +697,7 @@ begin
     ApprovedReports[i] := report;
 
     // update report in database
-    UpdateReport(report, SetClause, WhereClause);
+    DBUpdateReport(report, SetClause, WhereClause);
 
     // clean up
     UpdateApprovedDetails;
@@ -723,8 +726,8 @@ begin
     ApprovedListView.Items.Count := ApprovedReports.Count - 1;
     ApprovedReports.Remove(report);
     // update sql
-    AddReport(report, 'unapproved_reports');
-    RemoveReport(report, 'approved_reports');
+    DBAddReport(report, 'unapproved_reports');
+    DBRemoveReport(report, 'approved_reports');
   end;
 
   // update gui
@@ -792,7 +795,7 @@ begin
     UnapprovedListView.Items.Count := UnapprovedReports.Count - 1;
     UnapprovedReports.Remove(report);
     // update sql
-    RemoveReport(report, 'unapproved_reports');
+    DBRemoveReport(report, 'unapproved_reports');
   end;
 
   // update gui
@@ -820,8 +823,8 @@ begin
     UnapprovedListView.Items.Count := UnapprovedReports.Count - 1;
     UnapprovedReports.Remove(report);
     // update sql
-    AddReport(report, 'approved_reports');
-    RemoveReport(report, 'unapproved_reports');
+    DBAddReport(report, 'approved_reports');
+    DBRemoveReport(report, 'unapproved_reports');
   end;
 
   // update gui
@@ -839,6 +842,16 @@ end;
   - TCPServerExecute
 }
 {******************************************************************************}
+
+procedure TBackendForm.OnTaskTimer(Sender: TObject);
+begin
+  // do daily tasks
+  if (Now - Yesterday > 1.0) then begin
+    Yesterday := Now;
+    RebuildDictionaries;
+    BlacklistRemoveExpired;
+  end;
+end;
 
 procedure TBackendForm.TCPServerConnect(AContext: TIdContext);
 var
@@ -1018,7 +1031,7 @@ begin
         UnapprovedReports.Add(report);
         UnapprovedListView.Items.Count := UnapprovedReports.Count;
         // add report to sql
-        AddReport(report, 'unapproved_reports');
+        DBAddReport(report, 'unapproved_reports');
         note := 'Report accepted.';
         Inc(statistics.reportsRecieved);
         // update statistics based on game
@@ -1042,7 +1055,7 @@ begin
 
   // update user
   SetClause := UserSetClause(user);
-  UpdateUser(SetClause, WhereClause);
+  DBUpdateUser(SetClause, WhereClause);
 end;
 
 procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
@@ -1097,8 +1110,8 @@ begin
     UnapprovedListView.Items.Count := UnapprovedReports.Count - 1;
     UnapprovedReports.Remove(report);
     // update sql
-    AddReport(report, 'approved_reports');
-    RemoveReport(report, 'unapproved_reports');
+    DBAddReport(report, 'approved_reports');
+    DBRemoveReport(report, 'unapproved_reports');
   end;
 
   // update gui

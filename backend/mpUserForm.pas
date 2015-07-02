@@ -75,7 +75,7 @@ begin
   user.pluginsMerged := StrToInt(edPluginsMerged.Text);
   user.reportsSubmitted := StrToInt(edReportsSubmitted.Text);
   SetClause := UserSetClause(user);
-  UpdateUser(SetClause, WhereClause);
+  DBUpdateUser(SetClause, WhereClause);
   ModalResult := mrOk;
 end;
 

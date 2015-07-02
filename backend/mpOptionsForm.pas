@@ -39,13 +39,13 @@ type
     lblServerColor: TLabel;
     lblInitColor: TLabel;
     lblSQLColor: TLabel;
-    lblDictionaryColor: TLabel;
+    lblDataColor: TLabel;
     lblJavaColor: TLabel;
     lblErrorColor: TLabel;
     cbServerColor: TColorBox;
     cbInitColor: TColorBox;
     cbSQLColor: TColorBox;
-    cbDictionaryColor: TColorBox;
+    cbDataColor: TColorBox;
     cbJavaColor: TColorBox;
     cbErrorColor: TColorBox;
     gbStyle: TGroupBox;
@@ -104,7 +104,7 @@ begin
   settings.serverMessageColor := cbServerColor.Selected;
   settings.initMessageColor := cbInitColor.Selected;
   settings.SQLMessageColor := cbSQLColor.Selected;
-  settings.dictionaryMessageColor := cbDictionaryColor.Selected;
+  settings.dataMessageColor := cbDataColor.Selected;
   settings.javaMessageColor := cbJavaColor.Selected;
   settings.errorMessageColor := cbErrorColor.Selected;
 
@@ -161,7 +161,7 @@ begin
   cbServerColor.Selected := settings.serverMessageColor;
   cbInitColor.Selected := settings.initMessageColor;
   cbSQLColor.Selected := settings.sqlMessageColor;
-  cbDictionaryColor.Selected := settings.dictionaryMessageColor;
+  cbDataColor.Selected := settings.dataMessageColor;
   cbJavaColor.Selected := settings.javaMessageColor;
   cbErrorColor.Selected := settings.errorMessageColor;
 
@@ -256,7 +256,7 @@ begin
     if not lvBlacklist.Items[i].Selected then
       continue;
     entry := TBlacklistEntry(Blacklist[i]);
-    RemoveBlacklist(entry);
+    DBRemoveBlacklist(entry);
     Blacklist.Remove(entry);
     lvBlacklist.Items.Count := Blacklist.Count;
   end;
@@ -312,7 +312,7 @@ begin
     duration := StrToFloat(sDuration);
     entry := TBlacklistEntry.Create(user.ip, user.username, duration);
     Blacklist.Add(entry);
-    AddBlacklist(entry);
+    DBAddBlacklist(entry);
     lvBlacklist.Items.Count := Blacklist.Count;
   end;
 end;
@@ -329,7 +329,7 @@ begin
     if MessageDlg('Are you sure you want to delete '+user.ip+' ('+user.username+')?',
       mtConfirmation, [mbYes, mbNo], 0) = mrNo then
       continue;
-    RemoveUser(user);
+    DBRemoveUser(user);
     Users.Remove(user);
     lvUsers.Items.Count := Users.Count;
   end;

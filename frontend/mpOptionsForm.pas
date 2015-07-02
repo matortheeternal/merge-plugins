@@ -341,7 +341,7 @@ var
   index: integer;
   defaultGame: TGameMode;
 begin
-  // get status update (TEMPORARY PLEASE DELETE)
+  // get status update if we can
   GetStatus;
   CompareStatuses;
 

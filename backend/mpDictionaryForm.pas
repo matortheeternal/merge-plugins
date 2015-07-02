@@ -124,7 +124,7 @@ begin
   sl := TStringList.Create;
   dictionaryFilename := cbGame.Text + 'Dictionary.txt';
   LoadDictionary(dictionary, sl, dictionaryFilename);
-  LoadBlacklist(pluginBlacklist, dictionary);
+  LoadPluginBlacklist(pluginBlacklist, dictionary);
   vlInfo.InsertRow('Filename', dictionaryFilename, true);
   vlInfo.InsertRow('File size', FormatByteSize(GetFileSize(dictionaryFilename)), true);
   vlInfo.InsertRow('Date modified', DateTimeToStr(GetLastModified(dictionaryFilename)), true);
