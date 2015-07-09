@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
-  Controls, Registry,
+  Controls, Registry, Graphics,
   // indy components
-  IdTCPClient, IdGlobal,
+  IdTCPClient, IdStack, IdGlobal,
   // superobject json library
   superobject,
   // abbrevia components
@@ -21,6 +21,14 @@ uses
   wbDefinitionsTES5;
 
 type
+  TLogMessage = class (TOBject)
+  public
+    time: string;
+    group: string;
+    &label: string;
+    text: string;
+    constructor Create(time, group, &label, text: string); Overload;
+  end;
   TmpMessage = class(TObject)
   public
     id: integer;
@@ -166,6 +174,8 @@ type
     username: string;
     key: string;
     registered: boolean;
+    serverHost: string;
+    serverPort: integer;
     saveReportsLocally: boolean;
     simpleDictionaryView: boolean;
     simplePluginsView: boolean;
@@ -183,6 +193,12 @@ type
     extractBSAs: boolean;
     buildMergedBSA: boolean;
     batCopy: boolean;
+    initMessageColor: TColor;
+    clientMessageColor: TColor;
+    loadMessageColor: TColor;
+    mergeMessageColor: TColor;
+    guiMessageColor: TColor;
+    errorMessageColor: TColor;
     debugRenumbering: boolean;
     debugMergeStatus: boolean;
     debugAssetCopying: boolean;
@@ -190,7 +206,7 @@ type
     debugMasters: boolean;
     debugBatchCopying: boolean;
     debugBSAs: boolean;
-    debugTempPath: boolean;
+    debugPluginsLoad: boolean;
     debugLoadOrder: boolean;
     constructor Create; virtual;
     procedure Save(const filename: string);
@@ -267,6 +283,11 @@ type
   function GetActiveProfile: string;
   procedure GetActiveMods(var modlist: TStringList; profileName: string);
   function GetModContainingFile(var modlist: TStringList; filename: string): string;
+  { Log methods }
+  procedure InitLog;
+  procedure RebuildLog;
+  procedure SaveLog(var Log: TList);
+  function MessageEnabled(var msg: TLogMessage): boolean;
   { Dictionary and Settings methods }
   procedure LoadSettings;
   procedure SaveSettings;
@@ -372,15 +393,16 @@ const
   );
 
 var
-  dictionary, blacklist, PluginsList, MergesList: TList;
+  dictionary, blacklist, PluginsList, MergesList, BaseLog, Log: TList;
   settings: TSettings;
   statistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
-  bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate: boolean;
+  bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate, bInitGroup,
+  bLoadGroup, bClientGroup, bMergeGroup, bErrorGroup: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
-  ProgramVersion: string;
+  ProgramVersion, xEditLogLabel: string;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
@@ -1274,7 +1296,7 @@ end;
 procedure LoaderProgress(const s: string);
 begin
   if s <> '' then
-    Logger.Write('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Background Loader: ' + s);
+    Logger.Write('LOAD', 'Background', s);
   if bForceTerminate then
     Abort;
 end;
@@ -1541,7 +1563,7 @@ begin
   ActiveMods := TStringList.Create;
   ActiveProfile := GetActiveProfile;
   GetActiveMods(ActiveMods, ActiveProfile);
-  //Logger.Write('ActiveMods: '#13#10+ActiveMods.Text);
+  //Logger.Write('INIT', 'ModOrganizer', 'ActiveMods: '#13#10+ActiveMods.Text);
 end;
 
 function GetActiveProfile: string;
@@ -1557,7 +1579,7 @@ begin
   // load ini file
   fname := settings.MODirectory + 'ModOrganizer.ini';
   if(not FileExists(fname)) then begin
-    Logger.Write('Mod Organizer ini file ' + fname + ' does not exist');
+    Logger.Write('INIT', 'ModOrganizer', 'Mod Organizer ini file ' + fname + ' does not exist');
     exit;
   end;
   ini := TMemIniFile.Create(fname);
@@ -1624,6 +1646,75 @@ end;
 
 
 {******************************************************************************}
+{ Log methods
+  Set of methods for logging
+
+  List of methods:
+  - InitLog
+  - RebuildLog
+  - SaveLog
+  - MessageGroupEnabled
+}
+{******************************************************************************}
+
+procedure InitLog;
+begin
+  BaseLog := TList.Create;
+  Log := TList.Create;
+  bInitGroup := true;
+  bLoadGroup := true;
+  bClientGroup := true;
+  bMergeGroup := true;
+  bErrorGroup := true;
+end;
+
+procedure RebuildLog;
+var
+  i: Integer;
+  msg: TLogMessage;
+begin
+  Log.Clear;
+  for i := 0 to Pred(BaseLog.Count) do begin
+    msg := TLogMessage(BaseLog[i]);
+    if MessageEnabled(msg) then
+      Log.Add(msg);
+  end;
+end;
+
+procedure SaveLog(var Log: TList);
+var
+  sl: TStringList;
+  i: Integer;
+  msg: TLogMessage;
+  fdt: string;
+begin
+  sl := TStringList.Create;
+  for i := 0 to Pred(Log.Count) do begin
+    msg := TLogMessage(Log[i]);
+    sl.Add(Format('[%s] (%s) %s: %s', [msg.time, msg.group, msg.&label, msg.text]));
+  end;
+  fdt := FormatDateTime('mmddyy_hhnnss', TDateTime(Now));
+  ForceDirectories(LogPath);
+  sl.SaveToFile(LogPath+'log_'+fdt+'.txt');
+  sl.Free;
+end;
+
+function MessageEnabled(var msg: TLogMessage): boolean;
+begin
+  Result := true;
+  if msg.group = 'INIT' then
+    Result := bInitGroup
+  else if msg.group = 'LOAD' then
+    Result := bLoadGroup and (settings.debugPluginsLoad or (msg.&label <> 'Plugins'))
+  else if msg.group = 'CLIENT' then
+    Result := bClientGroup
+  else if msg.group = 'MERGE' then
+    Result := bMergeGroup
+  else if msg.group = 'ERROR' then
+    Result := bErrorGroup;
+end;
+
+{******************************************************************************}
 { Dictionary, Settings, and Statistics methods
   Set of methods for managing the dictionary.
 
@@ -1672,7 +1763,7 @@ begin
 
   // don't attempt to load dictionary if it doesn't exist
   if not FileExists(dictionaryFilename) then begin
-    Logger.Write('No dictionary file '+dictionaryFilename);
+    Logger.Write('INIT', 'Dictionary', 'No dictionary file '+dictionaryFilename);
     exit;
   end;
 
@@ -2066,8 +2157,8 @@ end;
 procedure InitializeClient;
 begin
   TCPClient := TidTCPClient.Create(nil);
-  TCPClient.Host := '127.0.0.1';
-  TCPClient.Port := 950;
+  TCPClient.Host := settings.serverHost;
+  TCPClient.Port := settings.serverPort;
   TCPClient.ReadTimeout := 3000;
   TCPClient.ConnectTimeout := 2000;
 end;
@@ -2075,13 +2166,14 @@ end;
 procedure ConnectToServer;
 begin
   try
+    Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
     TCPClient.Connect;
     CheckAuthorization;
     SendGameMode;
     GetStatus;
     CompareStatuses;
   except on Exception do
-    Logger.Write('Server unavailable.');
+    Logger.Write('CLIENT', 'Connect', 'Server unavailable.');
   end;
 end;
 
@@ -2093,7 +2185,7 @@ begin
   Result := false;
   if not TCPClient.Connected then
     exit;
-  Logger.Write('Checking if authenticated as: '+settings.username);
+  Logger.Write('CLIENT', 'Login', 'Checking if authenticated as "'+settings.username+'"');
 
   // attempt to check authorization
   // throws exception if server is unavailable
@@ -2107,11 +2199,11 @@ begin
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
     response.FromJson(line);
-    Logger.Write('  Response: '+response.data);
+    Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Yes';
   except
     on x : Exception do begin
-      Logger.Write('  Exception authorizing user: '+x.Message);
+      Logger.Write('Error', 'Client', 'Exception authorizing user '+x.Message);
     end;
   end;
 
@@ -2136,7 +2228,7 @@ begin
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
   except
     on x : Exception do begin
-      Logger.Write('  Exception sending game mode: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception sending game mode '+x.Message);
     end;
   end;
 end;
@@ -2148,7 +2240,7 @@ var
 begin
   if not TCPClient.Connected then
     exit;
-  Logger.Write('Resetting authentication as: '+settings.username);
+  Logger.Write('CLIENT', 'Login', 'Resetting authentication as "'+settings.username+'"');
 
   // attempt to reset authorization
   // throws exception if server is unavailable
@@ -2162,10 +2254,10 @@ begin
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
     response.FromJson(line);
-    Logger.Write('  Response: '+response.data);
+    Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
-      Logger.Write('  Exception resetting authentication: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception resetting authentication '+x.Message);
     end;
   end;
 end;
@@ -2178,7 +2270,7 @@ begin
   Result := false;
   if not TCPClient.Connected then
     exit;
-  Logger.Write('Checking username availability: '+settings.username);
+  Logger.Write('CLIENT', 'Login', 'Checking username availability "'+settings.username+'"');
 
   // attempt to register user
   // throws exception if server is unavailable
@@ -2192,11 +2284,11 @@ begin
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
     response.FromJson(line);
-    Logger.Write('  Response: '+response.data);
+    Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Available';
   except
     on x : Exception do begin
-      Logger.Write('  Exception checking username: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception checking username '+x.Message);
     end;
   end;
 end;
@@ -2209,7 +2301,7 @@ begin
   Result := false;
   if not TCPClient.Connected then
     exit;
-  Logger.Write('Registering username: '+settings.username);
+  Logger.Write('CLIENT', 'Login', 'Registering username "'+settings.username+'"');
 
   // attempt to register user
   // throws exception if server is unavailable
@@ -2223,11 +2315,11 @@ begin
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
     response.FromJson(line);
-    Logger.Write('  Response: '+response.data);
+    Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = ('Registered ' + settings.username);
   except
     on x : Exception do begin
-      Logger.Write('  Exception registering username: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception registering username '+x.Message);
     end;
   end;
 end;
@@ -2243,7 +2335,7 @@ begin
   if (Now - LastStatusTime) < StatusDelay then
     exit;
   LastStatusTime := Now;
-  Logger.Write('Getting status');
+  Logger.Write('CLIENT', 'Update', 'Getting update status');
 
   // attempt to get a status update
   // throws exception if server is unavailable
@@ -2259,10 +2351,10 @@ begin
     response.FromJson(LLine);
     RemoteStatus := TmpStatus.Create;
     RemoteStatus.FromJson(response.data);
-    Logger.Write('  Response: '+response.data);
+    //Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
-      Logger.Write('  Exception getting status: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception getting status '+x.Message);
     end;
   end;
 end;
@@ -2331,7 +2423,7 @@ begin
   if not TCPClient.Connected then
     exit;
   filename := wbAppName+'Dictionary.txt';
-  Logger.Write('Updating '+filename);
+  Logger.Write('CLIENT', 'Update',  filename);
 
   // attempt to request dictionary
   // throws exception if server is unavailable
@@ -2347,13 +2439,13 @@ begin
     TCPClient.IOHandler.ReadStream(stream, -1, False);
 
     // load dictionary from response
-    Logger.Write('  '+filename+' recieved.  (Size: '+FormatByteSize(stream.Size)+')');
+    Logger.Write('CLIENT', 'Update', filename+' recieved.  (Size: '+FormatByteSize(stream.Size)+')');
     stream.Free;
     LoadDictionary;
     Result := true;
   except
     on x : Exception do begin
-      Logger.Write('  Exception updating dictionary: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception updating dictionary '+x.Message);
     end;
   end;
 end;
@@ -2386,7 +2478,7 @@ begin
     end;
   except
     on x: Exception do begin
-      Logger.Write('Exception: ' + x.Message);
+      Logger.Write('ERROR', 'Update', 'Exception ' + x.Message);
       exit;
     end;
   end;
@@ -2412,7 +2504,7 @@ begin
     exit;
   end;
 
-  Logger.Write('Updating Program to v'+RemoteStatus.programVersion);
+  Logger.Write('CLIENT', 'Update', 'Merge Plugins v'+RemoteStatus.programVersion);
 
   // attempt to request dictionary
   // throws exception if server is unavailable
@@ -2423,18 +2515,18 @@ begin
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
-    Logger.Write('  Downloading '+filename);
+    Logger.Write('CLIENT', 'Update', 'Downloading '+filename);
     stream := TFileStream.Create('MergePlugins.zip', fmCreate + fmShareDenyNone);
     TCPClient.IOHandler.LargeStream := True;
     TCPClient.IOHandler.ReadStream(stream, -1, False);
 
     // load dictionary from response
-    Logger.Write('  '+filename+' recieved.  (Size: '+FormatByteSize(stream.Size)+')');
+    Logger.Write('CLIENT', 'Update', filename+' recieved.  (Size: '+FormatByteSize(stream.Size)+')');
     stream.Free;
     Result := true;
   except
     on x : Exception do begin
-      Logger.Write('  Exception updating program: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception updating program '+x.Message);
     end;
   end;
 end;
@@ -2455,7 +2547,7 @@ begin
     for i := 0 to Pred(lst.Count) do begin
       report := TReport(lst[i]);
       reportJson := report.ToJson;
-      Logger.Write('Sending report: '+report.filename);
+      Logger.Write('CLIENT', 'Report', 'Sending '+report.filename);
 
       // send report to server
       msg := TmpMessage.Create(MSG_REPORT, settings.username, settings.key, reportJson);
@@ -2466,13 +2558,13 @@ begin
       LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
       response := TmpMessage.Create;
       response.FromJson(LLine);
-      Logger.Write('  Response: '+response.data);
+      Logger.Write('CLIENT', 'Response', response.data);
       Inc(statistics.reportsSubmitted);
     end;
     Result := true;
   except
     on x : Exception do begin
-      Logger.Write('  Exception sending reports: '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception sending reports '+x.Message);
     end;
   end;
 end;
@@ -2483,6 +2575,7 @@ end;
   Set of methods for objects TMerge and TPlugin
 
   List of methods:
+  - TLogMessage.Create
   - TmpMessage.Create
   - TReport.Create
   - TReport.ToJson
@@ -2510,8 +2603,16 @@ end;
 }
 {******************************************************************************}
 
+constructor TLogMessage.Create(time, group, &label, text: string);
+begin
+  self.time := time;
+  self.group := group;
+  self.&label := &label;
+  self.text := text;
+end;
+
 { TmpMessage Constructor }
-Constructor TmpMessage.Create(id: integer; username, auth, data: string);
+constructor TmpMessage.Create(id: integer; username, auth, data: string);
 begin
   self.id := id;
   self.username := username;
@@ -2943,7 +3044,7 @@ begin
     if Assigned(plugin) then begin
       if plugin.hash <> hashes[i] then begin
         if settings.debugMergeStatus then
-          Logger.Write(plugin.filename + ' has hash ' + plugin.hash + ', '+
+          Logger.Write('MERGE', 'Status', plugin.filename + ' has hash ' + plugin.hash + ', '+
             name + ' has '+hashes[i]);
         Result := true;
       end;
@@ -2962,33 +3063,33 @@ var
   i: Integer;
   plugin: TPlugin;
 begin
-  if settings.debugMergeStatus then Logger.Write('Getting status for '+name);
+  if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Getting status for '+name);
   status := 0;
 
   // don't merge if no plugins to merge
   if plugins.Count < 1 then begin
-    if settings.debugMergeStatus then Logger.Write('  No plugins to merge');
+    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'No plugins to merge');
     status := 1;
     exit;
   end;
 
   // don't merge if mod destination directory is blank
   if settings.mergeDirectory = '' then begin
-    if settings.debugMergeStatus then Logger.Write('  Merge directory blank');
+    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Merge directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.MODirectory = '') then begin
-    if settings.debugMergeStatus then Logger.Write('  Mod Organizer Directory blank');
+    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Mod Organizer Directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
   if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
-     if settings.debugMergeStatus then Logger.Write('  Mod Organizer Directory invalid');
+     if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Mod Organizer Directory invalid');
      status := 2;
      exit;
   end;
@@ -2999,20 +3100,20 @@ begin
 
     // see if plugin is loaded
     if not Assigned(plugin) then begin
-      if settings.debugMergeStatus then Logger.Write('  Plugin '+plugins[i]+' is missing');
+      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Plugin '+plugins[i]+' is missing');
       status := 3;
       exit;
     end;
 
     if plugin.errors.Count = 0 then begin
-      if settings.debugMergeStatus then Logger.Write('  '+plugin.filename+' needs to be checked for errors.');
+      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', plugin.filename+' needs to be checked for errors.');
       status := 10;
     end
     else if plugin.errors[0] = 'None.' then begin
-      if settings.debugMergeStatus then Logger.Write('  No errors in '+plugin.filename);
+      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'No errors in '+plugin.filename);
     end
     else begin
-      if settings.debugMergeStatus then Logger.Write('  '+plugin.filename+' has errors');
+      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', plugin.filename+' has errors');
       status := 4;
       exit;
     end
@@ -3020,20 +3121,19 @@ begin
 
   dataPath := settings.mergeDirectory + name + '\';
   if (not PluginsModified) and FilesExist then begin
-    if settings.debugMergeStatus then Logger.Write('  Up to date.');
+    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Up to date.');
     status := 5;
     exit;
   end;
 
   // status green, ready to go
   if status = 0 then begin
-    if settings.debugMergeStatus then Logger.Write('  Ready to be merged.');
+    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Ready to be merged.');
     if dateBuilt = 0 then
       status := 7
     else
       status := 8;
   end;
-  if settings.debugMergeStatus then Logger.Write(' ');
 end;
 
 function TMerge.GetStatusColor: integer;
@@ -3109,6 +3209,8 @@ end;
 constructor TSettings.Create;
 begin
   language := 'English';
+  serverHost := 'mergeplugins.us.to';
+  serverPort := 960;
   simpleDictionaryView := false;
   simplePluginsView := false;
   updateDictionary := false;
@@ -3123,6 +3225,12 @@ begin
   handleScriptFragments := false;
   extractBSAs := false;
   buildMergedBSA := false;
+  initMessageColor := clGreen;
+  loadMessageColor := clPurple;
+  clientMessageColor := clBlue;
+  mergeMessageColor := $0000CCFF;
+  guiMessageColor := clBlack;
+  errorMessageColor := clRed;
 
   // generate a new secure key
   GenerateKey;
@@ -3177,8 +3285,20 @@ begin
   ini.WriteBool('Advanced', 'debugMasters', debugMasters);
   ini.WriteBool('Advanced', 'debugBatchCopying', debugBatchCopying);
   ini.WriteBool('Advanced', 'debugBSAs', debugBSAs);
-  ini.WriteBool('Advanced', 'debugTempPath', debugTempPath);
+  ini.WriteBool('Advanced', 'debugTempPath', debugPluginsLoad);
   ini.WriteBool('Advanced', 'debugLoadOrder', debugLoadOrder);
+
+  // save log colors
+  ini.WriteInteger('Advanced', 'initMessageColor', initMessageColor);
+  ini.WriteInteger('Advanced', 'loadMessageColor', loadMessageColor);
+  ini.WriteInteger('Advanced', 'clientMessageColor', clientMessageColor);
+  ini.WriteInteger('Advanced', 'mergeMessageColor', mergeMessageColor);
+  ini.WriteInteger('Advanced', 'guiMessageColor', guiMessageColor);
+  ini.WriteInteger('Advanced', 'errorMessageColor', errorMessageColor);
+
+  // save server host and port
+  ini.WriteString('Advanced', 'serverHost', serverHost);
+  ini.WriteInteger('Advanced', 'serverPort', serverPort);
 
   // save file
   ini.UpdateFile;
@@ -3234,8 +3354,20 @@ begin
   debugMasters := ini.ReadBool('Advanced', 'debugMasters', false);
   debugBatchCopying := ini.ReadBool('Advanced', 'debugBatchCopying', false);
   debugBSAs := ini.ReadBool('Advanced', 'debugBSAs', false);
-  debugTempPath := ini.ReadBool('Advanced', 'debugTempPath', false);
+  debugPluginsLoad := ini.ReadBool('Advanced', 'debugTempPath', false);
   debugLoadOrder := ini.ReadBool('Advanced', 'debugLoadOrder', false);
+
+  // load log colors
+  initMessageColor := TColor(ini.ReadInteger('Advanced', 'initMessageColor', clGreen));
+  loadMessageColor := TColor(ini.ReadInteger('Advanced', 'loadMessageColor', clPurple));
+  clientMessageColor := TColor(ini.ReadInteger('Advanced', 'clientMessageColor', clBlue));
+  mergeMessageColor := TColor(ini.ReadInteger('Advanced', 'mergeMessageColor', $0000CCFF));
+  guiMessageColor := TColor(ini.ReadInteger('Advanced', 'guiMessageColor', clBlack));
+  errorMessageColor := TColor(ini.ReadInteger('Advanced', 'errorMessageColor', clRed));
+
+  // load host and port
+  serverHost := ini.ReadString('Advanced', 'serverHost', 'mergeplugins.us.to');
+  serverPort := ini.ReadInteger('Advanced', 'serverPort', 960);
 
   // save file
   ini.UpdateFile;

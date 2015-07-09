@@ -132,7 +132,7 @@ object BackendForm: TBackendForm
       Top = 7
       Width = 654
       Height = 605
-      ActivePage = UnapprovedTabSheet
+      ActivePage = LogTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
@@ -268,6 +268,7 @@ object BackendForm: TBackendForm
           ReadOnly = True
           RowSelect = True
           ParentDoubleBuffered = False
+          PopupMenu = LogPopupMenu
           ShowColumnHeaders = False
           TabOrder = 0
           ViewStyle = vsReport
@@ -334,7 +335,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801CC0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801E00120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1429,12 +1430,8 @@ object BackendForm: TBackendForm
   end
   object TCPServer: TIdTCPServer
     Active = True
-    Bindings = <
-      item
-        IP = '127.0.0.1'
-        Port = 950
-      end>
-    DefaultPort = 950
+    Bindings = <>
+    DefaultPort = 960
     OnConnect = TCPServerConnect
     OnDisconnect = TCPServerDisconnect
     OnException = TCPServerException
@@ -1442,9 +1439,9 @@ object BackendForm: TBackendForm
     Left = 1000
     Top = 8
   end
-  object RepaintTimer: TTimer
+  object RefreshTimer: TTimer
     Interval = 3000
-    OnTimer = RefreshViews
+    OnTimer = OnRefreshTimer
     Left = 936
     Top = 8
   end
@@ -1453,5 +1450,41 @@ object BackendForm: TBackendForm
     OnTimer = OnTaskTimer
     Left = 872
     Top = 8
+  end
+  object LogPopupMenu: TPopupMenu
+    OnPopup = LogPopupMenuPopup
+    Left = 320
+    Top = 112
+    object FilterItem: TMenuItem
+      Caption = 'Filter'
+      object FilterInitItem: TMenuItem
+        Caption = 'Disable INIT'
+        OnClick = FilterInitItemClick
+      end
+      object FilterSqlItem: TMenuItem
+        Caption = 'Disable SQL'
+        OnClick = FilterSqlItemClick
+      end
+      object FilterServerItem: TMenuItem
+        Caption = 'Disable SERVER'
+        OnClick = FilterServerItemClick
+      end
+      object FilterDataItem: TMenuItem
+        Caption = 'Disable DATA'
+        OnClick = FilterDataItemClick
+      end
+      object FilterErrorItem: TMenuItem
+        Caption = 'Disable ERROR'
+        OnClick = FilterErrorItemClick
+      end
+    end
+    object CopyToClipboardItem: TMenuItem
+      Caption = 'Copy to clipboard'
+      OnClick = CopyToClipboardItemClick
+    end
+    object SaveAndClearItem: TMenuItem
+      Caption = 'Save and clear'
+      OnClick = SaveAndClearItemClick
+    end
   end
 end

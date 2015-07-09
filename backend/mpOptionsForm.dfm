@@ -296,7 +296,7 @@ object OptionsForm: TOptionsForm
           Top = 73
           Width = 145
           Height = 22
-          Selected = clSkyBlue
+          Selected = clPurple
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
           TabOrder = 2
         end
@@ -306,7 +306,7 @@ object OptionsForm: TOptionsForm
           Width = 145
           Height = 22
           Align = alCustom
-          Selected = 52479
+          Selected = 33023
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
           Anchors = [akTop, akRight]
           TabOrder = 3
@@ -317,7 +317,6 @@ object OptionsForm: TOptionsForm
           Width = 145
           Height = 22
           Align = alCustom
-          Selected = 33023
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
           Anchors = [akTop, akRight]
           TabOrder = 4
@@ -672,7 +671,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800740010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

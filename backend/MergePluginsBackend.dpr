@@ -51,7 +51,6 @@ begin
 
   // initialize application, load settings
   Application.Initialize;
-  ForceDirectories(ProgramPath+'user');
   LoadSettings;
   LoadStatistics;
 

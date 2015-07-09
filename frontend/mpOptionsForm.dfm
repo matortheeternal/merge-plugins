@@ -496,10 +496,6 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbDebug: TGroupBox
         Left = 6
         Top = 6
@@ -567,12 +563,12 @@ object OptionsForm: TOptionsForm
           Caption = 'Debug BSAs'
           TabOrder = 6
         end
-        object kbDebugTempPath: TCheckBox
+        object kbDebugPluginsLoad: TCheckBox
           Left = 272
           Top = 66
-          Width = 105
+          Width = 113
           Height = 17
-          Caption = 'Debug TempPath'
+          Caption = 'Debug plugins load'
           TabOrder = 7
         end
         object kbDebugLoadOrder: TCheckBox
@@ -620,6 +616,133 @@ object OptionsForm: TOptionsForm
         Caption = 'Only connect to the server when required'
         TabOrder = 2
       end
+      object gbColoring: TGroupBox
+        Left = 6
+        Top = 253
+        Width = 548
+        Height = 107
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Log Coloring'
+        TabOrder = 3
+        object lblClientColor: TLabel
+          Left = 12
+          Top = 20
+          Width = 27
+          Height = 13
+          Caption = 'Client'
+        end
+        object lblInitColor: TLabel
+          Left = 12
+          Top = 47
+          Width = 16
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 11
+          Caption = 'Init'
+        end
+        object lblLoadColor: TLabel
+          Left = 12
+          Top = 74
+          Width = 23
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 11
+          Caption = 'Load'
+        end
+        object lblMergeColor: TLabel
+          Left = 274
+          Top = 20
+          Width = 30
+          Height = 13
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Merge'
+        end
+        object lblGUIColor: TLabel
+          Left = 274
+          Top = 47
+          Width = 18
+          Height = 13
+          Margins.Top = 11
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'GUI'
+        end
+        object lblErrorColor: TLabel
+          Left = 274
+          Top = 74
+          Width = 29
+          Height = 13
+          Margins.Top = 11
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Errors'
+        end
+        object cbClientColor: TColorBox
+          Left = 88
+          Top = 17
+          Width = 145
+          Height = 22
+          Selected = clBlue
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          TabOrder = 0
+        end
+        object cbInitColor: TColorBox
+          Left = 88
+          Top = 45
+          Width = 145
+          Height = 22
+          Selected = clGreen
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          TabOrder = 1
+        end
+        object cbLoadColor: TColorBox
+          Left = 88
+          Top = 73
+          Width = 145
+          Height = 22
+          Selected = clPurple
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          TabOrder = 2
+        end
+        object cbMergeColor: TColorBox
+          Left = 392
+          Top = 17
+          Width = 145
+          Height = 22
+          Align = alCustom
+          Selected = 33023
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          Anchors = [akTop, akRight]
+          TabOrder = 3
+        end
+        object cbGUIColor: TColorBox
+          Left = 392
+          Top = 45
+          Width = 145
+          Height = 22
+          Align = alCustom
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          Anchors = [akTop, akRight]
+          TabOrder = 4
+        end
+        object cbErrorColor: TColorBox
+          Left = 392
+          Top = 73
+          Width = 145
+          Height = 22
+          Align = alCustom
+          Selected = clRed
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
+          Anchors = [akTop, akRight]
+          TabOrder = 5
+        end
+      end
     end
   end
   object btnCancel: TButton
@@ -649,7 +772,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800640010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800780010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

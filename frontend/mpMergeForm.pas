@@ -6,7 +6,7 @@ uses
   // delphi units
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl,
-  Menus, Grids, ValEdit, ShlObj, ShellAPI,
+  Menus, Grids, ValEdit, ShlObj, ShellAPI, StrUtils, Clipbrd,
   // third party libraries
   superobject, W7Taskbar,
   // mp units
@@ -42,7 +42,6 @@ type
     PluginsTabSheet: TTabSheet;
     MergesTabSheet: TTabSheet;
     LogTabSheet: TTabSheet;
-    LogMemo: TMemo;
     PluginsListView: TListView;
     MergeListView: TListView;
     // PLUGINS POPUP MENU
@@ -71,15 +70,27 @@ type
     ReconnectTimer: TTimer;
     StatusIcons: TImageList;
     Heartbeat: TTimer;
-    RepaintTimer: TTimer;
+    RefreshTimer: TTimer;
+    LogListView: TListView;
+    LogPopupMenu: TPopupMenu;
+    FilterItem: TMenuItem;
+    CopyToClipboardItem: TMenuItem;
+    SaveAndClearItem: TMenuItem;
+    FilterInitItem: TMenuItem;
+    FilterLoadItem: TMenuItem;
+    FilterClientItem: TMenuItem;
+    FilterMergeItem: TMenuItem;
+    FilterErrorItem: TMenuItem;
 
     // MERGE FORM EVENTS
-    procedure LogMessage(const s: string);
+    procedure LogMessage(const group, &label, text: string);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure LoaderDone;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure OnTimer(Sender: TObject);
+    procedure OnHeartbeatTimer(Sender: TObject);
+    procedure OnRepaintTimer(Sender: TObject);
     procedure ClientStatusChanged(ASender: TObject; const AStatus: TIdStatus; const AStatusText: string);
     procedure ShowAuthorizationMessage;
     // DETAILS EDITOR EVENTS
@@ -104,14 +115,6 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure PluginsListViewMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    // MERGE LIST VIEW EVENTS
-    procedure UpdateMergeDetails;
-    procedure UpdateMerges;
-    procedure MergeListViewChange(Sender: TObject; Item: TListItem;
-      Change: TItemChange);
-    procedure MergeListViewData(Sender: TObject; Item: TListItem);
-    procedure MergeListViewDrawItem(Sender: TCustomListView; Item: TListItem;
-      Rect: TRect; State: TOwnerDrawState);
     // PLUGINS POPUP MENU EVENTS
     procedure PluginsPopupMenuPopup(Sender: TObject);
     procedure UpdatePluginsPopupMenu;
@@ -120,6 +123,14 @@ type
     procedure CheckForErrorsClick(Sender: TObject);
     procedure RemoveFromMergeClick(Sender: TObject);
     procedure OpenPluginLocationItemClick(Sender: TObject);
+    // MERGE LIST VIEW EVENTS
+    procedure UpdateMergeDetails;
+    procedure UpdateMerges;
+    procedure MergeListViewChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
+    procedure MergeListViewData(Sender: TObject; Item: TListItem);
+    procedure MergeListViewDrawItem(Sender: TCustomListView; Item: TListItem;
+      Rect: TRect; State: TOwnerDrawState);
     // MERGES POPUP MENU EVENTS
     procedure MergesPopupMenuPopup(Sender: TObject);
     procedure EditMergeItemClick(Sender: TObject);
@@ -134,6 +145,19 @@ type
     procedure MergeListViewDblClick(Sender: TObject);
     procedure MergeListViewKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    // LOG LIST VIEW EVENTS
+    procedure LogListViewData(Sender: TObject; Item: TListItem);
+    procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem; Rect: TRect; State: TOwnerDrawState);
+    // LOG POPUP MENU EVENTS
+    procedure LogPopupMenuPopup(Sender: TObject);
+    procedure ToggleGroup(var bGroup: boolean);
+    procedure FilterInitItemClick(Sender: TObject);
+    procedure FilterLoadItemClick(Sender: TObject);
+    procedure FilterClientItemClick(Sender: TObject);
+    procedure FilterMergeItemClick(Sender: TObject);
+    procedure FilterErrorItemClick(Sender: TObject);
+    procedure CopyToClipboardItemClick(Sender: TObject);
+    procedure SaveAndClearItemClick(Sender: TObject);
     // QUICKBAR BUTTON EVENTS
     procedure CreateMergeButtonClick(Sender: TObject);
     procedure RebuildButtonClick(Sender: TObject);
@@ -144,8 +168,6 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure StatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
       const Rect: TRect);
-    procedure OnHeartbeatTimer(Sender: TObject);
-    procedure OnRepaintTimer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -175,18 +197,26 @@ implementation
 }
 {******************************************************************************}
 
-{ Prints a message to the log memo }
-procedure TMergeForm.LogMessage(const s: string);
+{ Prints a message to the log }
+procedure TMergeForm.LogMessage(const group, &label, text: string);
+var
+  msg: TLogMessage;
 begin
-  LogMemo.Lines.Add(s);
-  SendMessage(LogMemo.Handle, EM_LINESCROLL, 0, LogMemo.Lines.Count);
+  msg := TLogMessage.Create(FormatDateTime('hh:nn:ss', Now), group, &label, text);
+  BaseLog.Add(msg);
+  if MessageEnabled(msg) then begin
+    Log.Add(msg);
+    LogListView.Items.Count := Log.Count;
+    LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
+    SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+  end;
 end;
 
 procedure ProgressMessage(const s: string);
 begin
   if s = '' then
     exit;
-  MergeForm.LogMessage(s);
+  MergeForm.LogMessage('LOAD', xEditLogLabel, s);
 end;
 
 { Initialize form, initialize TES5Edit API, and load plugins }
@@ -207,6 +237,7 @@ begin
     SetTaskbarProgressState(tbpsIndeterminate);
 
     // INITIALIZE VARIABLES
+    InitLog;
     ProgramVersion := GetVersionMem;
     TempPath := wbProgramPath + 'temp\';
     LogPath := wbProgramPath + 'logs\';
@@ -237,6 +268,7 @@ begin
     StatusBar.Panels[8].Text := 'v'+ProgramVersion;
 
     // INITIALIZE TES5EDIT API
+    xEditLogLabel := 'Plugins';
     wbDisplayLoadOrderFormID := True;
     wbSortSubRecords := True;
     wbDisplayShorterNames := True;
@@ -257,21 +289,21 @@ begin
       else
         raise Exception.Create('Invalid game selection!');
     SetGame(settings.selectedGame);
-    Logger.Write('Selected game: '+wbGameName);
-    Logger.Write('Using data path: '+wbDataPath);
+    Logger.Write('INIT', 'Game', 'Using '+wbGameName);
+    Logger.Write('INIT', 'Path', 'Using '+wbDataPath);
 
-    // LOAD SETTINGS FOR GAME
+    // INITIALIZE SETTINGS FOR GAME
     LoadSettings;
     if settings.usingMO then
       ModOrganizerInit;
 
-    // LOAD DICTIONARY
+    // INITIALIZE DICTIONARY
     dictionaryFilename := wbAppName+'Dictionary.txt';
-    Logger.Write('Loading dictionary '+dictionaryFilename);
+    Logger.Write('INIT', 'Dictionary', 'Using '+dictionaryFilename);
     LoadDictionary;
 
-    // LOAD TES5EDIT DEFINITIONS
-    Logger.Write('Loading '+wbAppName+'Edit Definitions');
+    // INITIALIZE TES5EDIT DEFINITIONS
+    Logger.Write('INIT', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
     LoadDefinitions;
 
     // PREPARE TO LOAD PLUGINS
@@ -279,7 +311,7 @@ begin
       wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveProfile+'\plugins.txt'
     else
       wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
-    Logger.Write('Using load order '+wbPluginsFileName);
+    Logger.Write('INIT', 'Load Order', 'Using '+wbPluginsFileName);
     sl := TStringList.Create;
     sl.LoadFromFile(wbPluginsFileName);
     RemoveCommentsAndEmpty(sl);
@@ -298,9 +330,9 @@ begin
     end;
     // debug message
     if settings.debugLoadOrder then begin
-      Logger.Write('Load order: ');
+      Logger.Write('INIT', 'Load Order', 'Found');
       for i := 0 to Pred(sl.Count) do
-        Logger.Write('  ['+IntToHex(i, 2)+'] '+sl[i]);
+        Logger.Write('INIT', 'Load Order', '  ['+IntToHex(i, 2)+'] '+sl[i]);
     end;
 
 
@@ -338,7 +370,7 @@ begin
   except
     on x: Exception do begin
       bDontSave := true;
-      LogMessage('Exception: '+x.Message);
+      LogMessage('ERROR', 'Exception', x.Message);
     end;
   end;
 end;
@@ -364,6 +396,7 @@ procedure TMergeForm.LoaderDone;
 begin
   SetTaskbarProgressState(tbpsNone);
   StatusBar.SimpleText := 'Background loader finished.';
+  xEditLogLabel := 'xEdit';
   FlashWindow(Application.Handle, True);
   UpdateMerges;
 end;
@@ -440,10 +473,10 @@ end;
 procedure TMergeForm.ShowAuthorizationMessage;
 begin
   if bAuthorized then begin
-    Logger.Write('Authorized');
+    Logger.Write('CLIENT', 'Login', 'Authorized');
   end
   else begin
-    Logger.Write('Not authorized');
+    Logger.Write('CLIENT', 'Login', 'Not authorized');
   end;
 end;
 
@@ -744,7 +777,7 @@ procedure TMergeForm.PluginsListViewMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 var
   pt: TPoint;
-  li : TLIstItem;
+  li : TListItem;
   lvHitInfo: TLVHitTestInfo;
   hint : string;
   plugin: TPlugin;
@@ -1147,6 +1180,181 @@ begin
   end;
 end;
 
+
+{******************************************************************************}
+{ LogListView methods
+}
+{******************************************************************************}
+
+procedure TMergeForm.LogListViewData(Sender: TObject; Item: TListItem);
+var
+  msg: TLogMessage;
+begin
+  if (Item.Index > Pred(Log.Count)) then
+    exit;
+  msg := TLogMessage(Log[Item.Index]);
+  Item.Caption := msg.time;
+  Item.SubItems.Add(msg.group);
+  Item.SubItems.Add(msg.&label);
+  Item.SubItems.Add(msg.text);
+
+  // handle coloring
+  if (msg.group = 'INIT') then
+    LogListView.Canvas.Font.Color := settings.initMessageColor
+  else if (msg.group = 'LOAD') then
+    LogListView.Canvas.Font.Color := settings.loadMessageColor
+  else if (msg.group = 'CLIENT') then
+    LogListView.Canvas.Font.Color := settings.clientMessageColor
+  else if (msg.group = 'MERGE') then
+    LogListView.Canvas.Font.Color := settings.mergeMessageColor
+  else if (msg.group = 'ERROR') then
+    LogListView.Canvas.Font.Color := settings.errorMessageColor;
+end;
+
+procedure TMergeForm.LogListViewDrawItem(Sender: TCustomListView;
+  Item: TListItem; Rect: TRect; State: TOwnerDrawState);
+var
+  i, x, y: integer;
+  ListView: TListView;
+  R: TRect;
+  msg, FormatString: string;
+  ItemArray: array of TVarRec;
+  Column: TListColumn;
+begin
+  ListView := TListView(Sender);
+  if Item.Selected then begin
+    ListView.Canvas.Brush.Color := $FFEEDD;
+    ListView.Canvas.FillRect(Rect);
+  end;
+
+  // prepare format string
+  FormatString := '';
+  for i := 0 to Pred(ListView.Columns.Count) do begin
+    Column := ListView.Columns[i];
+    if Column.Caption = 'Time' then
+      FormatString := FormatString + '[%s] ';
+    if Column.Caption = 'Group' then
+      FormatString := FormatString + '(%s) ';
+    if Column.Caption = 'Label' then
+      FormatString := FormatString + '%s: ';
+    if Column.Caption = 'Text' then
+      FormatString := FormatString + '%s';
+  end;
+
+  // prepare item array
+  SetLength(ItemArray, 1 + Item.SubItems.Count);
+  ItemArray[0].VType := vtUnicodeString;
+  ItemArray[0].VUnicodeString := Pointer(Item.Caption);
+  for i := 0 to Pred(Item.SubItems.Count) do begin
+    ItemArray[i + 1].VType := vtUnicodeString;
+    ItemArray[i + 1].VUnicodeString := Pointer(Item.SubItems[i]);
+  end;
+
+  // prepare text rect
+  R := Rect;
+  R.Right := R.Left + ListView.Width - 3;
+  x := Rect.Left + 3;
+  y := (Rect.Bottom - Rect.Top - ListView.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
+
+  // draw message
+  msg := Format(FormatString, ItemArray);
+  ListView.Canvas.TextRect(R, x, y, msg);
+end;
+
+
+{******************************************************************************}
+{ Log Popup Menu events
+  - LogPopupMenuPopup
+  - FilterInitItemClick
+  - FilterSqlItemClick
+  - FilterServerItemClick
+  - FilterDataItemClick
+  - FilterErrorItemClick
+  - CopyToClipboardItemClick
+  - SaveAndClearItemClick
+}
+{******************************************************************************}
+
+function EnableStr(var b: boolean): string;
+begin
+  Result := IfThen(not b, 'Enable', 'Disable');
+end;
+
+procedure TMergeForm.LogPopupMenuPopup(Sender: TObject);
+begin
+  FilterInitItem.Caption := EnableStr(bInitGroup) + ' INIT';
+  FilterLoadItem.Caption := EnableStr(bLoadGroup) + ' LOAD';
+  FilterClientItem.Caption := EnableStr(bClientGroup) + ' CLIENT';
+  FilterMergeItem.Caption := EnableStr(bMergeGroup) + ' MERGE';
+  FilterErrorItem.Caption := EnableStr(bErrorGroup) + ' ERROR';
+  CopyToClipboardItem.Enabled := Assigned(LogListView.Selected);
+end;
+
+procedure TMergeForm.ToggleGroup(var bGroup: boolean);
+begin
+  bGroup := not bGroup;
+  LogListView.Items.Count := 0;
+  RebuildLog;
+  LogListView.Items.Count := Log.Count;
+end;
+
+procedure TMergeForm.FilterInitItemClick(Sender: TObject);
+begin
+  ToggleGroup(bInitGroup);
+end;
+
+procedure TMergeForm.FilterLoadItemClick(Sender: TObject);
+begin
+  ToggleGroup(bLoadGroup);
+end;
+
+procedure TMergeForm.FilterClientItemClick(Sender: TObject);
+begin
+  ToggleGroup(bClientGroup);
+end;
+
+procedure TMergeForm.FilterMergeItemClick(Sender: TObject);
+begin
+  ToggleGroup(bMergeGroup);
+end;
+
+procedure TMergeForm.FilterErrorItemClick(Sender: TObject);
+begin
+  ToggleGroup(bErrorGroup);
+end;
+
+procedure TMergeForm.CopyToClipboardItemClick(Sender: TObject);
+var
+  i: Integer;
+  sl: TStringList;
+  msg: TLogMessage;
+begin
+  sl := TStringList.Create;
+
+  // put selected messages in stringlist
+  for i := 0 to Pred(Log.Count) do begin
+    if not LogListView.Items[i].Selected then
+      continue;
+
+    msg := TLogMessage(Log[i]);
+    sl.Add(Format('[%s] (%s) %s: %s', [msg.time, msg.group, msg.&label, msg.text]));
+  end;
+
+  // put stringlist in clipboard, then free
+  Clipboard.AsText := sl.Text;
+  sl.Free;
+end;
+
+procedure TMergeForm.SaveAndClearItemClick(Sender: TObject);
+begin
+  SaveLog(BaseLog);
+  LogListView.Items.Count := 0;
+  BaseLog.Clear;
+  Log.Clear;
+  LogMessage('INIT', 'Log', 'Saved and cleared log.');
+end;
+
+
 {******************************************************************************}
 { MergePopupMenu methods
   Methods for dealing with the popup menu for the MergesListView.
@@ -1533,11 +1741,11 @@ begin
   // Send reports to backend
   bReportsSent := SendReports(ReportForm.reportsList);
   if not bReportsSent then begin
-    Logger.Write('Saving reports locally');
+    Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
     SaveReports(ReportForm.reportsList, 'user\reports\');
   end
   else if settings.saveReportsLocally then begin
-    Logger.Write('Saving reports locally');
+    Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
     SaveReports(ReportForm.reportsList, 'user\reports\submitted\Submitted-');
   end;
 
@@ -1644,7 +1852,7 @@ procedure TMergeForm.CreateMergeButtonClick(Sender: TObject);
 var
   merge: TMerge;
 begin
-  LogMessage('Created new merge!');
+  LogMessage('GUI', 'QuickBar', 'Created new merge!');
   merge := CreateNewMerge(MergesList);
   // add and update merge
   MergesList.Add(merge);
@@ -1661,7 +1869,7 @@ var
   timeCosts, merges: TList;
 begin
   if not bLoaderDone then begin
-    Logger.Write('Loader not done!  Can''t merge yet!');
+    Logger.Write('LOAD', 'Error', 'Loader not done!  Can''t merge yet!');
     exit;
   end;
   if MergesList.Count = 0 then
@@ -1681,7 +1889,7 @@ begin
 
   // exit if no merges to build
   if timeCosts.Count = 0 then begin
-    Logger.Write('No merges to build!');
+    Logger.Write('MERGE', 'Error', 'No merges to build!');
     timeCosts.Free;
     merges.Free;
     exit;
@@ -1757,7 +1965,6 @@ begin
 end;
 
 { Options }
-
 procedure TMergeForm.OptionsButtonClick(Sender: TObject);
 var
   OptionsForm: TOptionsForm;
@@ -1766,6 +1973,11 @@ begin
   OptionsForm := TOptionsForm.Create(Self);
   OptionsForm.ShowModal;
   OptionsForm.Free;
+
+  // update merges because status may have changed
+  UpdateMerges;
+  // rebuild log because some messages may have been enabled/disabled
+  RebuildLog;
 
   // initialize MO if usingMO changed
   if settings.usingMO then

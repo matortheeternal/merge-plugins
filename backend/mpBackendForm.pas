@@ -6,7 +6,7 @@ uses
   // delphi units
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl,
-  Menus, Grids, ValEdit, ShlObj, ShellAPI,
+  Menus, Grids, ValEdit, ShlObj, ShellAPI, Clipbrd, StrUtils,
   // indy components
   IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer,
   IdGlobal, IdSync,
@@ -56,15 +56,25 @@ type
     EditReportItem: TMenuItem;
     ViewDictionaryEntryItem: TMenuItem;
     TCPServer: TIdTCPServer;
-    RepaintTimer: TTimer;
+    RefreshTimer: TTimer;
     TaskTimer: TTimer;
+    LogPopupMenu: TPopupMenu;
+    CopyToClipboardItem: TMenuItem;
+    FilterItem: TMenuItem;
+    FilterInitItem: TMenuItem;
+    FilterSqlItem: TMenuItem;
+    FilterServerItem: TMenuItem;
+    FilterDataItem: TMenuItem;
+    FilterErrorItem: TMenuItem;
+    SaveAndClearItem: TMenuItem;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const group, &label, text: string);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure RefreshViews(Sender: TObject);
+    procedure OnRefreshTimer(Sender: TObject);
+    procedure OnTaskTimer(Sender: TObject);
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string): TItemProp;
     procedure AddDetailsList(name: string; sl: TStringList);
@@ -98,6 +108,16 @@ type
     procedure UnapprovedPopupMenuPopup(Sender: TObject);
     procedure DeleteReportItemClick(Sender: TObject);
     procedure ApproveReportItemClick(Sender: TObject);
+    // LOG POPUP MENU EVENTS
+    procedure LogPopupMenuPopup(Sender: TObject);
+    procedure ToggleGroup(var bGroup: boolean);
+    procedure FilterInitItemClick(Sender: TObject);
+    procedure FilterSqlItemClick(Sender: TObject);
+    procedure FilterServerItemClick(Sender: TObject);
+    procedure FilterDataItemClick(Sender: TObject);
+    procedure FilterErrorItemClick(Sender: TObject);
+    procedure CopyToClipboardItemClick(Sender: TObject);
+    procedure SaveAndClearItemClick(Sender: TObject);
     // QUICKBAR BUTTON EVENTS
     procedure ApproveButtonClick(Sender: TObject);
     procedure RebuildButtonClick(Sender: TObject);
@@ -114,7 +134,6 @@ type
     procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
-    procedure OnTaskTimer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -143,13 +162,19 @@ implementation
 }
 {******************************************************************************}
 
-{ Prints a message to the log memo }
+{ Prints a message to the log }
 procedure TBackendForm.LogMessage(const group, &label, text: string);
+var
+  msg: TLogMessage;
 begin
-  Log.Add(TLogMessage.Create(FormatDateTime('hh:nn:ss', Now), group, &label, text));
-  LogListView.Items.Count := Log.Count;
-  LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
-  SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+  msg := TLogMessage.Create(FormatDateTime('hh:nn:ss', Now), group, &label, text);
+  BaseLog.Add(msg);
+  if MessageGroupEnabled(group) then begin
+    Log.Add(msg);
+    LogListView.Items.Count := Log.Count;
+    LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
+    SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+  end;
 end;
 
 { Initialize form, initialize TES5Edit API, and load plugins }
@@ -159,14 +184,18 @@ begin
   SetTaskbarProgressState(tbpsIndeterminate);
   try
     // INITIALIZE VARIABLES
+    BaseLog := TList.Create;
     Log := TList.Create;
+    bInitGroup := true;
+    bServerGroup := true;
+    bSqlGroup := true;
+    bDataGroup := true;
+    bErrorGroup := true;
     wbStartTime := Now;
     Yesterday := Trunc(Now);
     Logger.OnLogEvent := LogMessage;
     ProgramPath := ExtractFilePath(ParamStr(0));
-    TempPath := ProgramPath + 'temp\';
     LogPath := ProgramPath + 'logs\';
-    ForceDirectories(tempPath);
     ForceDirectories(LogPath);
     status := TmpStatus.Create;
     status.Refresh;
@@ -253,7 +282,7 @@ begin
   SaveLog(Log);
 end;
 
-procedure TBackendForm.RefreshViews(Sender: TObject);
+procedure TBackendForm.OnRefreshTimer(Sender: TObject);
 begin
   if PageControl.ActivePageIndex = 2 then
     UpdateApplicationDetails;
@@ -830,6 +859,99 @@ begin
   // update gui
   ApprovedListView.Repaint;
   UnapprovedListView.Repaint;
+end;
+
+
+{******************************************************************************}
+{ Log Popup Menu events
+  - LogPopupMenuPopup
+  - FilterInitItemClick
+  - FilterSqlItemClick
+  - FilterServerItemClick
+  - FilterDataItemClick
+  - FilterErrorItemClick
+  - CopyToClipboardItemClick
+  - SaveAndClearItemClick
+}
+{******************************************************************************}
+
+function EnableStr(var b: boolean): string;
+begin
+  Result := IfThen(not b, 'Enable', 'Disable');
+end;
+
+procedure TBackendForm.LogPopupMenuPopup(Sender: TObject);
+begin
+  FilterInitItem.Caption := EnableStr(bInitGroup) + ' INIT';
+  FilterSqlItem.Caption := EnableStr(bSqlGroup) + ' SQL';
+  FilterServerItem.Caption := EnableStr(bServerGroup) + ' SERVER';
+  FilterDataItem.Caption := EnableStr(bDataGroup) + ' DATA';
+  FilterErrorItem.Caption := EnableStr(bErrorGroup) + ' ERROR';
+  CopyToClipboardItem.Enabled := Assigned(LogListView.Selected);
+end;
+
+procedure TBackendForm.ToggleGroup(var bGroup: boolean);
+begin
+  bGroup := not bGroup;
+  LogListView.Items.Count := 0;
+  RebuildLog;
+  LogListView.Items.Count := Log.Count;
+end;
+
+procedure TBackendForm.FilterInitItemClick(Sender: TObject);
+begin
+  ToggleGroup(bInitGroup);
+end;
+
+procedure TBackendForm.FilterSqlItemClick(Sender: TObject);
+begin
+  ToggleGroup(bSQLGroup);
+end;
+
+procedure TBackendForm.FilterServerItemClick(Sender: TObject);
+begin
+  ToggleGroup(bServerGroup);
+end;
+
+procedure TBackendForm.FilterDataItemClick(Sender: TObject);
+begin
+  ToggleGroup(bDataGroup);
+end;
+
+procedure TBackendForm.FilterErrorItemClick(Sender: TObject);
+begin
+  ToggleGroup(bErrorGroup);
+end;
+
+procedure TBackendForm.CopyToClipboardItemClick(Sender: TObject);
+var
+  i: Integer;
+  sl: TStringList;
+  msg: TLogMessage;
+begin
+  sl := TStringList.Create;
+
+  // put selected messages in stringlist
+  for i := 0 to Pred(Log.Count) do begin
+    if not LogListView.Items[i].Selected then
+      continue;
+
+    msg := TLogMessage(Log[i]);
+    sl.Add(Format('[%s] (%s) %s: %s', [msg.time, msg.group, msg.&label, msg.text]));
+  end;
+
+  // put stringlist in clipboard, then free
+  Clipboard.AsText := sl.Text;
+  sl.Free;
+end;
+
+procedure TBackendForm.SaveAndClearItemClick(Sender: TObject);
+begin
+  SaveLog(BaseLog);
+  LogListView.Items.Count := 0;
+  BaseLog.Clear;
+  Log.Clear;
+  LogMessage('INIT', 'Log', 'Saved and cleared log.');
 end;
 
 

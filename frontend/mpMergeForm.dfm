@@ -238,20 +238,44 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        DesignSize = (
-          646
-          579)
-        object LogMemo: TMemo
+        object LogListView: TListView
           Left = 3
           Top = 3
           Width = 640
           Height = 573
+          Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
+          Columns = <
+            item
+              Caption = 'Time'
+              Width = 80
+            end
+            item
+              Caption = 'Group'
+              Width = 80
+            end
+            item
+              Caption = 'Label'
+              Width = 80
+            end
+            item
+              AutoSize = True
+              Caption = 'Text'
+            end>
+          ColumnClick = False
           DoubleBuffered = True
-          ParentDoubleBuffered = False
+          MultiSelect = True
+          OwnerData = True
+          OwnerDraw = True
           ReadOnly = True
-          ScrollBars = ssVertical
+          RowSelect = True
+          ParentDoubleBuffered = False
+          PopupMenu = LogPopupMenu
+          ShowColumnHeaders = False
           TabOrder = 0
+          ViewStyle = vsReport
+          OnData = LogListViewData
+          OnDrawItem = LogListViewDrawItem
         end
       end
     end
@@ -360,7 +384,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801700120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801800120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1499,7 +1523,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010109001800500110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010109001800600110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1908,7 +1932,7 @@ object MergeForm: TMergeForm
     Left = 936
     Top = 8
     Bitmap = {
-      494C0101010014008C0040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010014009C0040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100002000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2974,14 +2998,14 @@ object MergeForm: TMergeForm
   object ReconnectTimer: TTimer
     Interval = 30000
     OnTimer = OnTimer
-    Left = 792
+    Left = 784
     Top = 8
   end
   object StatusIcons: TImageList
     Left = 864
     Top = 8
     Bitmap = {
-      494C010106000800340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010106000800440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       00000000000000000000000000000000000000000000EDEFE800849062000000
@@ -3258,10 +3282,46 @@ object MergeForm: TMergeForm
     Left = 712
     Top = 8
   end
-  object RepaintTimer: TTimer
+  object RefreshTimer: TTimer
     Interval = 3000
     OnTimer = OnRepaintTimer
     Left = 648
     Top = 8
+  end
+  object LogPopupMenu: TPopupMenu
+    OnPopup = LogPopupMenuPopup
+    Left = 264
+    Top = 112
+    object FilterItem: TMenuItem
+      Caption = 'Filter'
+      object FilterInitItem: TMenuItem
+        Caption = 'Disable INIT'
+        OnClick = FilterInitItemClick
+      end
+      object FilterLoadItem: TMenuItem
+        Caption = 'Disable LOAD'
+        OnClick = FilterLoadItemClick
+      end
+      object FilterClientItem: TMenuItem
+        Caption = 'Disable CLIENT'
+        OnClick = FilterClientItemClick
+      end
+      object FilterMergeItem: TMenuItem
+        Caption = 'Disable MERGE'
+        OnClick = FilterMergeItemClick
+      end
+      object FilterErrorItem: TMenuItem
+        Caption = 'Disable ERROR'
+        OnClick = FilterErrorItemClick
+      end
+    end
+    object CopyToClipboardItem: TMenuItem
+      Caption = 'Copy to clipboard'
+      OnClick = CopyToClipboardItemClick
+    end
+    object SaveAndClearItem: TMenuItem
+      Caption = 'Save and clear'
+      OnClick = SaveAndClearItemClick
+    end
   end
 end

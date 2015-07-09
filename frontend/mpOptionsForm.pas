@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl,
   mpBase, mpGameForm,
-  wbInterface;
+  wbInterface, ExtCtrls;
 
 type
   TOptionsForm = class(TForm)
@@ -59,7 +59,7 @@ type
     kbDebugMasters: TCheckBox;
     kbDebugBatchCopying: TCheckBox;
     kbDebugBSAs: TCheckBox;
-    kbDebugTempPath: TCheckBox;
+    kbDebugPluginsLoad: TCheckBox;
     kbDebugLoadOrder: TCheckBox;
     kbINIs: TCheckBox;
     btnRegister: TButton;
@@ -73,6 +73,19 @@ type
     kbNoStatistics: TCheckBox;
     kbNoPersistentConnection: TCheckBox;
     kbDebugClient: TCheckBox;
+    gbColoring: TGroupBox;
+    lblClientColor: TLabel;
+    lblInitColor: TLabel;
+    lblLoadColor: TLabel;
+    lblMergeColor: TLabel;
+    lblGUIColor: TLabel;
+    lblErrorColor: TLabel;
+    cbClientColor: TColorBox;
+    cbInitColor: TColorBox;
+    cbLoadColor: TColorBox;
+    cbMergeColor: TColorBox;
+    cbGUIColor: TColorBox;
+    cbErrorColor: TColorBox;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -218,8 +231,14 @@ begin
   settings.debugMasters := kbDebugMasters.Checked;
   settings.debugBatchCopying := kbDebugBatchCopying.Checked;
   settings.debugBSAs := kbDebugBSAs.Checked;
-  settings.debugTempPath := kbDebugTempPath.Checked;
+  settings.debugPluginsLoad := kbDebugPluginsLoad.Checked;
   settings.debugLoadOrder := kbDebugLoadOrder.Checked;
+  settings.clientMessageColor := cbClientColor.Selected ;
+  settings.initMessageColor := cbInitColor.Selected;
+  settings.loadMessageColor := cbLoadColor.Selected;
+  settings.mergeMessageColor := cbMergeColor.Selected;
+  settings.guiMessageColor := cbGuiColor.Selected;
+  settings.errorMessageColor := cbErrorColor.Selected;
   SaveSettings;
 end;
 
@@ -372,8 +391,14 @@ begin
   kbDebugMasters.Checked := settings.debugMasters;
   kbDebugBatchCopying.Checked := settings.debugBatchCopying;
   kbDebugBSAs.Checked := settings.debugBSAs;
-  kbDebugTempPath.Checked := settings.debugTempPath;
+  kbDebugPluginsLoad.Checked := settings.debugPluginsLoad;
   kbDebugLoadOrder.Checked := settings.debugLoadOrder;
+  cbClientColor.Selected := settings.clientMessageColor;
+  cbInitColor.Selected := settings.initMessageColor;
+  cbLoadColor.Selected := settings.loadMessageColor;
+  cbMergeColor.Selected := settings.mergeMessageColor;
+  cbGuiColor.Selected := settings.guiMessageColor;
+  cbErrorColor.Selected := settings.errorMessageColor;
 
   // load valid game paths
   if GamePathValid(settings.tes5path, 1) then
@@ -397,7 +422,7 @@ begin
   if settings.registered then begin
     edUsername.Enabled := false;
     btnRegister.Enabled := false;
-    // if not authorized then enabled reset button
+    // if not authorized then enable reset button
     if TCPClient.Connected then begin
       if not bAuthorized then begin
         btnReset.Enabled := true;

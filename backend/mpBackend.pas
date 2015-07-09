@@ -215,7 +215,9 @@ type
   procedure LoadPluginBlacklist(var lst, dictionary: TList);
   function GetRatingColor(rating: real): integer;
   function GetEntry(var dictionary: TList; pluginName, numRecords, version: string): TEntry;
+  procedure RebuildLog;
   procedure SaveLog(var Log: TList);
+  function MessageGroupEnabled(group: string): boolean;
   function CompareReports(P1, P2: Pointer): Integer;
   { User methods }
   function Authorized(ip, username, auth: string): boolean;
@@ -229,11 +231,11 @@ type
   function UserString(user: TUser): string;
 
 const
-  ReportColumns = 'game,username,filename,hash,record_count,rating,'+
+  REPORT_COLUMNS = 'game,username,filename,hash,record_count,rating,'+
     'merge_version,notes,date_submitted';
-  UserColumns = 'ip,username,auth,firstSeen,lastSeen,timesSeen,download,'+
+  USER_COLUMNS = 'ip,username,auth,firstSeen,lastSeen,timesSeen,download,'+
     'upload,timesRun,mergesBuilt,pluginsChecked,pluginsMerged,reportsSubmitted';
-  BlacklistColumns = 'ip,username,created,expires';
+  BLACKLIST_COLUMNS = 'ip,username,created,expires';
 
   // MSG IDs
   MSG_NOTIFY = 0;
@@ -257,14 +259,15 @@ const
 
 var
   TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary,
-  ApprovedReports, UnapprovedReports, Users, Blacklist, Log: TList;
+  ApprovedReports, UnapprovedReports, Users, Blacklist, BaseLog, Log: TList;
   slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary: TStringList;
   statistics: TStatistics;
   settings: TSettings;
   status: TmpStatus;
-  TempPath, LogPath, ProgramPath: string;
+  LogPath, ProgramPath: string;
   bLoginSuccess, bProgressCancel, bRebuildTES5, bRebuildTES4, bRebuildFNV,
-  bRebuildFO3, bAscending: boolean;
+  bRebuildFO3, bAscending, bInitGroup, bSQLGroup, bServerGroup,
+  bDataGroup, bErrorGroup: boolean;
   wbStartTime: TDateTime;
   sessionBandwidth: Int64;
   Connection: TZConnection;
@@ -361,7 +364,7 @@ begin
   Dataset := TZQuery.Create(nil);
   Dataset.Connection := Connection;
   Dataset.Fields.Clear;
-  Dataset.SQL.Add('SELECT '+UserColumns+' FROM users');
+  Dataset.SQL.Add('SELECT '+USER_COLUMNS+' FROM users');
   Dataset.ExecSQL;
   Dataset.Open;
 
@@ -408,7 +411,7 @@ end;
 
 function UserValuesClause(user: TUser): string;
 begin
-  Result := '('+UserColumns+') '+
+  Result := '('+USER_COLUMNS+') '+
     'VALUES ('''+
     user.ip+''','''+
     user.username+''','''+
@@ -472,7 +475,7 @@ begin
   Dataset := TZQuery.Create(nil);
   Dataset.Connection := Connection;
   Dataset.Fields.Clear;
-  Dataset.SQL.Add('SELECT '+BlacklistColumns+' FROM blacklist');
+  Dataset.SQL.Add('SELECT '+BLACKLIST_COLUMNS+' FROM blacklist');
   Dataset.ExecSQL;
   Dataset.Open;
 
@@ -510,7 +513,7 @@ end;
 
 function BlacklistValuesClause(entry: TBlacklistEntry): string;
 begin
-  Result := '('+BlacklistColumns+') '+
+  Result := '('+BLACKLIST_COLUMNS+') '+
     'VALUES ('''+
     entry.ip+''','''+
     entry.username+''','''+
@@ -568,7 +571,7 @@ begin
   Dataset := TZQuery.Create(nil);
   Dataset.Connection := Connection;
   Dataset.Fields.Clear;
-  Dataset.SQL.Add('SELECT '+ReportColumns+' FROM approved_reports');
+  Dataset.SQL.Add('SELECT '+REPORT_COLUMNS+' FROM approved_reports');
   Dataset.ExecSQL;
   Dataset.Open;
 
@@ -588,7 +591,7 @@ begin
   Dataset := TZQuery.Create(nil);
   Dataset.Connection := Connection;
   Dataset.Fields.Clear;
-  Dataset.SQL.Add('SELECT '+ReportColumns+' FROM unapproved_reports');
+  Dataset.SQL.Add('SELECT '+REPORT_COLUMNS+' FROM unapproved_reports');
   Dataset.ExecSQL;
   Dataset.Open;
 
@@ -630,7 +633,7 @@ end;
 
 function ReportValuesClause(report: TReport): string;
 begin
-  Result := '('+ReportColumns+') '+
+  Result := '('+REPORT_COLUMNS+') '+
     'VALUES ('''+
     report.game+''','''+
     report.username+''','''+
@@ -1427,6 +1430,19 @@ begin
   end;
 end;
 
+procedure RebuildLog;
+var
+  i: Integer;
+  msg: TLogMessage;
+begin
+  Log.Clear;
+  for i := 0 to Pred(BaseLog.Count) do begin
+    msg := TLogMessage(BaseLog[i]);
+    if MessageGroupEnabled(msg.group) then
+      Log.Add(msg);
+  end;
+end;
+
 procedure SaveLog(var Log: TList);
 var
   sl: TStringList;
@@ -1443,6 +1459,21 @@ begin
   ForceDirectories(LogPath);
   sl.SaveToFile(LogPath+'log_'+fdt+'.txt');
   sl.Free;
+end;
+
+function MessageGroupEnabled(group: string): boolean;
+begin
+  Result := true;
+  if group = 'INIT' then
+    Result := bInitGroup
+  else if group = 'SQL' then
+    Result := bSQLGroup
+  else if group = 'SERVER' then
+    Result := bServerGroup
+  else if group = 'DATA' then
+    Result := bDataGroup
+  else if group = 'ERROR' then
+    Result := bErrorGroup;
 end;
 
 function CompareReports(P1, P2: Pointer): Integer;
@@ -1921,9 +1952,9 @@ constructor TSettings.Create;
 begin
   serverMessageColor := clBlue;
   initMessageColor := clGreen;
-  SQLMessageColor := clSkyBlue;
-  dataMessageColor := $0000CCFF;
-  javaMessageColor := $000080FF;
+  SQLMessageColor := clPurple;
+  dataMessageColor := $000080FF;
+  javaMessageColor := clBlack;
   errorMessageColor := clRed;
 end;
 
