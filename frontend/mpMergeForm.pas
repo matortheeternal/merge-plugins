@@ -123,6 +123,7 @@ type
     procedure CheckForErrorsClick(Sender: TObject);
     procedure RemoveFromMergeClick(Sender: TObject);
     procedure OpenPluginLocationItemClick(Sender: TObject);
+    procedure ReportOnPluginClick(Sender: TObject);
     // MERGE LIST VIEW EVENTS
     procedure UpdateMergeDetails;
     procedure UpdateMerges;
@@ -378,6 +379,9 @@ end;
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
+  // ATTEMPT TO CONNECT TO SERVER
+  ConnectToServer;
+
   // START BACKGROUND LOADER
   LoaderCallback := LoaderDone;
   SetTaskbarProgressState(tbpsIndeterminate);
@@ -461,8 +465,8 @@ end;
 
 procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
 begin
-  TCPClient.CheckForGracefulDisconnect(false);
-  TCPClient.Connected;
+  if not ServerAvailable then
+    TCPClient.Disconnect;
 end;
 
 procedure TMergeForm.ClientStatusChanged(ASender: TObject; const AStatus: TIdStatus; const AStatusText: string);
@@ -1016,6 +1020,51 @@ begin
   // update
   UpdateMerges;
   PluginsListView.Repaint;
+end;
+
+procedure TMergeForm.ReportOnPluginClick(Sender: TObject);
+var
+  i: Integer;
+  PluginsToReport: TList;
+  plugin: TPlugin;
+  ReportForm: TReportForm;
+  bReportsSent, bModalOK: boolean;
+begin
+  PluginsToReport := TList.Create;
+  bModalOK := false;
+
+  // loop through plugins
+  for i := 0 to Pred(PluginsListView.Items.Count) do begin
+    if not PluginsListView.Items[i].Selected then
+      continue;
+    plugin := TPlugin(PluginsList[i]);
+    PluginsToReport.Add(plugin);
+  end;
+
+  // report on all merges
+  ReportForm := TReportForm.Create(Self);
+  if PluginsToReport.Count > 0 then begin
+    ReportForm.pluginsToReport := PluginsToReport;
+    ReportForm.AppName := wbAppName;
+    bModalOK := ReportForm.ShowModal = mrOk;
+  end;
+
+  // Send reports to backend
+  if bModalOK then begin
+    bReportsSent := SendReports(ReportForm.reportsList);
+    if not bReportsSent then begin
+      Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
+      SaveReports(ReportForm.reportsList, 'user\reports\');
+    end
+    else if settings.saveReportsLocally then begin
+      Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
+      SaveReports(ReportForm.reportsList, 'user\reports\submitted\Submitted-');
+    end;
+  end;
+
+  // clean up
+  ReportForm.Free;
+  PluginsToReport.Free;
 end;
 
 procedure TMergeForm.OpenPluginLocationItemClick(Sender: TObject);
@@ -1715,9 +1764,10 @@ var
   pluginsList: TList;
   plugin: TPlugin;
   ReportForm: TReportForm;
-  bReportsSent: boolean;
+  bReportsSent, bModalOK: boolean;
 begin
   pluginsList := TList.Create;
+  bModalOK := false;
 
   // loop through merges
   for i := 0 to Pred(MergeListView.Items.Count) do begin
@@ -1733,20 +1783,22 @@ begin
   // report on all merges
   ReportForm := TReportForm.Create(Self);
   if pluginsList.Count > 0 then begin
-    ReportForm.pluginsList := pluginsList;
+    ReportForm.pluginsToReport := pluginsList;
     ReportForm.AppName := wbAppName;
-    ReportForm.ShowModal;
+    bModalOK := ReportForm.ShowModal = mrOk;
   end;
 
   // Send reports to backend
-  bReportsSent := SendReports(ReportForm.reportsList);
-  if not bReportsSent then begin
-    Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
-    SaveReports(ReportForm.reportsList, 'user\reports\');
-  end
-  else if settings.saveReportsLocally then begin
-    Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
-    SaveReports(ReportForm.reportsList, 'user\reports\submitted\Submitted-');
+  if bModalOK then begin
+    bReportsSent := SendReports(ReportForm.reportsList);
+    if not bReportsSent then begin
+      Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
+      SaveReports(ReportForm.reportsList, 'user\reports\');
+    end
+    else if settings.saveReportsLocally then begin
+      Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
+      SaveReports(ReportForm.reportsList, 'user\reports\submitted\Submitted-');
+    end;
   end;
 
   // clean up

@@ -40,7 +40,7 @@ type
     { Private declarations }
   public
     { Public declarations }
-    pluginsList: TList;
+    pluginsToReport: TList;
     reportsList: TList;
     AppName: string;
   end;
@@ -82,7 +82,7 @@ var
   existingEntry: TEntry;
   plugin: TPlugin;
 begin
-  plugin := TPlugin(pluginsList[currentPlugin]);
+  plugin := TPlugin(pluginsToReport[currentPlugin]);
 
   // create next entry
   if currentPlugin = reportsList.Count then begin
@@ -134,7 +134,7 @@ var
   report: TReport;
 begin
   // if at last plugin, close form with modal result
-  if currentPlugin = Pred(pluginsList.Count) then begin
+  if currentPlugin = Pred(pluginsToReport.Count) then begin
     ModalResult := mrOk;
     exit;
   end;
@@ -148,7 +148,7 @@ begin
   // go to next plugin
   Inc(currentPlugin);
   btnPrev.Enabled := true;
-  if currentPlugin = Pred(pluginsList.Count) then
+  if currentPlugin = Pred(pluginsToReport.Count) then
     btnNext.Caption := 'Done';
 
   // display entry
@@ -186,9 +186,9 @@ begin
   reportsList := TList.Create;
 
   // deal with special cases
-  if not Assigned(pluginsList) then
+  if not Assigned(pluginsToReport) then
     Close;
-  case pluginsList.Count of
+  case pluginsToReport.Count of
     0: Close;
     1: btnNext.Caption := 'Done';
   end;

@@ -61,6 +61,7 @@ type
     username: string;
     auth: string;
     data: string;
+    constructor Create; Overload;
     constructor Create(id: integer; username, auth, data: string); Overload;
     function ToJson: string;
     procedure FromJson(json: string);
@@ -215,6 +216,7 @@ type
   procedure LoadPluginBlacklist(var lst, dictionary: TList);
   function GetRatingColor(rating: real): integer;
   function GetEntry(var dictionary: TList; pluginName, numRecords, version: string): TEntry;
+  procedure InitLog;
   procedure RebuildLog;
   procedure SaveLog(var Log: TList);
   function MessageGroupEnabled(group: string): boolean;
@@ -238,16 +240,16 @@ const
   BLACKLIST_COLUMNS = 'ip,username,created,expires';
 
   // MSG IDs
-  MSG_NOTIFY = 0;
-  MSG_REGISTER = 1;
-  MSG_AUTH_RESET = 2;
-  MSG_STATISTICS = 3;
-  MSG_STATUS = 4;
-  MSG_REQUEST = 5;
-  MSG_REPORT = 6;
+  MSG_NOTIFY = 1;
+  MSG_REGISTER = 2;
+  MSG_AUTH_RESET = 3;
+  MSG_STATISTICS = 4;
+  MSG_STATUS = 5;
+  MSG_REQUEST = 6;
+  MSG_REPORT = 7;
 
   // MSG Strings
-  MSG_STRINGS: array[0..6] of string = (
+  MSG_STRINGS: array[1..7] of string = (
     'MSG_NOTIFY',
     'MSG_REGISTER',
     'MSG_AUTH_RESET',
@@ -260,11 +262,12 @@ const
 var
   TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary,
   ApprovedReports, UnapprovedReports, Users, Blacklist, BaseLog, Log: TList;
-  slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary: TStringList;
+  slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary,
+  slConnectedIPs: TStringList;
   statistics: TStatistics;
   settings: TSettings;
   status: TmpStatus;
-  LogPath, ProgramPath: string;
+  LogPath, ProgramPath, ProgramVersion: string;
   bLoginSuccess, bProgressCancel, bRebuildTES5, bRebuildTES4, bRebuildFNV,
   bRebuildFO3, bAscending, bInitGroup, bSQLGroup, bServerGroup,
   bDataGroup, bErrorGroup: boolean;
@@ -1430,6 +1433,17 @@ begin
   end;
 end;
 
+procedure InitLog;
+begin
+  BaseLog := TList.Create;
+  Log := TList.Create;
+  bInitGroup := true;
+  bServerGroup := true;
+  bSqlGroup := true;
+  bDataGroup := true;
+  bErrorGroup := true;
+end;
+
 procedure RebuildLog;
 var
   i: Integer;
@@ -1732,6 +1746,11 @@ begin
 end;
 
 { TmpMessage Constructor }
+constructor TmpMessage.Create;
+begin
+  id := 0;
+end;
+
 constructor TmpMessage.Create(id: integer; username, auth, data: string);
 begin
   self.id := id;

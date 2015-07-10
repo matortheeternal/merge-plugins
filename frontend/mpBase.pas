@@ -313,6 +313,7 @@ type
   { Client methods }
   procedure InitializeClient;
   procedure ConnectToServer;
+  function ServerAvailable: boolean;
   function CheckAuthorization: boolean;
   procedure SendGameMode;
   procedure ResetAuth;
@@ -335,13 +336,13 @@ const
   xEditVersion = '3.1.1';
 
   // MSG IDs
-  MSG_NOTIFY = 0;
-  MSG_REGISTER = 1;
-  MSG_AUTH_RESET = 2;
-  MSG_STATISTICS = 3;
-  MSG_STATUS = 4;
-  MSG_REQUEST = 5;
-  MSG_REPORT = 6;
+  MSG_NOTIFY = 1;
+  MSG_REGISTER = 2;
+  MSG_AUTH_RESET = 3;
+  MSG_STATISTICS = 4;
+  MSG_STATUS = 5;
+  MSG_REQUEST = 6;
+  MSG_REPORT = 7;
 
   // PLUGIN FLAGS
   FlagsArray: array[0..8] of TPluginFlag = (
@@ -2174,6 +2175,20 @@ begin
     CompareStatuses;
   except on Exception do
     Logger.Write('CLIENT', 'Connect', 'Server unavailable.');
+  end;
+end;
+
+function ServerAvailable: boolean;
+begin
+  Result := false;
+  if not TCPClient.Connected then
+    exit;
+
+  try
+    TCPClient.IOHandler.WriteLn('', TIdTextEncoding.Default);
+    Result := true;
+  except on Exception do
+    // server is unavailable
   end;
 end;
 

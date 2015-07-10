@@ -21,12 +21,10 @@ type
     // GENERIC
     XPManifest: TXPManifest;
     IconList: TImageList;
-    StatusBar: TStatusBar;
     // QUICKBAR
     QuickBar: TPanel;
     ApproveButton: TSpeedButton;
     BuildButton: TSpeedButton;
-    ReportButton: TSpeedButton;
     DictionaryButton: TSpeedButton;
     OptionsButton: TSpeedButton;
     UpdateButton: TSpeedButton;
@@ -67,9 +65,17 @@ type
     FilterDataItem: TMenuItem;
     FilterErrorItem: TMenuItem;
     SaveAndClearItem: TMenuItem;
+    StatusPanel: TPanel;
+    StatusPanelMessage: TPanel;
+    StatusPanelClients: TPanel;
+    StatusPanelBackend: TPanel;
+    StatusPanelFrontend: TPanel;
+    StatusPanelReports: TPanel;
+    StatusPanelUptime: TPanel;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const group, &label, text: string);
+    procedure UpdateStatusPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -121,7 +127,6 @@ type
     // QUICKBAR BUTTON EVENTS
     procedure ApproveButtonClick(Sender: TObject);
     procedure RebuildButtonClick(Sender: TObject);
-    procedure ReportButtonClick(Sender: TObject);
     procedure DictionaryButtonClick(Sender: TObject);
     procedure OptionsButtonClick(Sender: TObject);
     procedure UpdateButtonClick(Sender: TObject);
@@ -177,6 +182,18 @@ begin
   end;
 end;
 
+procedure TBackendForm.UpdateStatusPanel;
+var
+  sessionUptime: TDateTime;
+begin
+  sessionUptime := GetSessionUptime;
+  StatusPanelClients.Caption := 'Connected clients: '+IntToStr(slConnectedIPs.Count);
+  StatusPanelReports.Caption := 'Pending reports: '+IntToStr(UnapprovedListView.Items.Count);
+  StatusPanelUptime.Caption := 'Uptime: '+TimeStr(sessionUptime);
+  StatusPanelFrontend.Caption := 'Frontend v'+status.programVersion;
+  StatusPanelBackend.Caption := 'Backend v'+ProgramVersion;
+end;
+
 { Initialize form, initialize TES5Edit API, and load plugins }
 procedure TBackendForm.FormCreate(Sender: TObject);
 begin
@@ -184,13 +201,8 @@ begin
   SetTaskbarProgressState(tbpsIndeterminate);
   try
     // INITIALIZE VARIABLES
-    BaseLog := TList.Create;
-    Log := TList.Create;
-    bInitGroup := true;
-    bServerGroup := true;
-    bSqlGroup := true;
-    bDataGroup := true;
-    bErrorGroup := true;
+    ProgramVersion := GetVersionMem;
+    InitLog;
     wbStartTime := Now;
     Yesterday := Trunc(Now);
     Logger.OnLogEvent := LogMessage;
@@ -199,16 +211,16 @@ begin
     ForceDirectories(LogPath);
     status := TmpStatus.Create;
     status.Refresh;
+    slConnectedIPs := TStringList.Create;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
     IconList.GetBitmap(0, ApproveButton.Glyph);
     IconList.GetBitmap(1, BuildButton.Glyph);
-    IconList.GetBitmap(2, ReportButton.Glyph);
-    IconList.GetBitmap(3, DictionaryButton.Glyph);
-    IconList.GetBitmap(4, OptionsButton.Glyph);
-    IconList.GetBitmap(5, UpdateButton.Glyph);
-    IconList.GetBitmap(6, HelpButton.Glyph);
+    IconList.GetBitmap(2, DictionaryButton.Glyph);
+    IconList.GetBitmap(3, OptionsButton.Glyph);
+    IconList.GetBitmap(4, UpdateButton.Glyph);
+    IconList.GetBitmap(5, HelpButton.Glyph);
 
     // CREATE AND LOAD DICTIONARIES
     TES5Dictionary := TList.Create;
@@ -247,6 +259,9 @@ begin
   PageControl.ActivePageIndex := 0;
   ApprovedListView.Width := ApprovedListView.Width + 1;
   PageControl.ActivePageIndex := 2;
+
+  // refresh views
+  OnRefreshTimer(nil);
 end;
 
 procedure TBackendForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -284,6 +299,7 @@ end;
 
 procedure TBackendForm.OnRefreshTimer(Sender: TObject);
 begin
+  UpdateStatusPanel;
   if PageControl.ActivePageIndex = 2 then
     UpdateApplicationDetails;
 end;
@@ -416,7 +432,7 @@ begin
   // add details items
   AddDetailsItem('Application', 'Merge Plugins Backend');
   AddDetailsItem('Author', 'matortheeternal');
-  AddDetailsItem('Version', GetVersionMem);
+  AddDetailsItem('Version', ProgramVersion);
   AddDetailsItem('Date built', DateTimeToStr(GetLastModified(ParamStr(0))));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Times run', IntToStr(statistics.timesRun));
@@ -990,6 +1006,7 @@ begin
 
   // handle connection
   LogMessage('SERVER', 'Connected', ip);
+  slConnectedIPs.Add(ip);
   user := GetUser(ip);
   if not Assigned(user) then
     user := AddUser(ip);
@@ -999,9 +1016,13 @@ end;
 procedure TBackendForm.TCPServerDisconnect(AContext: TIdContext);
 var
   ip: string;
+  index: integer;
 begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
   LogMessage('SERVER', 'Disconnected', ip);
+  index := slConnectedIPs.IndexOf(ip);
+  if index > -1 then
+    slConnectedIPs.Delete(index);
 end;
 
 procedure TBackendForm.TCPServerException(AContext: TIdContext;
@@ -1198,7 +1219,8 @@ begin
   msg.FromJson(LLine);
   size := Length(LLine);
   Inc(sessionBandwidth, size);
-  HandleMessage(msg, size, AContext);
+  if (msg.id > 0) then
+    HandleMessage(msg, size, AContext);
 
   // free message
   msg.Free;
@@ -1246,11 +1268,6 @@ begin
   RebuildDictionaries;
 end;
 
-procedure TBackendForm.ReportButtonClick(Sender: TObject);
-begin
-  // comment
-end;
-
 procedure TBackendForm.DictionaryButtonClick(Sender: TObject);
 var
   DictionaryForm: TDictionaryForm;
@@ -1278,7 +1295,7 @@ end;
 
 procedure TBackendForm.UpdateButtonClick(Sender: TObject);
 begin
-  // comment
+  status.Refresh;
 end;
 
 procedure TBackendForm.HelpButtonClick(Sender: TObject);
