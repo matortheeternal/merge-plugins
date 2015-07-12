@@ -125,6 +125,7 @@ type
     reports: TStringList;
     constructor Create; virtual;
     procedure GetData;
+    procedure UpdateData;
     procedure GetHash;
     procedure GetFlags;
     function GetFlagsString: string;
@@ -305,6 +306,7 @@ type
   function MergeByFilename(merges: TList; filename: string): TMerge;
   function CreateNewMerge(merges: TList): TMerge;
   function CreateNewPlugin(filename: string): TPlugin;
+  procedure UpdatePluginData;
   procedure SaveMerges;
   procedure LoadMerges;
   procedure SavePluginErorrs;
@@ -379,7 +381,7 @@ const
   ForcedStatuses = [6, 9];
 
   // DELAYS
-  StatusDelay = 5.0 / (60.0 * 24.0); // 5 minutes
+  StatusDelay = 2.0 / (60.0 * 24.0); // 2 minutes
 
   // GAME MODES
   GameArray: array[1..4] of TGameMode = (
@@ -401,7 +403,7 @@ var
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate, bInitGroup,
-  bLoadGroup, bClientGroup, bMergeGroup, bErrorGroup: boolean;
+  bLoadGroup, bClientGroup, bMergeGroup, bErrorGroup, bConnecting: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
   ProgramVersion, xEditLogLabel: string;
   batch, ActiveMods: TStringList;
@@ -1065,13 +1067,15 @@ end;
   Logger.Write(AppendIfMissing(s, '  Hello.')); //'This is a sample string.  Hello.'
 }
 function AppendIfMissing(str, substr: string): string;
+var
+  strEnd: string;
 begin
   Result := str;
-  if Length(str) > Length(substr) then
-    if Copy(str, Length(str) - Length(substr), Length(substr)) = substr then
-      exit;
-
-  Result := str + substr;
+  if Length(str) > Length(substr) then begin
+    strEnd :=  Copy(str, Length(str) - Length(substr) + 1, Length(substr));
+    if not SameText(strEnd, substr) then
+      Result := str + substr;
+  end;
 end;
 
 {
@@ -1850,6 +1854,7 @@ var
   i: Integer;
   report: TReport;
 begin
+  ForceDirectories(ExtractFilePath(path));
   for i := 0 to Pred(lst.Count) do begin
     report := TReport(lst[i]);
     report.dateSubmitted := Now;
@@ -1998,6 +2003,17 @@ begin
   PluginsList.Add(plugin);
 
   Result := plugin;
+end;
+
+procedure UpdatePluginData;
+var
+  i: Integer;
+  plugin: TPlugin;
+begin
+  for i := 0 to Pred(PluginsList.Count) do begin
+    plugin := TPlugin(PluginsList[i]);
+    plugin.UpdateData;
+  end;
 end;
 
 procedure SaveMerges;
@@ -2166,6 +2182,7 @@ end;
 
 procedure ConnectToServer;
 begin
+  bConnecting := true;
   try
     Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
     TCPClient.Connect;
@@ -2173,9 +2190,10 @@ begin
     SendGameMode;
     GetStatus;
     CompareStatuses;
-  except on Exception do
-    Logger.Write('CLIENT', 'Connect', 'Server unavailable.');
+  except on x: Exception do
+    Logger.Write('CLIENT', 'Connect', 'Server unavailable. '+x.Message);
   end;
+  bConnecting := false;
 end;
 
 function ServerAvailable: boolean;
@@ -2218,7 +2236,7 @@ begin
     Result := response.data = 'Yes';
   except
     on x : Exception do begin
-      Logger.Write('Error', 'Client', 'Exception authorizing user '+x.Message);
+      Logger.Write('ERROR', 'Client', 'Exception authorizing user '+x.Message);
     end;
   end;
 
@@ -2728,7 +2746,7 @@ begin
   obj.I['recordCount'] := recordCount;
   obj.I['rating'] := rating;
   obj.S['mergeVersion'] := mergeVersion;
-  obj.S['notes'] := StringReplace(notes.Text, #13#10, '@13', [rfReplaceAll]);
+  obj.S['notes'] := StringReplace(Trim(notes.Text), #13#10, '@13', [rfReplaceAll]);
   obj.S['dateSubmitted'] := DateTimeToSQL(dateSubmitted);
 
   Result := obj.AsJSon;
@@ -2877,6 +2895,20 @@ begin
   // get numOverrides if not blacklisted
   if not (IS_BLACKLISTED in flags) then
     numOverrides := IntToStr(CountOverrides(_File));
+end;
+
+procedure TPlugin.UpdateData;
+var
+  s: string;
+begin
+  // get reports
+  entry := GetEntry(filename, numRecords, ProgramVersion);
+  s := Trim(StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]));
+  reports.Text := Wordwrap(s, 70);
+
+  // update blacklisted flag if it was blacklisted
+  if IsBlacklisted(filename) then
+    flags := flags + [IS_BLACKLISTED];
 end;
 
 procedure TPlugin.GetHash;

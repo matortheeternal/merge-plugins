@@ -133,17 +133,17 @@ procedure TReportForm.btnNextClick(Sender: TObject);
 var
   report: TReport;
 begin
+  // save settings in current entry
+  report := TReport(reportsList[currentPlugin]);
+  report.rating := cbRating.ItemIndex - 1;
+  report.notes.Text := meNotes.Lines.Text;
+  PreviousNotes := report.notes.Text;
+
   // if at last plugin, close form with modal result
   if currentPlugin = Pred(pluginsToReport.Count) then begin
     ModalResult := mrOk;
     exit;
   end;
-
-  // save settings in current entry
-  report := TReport(reportsList[currentPlugin]);
-  report.rating := cbRating.ItemIndex - 1;
-  report.notes.Text := Trim(meNotes.Lines.Text);
-  PreviousNotes := report.notes.Text;
 
   // go to next plugin
   Inc(currentPlugin);

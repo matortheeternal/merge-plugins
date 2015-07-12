@@ -304,6 +304,7 @@ begin
     if UpdateDictionary then begin
       status := TmpStatus.Create;
       CompareStatuses;
+      UpdatePluginData;
       btnUpdateDictionary.Enabled := false;
       lblDictionaryStatus.Caption := 'Up to date';
       lblDictionaryStatus.Font.Color := clGreen;

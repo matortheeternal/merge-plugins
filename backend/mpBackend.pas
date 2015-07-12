@@ -1319,6 +1319,15 @@ begin
     end;
   end;
 
+  // add last built entry to dictionary if it exists
+  if (entry <> nil) then begin
+    entry.rating := FormatFloat('0.0#', (rating / (n * 1.0)));
+    entry.reports := IntToStr(n);
+    entry.notes := StringReplace(sl.Text, #13#10, '@13', [rfReplaceAll]);
+    sl.Clear;
+    lst.Add(entry);
+  end;
+
   // clean up
   sl.Free;
   // save dictionary

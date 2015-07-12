@@ -380,7 +380,7 @@ end;
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
   // ATTEMPT TO CONNECT TO SERVER
-  ConnectToServer;
+  if not bConnecting then ConnectToServer;
 
   // START BACKGROUND LOADER
   LoaderCallback := LoaderDone;
@@ -454,7 +454,7 @@ end;
 
 procedure TMergeForm.OnTimer(Sender: TObject);
 begin
-  if not TCPClient.Connected then
+  if not (TCPClient.Connected or bConnecting) then
     ConnectToServer;
 end;
 
@@ -465,7 +465,7 @@ end;
 
 procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
 begin
-  if not ServerAvailable then
+  if (not bConnecting) and (not ServerAvailable) then
     TCPClient.Disconnect;
 end;
 
@@ -2053,12 +2053,23 @@ end;
 { Update }
 procedure TMergeForm.UpdateButtonClick(Sender: TObject);
 begin
-  if bProgramUpdate and TCPClient.Connected then begin
-    if not DownloadProgram then
-      exit;
+  // if not connected to server, don't try to update anything
+  if not TCPClient.Connected then
+    exit;
+
+  // update program
+  if bProgramUpdate and DownloadProgram then begin
     bInstallUpdate := UpdateProgram;
     if bInstallUpdate then
       Close;
+  end;
+
+  // update dictionary
+  if bDictionaryUpdate and UpdateDictionary then begin
+    status := TmpStatus.Create;
+    CompareStatuses;
+    UpdatePluginData;
+    PluginsListView.Repaint;
   end;
 end;
 

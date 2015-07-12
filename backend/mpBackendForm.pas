@@ -862,6 +862,8 @@ begin
     UnapprovedReports.Remove(report);
     // update sql
     DBRemoveReport(report, 'unapproved_reports');
+    // update statistics
+    Inc(statistics.reportsDenied);
   end;
 
   // update gui
@@ -891,6 +893,8 @@ begin
     // update sql
     DBAddReport(report, 'approved_reports');
     DBRemoveReport(report, 'unapproved_reports');
+    // update statistics
+    Inc(statistics.reportsApproved);
   end;
 
   // update gui
