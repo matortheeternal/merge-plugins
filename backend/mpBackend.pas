@@ -66,6 +66,14 @@ type
     function ToJson: string;
     procedure FromJson(json: string);
   end;
+  TFilter = class(TObject)
+  public
+    group: string;
+    &label: string;
+    enabled: boolean;
+    constructor Create(group: string; enabled: boolean); Overload;
+    constructor Create(group, &label: string; enabled: boolean); Overload;
+  end;
   TmpStatus = class(TObject)
   public
     programVersion: string;
@@ -219,8 +227,10 @@ type
   procedure InitLog;
   procedure RebuildLog;
   procedure SaveLog(var Log: TList);
-  function MessageGroupEnabled(group: string): boolean;
-  function CompareReports(P1, P2: Pointer): Integer;
+  function MessageEnabled(msg: TLogMessage): boolean;
+  function CompareReportsForBuild(P1, P2: Pointer): Integer;
+  function CompareApprovedReports(P1, P2: Pointer): Integer;
+  function CompareUnapprovedReports(P1, P2: Pointer): Integer;
   { User methods }
   function Authorized(ip, username, auth: string): boolean;
   function ResetAuth(ip, username, auth: string): boolean;
@@ -233,11 +243,15 @@ type
   function UserString(user: TUser): string;
 
 const
+  // COLUMNS IN SQL TABLES
   REPORT_COLUMNS = 'game,username,filename,hash,record_count,rating,'+
     'merge_version,notes,date_submitted';
   USER_COLUMNS = 'ip,username,auth,firstSeen,lastSeen,timesSeen,download,'+
     'upload,timesRun,mergesBuilt,pluginsChecked,pluginsMerged,reportsSubmitted';
   BLACKLIST_COLUMNS = 'ip,username,created,expires';
+
+  // MAXIMUM DICTIONARY ENTRY NOTES LENGTH
+  MAX_NOTES_LENGTH = 4096;
 
   // MSG IDs
   MSG_NOTIFY = 1;
@@ -261,7 +275,8 @@ const
 
 var
   TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary,
-  ApprovedReports, UnapprovedReports, Users, Blacklist, BaseLog, Log: TList;
+  ApprovedReports, UnapprovedReports, Users, Blacklist, BaseLog, Log,
+  LabelFilters, GroupFilters: TList;
   slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary,
   slConnectedIPs: TStringList;
   statistics: TStatistics;
@@ -269,12 +284,11 @@ var
   status: TmpStatus;
   LogPath, ProgramPath, ProgramVersion: string;
   bLoginSuccess, bProgressCancel, bRebuildTES5, bRebuildTES4, bRebuildFNV,
-  bRebuildFO3, bAscending, bInitGroup, bSQLGroup, bServerGroup,
-  bDataGroup, bErrorGroup: boolean;
+  bRebuildFO3, bApprovedAscending, bUnapprovedAscending: boolean;
   wbStartTime: TDateTime;
   sessionBandwidth: Int64;
   Connection: TZConnection;
-  aColumnToSort: integer;
+  aApprovedColumnToSort, aUnapprovedColumnToSort: integer;
   Yesterday: TDateTime;
 
 implementation
@@ -342,7 +356,7 @@ procedure SQLQuery(query: string);
 var
   SQLQuery: TZQuery;
 begin
-  //Logger.Write('SQL', 'Query', query);
+  Logger.Write('SQL', 'Query', query);
   SQLQuery := TZQuery.Create(nil);
   SQLQuery.Connection := Connection;
   SQLQuery.Fields.Clear;
@@ -1195,7 +1209,7 @@ end;
 
 procedure EntryNotes(var sl: TStringList; var report: TReport);
 var
-  header: string;
+  header, notes: string;
   slHeader: TStringList;
 begin
   // prepare header
@@ -1211,9 +1225,12 @@ begin
   else
     header := ApplyTemplate(settings.templateNoHash, slHeader);
 
-  // add to notes stringlist
-  sl.Add(header);
-  sl.Add(report.notes.Text);
+  // add to entry notes if doing so won't exceed the maximum notes length
+  notes := Report.notes.Text;
+  if (Length(header) + Length(notes) + Length(sl.Text) < MAX_NOTES_LENGTH) then begin
+    sl.Add(header);
+    sl.Add(notes);
+  end;
 
   // clean up
   slHeader.Free;
@@ -1245,9 +1262,9 @@ var
 begin
   Logger.Write('DATA', 'Dictionary', 'Building '+game+' Dictionary');
   // sort reports so we can build dictionary entries faster
-  bAscending := false;
-  aColumnToSort := 1;
-  ApprovedReports.Sort(CompareReports);
+  bApprovedAscending := false;
+  aApprovedColumnToSort := 1;
+  ApprovedReports.Sort(CompareReportsForBuild);
 
   // prepare to make new dictionary file
   lst.Clear;
@@ -1360,7 +1377,7 @@ var
 begin
   // don't attempt to load dictionary if it doesn't exist
   if not FileExists(filename) then begin
-    Logger.Write('INIT', 'Error', 'No dictionary file '+filename);
+    Logger.Write('ERROR', 'Init', 'No dictionary file '+filename);
     exit;
   end;
 
@@ -1437,11 +1454,28 @@ procedure InitLog;
 begin
   BaseLog := TList.Create;
   Log := TList.Create;
-  bInitGroup := true;
-  bServerGroup := true;
-  bSqlGroup := true;
-  bDataGroup := true;
-  bErrorGroup := true;
+  LabelFilters := TList.Create;
+  GroupFilters := TList.Create;
+  // INITIALIZE GROUP FILTERS
+  GroupFilters.Add(TFilter.Create('INIT', true));
+  GroupFilters.Add(TFilter.Create('SQL', true));
+  GroupFilters.Add(TFilter.Create('SERVER', true));
+  GroupFilters.Add(TFilter.Create('DATA', true));
+  GroupFilters.Add(TFilter.Create('ERROR', true));
+  // INITIALIZE LABEL FILTERS
+  LabelFilters.Add(TFilter.Create('INIT', 'Dictionary', true));
+  LabelFilters.Add(TFilter.Create('INIT', 'Status', true));
+  LabelFilters.Add(TFilter.Create('INIT', 'Log', true));
+  LabelFilters.Add(TFilter.Create('SQL', 'Blacklist', true));
+  LabelFilters.Add(TFilter.Create('SQL', 'Users', true));
+  LabelFilters.Add(TFilter.Create('SQL', 'approved_reports', true));
+  LabelFilters.Add(TFilter.Create('SQL', 'unapproved_reports', true));
+  LabelFilters.Add(TFilter.Create('SQL', 'Query', false));
+  LabelFilters.Add(TFilter.Create('SERVER', 'Connected', true));
+  LabelFilters.Add(TFilter.Create('SERVER', 'Message', true));
+  LabelFilters.Add(TFilter.Create('SERVER', 'Response', true));
+  LabelFilters.Add(TFilter.Create('SERVER', 'Disconnected', true));
+  LabelFilters.Add(TFilter.Create('SERVER', 'Terminated', true));
 end;
 
 procedure RebuildLog;
@@ -1452,7 +1486,7 @@ begin
   Log.Clear;
   for i := 0 to Pred(BaseLog.Count) do begin
     msg := TLogMessage(BaseLog[i]);
-    if MessageGroupEnabled(msg.group) then
+    if MessageEnabled(msg) then
       Log.Add(msg);
   end;
 end;
@@ -1475,22 +1509,64 @@ begin
   sl.Free;
 end;
 
-function MessageGroupEnabled(group: string): boolean;
+function GetGroupFilter(msg: TLogMessage): TFilter;
+var
+  i: Integer;
+  filter: TFilter;
 begin
-  Result := true;
-  if group = 'INIT' then
-    Result := bInitGroup
-  else if group = 'SQL' then
-    Result := bSQLGroup
-  else if group = 'SERVER' then
-    Result := bServerGroup
-  else if group = 'DATA' then
-    Result := bDataGroup
-  else if group = 'ERROR' then
-    Result := bErrorGroup;
+  Result := nil;
+  for i := 0 to Pred(GroupFilters.Count) do begin
+    filter := TFilter(GroupFilters[i]);
+    if filter.group = msg.group then begin
+      Result := filter;
+      exit;
+    end;
+  end;
 end;
 
-function CompareReports(P1, P2: Pointer): Integer;
+function GetLabelFilter(msg: TLogMessage): TFilter;
+var
+  i: Integer;
+  filter: TFilter;
+begin
+  Result := nil;
+  for i := 0 to Pred(LabelFilters.Count) do begin
+    filter := TFilter(LabelFilters[i]);
+    if filter.&label = msg.&label then begin
+      Result := filter;
+      exit;
+    end;
+  end;
+end;
+
+function MessageEnabled(msg: TLogMessage): boolean;
+var
+  GroupFilter, LabelFilter: TFilter;
+begin
+  Result := true;
+  GroupFilter := GetGroupFilter(msg);
+  LabelFilter := GetLabelFilter(msg);
+  if GroupFilter <> nil then
+    Result := Result and GroupFilter.enabled;
+  if LabelFilter <> nil then
+    Result := Result and LabelFilter.enabled;
+end;
+
+function CompareReportsForBuild(P1, P2: Pointer): Integer;
+var
+  report1, report2: TReport;
+begin
+  report1 := TReport(P1);
+  report2 := TReport(P2);
+
+  Result := AnsiCompareText(report1.filename, report2.filename);
+  if Result = 0 then
+    Result := AnsiCompareText(report2.mergeVersion, report1.mergeVersion);
+  if Result = 0 then
+    Result := report2.recordCount - report1.recordCount;
+end;
+
+function CompareApprovedReports(P1, P2: Pointer): Integer;
 var
   report1, report2: TReport;
 begin
@@ -1498,18 +1574,41 @@ begin
   report1 := TReport(P1);
   report2 := TReport(P2);
 
-  if aColumnToSort = 0 then
+  if aApprovedColumnToSort = 0 then
     Result := AnsiCompareText(report1.game, report2.game)
-  else if aColumnToSort = 1 then
+  else if aApprovedColumnToSort = 1 then
     Result := AnsiCompareText(report1.filename, report2.filename)
-  else if aColumnToSort = 2 then
+  else if aApprovedColumnToSort = 2 then
     Result := Trunc(report1.dateSubmitted) - Trunc(report2.dateSubmitted)
-  else if aColumnToSort = 3 then
+  else if aApprovedColumnToSort = 3 then
     Result := AnsiCompareText(report1.username, report2.username)
-  else if aColumnToSort = 4 then
+  else if aApprovedColumnToSort = 4 then
     Result := report1.rating - report2.rating;
 
-  if bAscending then
+  if bApprovedAscending then
+    Result := -Result;
+end;
+
+function CompareUnapprovedReports(P1, P2: Pointer): Integer;
+var
+  report1, report2: TReport;
+begin
+  Result := 0;
+  report1 := TReport(P1);
+  report2 := TReport(P2);
+
+  if aUnapprovedColumnToSort = 0 then
+    Result := AnsiCompareText(report1.game, report2.game)
+  else if aUnapprovedColumnToSort = 1 then
+    Result := AnsiCompareText(report1.filename, report2.filename)
+  else if aUnapprovedColumnToSort = 2 then
+    Result := Trunc(report1.dateSubmitted) - Trunc(report2.dateSubmitted)
+  else if aUnapprovedColumnToSort = 3 then
+    Result := AnsiCompareText(report1.username, report2.username)
+  else if aUnapprovedColumnToSort = 4 then
+    Result := report1.rating - report2.rating;
+
+  if bUnapprovedAscending then
     Result := -Result;
 end;
 
@@ -1786,6 +1885,20 @@ begin
   username := obj.S['username'];
   auth := obj.S['auth'];
   data := obj.S['data'];
+end;
+
+{ Create TFilter object }
+constructor TFilter.Create(group: string; enabled: boolean);
+begin
+  self.group := group;
+  self.enabled := enabled;
+end;
+
+constructor TFilter.Create(group, &label: string; enabled: boolean);
+begin
+  self.group := group;
+  self.&label := &label;
+  self.enabled := enabled;
 end;
 
 { TmpStatus to json string }

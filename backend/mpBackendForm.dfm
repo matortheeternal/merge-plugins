@@ -121,7 +121,7 @@ object BackendForm: TBackendForm
       Top = 7
       Width = 654
       Height = 605
-      ActivePage = LogTabSheet
+      ActivePage = UnapprovedTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
@@ -158,7 +158,6 @@ object BackendForm: TBackendForm
             item
               Caption = 'Rating'
             end>
-          ColumnClick = False
           DoubleBuffered = True
           MultiSelect = True
           OwnerData = True
@@ -167,10 +166,11 @@ object BackendForm: TBackendForm
           ParentDoubleBuffered = False
           ParentShowHint = False
           PopupMenu = UnapprovedPopupMenu
-          ShowHint = True
+          ShowHint = False
           TabOrder = 0
           ViewStyle = vsReport
           OnChange = UnapprovedListViewChange
+          OnColumnClick = UnapprovedListViewColumnClick
           OnData = UnapprovedListViewData
           OnDrawItem = UnapprovedListViewDrawItem
         end
@@ -207,7 +207,6 @@ object BackendForm: TBackendForm
           DoubleBuffered = True
           MultiSelect = True
           OwnerData = True
-          OwnerDraw = True
           ReadOnly = True
           RowSelect = True
           ParentDoubleBuffered = False
@@ -427,7 +426,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010600F801F00120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600F801F80120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E7E7
@@ -1545,29 +1544,16 @@ object BackendForm: TBackendForm
   end
   object LogPopupMenu: TPopupMenu
     OnPopup = LogPopupMenuPopup
-    Left = 320
+    Left = 312
     Top = 112
-    object FilterItem: TMenuItem
-      Caption = 'Filter'
-      object FilterInitItem: TMenuItem
-        Caption = 'Disable INIT'
-        OnClick = FilterInitItemClick
+    object FilterGroupItem: TMenuItem
+      Caption = 'Filter group'
+      object TMenuItem
       end
-      object FilterSqlItem: TMenuItem
-        Caption = 'Disable SQL'
-        OnClick = FilterSqlItemClick
-      end
-      object FilterServerItem: TMenuItem
-        Caption = 'Disable SERVER'
-        OnClick = FilterServerItemClick
-      end
-      object FilterDataItem: TMenuItem
-        Caption = 'Disable DATA'
-        OnClick = FilterDataItemClick
-      end
-      object FilterErrorItem: TMenuItem
-        Caption = 'Disable ERROR'
-        OnClick = FilterErrorItemClick
+    end
+    object FilterLabelItem: TMenuItem
+      Caption = 'Filter label'
+      object TMenuItem
       end
     end
     object CopyToClipboardItem: TMenuItem

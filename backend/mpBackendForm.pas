@@ -58,12 +58,6 @@ type
     TaskTimer: TTimer;
     LogPopupMenu: TPopupMenu;
     CopyToClipboardItem: TMenuItem;
-    FilterItem: TMenuItem;
-    FilterInitItem: TMenuItem;
-    FilterSqlItem: TMenuItem;
-    FilterServerItem: TMenuItem;
-    FilterDataItem: TMenuItem;
-    FilterErrorItem: TMenuItem;
     SaveAndClearItem: TMenuItem;
     StatusPanel: TPanel;
     StatusPanelMessage: TPanel;
@@ -72,8 +66,11 @@ type
     StatusPanelFrontend: TPanel;
     StatusPanelReports: TPanel;
     StatusPanelUptime: TPanel;
+    FilterLabelItem: TMenuItem;
+    FilterGroupItem: TMenuItem;
 
     // MERGE FORM EVENTS
+    procedure CorrectListViewWidth(var lv: TListView);
     procedure LogMessage(const group, &label, text: string);
     procedure UpdateStatusPanel;
     procedure FormCreate(Sender: TObject);
@@ -116,12 +113,8 @@ type
     procedure ApproveReportItemClick(Sender: TObject);
     // LOG POPUP MENU EVENTS
     procedure LogPopupMenuPopup(Sender: TObject);
-    procedure ToggleGroup(var bGroup: boolean);
-    procedure FilterInitItemClick(Sender: TObject);
-    procedure FilterSqlItemClick(Sender: TObject);
-    procedure FilterServerItemClick(Sender: TObject);
-    procedure FilterDataItemClick(Sender: TObject);
-    procedure FilterErrorItemClick(Sender: TObject);
+    procedure ToggleGroupFilter(Sender: TObject);
+    procedure ToggleLabelFilter(Sender: TObject);
     procedure CopyToClipboardItemClick(Sender: TObject);
     procedure SaveAndClearItemClick(Sender: TObject);
     // QUICKBAR BUTTON EVENTS
@@ -139,6 +132,8 @@ type
     procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
+    procedure UnapprovedListViewColumnClick(Sender: TObject;
+      Column: TListColumn);
   private
     { Private declarations }
   public
@@ -168,17 +163,33 @@ implementation
 {******************************************************************************}
 
 { Prints a message to the log }
+procedure TBackendForm.CorrectListViewWidth(var lv: TListView);
+var
+  i, w: Integer;
+begin
+  w := lv.ClientWidth;
+  // loop through columns keeping track of remaining width
+  for i := 0 to Pred(lv.Columns.Count) do
+    Dec(w, ListView_GetColumnWidth(lv.Handle, i));
+
+  // set last column width to fit in client width if it's larger than it
+  i := lv.Columns.Count - 1;
+  if w < 0 then
+    lv.Columns[i].Width := ListView_GetColumnWidth(lv.Handle, i) + w;
+end;
+
 procedure TBackendForm.LogMessage(const group, &label, text: string);
 var
   msg: TLogMessage;
 begin
   msg := TLogMessage.Create(FormatDateTime('hh:nn:ss', Now), group, &label, text);
   BaseLog.Add(msg);
-  if MessageGroupEnabled(group) then begin
+  if MessageEnabled(msg) then begin
     Log.Add(msg);
     LogListView.Items.Count := Log.Count;
     LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
     SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+    CorrectListViewWidth(LogListView);
   end;
 end;
 
@@ -247,7 +258,7 @@ begin
     ApprovedListView.Items.Count := ApprovedReports.Count;
   except
     on x: Exception do
-      LogMessage('INIT', 'Exception', x.Message);
+      LogMessage('ERROR', 'Init', x.Message);
   end;
 end;
 
@@ -581,6 +592,16 @@ begin
   UpdateUnapprovedDetails;
 end;
 
+procedure TBackendForm.UnapprovedListViewColumnClick(Sender: TObject;
+  Column: TListColumn);
+begin
+  bUnapprovedAscending := (aUnapprovedColumnToSort = Column.Index) and (not bApprovedAscending);
+  aUnapprovedColumnToSort := Column.Index;
+  UnapprovedReports.Sort(CompareUnapprovedReports);
+  UnapprovedListView.Repaint;
+  UpdateUnapprovedDetails;
+end;
+
 procedure TBackendForm.UnapprovedListViewData(Sender: TObject; Item: TListItem);
 var
   report: TReport;
@@ -632,9 +653,9 @@ end;
 procedure TBackendForm.ApprovedListViewColumnClick(Sender: TObject;
   Column: TListColumn);
 begin
-  bAscending := (aColumnToSort = Column.Index) and (not bAscending);
-  aColumnToSort := Column.Index;
-  ApprovedReports.Sort(CompareReports);
+  bApprovedAscending := (aApprovedColumnToSort = Column.Index) and (not bApprovedAscending);
+  aApprovedColumnToSort := Column.Index;
+  ApprovedReports.Sort(CompareApprovedReports);
   ApprovedListView.Repaint;
   UpdateApprovedDetails;
 end;
@@ -897,46 +918,59 @@ begin
 end;
 
 procedure TBackendForm.LogPopupMenuPopup(Sender: TObject);
+var
+  i: Integer;
+  item: TMenuItem;
+  filter: TFilter;
 begin
-  FilterInitItem.Caption := EnableStr(bInitGroup) + ' INIT';
-  FilterSqlItem.Caption := EnableStr(bSqlGroup) + ' SQL';
-  FilterServerItem.Caption := EnableStr(bServerGroup) + ' SERVER';
-  FilterDataItem.Caption := EnableStr(bDataGroup) + ' DATA';
-  FilterErrorItem.Caption := EnableStr(bErrorGroup) + ' ERROR';
+  // rebuild group filter items
+  FilterGroupItem.Clear;
+  for i := 0 to Pred(GroupFilters.Count) do begin
+    filter := TFilter(GroupFilters[i]);
+    item := TMenuItem.Create(FilterGroupItem);
+    item.Caption := EnableStr(filter.enabled) + ' ' + filter.group;
+    item.OnClick := ToggleGroupFilter;
+    FilterGroupItem.Add(item);
+  end;
+
+  // rebuild label filter items
+  FilterLabelItem.Clear;
+  for i := 0 to Pred(LabelFilters.Count) do begin
+    filter := TFilter(LabelFilters[i]);
+    item := TMenuItem.Create(FilterLabelItem);
+    item.Caption := EnableStr(filter.enabled) + ' ' + filter.group + ', ' + filter.&label;
+    item.OnClick := ToggleLabelFilter;
+    FilterLabelItem.Add(item);
+  end;
+
+  // toggle copy to clipboard item based on whether or not log items are selected
   CopyToClipboardItem.Enabled := Assigned(LogListView.Selected);
 end;
 
-procedure TBackendForm.ToggleGroup(var bGroup: boolean);
+procedure TBackendForm.ToggleGroupFilter(Sender: TObject);
+var
+  index: integer;
+  filter: TFilter;
 begin
-  bGroup := not bGroup;
+  index := FilterGroupItem.IndexOf(TMenuItem(Sender));
+  filter := GroupFilters[index];
+  filter.enabled := not filter.enabled;
   LogListView.Items.Count := 0;
   RebuildLog;
   LogListView.Items.Count := Log.Count;
 end;
 
-procedure TBackendForm.FilterInitItemClick(Sender: TObject);
+procedure TBackendForm.ToggleLabelFilter(Sender: TObject);
+var
+  index: integer;
+  filter: TFilter;
 begin
-  ToggleGroup(bInitGroup);
-end;
-
-procedure TBackendForm.FilterSqlItemClick(Sender: TObject);
-begin
-  ToggleGroup(bSQLGroup);
-end;
-
-procedure TBackendForm.FilterServerItemClick(Sender: TObject);
-begin
-  ToggleGroup(bServerGroup);
-end;
-
-procedure TBackendForm.FilterDataItemClick(Sender: TObject);
-begin
-  ToggleGroup(bDataGroup);
-end;
-
-procedure TBackendForm.FilterErrorItemClick(Sender: TObject);
-begin
-  ToggleGroup(bErrorGroup);
+  index := FilterLabelItem.IndexOf(TMenuItem(Sender));
+  filter := LabelFilters[index];
+  filter.enabled := not filter.enabled;
+  LogListView.Items.Count := 0;
+  RebuildLog;
+  LogListView.Items.Count := Log.Count;
 end;
 
 procedure TBackendForm.CopyToClipboardItemClick(Sender: TObject);
@@ -1031,7 +1065,7 @@ begin
   if AException.Message = 'Connection Closed Gracefully.' then
     exit;
 
-  LogMessage('SERVER', 'Exception', AContext.Connection.Socket.Binding.PeerIP+
+  LogMessage('ERROR', 'Server', AContext.Connection.Socket.Binding.PeerIP+
     ' '+AException.Message);
 end;
 
@@ -1158,7 +1192,7 @@ begin
           stream.Free;
         end
         else
-          LogMessage('SERVER', 'Error', 'MergePlugins.zip doesn''t exist!');
+          LogMessage('ERROR', 'Server', 'MergePlugins.zip doesn''t exist!');
       end;
     end;
 
