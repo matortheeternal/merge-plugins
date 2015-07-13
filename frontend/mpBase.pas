@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
-  Controls, Registry, Graphics,
+  Controls, Registry, Graphics, ComCtrls, CommCtrl,
   // indy components
   IdTCPClient, IdStack, IdGlobal,
   // superobject json library
@@ -279,6 +279,7 @@ type
   procedure CopyDirectory(src, dst: string; fIgnore, dIgnore: TStringList);
   procedure GetFilesList(path: string; var fIgnore, dIgnore, list: TStringList);
   procedure CopyFiles(src, dst: string; var list: TStringList);
+  procedure CorrectListViewWidth(var lv: TListView);
   { Mod Organizer methods }
   procedure ModOrganizerInit;
   function GetActiveProfile: string;
@@ -1550,6 +1551,37 @@ begin
   end;
 end;
 
+{ Fixes @lv's width to fit client width if it has autosizable columns,
+  which resolves an issue where autosize doesn't work on virtual vsReport
+  TListViews when a scroll bar becomes visible. }
+procedure CorrectListViewWidth(var lv: TListView);
+var
+  i, w: Integer;
+  col: TListColumn;
+  AutoSizedColumns: TList;
+begin
+  AutoSizedColumns := TList.Create;
+  w := lv.ClientWidth;
+
+  // loop through columns keeping track of remaining width
+  for i := 0 to Pred(lv.Columns.Count) do begin
+    col := lv.Columns[i];
+    if col.AutoSize then
+      AutoSizedColumns.Add(col)
+    else
+      Dec(w, ListView_GetColumnWidth(lv.Handle, i));
+  end;
+
+  // set auotsized columns to fit client width
+  for i := 0 to Pred(AutoSizedColumns.Count) do begin
+    col := TListColumn(AutoSizedColumns[i]);
+    col.Width := w div AutoSizedColumns.Count;
+  end;
+
+  // clean up
+  AutoSizedColumns.Free;
+end;
+
 
 {******************************************************************************}
 { Mod Organizer methods
@@ -2182,6 +2214,7 @@ end;
 
 procedure ConnectToServer;
 begin
+  if bConnecting then exit;
   bConnecting := true;
   try
     Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
@@ -2191,7 +2224,8 @@ begin
     GetStatus;
     CompareStatuses;
   except on x: Exception do
-    Logger.Write('CLIENT', 'Connect', 'Server unavailable. '+x.Message);
+    //if x.Message <> 'Already connected.' then
+      Logger.Write('CLIENT', 'Connect', 'Server unavailable. '+x.Message);
   end;
   bConnecting := false;
 end;

@@ -56,6 +56,7 @@ object BackendForm: TBackendForm
       Hint = 'Build dictionary files'
       Flat = True
       ParentShowHint = False
+      PopupMenu = RebuildPopupMenu
       ShowHint = True
       OnClick = RebuildButtonClick
     end
@@ -178,10 +179,6 @@ object BackendForm: TBackendForm
       object ApprovedTabSheet: TTabSheet
         Caption = 'Approved Reports'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object ApprovedListView: TListView
           Left = 3
           Top = 3
@@ -228,10 +225,6 @@ object BackendForm: TBackendForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -434,7 +427,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010600F801FC0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600F801000220002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E7E7
@@ -1538,16 +1531,9 @@ object BackendForm: TBackendForm
     Left = 1000
     Top = 8
   end
-  object RefreshTimer: TTimer
-    Interval = 3000
-    OnTimer = OnRefreshTimer
-    Left = 936
-    Top = 8
-  end
   object TaskTimer: TTimer
-    Interval = 60000
     OnTimer = OnTaskTimer
-    Left = 872
+    Left = 944
     Top = 8
   end
   object LogPopupMenu: TPopupMenu
@@ -1568,9 +1554,21 @@ object BackendForm: TBackendForm
       Caption = 'Copy to clipboard'
       OnClick = CopyToClipboardItemClick
     end
+    object ToggleAutoScrollItem: TMenuItem
+      Caption = 'Disable auto scroll'
+      OnClick = ToggleAutoScrollItemClick
+    end
     object SaveAndClearItem: TMenuItem
       Caption = 'Save and clear'
       OnClick = SaveAndClearItemClick
+    end
+  end
+  object RebuildPopupMenu: TPopupMenu
+    Left = 432
+    Top = 8
+    object ForceRebuildItem: TMenuItem
+      Caption = 'Force rebuild dictionaries'
+      OnClick = ForceRebuildItemClick
     end
   end
 end

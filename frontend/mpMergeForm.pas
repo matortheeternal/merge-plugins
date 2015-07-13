@@ -81,6 +81,7 @@ type
     FilterClientItem: TMenuItem;
     FilterMergeItem: TMenuItem;
     FilterErrorItem: TMenuItem;
+    ToggleAutoScrollItem: TMenuItem;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const group, &label, text: string);
@@ -169,6 +170,7 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure StatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
       const Rect: TRect);
+    procedure ToggleAutoScrollItemClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -179,7 +181,7 @@ var
   MergeForm: TMergeForm;
   LastHint: string;
   LastURLTime: double;
-  bMergesToBuild, bMergesToCheck: boolean;
+  bMergesToBuild, bMergesToCheck, bAutoScroll: boolean;
 
 implementation
 
@@ -208,8 +210,11 @@ begin
   if MessageEnabled(msg) then begin
     Log.Add(msg);
     LogListView.Items.Count := Log.Count;
-    LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
-    SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+    if bAutoScroll then begin
+      //LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
+      SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+    end;
+    CorrectListViewWidth(LogListView);
   end;
 end;
 
@@ -239,6 +244,7 @@ begin
 
     // INITIALIZE VARIABLES
     InitLog;
+    bAutoScroll := true;
     ProgramVersion := GetVersionMem;
     TempPath := wbProgramPath + 'temp\';
     LogPath := wbProgramPath + 'logs\';
@@ -386,14 +392,13 @@ begin
   LoaderCallback := LoaderDone;
   SetTaskbarProgressState(tbpsIndeterminate);
   TLoaderThread.Create;
+
+  // CORRECT LIST VIEW WIDTHS
+  CorrectListViewWidth(MergeListView);
+  CorrectListViewWidth(PluginsListView);
+
   // SHOW LOADER HINT
   StatusBar.SimpleText := 'Background loader in progress.';
-
-  // SET UP PAGE CONTROLS
-  PageControl.ActivePageIndex := 1;
-  MergeListView.Width := MergeListView.Width + 1;
-  PageControl.ActivePageIndex := 0;
-  PluginsListView.Width := PluginsListView.Width + 1;
 end;
 
 procedure TMergeForm.LoaderDone;
@@ -1336,7 +1341,17 @@ begin
   FilterClientItem.Caption := EnableStr(bClientGroup) + ' CLIENT';
   FilterMergeItem.Caption := EnableStr(bMergeGroup) + ' MERGE';
   FilterErrorItem.Caption := EnableStr(bErrorGroup) + ' ERROR';
+
+  // toggle copy to clipboard item based on whether or not log items are selected
   CopyToClipboardItem.Enabled := Assigned(LogListView.Selected);
+
+  // rename toggle auto scroll item based on whether or not auto scroll is enabled
+  LogPopupMenu.Items[3].Caption := EnableStr(bAutoScroll) + ' auto scroll';
+end;
+
+procedure TMergeForm.ToggleAutoScrollItemClick(Sender: TObject);
+begin
+  bAutoScroll := not bAutoScroll;
 end;
 
 procedure TMergeForm.ToggleGroup(var bGroup: boolean);

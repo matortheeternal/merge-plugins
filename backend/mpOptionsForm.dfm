@@ -253,15 +253,15 @@ object OptionsForm: TOptionsForm
           Anchors = [akTop, akRight]
           Caption = 'Data'
         end
-        object lblJavaColor: TLabel
+        object lblTaskColor: TLabel
           Left = 274
           Top = 47
-          Width = 23
+          Width = 27
           Height = 13
           Margins.Top = 11
           Align = alCustom
           Anchors = [akTop, akRight]
-          Caption = 'Java'
+          Caption = 'Tasks'
         end
         object lblErrorColor: TLabel
           Left = 274
@@ -311,7 +311,7 @@ object OptionsForm: TOptionsForm
           Anchors = [akTop, akRight]
           TabOrder = 3
         end
-        object cbJavaColor: TColorBox
+        object cbTaskColor: TColorBox
           Left = 392
           Top = 45
           Width = 145
@@ -671,7 +671,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800740010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800780010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

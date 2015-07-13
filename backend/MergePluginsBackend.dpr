@@ -30,7 +30,8 @@ uses
   mpLoginForm in 'mpLoginForm.pas' {LoginForm},
   W7Taskbar in 'W7Taskbar.pas',
   CRC32 in 'CRC32.pas',
-  mpUserForm in 'mpUserForm.pas' {UserForm};
+  mpUserForm in 'mpUserForm.pas' {UserForm},
+  mpTaskHandler in 'mpTaskHandler.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

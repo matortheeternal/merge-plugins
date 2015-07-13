@@ -40,13 +40,13 @@ type
     lblInitColor: TLabel;
     lblSQLColor: TLabel;
     lblDataColor: TLabel;
-    lblJavaColor: TLabel;
+    lblTaskColor: TLabel;
     lblErrorColor: TLabel;
     cbServerColor: TColorBox;
     cbInitColor: TColorBox;
     cbSQLColor: TColorBox;
     cbDataColor: TColorBox;
-    cbJavaColor: TColorBox;
+    cbTaskColor: TColorBox;
     cbErrorColor: TColorBox;
     gbStyle: TGroupBox;
     kbSimpleReports: TCheckBox;
@@ -105,7 +105,7 @@ begin
   settings.initMessageColor := cbInitColor.Selected;
   settings.SQLMessageColor := cbSQLColor.Selected;
   settings.dataMessageColor := cbDataColor.Selected;
-  settings.javaMessageColor := cbJavaColor.Selected;
+  settings.taskMessageColor := cbTaskColor.Selected;
   settings.errorMessageColor := cbErrorColor.Selected;
 
   // save style
@@ -162,7 +162,7 @@ begin
   cbInitColor.Selected := settings.initMessageColor;
   cbSQLColor.Selected := settings.sqlMessageColor;
   cbDataColor.Selected := settings.dataMessageColor;
-  cbJavaColor.Selected := settings.javaMessageColor;
+  cbTaskColor.Selected := settings.taskMessageColor;
   cbErrorColor.Selected := settings.errorMessageColor;
 
   // load style choices

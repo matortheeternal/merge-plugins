@@ -14,13 +14,15 @@ uses
   superobject, W7Taskbar,
   // mp units
   mpBackend, mpLogger, mpDictionaryForm, mpOptionsForm, mpProgressForm,
-  mpTracker, mpEditForm;
+  mpTracker, mpEditForm, mpTaskHandler;
 
 type
   TBackendForm = class(TForm)
     // GENERIC
     XPManifest: TXPManifest;
     IconList: TImageList;
+    TaskTimer: TTimer;
+    TCPServer: TIdTCPServer;
     // QUICKBAR
     QuickBar: TPanel;
     ApproveButton: TSpeedButton;
@@ -53,12 +55,16 @@ type
     UnapproveReportItem: TMenuItem;
     EditReportItem: TMenuItem;
     ViewDictionaryEntryItem: TMenuItem;
-    TCPServer: TIdTCPServer;
-    RefreshTimer: TTimer;
-    TaskTimer: TTimer;
+    // LOG POPUP MENU
     LogPopupMenu: TPopupMenu;
     CopyToClipboardItem: TMenuItem;
     SaveAndClearItem: TMenuItem;
+    FilterLabelItem: TMenuItem;
+    FilterGroupItem: TMenuItem;
+    // REBUILD POPUP MENU
+    RebuildPopupMenu: TPopupMenu;
+    ForceRebuildItem: TMenuItem;
+    // STATUS PANEL
     StatusPanel: TPanel;
     StatusPanelMessage: TPanel;
     StatusPanelClients: TPanel;
@@ -66,17 +72,15 @@ type
     StatusPanelFrontend: TPanel;
     StatusPanelReports: TPanel;
     StatusPanelUptime: TPanel;
-    FilterLabelItem: TMenuItem;
-    FilterGroupItem: TMenuItem;
+    ToggleAutoScrollItem: TMenuItem;
 
     // MERGE FORM EVENTS
-    procedure CorrectListViewWidth(var lv: TListView);
     procedure LogMessage(const group, &label, text: string);
     procedure UpdateStatusPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure OnRefreshTimer(Sender: TObject);
+    procedure RefreshGUI;
     procedure OnTaskTimer(Sender: TObject);
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string): TItemProp;
@@ -90,6 +94,8 @@ type
     // LIST VIEW EVENTS
     procedure UnapprovedListViewChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
+    procedure UnapprovedListViewColumnClick(Sender: TObject;
+      Column: TListColumn);
     procedure UnapprovedListViewData(Sender: TObject; Item: TListItem);
     procedure UnapprovedListViewDrawItem(Sender: TCustomListView;
       Item: TListItem; Rect: TRect; State: TOwnerDrawState);
@@ -102,6 +108,8 @@ type
     procedure LogListViewData(Sender: TObject; Item: TListItem);
     procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
+    // REBUILD POPUP MENU EVENTS
+    procedure ForceRebuildItemClick(Sender: TObject);
     // APPROVED POPUP MENU EVENTS
     procedure ApprovedPopupMenuPopup(Sender: TObject);
     procedure EditReportItemClick(Sender: TObject);
@@ -128,12 +136,12 @@ type
     procedure TCPServerConnect(AContext: TIdContext);
     procedure TCPServerDisconnect(AContext: TIdContext);
     procedure TCPServerException(AContext: TIdContext; AException: Exception);
-    procedure SendResponse(var user: TUser; var AContext: TIdContext; id: integer; data: string; bLog: boolean = true);
+    procedure SendResponse(var user: TUser; var AContext: TIdContext;
+      id: integer; data: string; bLog: boolean = true);
     procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
-    procedure UnapprovedListViewColumnClick(Sender: TObject;
-      Column: TListColumn);
+    procedure ToggleAutoScrollItemClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -143,7 +151,9 @@ type
 var
   BackendForm: TBackendForm;
   LastHint: string;
-  LastURLTime: double;
+  bAutoScroll: boolean;
+  LastURLTime, LastDailyTaskTime, LastRegTaskTime: double;
+  TaskHandler: TTaskHandler;
 
 implementation
 
@@ -163,21 +173,6 @@ implementation
 {******************************************************************************}
 
 { Prints a message to the log }
-procedure TBackendForm.CorrectListViewWidth(var lv: TListView);
-var
-  i, w: Integer;
-begin
-  w := lv.ClientWidth;
-  // loop through columns keeping track of remaining width
-  for i := 0 to Pred(lv.Columns.Count) do
-    Dec(w, ListView_GetColumnWidth(lv.Handle, i));
-
-  // set last column width to fit in client width if it's larger than it
-  i := lv.Columns.Count - 1;
-  if w < 0 then
-    lv.Columns[i].Width := ListView_GetColumnWidth(lv.Handle, i) + w;
-end;
-
 procedure TBackendForm.LogMessage(const group, &label, text: string);
 var
   msg: TLogMessage;
@@ -187,8 +182,11 @@ begin
   if MessageEnabled(msg) then begin
     Log.Add(msg);
     LogListView.Items.Count := Log.Count;
-    LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
-    SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+    if bAutoScroll then begin
+      LogListView.ClearSelection;
+      LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
+      SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+    end;
     CorrectListViewWidth(LogListView);
   end;
 end;
@@ -214,8 +212,9 @@ begin
     // INITIALIZE VARIABLES
     ProgramVersion := GetVersionMem;
     InitLog;
+    bAutoScroll := true;
     wbStartTime := Now;
-    Yesterday := Trunc(Now);
+    LastDailyTaskTime := Trunc(Now);
     Logger.OnLogEvent := LogMessage;
     ProgramPath := ExtractFilePath(ParamStr(0));
     LogPath := ProgramPath + 'logs\';
@@ -264,15 +263,19 @@ end;
 
 procedure TBackendForm.FormShow(Sender: TObject);
 begin
-  // Force ListViews to autosize columns
-  PageControl.ActivePageIndex := 1;
-  UnapprovedListView.Width := UnapprovedListView.Width + 1;
-  PageControl.ActivePageIndex := 0;
-  ApprovedListView.Width := ApprovedListView.Width + 1;
-  PageControl.ActivePageIndex := 2;
+  // Correct list view widths
+  CorrectListViewWidth(UnapprovedListView);
+  CorrectListViewWidth(ApprovedListView);
 
-  // refresh views
-  OnRefreshTimer(nil);
+  // Refresh GUI
+  RefreshGUI;
+
+  // initialize task handler
+  TaskHandler := TTaskHandler.Create;
+  TaskHandler.AddTask(TTask.Create('SQL Heartbeat', 10.0 * minutes, TTaskProcedures.SQLHeartbeat));
+  TaskHandler.AddTask(TTask.Create('Refresh Blacklist', 1.0 * days, TTaskProcedures.RefreshBlacklist));
+  TaskHandler.AddTask(TTask.Create('Rebuild Dictionaries', 1.0 * days, TTaskProcedures.RebuildDictionaries));
+  TaskHandler.AddTask(TTask.Create('Refresh GUI', 3.0 * seconds, RefreshGUI));
 end;
 
 procedure TBackendForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -308,11 +311,16 @@ begin
   SaveLog(Log);
 end;
 
-procedure TBackendForm.OnRefreshTimer(Sender: TObject);
+procedure TBackendForm.RefreshGUI;
 begin
   UpdateStatusPanel;
   if PageControl.ActivePageIndex = 2 then
     UpdateApplicationDetails;
+end;
+
+procedure TBackendForm.OnTaskTimer(Sender: TObject);
+begin
+  TaskHandler.ExecTasks;
 end;
 
 
@@ -530,8 +538,8 @@ begin
     LogListView.Canvas.Font.Color := settings.SQLMessageColor
   else if (msg.group = 'DATA') then
     LogListView.Canvas.Font.Color := settings.dataMessageColor
-  else if (msg.group = 'JAVA') then
-    LogListView.Canvas.Font.Color := settings.javaMessageColor
+  else if (msg.group = 'TASK') then
+    LogListView.Canvas.Font.Color := settings.taskMessageColor
   else if (msg.group = 'ERROR') then
     LogListView.Canvas.Font.Color := settings.errorMessageColor;
 end;
@@ -699,6 +707,22 @@ begin
     x := R.Left;
     ListView.Canvas.TextRect(R, x, y, Item.SubItems[i]);
   end;
+end;
+
+
+{******************************************************************************}
+{ Rebuild Popup Menu events
+  - ForceRebuildItemClick
+}
+{******************************************************************************}
+
+procedure TBackendForm.ForceRebuildItemClick(Sender: TObject);
+begin
+  bRebuildTES5 := true;
+  bRebuildTES4 := true;
+  bRebuildFO3 := true;
+  bRebuildFNV := true;
+  TTaskProcedures.RebuildDictionaries;
 end;
 
 {******************************************************************************}
@@ -885,6 +909,12 @@ begin
 
     report := TReport(UnapprovedReports[i]);
     UpdateRebuildBooleans(report);
+    // replace reports from same user on same plugin
+    if ReportExists(ApprovedReports, report) then begin
+      ApprovedListView.Items.Count := ApprovedReports.Count - 1;
+      RemoveExistingReports(ApprovedReports, report);
+      DBRemoveReport(report, 'approved_reports');
+    end;
     // update internal lists
     ApprovedReports.Add(report);
     ApprovedListView.Items.Count := ApprovedReports.Count;
@@ -949,6 +979,9 @@ begin
 
   // toggle copy to clipboard item based on whether or not log items are selected
   CopyToClipboardItem.Enabled := Assigned(LogListView.Selected);
+
+  // rename toggle auto scroll item based on whether or not auto scroll is enabled
+  LogPopupMenu.Items[3].Caption := EnableStr(bAutoScroll) + ' auto scroll';
 end;
 
 procedure TBackendForm.ToggleGroupFilter(Sender: TObject);
@@ -999,6 +1032,12 @@ begin
   sl.Free;
 end;
 
+// Toggle auto scroll of the log
+procedure TBackendForm.ToggleAutoScrollItemClick(Sender: TObject);
+begin
+  bAutoScroll := not bAutoScroll;
+end;
+
 procedure TBackendForm.SaveAndClearItemClick(Sender: TObject);
 begin
   SaveLog(BaseLog);
@@ -1018,16 +1057,6 @@ end;
   - TCPServerExecute
 }
 {******************************************************************************}
-
-procedure TBackendForm.OnTaskTimer(Sender: TObject);
-begin
-  // do daily tasks
-  if (Now - Yesterday > 1.0) then begin
-    Yesterday := Now;
-    RebuildDictionaries;
-    BlacklistRemoveExpired;
-  end;
-end;
 
 procedure TBackendForm.TCPServerConnect(AContext: TIdContext);
 var
@@ -1208,9 +1237,20 @@ begin
         report.username := msg.username;
         report.dateSubmitted := Now;
         report.notes.Text := StringReplace(report.notes.Text, '@13', #13#10, [rfReplaceAll]);
+        LogMessage('SERVER', 'Message', Format('Recieved report %s %s %s',
+          [report.game, report.username, report.filename]));
+
+        // replace reports from same user on same plugin
+        if ReportExists(UnapprovedReports, report) then begin
+          UnapprovedListView.Items.Count := UnapprovedReports.Count - 1;
+          RemoveExistingReports(UnapprovedReports, report);
+          DBRemoveReport(report, 'unapproved_reports');
+        end;
+
         // add report to gui
         UnapprovedReports.Add(report);
         UnapprovedListView.Items.Count := UnapprovedReports.Count;
+
         // add report to sql
         DBAddReport(report, 'unapproved_reports');
         note := 'Report accepted.';
@@ -1242,7 +1282,7 @@ end;
 procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
 begin
   LogMessage('SERVER', 'Message', ip+' ('+msg.username+')  '+MSG_STRINGS[msg.id]);
-  if (msg.data <> '') then
+  if (Length(msg.data) > 1) and (Length(msg.data) < 60) then
     LogMessage('SERVER', 'Message', msg.data);
 end;
 
@@ -1303,7 +1343,7 @@ end;
 
 procedure TBackendForm.RebuildButtonClick(Sender: TObject);
 begin
-  RebuildDictionaries;
+  TTaskProcedures.RebuildDictionaries;
 end;
 
 procedure TBackendForm.DictionaryButtonClick(Sender: TObject);

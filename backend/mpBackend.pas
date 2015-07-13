@@ -4,11 +4,10 @@ interface
 
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
-  Controls, Registry, DateUtils, Graphics,
+  Controls, Registry, DateUtils, Graphics, ComCtrls, CommCtrl,
   // zeosdbo components
-  ZConnection, ZDataset,
-  ZDbcCache, ZAbstractRODataset, ZDbcMySQL, ZDbcPostgreSQL, DB, ZSqlUpdate,
-  ComCtrls, ZDbcInterbase6, ZSqlMonitor, ZAbstractDataset, ZSequence,
+  ZConnection, ZDataset, ZDbcCache, ZAbstractRODataset, ZDbcMySQL, ZSequence,
+  ZDbcPostgreSQL, DB, ZSqlUpdate, ZDbcInterbase6, ZSqlMonitor, ZAbstractDataset,
   // abbrevia components
   AbBase, AbBrowse, AbZBrows, AbZipper, AbArcTyp,
   // superobject
@@ -19,7 +18,13 @@ uses
   mpLogger, mpTracker;
 
 type
-  TLogMessage = class (TOBject)
+  TTaskProcedures = class
+  public
+    class procedure SQLHeartbeat;
+    class procedure RebuildDictionaries;
+    class procedure RefreshBlacklist;
+  end;
+  TLogMessage = class (TObject)
   public
     time: string;
     group: string;
@@ -116,6 +121,11 @@ type
   end;
   TSettings = class(TObject)
   public
+    sqlUser: string;
+    sqlPassword: string;
+    sqlDatabase: string;
+    sqlHost: string;
+    sqlPort: string;
     simpleLogView: boolean;
     simpleReportsView: boolean;
     simpleDictionaryView: boolean;
@@ -123,7 +133,7 @@ type
     initMessageColor: TColor;
     SQLMessageColor: TColor;
     dataMessageColor: TColor;
-    javaMessageColor: TColor;
+    taskMessageColor: TColor;
     errorMessageColor: TColor;
     bSeparateHashes: boolean;
     bSeparateRecords: boolean;
@@ -189,6 +199,7 @@ type
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
   function DateTimeToSQL(date: TDateTime): string;
+  function RateStr(date: TDateTime): string;
   function TimeStr(date: TDateTime): string;
   function AppendIfMissing(str, substr: string): string;
   function StrEndsWith(s1, s2: string): boolean;
@@ -201,6 +212,7 @@ type
   function GetVersionMem: string;
   function FileVersion(const FileName: string): String;
   function ApplyTemplate(const template: string; var map: TStringList): string;
+  procedure CorrectListViewWidth(var lv: TListView);
   { Windows API functions }
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
@@ -216,7 +228,6 @@ type
   procedure SaveStatistics;
   procedure EntryNotes(var sl: TStringList; var report: TReport);
   procedure RebuildDictionary(game: string; var lst: TList);
-  procedure RebuildDictionaries;
   procedure UpdateRebuildBooleans(report: TReport);
   function GetDictionary(name: string): string;
   function GetDictionaryHash(name: string): string;
@@ -231,6 +242,8 @@ type
   function CompareReportsForBuild(P1, P2: Pointer): Integer;
   function CompareApprovedReports(P1, P2: Pointer): Integer;
   function CompareUnapprovedReports(P1, P2: Pointer): Integer;
+  function ReportExists(var lst: TList; var report: TReport): boolean;
+  procedure RemoveExistingReports(var lst: TList; var report: TReport);
   { User methods }
   function Authorized(ip, username, auth: string): boolean;
   function ResetAuth(ip, username, auth: string): boolean;
@@ -239,7 +252,6 @@ type
   function AddUser(ip: string): TUser; Overload;
   procedure UpdateUser(ip, username, auth: string); Overload;
   function IsBlacklisted(ip: string): boolean;
-  procedure BlacklistRemoveExpired;
   function UserString(user: TUser): string;
 
 const
@@ -252,6 +264,12 @@ const
 
   // MAXIMUM DICTIONARY ENTRY NOTES LENGTH
   MAX_NOTES_LENGTH = 4096;
+
+  // TIME TRACKING
+  days = 1.0;
+  hours = 1.0 / 24.0;
+  minutes = hours / 60.0;
+  seconds = minutes / 60.0;
 
   // MSG IDs
   MSG_NOTIFY = 1;
@@ -289,9 +307,47 @@ var
   sessionBandwidth: Int64;
   Connection: TZConnection;
   aApprovedColumnToSort, aUnapprovedColumnToSort: integer;
-  Yesterday: TDateTime;
 
 implementation
+
+{******************************************************************************}
+{ Task Procedures
+  Procedures that are executed as regular tasks.
+}
+{******************************************************************************}
+
+class procedure TTaskProcedures.SQLHeartbeat;
+begin
+  if Connection.Connected then
+    SQLQuery('SELECT @@Version;');
+end;
+
+class procedure TTaskProcedures.RebuildDictionaries;
+begin
+  Logger.Write('DATA', 'Dictionary', 'Checking for dictionaries to rebuild');
+  if bRebuildTES5 then RebuildDictionary('TES5', TES5Dictionary);
+  if bRebuildTES4 then RebuildDictionary('TES4', TES4Dictionary);
+  if bRebuildFNV then RebuildDictionary('FNV', FNVDictionary);
+  if bRebuildFO3 then RebuildDictionary('FO3', FO3Dictionary);
+  if not (bRebuildTES5 or bRebuildTES4 or bRebuildFNV or bRebuildFO3) then
+    Logger.Write('DATA', 'Dictionary', 'No dictionaries need to be updated');
+end;
+
+class procedure TTaskProcedures.RefreshBlacklist;
+var
+  i: Integer;
+  entry: TBlacklistEntry;
+begin
+  Logger.Write('DATA', 'Blacklist', 'Removing expired entries');
+  for i := Pred(Blacklist.Count) downto 0 do begin
+    entry := TBlacklistEntry(Blacklist[i]);
+    if entry.IsExpired then begin
+      DBRemoveBlacklist(entry);
+      Blacklist.Remove(entry);
+    end;
+  end;
+end;
+
 
 {******************************************************************************}
 { SQL Methods
@@ -354,16 +410,31 @@ end;
 
 procedure SQLQuery(query: string);
 var
-  SQLQuery: TZQuery;
+  ZQuery: TZQuery;
 begin
-  Logger.Write('SQL', 'Query', query);
-  SQLQuery := TZQuery.Create(nil);
-  SQLQuery.Connection := Connection;
-  SQLQuery.Fields.Clear;
-  SQLQuery.SQL.Add(query);
-  SQLQuery.ExecSQL;
-  SQLQuery.Free;
+  try
+    Logger.Write('SQL', 'Query', query);
+    ZQuery := TZQuery.Create(nil);
+    ZQuery.Connection := Connection;
+    ZQuery.Fields.Clear;
+    ZQuery.SQL.Add(query);
+    ZQuery.ExecSQL;
+    ZQuery.Free;
+  except
+    on x : Exception do begin
+      if x.Message = 'SQL Error: MySQL server has gone away' then begin
+        Logger.Write('ERROR', 'SQL', 'MySQL server is unavailable');
+        Connection.Disconnect;
+        Connection.Connect;
+        if Connection.Connected then
+          SQLQuery(query);
+      end
+      else
+        Logger.Write('ERROR', 'SQL', x.Message);
+    end;
+  end;
 end;
+
 
 //========================================
 // USERS
@@ -762,6 +833,19 @@ begin
   fs.TimeSeparator := ':';
   fs.LongTimeFormat := 'hh:nn:ss';
   Result := StrToDateTime(date, fs);
+end;
+
+{ Converts a TDateTime to a rate string, e.g. Every 24.0 hours }
+function RateStr(date: TDateTime): string;
+begin
+  if date > 1.0 then
+    Result := Format('Every %0.2f days', [date])
+  else if date * 24.0 > 1.0 then
+    Result := Format('Every %0.1f hours', [date * 24.0])
+  else if date * 24.0 * 60.0 > 1.0 then
+    Result := Format('Every %0.1f minutes', [date * 24.0 * 60.0])
+  else
+    Result := Format('Every %0.1f seconds', [date * 24.0 * 60.0 * 60.0]);
 end;
 
 { Converts a TDateTime to a time string, e.g. 19d 20h 3m 30s }
@@ -1167,6 +1251,37 @@ begin
   end;
 end;
 
+{ Fixes @lv's width to fit client width if it has autosizable columns,
+  which resolves an issue where autosize doesn't work on virtual vsReport
+  TListViews when a scroll bar becomes visible. }
+procedure CorrectListViewWidth(var lv: TListView);
+var
+  i, w: Integer;
+  col: TListColumn;
+  AutoSizedColumns: TList;
+begin
+  AutoSizedColumns := TList.Create;
+  w := lv.ClientWidth;
+
+  // loop through columns keeping track of remaining width
+  for i := 0 to Pred(lv.Columns.Count) do begin
+    col := lv.Columns[i];
+    if col.AutoSize then
+      AutoSizedColumns.Add(col)
+    else
+      Dec(w, ListView_GetColumnWidth(lv.Handle, i));
+  end;
+
+  // set auotsized columns to fit client width
+  for i := 0 to Pred(AutoSizedColumns.Count) do begin
+    col := TListColumn(AutoSizedColumns[i]);
+    col.Width := w div AutoSizedColumns.Count;
+  end;
+
+  // clean up
+  AutoSizedColumns.Free;
+end;
+
 
 {******************************************************************************}
 { Data methods
@@ -1336,17 +1451,6 @@ begin
   status.Refresh;
 end;
 
-procedure RebuildDictionaries;
-begin
-  Logger.Write('DATA', 'Dictionary', 'Checking for dictionaries to rebuild');
-  if bRebuildTES5 then RebuildDictionary('TES5', TES5Dictionary);
-  if bRebuildTES4 then RebuildDictionary('TES4', TES4Dictionary);
-  if bRebuildFNV then RebuildDictionary('FNV', FNVDictionary);
-  if bRebuildFO3 then RebuildDictionary('FO3', FO3Dictionary);
-  if not (bRebuildTES5 or bRebuildTES4 or bRebuildFNV or bRebuildFO3) then
-    Logger.Write('DATA', 'Dictionary', 'No dictionaries need to be updated');
-end;
-
 procedure UpdateRebuildBooleans(report: TReport);
 begin
   if report.game = 'TES5' then bRebuildTES5 := true;
@@ -1470,6 +1574,7 @@ begin
   GroupFilters.Add(TFilter.Create('SQL', true));
   GroupFilters.Add(TFilter.Create('SERVER', true));
   GroupFilters.Add(TFilter.Create('DATA', true));
+  GroupFilters.Add(TFilter.Create('TASK', true));
   GroupFilters.Add(TFilter.Create('ERROR', true));
   // INITIALIZE LABEL FILTERS
   LabelFilters.Add(TFilter.Create('INIT', 'Dictionary', true));
@@ -1485,6 +1590,8 @@ begin
   LabelFilters.Add(TFilter.Create('SERVER', 'Response', true));
   LabelFilters.Add(TFilter.Create('SERVER', 'Disconnected', true));
   LabelFilters.Add(TFilter.Create('SERVER', 'Terminated', true));
+  LabelFilters.Add(TFilter.Create('TASK', 'Init', true));
+  LabelFilters.Add(TFilter.Create('TASK', 'Execute', true));
 end;
 
 procedure RebuildLog;
@@ -1621,6 +1728,32 @@ begin
     Result := -Result;
 end;
 
+function ReportExists(var lst: TList; var report: TReport): boolean;
+var
+  i: Integer;
+  r: TReport;
+begin
+  Result := false;
+  for i := 0 to Pred(lst.Count) do begin
+    r := TReport(lst[i]);
+    Result := (r.game = report.game) and (r.username = report.username) and
+      (r.filename = report.filename);
+    if Result then break;
+  end;
+end;
+
+procedure RemoveExistingReports(var lst: TList; var report: TReport);
+var
+  i: Integer;
+  r: TReport;
+begin
+  for i := Pred(lst.Count) downto 0 do begin
+    r := TReport(lst[i]);
+    if (r.game = report.game) and (r.username = report.username) and
+      (r.filename = report.filename) then lst.Remove(r);
+  end;
+end;
+
 {******************************************************************************}
 { User methods
   Set of methods for handling users.
@@ -1747,21 +1880,6 @@ begin
   end;
 end;
 
-procedure BlacklistRemoveExpired;
-var
-  i: Integer;
-  entry: TBlacklistEntry;
-begin
-  Logger.Write('DATA', 'Blacklist', 'Removing expired entries');
-  for i := Pred(Blacklist.Count) downto 0 do begin
-    entry := TBlacklistEntry(Blacklist[i]);
-    if entry.IsExpired then begin
-      DBRemoveBlacklist(entry);
-      Blacklist.Remove(entry);
-    end;
-  end;
-end;
-
 function UserString(user: TUser): string;
 begin
   Result := user.ip;
@@ -1772,7 +1890,7 @@ end;
 
 {******************************************************************************}
 { Object methods
-  Set of methods for objects TMerge and TPlugin
+  Set of methods for various general objects
 
   List of methods:
   - TLogMessage.Create
@@ -2095,7 +2213,7 @@ begin
   initMessageColor := clGreen;
   SQLMessageColor := clPurple;
   dataMessageColor := $000080FF;
-  javaMessageColor := clBlack;
+  taskMessageColor := clBlack;
   errorMessageColor := clRed;
 end;
 
@@ -2114,12 +2232,19 @@ begin
   sl.LoadFromFile(filename);
   obj := SO(PChar(sl.Text));
 
+  // load SQL login
+  sqlUser := obj.S['sqlUser'];
+  sqlPassword := obj.S['sqlPassword'];
+  sqlDatabase := obj.S['sqlDatabase'];
+  sqlHost := obj.S['sqlHost'];
+  sqlPort := obj.S['sqlPort'];
+
   // load log colors
   serverMessageColor := TColor(obj.I['serverMessageColor']);
   initMessageColor := TColor(obj.I['initMessageColor']);
   SQLMessageColor := TColor(obj.I['SQLMessageColor']);
   dataMessageColor := TColor(obj.I['dictionaryMessageColor']);
-  javaMessageColor := TColor(obj.I['javaMessageColor']);
+  taskMessageColor := TColor(obj.I['javaMessageColor']);
   errorMessageColor := TColor(obj.I['errorMessageColor']);
 
   // load style choices
@@ -2147,12 +2272,19 @@ begin
   // initialize json
   obj := SO;
 
+  // save SQL login
+  obj.S['sqlUser'] := sqlUser;
+  obj.S['sqlPassword'] := sqlPassword;
+  obj.S['sqlDatabase'] := sqlDatabase;
+  obj.S['sqlHost'] := sqlHost;
+  obj.S['sqlPort'] := sqlPort;
+
   // save log colors
   obj.I['serverMessageColor'] := Integer(serverMessageColor);
   obj.I['initMessageColor'] := Integer(initMessageColor);
   obj.I['SQLMessageColor'] := Integer(SQLMessageColor);
   obj.I['dictionaryMessageColor'] := Integer(dataMessageColor);
-  obj.I['javaMessageColor'] := Integer(javaMessageColor);
+  obj.I['javaMessageColor'] := Integer(taskMessageColor);
   obj.I['errorMessageColor'] := Integer(errorMessageColor);
 
   // save style choices

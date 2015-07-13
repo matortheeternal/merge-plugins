@@ -11,9 +11,9 @@ type
   TLoginForm = class(TForm)
     btnLogin: TButton;
     btnCancel: TButton;
-    lblUserID: TLabel;
+    lblUser: TLabel;
     gbLogin: TGroupBox;
-    edUserID: TEdit;
+    edUser: TEdit;
     lblPassword: TLabel;
     edPassword: TEdit;
     lblDatabase: TLabel;
@@ -24,6 +24,7 @@ type
     edPort: TEdit;
     procedure btnLoginClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -49,12 +50,33 @@ end;
 procedure TLoginForm.btnLoginClick(Sender: TObject);
 begin
   // attempt to login to the mysql database
-  DBLogin(edUserID.Text, edPassword.text, edDatabase.Text, edHost.Text,
+  DBLogin(edUser.Text, edPassword.text, edDatabase.Text, edHost.Text,
     edPort.Text);
 
   // if login successful, close form with ModalResult = mrOk
-  if bLoginSuccess then
+  if bLoginSuccess then begin
+    settings.sqlUser := edUser.Text;
+    settings.sqlPassword := edPassword.Text;
+    settings.sqlDatabase := edDatabase.Text;
+    settings.sqlHost := edHost.Text;
+    settings.sqlPort := edPort.Text;
+    SaveSettings;
     ModalResult := mrOk;
+  end;
+end;
+procedure TLoginForm.FormCreate(Sender: TObject);
+begin
+  // load login from settings for fields that are not empty
+  if not (settings.sqlUser = '') then
+    edUser.Text := settings.sqlUser;
+  if not (settings.sqlPassword = '') then
+    edPassword.Text := settings.sqlPassword;
+  if not (settings.sqlDatabase = '') then
+    edDatabase.Text := settings.sqlDatabase;
+  if not (settings.sqlHost = '') then
+    edHost.Text := settings.sqlHost;
+  if not (settings.sqlPort = '') then
+    edPort.Text := settings.sqlPort;
 end;
 
 end.

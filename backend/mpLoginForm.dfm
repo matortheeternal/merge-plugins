@@ -14,6 +14,7 @@ object LoginForm: TLoginForm
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object btnLogin: TButton
@@ -41,12 +42,12 @@ object LoginForm: TLoginForm
     Height = 165
     Caption = 'Login'
     TabOrder = 2
-    object lblUserID: TLabel
+    object lblUser: TLabel
       Left = 16
       Top = 20
-      Width = 36
+      Width = 22
       Height = 13
-      Caption = 'User ID'
+      Caption = 'User'
     end
     object lblPassword: TLabel
       Left = 16
@@ -76,13 +77,13 @@ object LoginForm: TLoginForm
       Height = 13
       Caption = 'Port'
     end
-    object edUserID: TEdit
+    object edUser: TEdit
       Left = 122
       Top = 17
       Width = 143
       Height = 21
       TabOrder = 0
-      Text = 'root'
+      Text = 'user'
     end
     object edPassword: TEdit
       Left = 122
@@ -99,7 +100,7 @@ object LoginForm: TLoginForm
       Width = 143
       Height = 21
       TabOrder = 2
-      Text = 'mergeplugins'
+      Text = 'database'
     end
     object edHost: TEdit
       Left = 122
