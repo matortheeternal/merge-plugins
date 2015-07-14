@@ -296,6 +296,7 @@ begin
       else
         raise Exception.Create('Invalid game selection!');
     SetGame(settings.selectedGame);
+    wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
     Logger.Write('INIT', 'Game', 'Using '+wbGameName);
     Logger.Write('INIT', 'Path', 'Using '+wbDataPath);
 

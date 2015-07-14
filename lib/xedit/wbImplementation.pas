@@ -10736,7 +10736,7 @@ end;
 function TwbGroupRecord.GetChildrenOf: IwbMainRecord;
 begin
   Result := nil;
-  if (grStruct.grsGroupType in [1, 6..10]) and Assigned(eContainer) then
+  if grStruct.grsGroupType in [1, 6..10] then
     Result := GetFile.RecordByFormID[grStruct.grsLabel, True];
 end;
 
