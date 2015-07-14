@@ -6298,7 +6298,7 @@ begin
     Include(mrStates, mrsBaseRecordChecked);
     if Supports(GetRecordBySignature('NAME'), IwbContainerElementRef, NameRec) then
       if Supports(NameRec.LinksTo, IwbMainRecord, Result) then begin
-        mrBaseRecordID := Result.FixedFormID;
+        mrBaseRecordID := NameRec.NativeValue;
       end;
     Exit;
   end;
@@ -10736,7 +10736,7 @@ end;
 function TwbGroupRecord.GetChildrenOf: IwbMainRecord;
 begin
   Result := nil;
-  if grStruct.grsGroupType in [1, 6..8, 10] then
+  if (grStruct.grsGroupType in [1, 6..10]) and Assigned(eContainer) then
     Result := GetFile.RecordByFormID[grStruct.grsLabel, True];
 end;
 
