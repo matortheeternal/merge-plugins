@@ -69,7 +69,7 @@ begin
   end;
 
   // run main application
-  Inc(statistics.timesRun);
+  Inc(sessionStatistics.timesRun);
   Application.Title := 'Merge Plugins';
   Application.CreateForm(TMergeForm, MergeForm);
   Application.CreateForm(TProgressForm, ProgressForm);

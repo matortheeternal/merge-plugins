@@ -857,8 +857,8 @@ begin
 
   // update statistics
   if merge.status = 7 then
-    Inc(statistics.pluginsMerged, merge.plugins.Count);
-  Inc(statistics.mergesBuilt);
+    Inc(sessionStatistics.pluginsMerged, merge.plugins.Count);
+  Inc(sessionStatistics.mergesBuilt);
 
   // done merging
   time := (Now - time) * 86400;

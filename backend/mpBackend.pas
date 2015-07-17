@@ -32,6 +32,16 @@ type
     text: string;
     constructor Create(time, group, &label, text: string); Overload;
   end;
+  TUserStatistics = class(TObject)
+  public
+    timesRun: integer;
+    mergesBuilt: integer;
+    pluginsChecked: integer;
+    pluginsMerged: integer;
+    reportsSubmitted: integer;
+    procedure FromJson(json: string);
+    function ToJson: string;
+  end;
   TUser = class(TObject)
   public
     ip: string;
@@ -49,6 +59,7 @@ type
     reportsSubmitted: integer;
     constructor Create(ip: string); Overload;
     constructor Create(const fields: TFields); Overload;
+    procedure UpdateStatistics(stats: TUserStatistics);
   end;
   TBlacklistEntry = class(TObject)
   public
@@ -144,7 +155,7 @@ type
     procedure Save(const filename: string);
     procedure Load(const filename: string);
   end;
-  TStatistics = class(TObject)
+  TServerStatistics = class(TObject)
   public
     timesRun: integer;
     uniqueIPs: TStringList;
@@ -297,7 +308,7 @@ var
   LabelFilters, GroupFilters: TList;
   slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary,
   slConnectedIPs: TStringList;
-  statistics: TStatistics;
+  statistics: TServerStatistics;
   settings: TSettings;
   status: TmpStatus;
   LogPath, ProgramPath, ProgramVersion: string;
@@ -1313,7 +1324,7 @@ end;
 
 procedure LoadStatistics;
 begin
-  statistics := TStatistics.Create;
+  statistics := TServerStatistics.Create;
   statistics.Load('statistics.ini');
 end;
 
@@ -1971,6 +1982,14 @@ begin
   reportsSubmitted := fields[12].AsInteger;
 end;
 
+procedure TUser.UpdateStatistics(stats: TUserStatistics);
+begin
+  timesRun := timesRun + stats.timesRun;
+  mergesBuilt := mergesBuilt + stats.mergesBuilt;
+  pluginsChecked := pluginsChecked + stats.pluginsChecked;
+  pluginsMerged := pluginsMerged + stats.pluginsMerged;
+end;
+
 { TmpMessage Constructor }
 constructor TmpMessage.Create;
 begin
@@ -2306,8 +2325,37 @@ begin
   obj := nil;
 end;
 
+{ TUserStatistics }
+procedure TUserStatistics.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  timesRun := obj.I['timesRun'];
+  mergesBuilt := obj.I['mergesBuilt'];
+  pluginsChecked := obj.I['pluginsChecked'];
+  pluginsMerged := obj.I['pluginsMerged'];
+  reportsSubmitted := obj.I['reportsSubmitted'];
+end;
+
+function TUserStatistics.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO();
+
+  obj.I['timesRun'] := timesRun;
+  obj.I['mergesBuilt'] := mergesBuilt;
+  obj.I['pluginsChecked'] := pluginsChecked;
+  obj.I['pluginsMerged'] := pluginsMerged;
+  obj.I['reportsSubmitted'] := reportsSubmitted;
+
+  Result := obj.AsJSon;
+end;
+
 { TStatistics constructor }
-constructor TStatistics.Create;
+constructor TServerStatistics.Create;
 begin
   timesRun := 0;
   dictionaryUpdates := 0;
@@ -2327,7 +2375,7 @@ begin
   fo3Logins := 0;
 end;
 
-procedure TStatistics.Save(const filename: string);
+procedure TServerStatistics.Save(const filename: string);
 var
   ini: TMemIniFile;
 begin
@@ -2354,7 +2402,7 @@ begin
   ini.Free;
 end;
 
-procedure TStatistics.Load(const filename: string);
+procedure TServerStatistics.Load(const filename: string);
 var
   ini: TMemIniFile;
 begin

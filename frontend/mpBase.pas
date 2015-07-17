@@ -224,6 +224,8 @@ type
     constructor Create; virtual;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
+    function ToJson: string;
+    procedure FromJson(json: string);
   end;
 
   { Initialization Methods }
@@ -319,6 +321,7 @@ type
   function ServerAvailable: boolean;
   function CheckAuthorization: boolean;
   procedure SendGameMode;
+  procedure SendStatistics;
   procedure ResetAuth;
   function UsernameAvailable: boolean;
   function RegisterUser: boolean;
@@ -399,7 +402,7 @@ const
 var
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log: TList;
   settings: TSettings;
-  statistics: TStatistics;
+  statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
@@ -1780,11 +1783,24 @@ end;
 procedure LoadStatistics;
 begin
   statistics := TStatistics.Create;
+  sessionStatistics := TStatistics.Create;
   statistics.Load('user\statistics.ini');
 end;
 
 procedure SaveStatistics;
 begin
+  // move session statistics to general statistics
+  Inc(statistics.timesRun, sessionStatistics.timesRun);
+  Inc(statistics.mergesBuilt, sessionStatistics.mergesBuilt);
+  Inc(statistics.pluginsChecked, sessionStatistics.pluginsChecked);
+  Inc(statistics.pluginsMerged, sessionStatistics.pluginsMerged);
+  Inc(statistics.reportsSubmitted, sessionStatistics.reportsSubmitted);
+  // zero out session statistics
+  sessionStatistics.timesRun := 0;
+  sessionStatistics.mergesBuilt := 0;
+  sessionStatistics.pluginsChecked := 0;
+  sessionStatistics.reportsSubmitted := 0;
+  // save to file
   statistics.Save('user\statistics.ini');
 end;
 
@@ -2289,13 +2305,41 @@ begin
   // attempt to check authorization
   // throws exception if server is unavailable
   try
-    // send notify request to server
+    // send notifification to server
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, wbAppName);
     msgJson := msg.ToJson;
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
   except
     on x : Exception do begin
       Logger.Write('ERROR', 'Client', 'Exception sending game mode '+x.Message);
+    end;
+  end;
+end;
+
+procedure SendStatistics;
+var
+  msg, response: TmpMessage;
+  msgJson, LLine: string;
+begin
+  if not TCPClient.Connected then
+    exit;
+
+  // attempt to check authorization
+  // throws exception if server is unavailable
+  try
+    // send statistics to server
+    msg := TmpMessage.Create(MSG_STATISTICS, settings.username, settings.key, sessionStatistics.ToJson);
+    msgJson := msg.ToJson;
+    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+
+    // get response
+    LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    response := TmpMessage.Create;
+    response.FromJson(LLine);
+    Logger.Write('CLIENT', 'Response', response.data);
+  except
+    on x : Exception do begin
+      Logger.Write('ERROR', 'Client', 'Exception sending statistics '+x.Message);
     end;
   end;
 end;
@@ -2626,7 +2670,7 @@ begin
       response := TmpMessage.Create;
       response.FromJson(LLine);
       Logger.Write('CLIENT', 'Response', response.data);
-      Inc(statistics.reportsSubmitted);
+      Inc(sessionStatistics.reportsSubmitted);
     end;
     Result := true;
   except
@@ -2977,7 +3021,7 @@ begin
 
   // update flags, statistics
   GetFlags;
-  Inc(statistics.pluginsChecked);
+  Inc(sessionStatistics.pluginsChecked);
 end;
 
 function TPlugin.ErrorDump: ISuperObject;
@@ -3506,6 +3550,34 @@ begin
   // save file
   ini.UpdateFile;
   ini.Free;
+end;
+
+procedure TStatistics.FromJson(json: string);
+var
+  obj: ISuperObject;
+begin
+  obj := SO(PChar(json));
+
+  timesRun := obj.I['timesRun'];
+  mergesBuilt := obj.I['mergesBuilt'];
+  pluginsChecked := obj.I['pluginsChecked'];
+  pluginsMerged := obj.I['pluginsMerged'];
+  reportsSubmitted := obj.I['reportsSubmitted'];
+end;
+
+function TStatistics.ToJson: string;
+var
+  obj: ISuperObject;
+begin
+  obj := SO();
+
+  obj.I['timesRun'] := timesRun;
+  obj.I['mergesBuilt'] := mergesBuilt;
+  obj.I['pluginsChecked'] := pluginsChecked;
+  obj.I['pluginsMerged'] := pluginsMerged;
+  obj.I['reportsSubmitted'] := reportsSubmitted;
+
+  Result := obj.AsJSon;
 end;
 
 

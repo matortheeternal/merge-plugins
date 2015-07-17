@@ -1125,6 +1125,7 @@ var
   user: TUser;
   stream: TMemoryStream;
   bAuthorized: boolean;
+  userStatistics: TUserStatistics;
 begin
   // get ip, authorization
   ip := AContext.Connection.Socket.Binding.PeerIP;
@@ -1190,7 +1191,19 @@ begin
     end;
 
     MSG_STATISTICS:  begin
-       // TODO: Handle user statistics
+      note := 'Not authorized';
+      if bAuthorized then try
+        userStatistics := TUserStatistics.Create;
+        userStatistics.FromJson(msg.data);
+        user.updateStatistics(userStatistics);
+        note := 'Statistics recieved';
+        userStatistics.Free;
+      except
+        on x : Exception do
+          note := 'Failed to load report.';
+      end;
+      // respond to user
+      SendResponse(user, AContext, MSG_NOTIFY, note);
     end;
 
     MSG_STATUS: begin

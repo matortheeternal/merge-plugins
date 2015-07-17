@@ -415,16 +415,18 @@ procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   ProgressForm: TProgressForm;
 begin
-  // disconnect from server
+  // show progress form
+  ProgressForm := TProgressForm.Create(Self);
+  ProgressForm.PopupParent := Self;
+  ProgressForm.SetTitle('Closing');
+  ProgressForm.Show;
+
+  // send statistics, then disconnect from the server
+  SendStatistics;
   TCPClient.Disconnect;
 
-  // save if bDontSave is false
+  // save ESPs only if it's safe to do so
   if not bDontSave then begin
-    // show progress form
-    ProgressForm := TProgressForm.Create(Self);
-    ProgressForm.PopupParent := Self;
-    ProgressForm.SetTitle('Saving');
-    ProgressForm.Show;
     Enabled := false;
     ProgressForm.ProgressBar.Max := PluginsList.Count + MergesList.Count + 2;
     ProgressForm.DetailsButtonClick(nil);
@@ -438,7 +440,6 @@ begin
     ProgressForm.SetProgress(ProgressForm.ProgressBar.Max);
     // ProgressForm.SaveLog;
     Application.ProcessMessages;
-    ProgressForm.Free;
     Enabled := true;
   end;
 
@@ -449,6 +450,9 @@ begin
   // delete temppath
   DeleteDirectory(TempPath);
   Action := caFree;
+
+  // free progress form
+  ProgressForm.Free;
 
   // restart program if update applied
   if bInstallUpdate then
@@ -605,11 +609,11 @@ begin
   AddDetailsItem('Game mode', wbGameName);
   AddDetailsItem('Language', settings.language);
   AddDetailsItem(' ', ' ');
-  AddDetailsItem('Times run', IntToStr(statistics.timesRun));
-  AddDetailsItem('Merges built', IntToStr(statistics.mergesBuilt));
-  AddDetailsItem('Plugins checked for errors', IntToStr(statistics.pluginsChecked));
-  AddDetailsItem('Plugins merged', IntToStr(statistics.pluginsMerged));
-  AddDetailsItem('Reports submitted', IntToStr(statistics.reportsSubmitted));
+  AddDetailsItem('Times run', IntToStr(statistics.timesRun + sessionStatistics.timesRun));
+  AddDetailsItem('Merges built', IntToStr(statistics.mergesBuilt + sessionStatistics.mergesBuilt));
+  AddDetailsItem('Plugins checked for errors', IntToStr(statistics.pluginsChecked + sessionStatistics.pluginsChecked));
+  AddDetailsItem('Plugins merged', IntToStr(statistics.pluginsMerged + sessionStatistics.pluginsMerged));
+  AddDetailsItem('Reports submitted', IntToStr(statistics.reportsSubmitted + sessionStatistics.reportsSubmitted));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Website', 'http://www.nexusmods.com/skyrim/mods/37981');
   AddDetailsItem('API Credits', 'superobject, TurboPower Abbrevia, xEdit');
