@@ -23,7 +23,6 @@ type
     IconList: TImageList;
     FlagList: TImageList;
     DoubleIconList: TImageList;
-    StatusBar: TStatusBar;
     // QUICKBAR
     QuickBar: TPanel;
     NewButton: TSpeedButton;
@@ -68,7 +67,6 @@ type
     DetailsEditor: TValueListEditor;
     RemoveBadPluginsItem: TMenuItem;
     ReconnectTimer: TTimer;
-    StatusIcons: TImageList;
     Heartbeat: TTimer;
     RefreshTimer: TTimer;
     LogListView: TListView;
@@ -82,6 +80,21 @@ type
     FilterMergeItem: TMenuItem;
     FilterErrorItem: TMenuItem;
     ToggleAutoScrollItem: TMenuItem;
+    StatusPanel: TPanel;
+    StatusPanelMessage: TPanel;
+    StatusPanelBlocking: TPanel;
+    StatusPanelProgram: TPanel;
+    StatusPanelDictionary: TPanel;
+    StatusPanelConnection: TPanel;
+    StatusPanelMerges: TPanel;
+    StatusPanelLanguage: TPanel;
+    StatusPanelVersion: TPanel;
+    ImageBlocked: TImage;
+    ImageDisconnected: TImage;
+    ImageBuild: TImage;
+    ImageDictionaryUpdate: TImage;
+    ImageProgramUpdate: TImage;
+    ImageConnected: TImage;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const group, &label, text: string);
@@ -92,8 +105,8 @@ type
     procedure OnTimer(Sender: TObject);
     procedure OnHeartbeatTimer(Sender: TObject);
     procedure OnRepaintTimer(Sender: TObject);
-    procedure ClientStatusChanged(ASender: TObject; const AStatus: TIdStatus; const AStatusText: string);
     procedure ShowAuthorizationMessage;
+    procedure UpdateStatusPanel;
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string; editable: boolean = false):
       TItemProp;
@@ -102,8 +115,6 @@ type
     procedure UpdateApplicationDetails;
     procedure DetailsEditorMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    {procedure DetailsEditorSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);}
     // PLUGINS LIST VIEW EVENTS
     procedure UpdatePluginDetails;
     procedure PluginsListViewChange(Sender: TObject; Item: TListItem;
@@ -168,8 +179,6 @@ type
     procedure OptionsButtonClick(Sender: TObject);
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
-    procedure StatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
-      const Rect: TRect);
     procedure ToggleAutoScrollItemClick(Sender: TObject);
   private
     { Private declarations }
@@ -258,7 +267,6 @@ begin
 
     // INITIALIZE CLIENT
     InitializeClient;
-    TCPClient.OnStatus := ClientStatusChanged;
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
@@ -271,8 +279,8 @@ begin
     IconList.GetBitmap(6, HelpButton.Glyph);
 
     // STATUSBAR VALUES
-    StatusBar.Panels[7].Text := settings.language;
-    StatusBar.Panels[8].Text := 'v'+ProgramVersion;
+    StatusPanelLanguage.Caption := settings.language;
+    StatusPanelVersion.Caption := 'v'+ProgramVersion;
 
     // INITIALIZE TES5EDIT API
     xEditLogLabel := 'Plugins';
@@ -399,13 +407,13 @@ begin
   CorrectListViewWidth(PluginsListView);
 
   // SHOW LOADER HINT
-  StatusBar.SimpleText := 'Background loader in progress.';
+  StatusPanelMessage.Caption := 'Background loader in progress.';
 end;
 
 procedure TMergeForm.LoaderDone;
 begin
   SetTaskbarProgressState(tbpsNone);
-  StatusBar.SimpleText := 'Background loader finished.';
+  StatusPanelMessage.Caption := 'Background loader finished.';
   xEditLogLabel := 'xEdit';
   FlashWindow(Application.Handle, True);
   UpdateMerges;
@@ -470,18 +478,13 @@ end;
 
 procedure TMergeForm.OnRepaintTimer(Sender: TObject);
 begin
-  StatusBar.Invalidate;
+  UpdateStatusPanel;
 end;
 
 procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
 begin
   if (not bConnecting) and (not ServerAvailable) then
     TCPClient.Disconnect;
-end;
-
-procedure TMergeForm.ClientStatusChanged(ASender: TObject; const AStatus: TIdStatus; const AStatusText: string);
-begin
-  StatusBar.Repaint;
 end;
 
 procedure TMergeForm.ShowAuthorizationMessage;
@@ -494,45 +497,14 @@ begin
   end;
 end;
 
-procedure TMergeForm.StatusBarDrawPanel(StatusBar: TStatusBar;
-  Panel: TStatusPanel; const Rect: TRect);
-var
-  icon: TIcon;
+procedure TMergeForm.UpdateStatusPanel;
 begin
-  icon := TIcon.Create;
-  case Panel.Index of
-    2: begin
-      if not bLoaderDone then begin
-        StatusIcons.GetIcon(0, icon);
-        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
-      end;
-    end;
-    3: begin
-      if TCPClient.Connected then
-        StatusIcons.GetIcon(1, icon)
-      else
-        StatusIcons.GetIcon(2, icon);
-      StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
-    end;
-    4: begin
-      if bLoaderDone and bMergesToBuild then begin
-        StatusIcons.GetIcon(3, icon);
-        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
-      end;
-    end;
-    5: begin
-      if bDictionaryUpdate then begin
-        StatusIcons.GetIcon(4, icon);
-        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
-      end;
-    end;
-    6: begin
-      if bProgramUpdate then begin
-        StatusIcons.GetIcon(5, icon);
-        StatusBar.Canvas.Draw(Rect.Left + 2, Rect.Top + 2, icon);
-      end;
-    end;
-  end;
+  ImageBlocked.Visible := not bLoaderDone;
+  ImageConnected.Visible := TCPClient.Connected;
+  ImageDisconnected.Visible := not TCPClient.Connected;
+  ImageBuild.Visible := bLoaderDone and bMergesToBuild;
+  ImageDictionaryUpdate.Visible := bDictionaryUpdate;
+  ImageProgramUpdate.Visible := bProgramUpdate;
 end;
 
 {******************************************************************************}
