@@ -182,6 +182,7 @@ type
   { MySQL methods }
   procedure DBLogin(userID, password, database, host, port: string);
   procedure SQLQuery(query: string);
+  function SanitizeForSQL(s: string): string;
   //==USERS==
   procedure DBQueryUsers;
   function UserWhereClause(user: TUser): string;
@@ -444,6 +445,11 @@ begin
         Logger.Write('ERROR', 'SQL', x.Message);
     end;
   end;
+end;
+
+function SanitizeForSQL(s: string): string;
+begin
+  Result := StringReplace(s, '''', '''''', [rfReplaceAll]);
 end;
 
 
@@ -2028,9 +2034,9 @@ begin
   obj := SO(PChar(json));
 
   id := obj.I['id'];
-  username := obj.S['username'];
-  auth := obj.S['auth'];
-  data := obj.S['data'];
+  username := SanitizeForSQL(obj.S['username']);
+  auth := SanitizeForSQL(obj.S['auth']);
+  data := SanitizeForSQL(obj.S['data']);
 end;
 
 { Create TFilter object }
@@ -2070,11 +2076,11 @@ var
 begin
   obj := SO(PChar(json));
 
-  ProgramVersion := obj.S['ProgramVersion'];
-  TES5Hash := obj.S['TES5Hash'];
-  TES4Hash := obj.S['TES4Hash'];
-  FNVHash := obj.S['FNVHash'];
-  FO3Hash := obj.S['FO3Hash'];
+  ProgramVersion := SanitizeForSQL(obj.S['ProgramVersion']);
+  TES5Hash := SanitizeForSQL(obj.S['TES5Hash']);
+  TES4Hash := SanitizeForSQL(obj.S['TES4Hash']);
+  FNVHash := SanitizeForSQL(obj.S['FNVHash']);
+  FO3Hash := SanitizeForSQL(obj.S['FO3Hash']);
 end;
 
 procedure TmpStatus.Refresh;
@@ -2175,15 +2181,15 @@ var
 begin
   obj := SO(PChar(json));
 
-  game := obj.S['game'];
-  username := obj.S['username'];
-  filename := obj.S['filename'];
-  hash := obj.S['hash'];
+  game := SanitizeForSQL(obj.S['game']);
+  username := SanitizeForSQL(obj.S['username']);
+  filename := SanitizeForSQL(obj.S['filename']);
+  hash := SanitizeForSQL(obj.S['hash']);
   recordCount := obj.I['recordCount'];
   rating := obj.I['rating'];
-  mergeVersion := obj.S['mergeVersion'];
-  notes.Text := obj.S['notes'];
-  dateSubmitted := SQLToDateTime(obj.S['dateSubmitted']);
+  mergeVersion := SanitizeForSQL(obj.S['mergeVersion']);
+  notes.Text := SanitizeForSQL(obj.S['notes']);
+  dateSubmitted := SQLToDateTime(SanitizeForSQL(obj.S['dateSubmitted']));
 end;
 
 { TEntry Constructor }

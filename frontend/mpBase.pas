@@ -1769,15 +1769,78 @@ end;
 }
 {******************************************************************************}
 
+procedure LoadRegistrationData;
+const
+  sMergePluginsRegKey = 'Software\\Merge Plugins\\';
+  sMergePluginsRegKey64 = 'Software\\Wow6432Node\\Merge Plugins\\';
+var
+  reg: TRegistry;
+begin
+  reg := TRegistry.Create(KEY_READ);
+  reg.RootKey := HKEY_LOCAL_MACHINE;
+
+  try
+    if (not reg.KeyExists(sMergePluginsRegKey))
+      xor (not reg.KeyExists(sMergePluginsRegKey64)) then
+        exit;
+
+    if not reg.OpenKeyReadOnly(sMergePluginsRegKey) then
+      if not reg.OpenKeyReadOnly(sMergePluginsRegKey64) then
+        exit;
+
+    if reg.ReadBool('Registered') then begin
+      settings.username := reg.ReadString('Username');
+      settings.key := reg.ReadString('Key');
+      settings.registered := true;
+    end;
+  except on Exception do
+    // nothing
+  end;
+
+  reg.CloseKey();
+  reg.Free;
+end;
+
 procedure LoadSettings;
 begin
   settings := TSettings.Create;
   settings.Load('user\settings.ini');
+  LoadRegistrationData;
+end;
+
+procedure SaveRegistrationData;
+const
+  sMergePluginsRegKey = 'Software\\Merge Plugins\\';
+  sMergePluginsRegKey64 = 'Software\\Wow6432Node\\Merge Plugins\\';
+var
+  reg: TRegistry;
+begin
+  reg := TRegistry.Create(KEY_READ);
+  reg.RootKey := HKEY_LOCAL_MACHINE;
+
+  try
+    reg.Access := KEY_WRITE;
+    if not reg.OpenKey(sMergePluginsRegKey, true) then
+      if not reg.OpenKey(sMergePluginsRegKey64, true) then
+        exit;
+
+    reg.WriteString('Username', settings.username);
+    reg.WriteString('Key', settings.key);
+    reg.WriteBool('Registered', settings.registered);
+  except on Exception do
+    // nothing
+  end;
+
+  reg.CloseKey();
+  reg.Free;
 end;
 
 procedure SaveSettings;
 begin
   settings.Save('user\settings.ini');
+  // save registration data to registry if registered
+  if (settings.registered) then
+    SaveRegistrationData;
 end;
 
 procedure LoadStatistics;

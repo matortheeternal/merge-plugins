@@ -84,6 +84,7 @@ type
     procedure lvUsersDblClick(Sender: TObject);
     procedure meTemplateHashChange(Sender: TObject);
     procedure meTemplateNoHashChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
@@ -183,6 +184,13 @@ begin
   // load ips
   lvBlacklist.Items.Count := Blacklist.Count;
   lvUsers.Items.Count := Users.Count;
+end;
+
+procedure TOptionsForm.FormShow(Sender: TObject);
+begin
+  // correct list view widths
+  CorrectListViewWidth(lvBlacklist);
+  CorrectListViewWidth(lvUsers);
 end;
 
 procedure TOptionsForm.lvBlacklistData(Sender: TObject; Item: TListItem);

@@ -1268,6 +1268,8 @@ begin
         DBAddReport(report, 'unapproved_reports');
         note := 'Report accepted.';
         Inc(statistics.reportsRecieved);
+        Inc(user.reportsSubmitted);
+
         // update statistics based on game
         if report.game = 'TES5' then
           Inc(statistics.tes5Reports)
