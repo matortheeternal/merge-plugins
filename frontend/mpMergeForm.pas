@@ -220,7 +220,8 @@ begin
     Log.Add(msg);
     LogListView.Items.Count := Log.Count;
     if bAutoScroll then begin
-      //LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
+      LogListView.ClearSelection;
+      LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
       SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
     end;
     CorrectListViewWidth(LogListView);
@@ -558,9 +559,18 @@ var
 begin
   ndx := TPageControl(Sender).ActivePageIndex;
   case ndx of
-    0: UpdatePluginDetails;
-    1: UpdateMergeDetails;
-    2: UpdateApplicationDetails;
+    0: begin
+      UpdatePluginDetails;
+      CorrectListViewWidth(PluginsListView);
+    end;
+    1: begin
+      UpdateMergeDetails;
+      CorrectListViewWidth(MergeListView);
+    end;
+    2: begin
+      UpdateApplicationDetails;
+      CorrectListViewWidth(LogListView);
+    end;
   end;
 end;
 

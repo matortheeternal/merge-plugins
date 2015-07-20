@@ -128,7 +128,6 @@ object MergeForm: TMergeForm
     Caption = 'MainPanel'
     Constraints.MinWidth = 200
     TabOrder = 1
-    ExplicitHeight = 617
     object PageControl: TPageControl
       Left = 3
       Top = 7
@@ -139,14 +138,12 @@ object MergeForm: TMergeForm
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
       OnChange = PageControlChange
-      ExplicitHeight = 607
       object PluginsTabSheet: TTabSheet
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Caption = 'Plugins'
-        ExplicitHeight = 579
         object PluginsListView: TListView
           Left = 3
           Top = 3
@@ -187,12 +184,14 @@ object MergeForm: TMergeForm
           OnData = PluginsListViewData
           OnDrawItem = PluginsListViewDrawItem
           OnMouseMove = PluginsListViewMouseMove
-          ExplicitHeight = 573
         end
       end
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
         ExplicitHeight = 579
         object MergeListView: TListView
           Left = 3
@@ -244,6 +243,9 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
         ExplicitHeight = 579
         object LogListView: TListView
           Left = 3
@@ -297,7 +299,6 @@ object MergeForm: TMergeForm
     BevelOuter = bvNone
     Constraints.MinWidth = 200
     TabOrder = 2
-    ExplicitHeight = 617
     object DetailsLabel: TLabel
       Left = 6
       Top = 10
@@ -322,7 +323,6 @@ object MergeForm: TMergeForm
         'Name'
         'Value')
       OnMouseUp = DetailsEditorMouseUp
-      ExplicitHeight = 586
       ColWidths = (
         150
         435)
@@ -760,7 +760,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801980120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F8019C0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1900,7 +1900,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010109001800780110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101090018007C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2309,7 +2309,7 @@ object MergeForm: TMergeForm
     Left = 936
     Top = 8
     Bitmap = {
-      494C010101001400B40040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101001400B80040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100002000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

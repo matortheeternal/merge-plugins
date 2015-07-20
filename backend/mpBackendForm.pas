@@ -264,8 +264,11 @@ end;
 procedure TBackendForm.FormShow(Sender: TObject);
 begin
   // Correct list view widths
+  PageControl.ActivePage := UnapprovedTabSheet;
   CorrectListViewWidth(UnapprovedListView);
+  PageControl.ActivePage := ApprovedTabSheet;
   CorrectListViewWidth(ApprovedListView);
+  PageControl.ActivePage := LogTabSheet;
 
   // Refresh GUI
   RefreshGUI;
@@ -373,9 +376,18 @@ var
 begin
   ndx := TPageControl(Sender).ActivePageIndex;
   case ndx of
-    0: UpdateUnapprovedDetails;
-    1: UpdateApprovedDetails;
-    2: UpdateApplicationDetails;
+    0: begin
+      UpdateUnapprovedDetails;
+      CorrectListViewWidth(UnapprovedListView);
+    end;
+    1: begin
+      UpdateApprovedDetails;
+      CorrectListViewWidth(ApprovedListView);
+    end;
+    2: begin
+      UpdateApplicationDetails;
+      CorrectListViewWidth(LogListView);
+    end;
   end;
 end;
 

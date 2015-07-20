@@ -189,8 +189,12 @@ end;
 procedure TOptionsForm.FormShow(Sender: TObject);
 begin
   // correct list view widths
+  SettingsPageControl.ActivePage := UsersTabSheet;
   CorrectListViewWidth(lvBlacklist);
   CorrectListViewWidth(lvUsers);
+
+  // return to general page
+  SettingsPageControl.ActivePage := GeneralTabSheet;
 end;
 
 procedure TOptionsForm.lvBlacklistData(Sender: TObject; Item: TListItem);
