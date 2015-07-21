@@ -78,13 +78,13 @@ type
     lblInitColor: TLabel;
     lblLoadColor: TLabel;
     lblMergeColor: TLabel;
-    lblGUIColor: TLabel;
+    lblPluginColor: TLabel;
     lblErrorColor: TLabel;
     cbClientColor: TColorBox;
     cbInitColor: TColorBox;
     cbLoadColor: TColorBox;
     cbMergeColor: TColorBox;
-    cbGUIColor: TColorBox;
+    cbPluginColor: TColorBox;
     cbErrorColor: TColorBox;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
@@ -203,6 +203,11 @@ end;
 
 procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
+  // check if we need to update merge status afterwards
+  bUpdateMergeStatus := (settings.usingMO <> kbUsingMO.Checked)
+    or (settings.MODirectory <> edMODirectory.Text)
+    or (settings.mergeDirectory <> edMergeDirectory.Text);
+
   // save changes to settings
   settings.language := cbLanguage.Text;
   settings.defaultGame := GetGameID(cbGameMode.Text);
@@ -237,7 +242,7 @@ begin
   settings.initMessageColor := cbInitColor.Selected;
   settings.loadMessageColor := cbLoadColor.Selected;
   settings.mergeMessageColor := cbMergeColor.Selected;
-  settings.guiMessageColor := cbGuiColor.Selected;
+  settings.pluginMessageColor := cbPluginColor.Selected;
   settings.errorMessageColor := cbErrorColor.Selected;
   SaveSettings;
 end;
@@ -398,7 +403,7 @@ begin
   cbInitColor.Selected := settings.initMessageColor;
   cbLoadColor.Selected := settings.loadMessageColor;
   cbMergeColor.Selected := settings.mergeMessageColor;
-  cbGuiColor.Selected := settings.guiMessageColor;
+  cbPluginColor.Selected := settings.pluginMessageColor;
   cbErrorColor.Selected := settings.errorMessageColor;
 
   // load valid game paths

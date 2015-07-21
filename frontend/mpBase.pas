@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
-  Controls, Registry, Graphics, ComCtrls, CommCtrl,
+  Controls, Registry, Graphics, ComCtrls, CommCtrl, RTTI,
   // indy components
   IdTCPClient, IdStack, IdGlobal,
   // superobject json library
@@ -36,8 +36,6 @@ type
     auth: string;
     data: string;
     constructor Create(id: integer; username, auth, data: string); Overload;
-    function ToJson: string;
-    procedure FromJson(json: string);
   end;
   TmpStatus = class(TObject)
   public
@@ -47,8 +45,6 @@ type
     fnvHash: string;
     fo3Hash: string;
     constructor Create; Overload;
-    function ToJson: string;
-    procedure FromJson(json: string);
   end;
   TReport = class(TObject)
   public
@@ -59,11 +55,10 @@ type
     recordCount: integer;
     rating: integer;
     mergeVersion: string;
-    notes: TStringList;
+    notes: string;
     dateSubmitted: TDateTime;
-    constructor Create; Overload;
-    function ToJson: string;
-    procedure FromJson(json: string);
+    procedure SetNotes(notes: string);
+    function GetNotes: string;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
   end;
@@ -78,6 +73,14 @@ type
     gameMode: TwbGameMode;
     appName: string;
     exeName: string;
+  end;
+  TFilter = class(TObject)
+  public
+    group: string;
+    &label: string;
+    enabled: boolean;
+    constructor Create(group: string; enabled: boolean); Overload;
+    constructor Create(group, &label: string; enabled: boolean); Overload;
   end;
   TEntry = class(TObject)
   public
@@ -198,7 +201,7 @@ type
     clientMessageColor: TColor;
     loadMessageColor: TColor;
     mergeMessageColor: TColor;
-    guiMessageColor: TColor;
+    pluginMessageColor: TColor;
     errorMessageColor: TColor;
     debugRenumbering: boolean;
     debugMergeStatus: boolean;
@@ -224,10 +227,11 @@ type
     constructor Create; virtual;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
-    function ToJson: string;
-    procedure FromJson(json: string);
   end;
 
+  { Generic Methods }
+  function ToJson(obj: TObject): string;
+  function FromJson(json: string; classType: TClass): TObject;
   { Initialization Methods }
   function GamePathValid(path: string; id: integer): boolean;
   procedure SetGame(id: integer);
@@ -291,7 +295,7 @@ type
   procedure InitLog;
   procedure RebuildLog;
   procedure SaveLog(var Log: TList);
-  function MessageEnabled(var msg: TLogMessage): boolean;
+  function MessageEnabled(msg: TLogMessage): boolean;
   { Dictionary and Settings methods }
   procedure LoadSettings;
   procedure SaveSettings;
@@ -400,14 +404,15 @@ const
   );
 
 var
-  dictionary, blacklist, PluginsList, MergesList, BaseLog, Log: TList;
+  dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
+  LabelFilters, GroupFilters: TList;
   settings: TSettings;
   statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
-  bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate, bInitGroup,
-  bLoadGroup, bClientGroup, bMergeGroup, bErrorGroup, bConnecting: boolean;
+  bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
+  bConnecting, bUpdateMergeStatus: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
   ProgramVersion, xEditLogLabel: string;
   batch, ActiveMods: TStringList;
@@ -416,6 +421,70 @@ var
   LastStatusTime: TDateTime;
 
 implementation
+
+{******************************************************************************}
+{ Generic Methods
+  These are generic methods that can be used with any object.
+}
+{******************************************************************************}
+
+function ToJson(obj: TObject): string;
+var
+  rtype: TRTTIType;
+  field: TRTTIField;
+  fieldType: string;
+  jsonObj: ISuperObject;
+begin
+  jsonObj := SO;
+  rtype := TRTTIContext.Create.GetType(obj.ClassType);
+
+  // loop through fields
+  for field in rType.GetFields do begin
+    fieldType := field.FieldType.ToString;
+    // handle datatypes I use
+    if (fieldType = 'string') then
+      jsonObj.S[field.Name] := field.GetValue(obj).ToString
+    else if (fieldType = 'Integer') then
+      jsonObj.I[field.Name] := field.GetValue(obj).AsInteger
+    else if (fieldType = 'TDateTime') then
+      jsonObj.S[field.Name] := field.GetValue(obj).ToString;
+  end;
+
+  Result := jsonObj.AsJSon;
+end;
+
+{
+  Example usage:
+  report := TReport(FromJson(reportJson, report.ClassType));
+}
+function FromJson(json: string; classType: TClass): TObject;
+var
+  rtype: TRTTIType;
+  field: TRTTIField;
+  fieldType: string;
+  context: TRTTIContext;
+  jsonObj: ISuperObject;
+begin
+  jsonObj := SO(PChar(json));
+  context := TRTTIContext.Create;
+  rtype := context.GetType(classType);
+  Result := classType.Create;
+
+  // loop through fields
+  for field in rType.GetFields do begin
+    fieldType := field.FieldType.ToString;
+    // handle datatypes I use
+    if (fieldType = 'string') then
+      field.SetValue(Result, jsonObj.S[field.Name])
+    else if (fieldType = 'Integer') then
+      field.SetValue(Result, jsonObj.I[field.Name])
+    else if (fieldType = 'TDateTime') then
+      field.SetValue(Result, SQLToDateTime(jsonObj.S[field.Name]));
+  end;
+
+  context.Free;
+end;
+
 
 {******************************************************************************}
 { Initialization Methods
@@ -1701,11 +1770,40 @@ procedure InitLog;
 begin
   BaseLog := TList.Create;
   Log := TList.Create;
-  bInitGroup := true;
-  bLoadGroup := true;
-  bClientGroup := true;
-  bMergeGroup := true;
-  bErrorGroup := true;
+  LabelFilters := TList.Create;
+  GroupFilters := TList.Create;
+  // INITIALIZE GROUP FILTERS
+  GroupFilters.Add(TFilter.Create('INIT', true));
+  GroupFilters.Add(TFilter.Create('LOAD', true));
+  GroupFilters.Add(TFilter.Create('CLIENT', true));
+  GroupFilters.Add(TFilter.Create('MERGE', true));
+  GroupFilters.Add(TFilter.Create('PLUGIN', true));
+  GroupFilters.Add(TFilter.Create('ERROR', true));
+  // INITIALIZE LABEL FILTERS
+  LabelFilters.Add(TFilter.Create('INIT', 'Game', true));
+  LabelFilters.Add(TFilter.Create('INIT', 'Path', true));
+  LabelFilters.Add(TFilter.Create('INIT', 'Definitions', true));
+  LabelFilters.Add(TFilter.Create('INIT', 'Dictionary', true));
+  LabelFilters.Add(TFilter.Create('INIT', 'Load Order', true));
+  LabelFilters.Add(TFilter.Create('INIT', 'Log', true));
+  LabelFilters.Add(TFilter.Create('LOAD', 'Order', false));
+  LabelFilters.Add(TFilter.Create('LOAD', 'Plugins', false));
+  LabelFilters.Add(TFilter.Create('LOAD', 'Background', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Connect', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Login', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Response', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Update', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Report', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Status', false));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Create', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Edit', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Check', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Clean', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Delete', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Build', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Report', true));
+  LabelFilters.Add(TFilter.Create('PLUGIN', 'Report', true));
+  LabelFilters.Add(TFilter.Create('PLUGIN', 'Check', true));
 end;
 
 procedure RebuildLog;
@@ -1739,19 +1837,47 @@ begin
   sl.Free;
 end;
 
-function MessageEnabled(var msg: TLogMessage): boolean;
+function GetGroupFilter(msg: TLogMessage): TFilter;
+var
+  i: Integer;
+  filter: TFilter;
+begin
+  Result := nil;
+  for i := 0 to Pred(GroupFilters.Count) do begin
+    filter := TFilter(GroupFilters[i]);
+    if filter.group = msg.group then begin
+      Result := filter;
+      exit;
+    end;
+  end;
+end;
+
+function GetLabelFilter(msg: TLogMessage): TFilter;
+var
+  i: Integer;
+  filter: TFilter;
+begin
+  Result := nil;
+  for i := 0 to Pred(LabelFilters.Count) do begin
+    filter := TFilter(LabelFilters[i]);
+    if filter.&label = msg.&label then begin
+      Result := filter;
+      exit;
+    end;
+  end;
+end;
+
+function MessageEnabled(msg: TLogMessage): boolean;
+var
+  GroupFilter, LabelFilter: TFilter;
 begin
   Result := true;
-  if msg.group = 'INIT' then
-    Result := bInitGroup
-  else if msg.group = 'LOAD' then
-    Result := bLoadGroup and (settings.debugPluginsLoad or (msg.&label <> 'Plugins'))
-  else if msg.group = 'CLIENT' then
-    Result := bClientGroup
-  else if msg.group = 'MERGE' then
-    Result := bMergeGroup
-  else if msg.group = 'ERROR' then
-    Result := bErrorGroup;
+  GroupFilter := GetGroupFilter(msg);
+  LabelFilter := GetLabelFilter(msg);
+  if GroupFilter <> nil then
+    Result := Result and GroupFilter.enabled;
+  if LabelFilter <> nil then
+    Result := Result and LabelFilter.enabled;
 end;
 
 {******************************************************************************}
@@ -2338,13 +2464,13 @@ begin
   try
     // send notify request to server
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, 'Authorized?');
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
-    response.FromJson(line);
+    response := TmpMessage(FromJson(line, response.ClassType));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Yes';
   except
@@ -2370,7 +2496,7 @@ begin
   try
     // send notifification to server
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, wbAppName);
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
   except
     on x : Exception do begin
@@ -2391,14 +2517,14 @@ begin
   // throws exception if server is unavailable
   try
     // send statistics to server
-    msg := TmpMessage.Create(MSG_STATISTICS, settings.username, settings.key, sessionStatistics.ToJson);
-    msgJson := msg.ToJson;
+    msg := TmpMessage.Create(MSG_STATISTICS, settings.username, settings.key, ToJson(sessionStatistics));
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
     LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
-    response.FromJson(LLine);
+    response := TmpMessage(FromJson(LLine, response.ClassType));
     Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2421,13 +2547,13 @@ begin
   try
     // send auth reset request to server
     msg := TmpMessage.Create(MSG_AUTH_RESET, settings.username, settings.key, '');
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
-    response.FromJson(line);
+    response := TmpMessage(FromJson(line, response.ClassType));
     Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2451,13 +2577,13 @@ begin
   try
     // send register request to server
     msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, 'Check');
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
-    response.FromJson(line);
+    response := TmpMessage(FromJson(line, response.ClassType));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Available';
   except
@@ -2482,13 +2608,13 @@ begin
   try
     // send register request to server
     msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, '');
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
-    response.FromJson(line);
+    response := TmpMessage(FromJson(line, response.ClassType));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = ('Registered ' + settings.username);
   except
@@ -2516,15 +2642,15 @@ begin
   try
     // send status request to server
     msg := TmpMessage.Create(MSG_STATUS, settings.username, settings.key, '');
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
     LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage.Create;
-    response.FromJson(LLine);
+    response := TmpMessage(FromJson(LLine, response.ClassType));
     RemoteStatus := TmpStatus.Create;
-    RemoteStatus.FromJson(response.data);
+    RemoteStatus := TmpStatus(FromJson(response.data, RemoteStatus.ClassType));
     //Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2604,7 +2730,7 @@ begin
   try
     // send request to server
     msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, filename);
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
@@ -2685,7 +2811,7 @@ begin
   try
     // send request to server
     msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, 'Program');
-    msgJson := msg.ToJson;
+    msgJson := ToJson(msg);
     TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
     // get response
@@ -2720,18 +2846,18 @@ begin
     // send all reports in @lst
     for i := 0 to Pred(lst.Count) do begin
       report := TReport(lst[i]);
-      reportJson := report.ToJson;
+      reportJson := ToJson(report);
       Logger.Write('CLIENT', 'Report', 'Sending '+report.filename);
 
       // send report to server
       msg := TmpMessage.Create(MSG_REPORT, settings.username, settings.key, reportJson);
-      msgJson := msg.ToJson;
+      msgJson := ToJson(msg);
       TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 
       // get response
       LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
       response := TmpMessage.Create;
-      response.FromJson(LLine);
+      response := TmpMessage(FromJson(LLine, response.ClassType));
       Logger.Write('CLIENT', 'Response', response.data);
       Inc(sessionStatistics.reportsSubmitted);
     end;
@@ -2794,35 +2920,6 @@ begin
   self.data := data;
 end;
 
-{ TmpMessage to json string }
-function TmpMessage.ToJson: string;
-var
-  obj: ISuperObject;
-begin
-  obj := SO;
-
-  // filename, hash, errors
-  obj.I['id'] := id;
-  obj.S['username'] := username;
-  obj.S['auth'] := auth;
-  obj.S['data'] := data;
-
-  Result := obj.AsJSon;
-end;
-
-{ Json string to TmpMessage }
-procedure TmpMessage.FromJson(json: string);
-var
-  obj: ISuperObject;
-begin
-  obj := SO(PChar(json));
-
-  id := obj.I['id'];
-  username := obj.S['username'];
-  auth := obj.S['auth'];
-  data := obj.S['data'];
-end;
-
 { Constructor for TmpStatus }
 constructor TmpStatus.Create;
 begin
@@ -2837,78 +2934,15 @@ begin
     FO3Hash := GetCRC32('FO3Dictionary.txt');
 end;
 
-{ TmpStatus to json string }
-function TmpStatus.ToJson: string;
-var
-  obj: ISuperObject;
+{ TReport }
+procedure TReport.SetNotes(notes: string);
 begin
-  obj := SO;
-
-  obj.S['ProgramVersion'] := ProgramVersion;
-  obj.S['TES5Hash'] := TES5Hash;
-  obj.S['TES4Hash'] := TES4Hash;
-  obj.S['FNVHash'] := FNVHash;
-  obj.S['FO3Hash'] := FO3Hash;
-
-  Result := obj.AsJSon;
+  self.notes := StringReplace(Trim(notes), #13#10, '@13', [rfReplaceAll]);
 end;
 
-{ Json string to TmpStatus }
-procedure TmpStatus.FromJson(json: string);
-var
-  obj: ISuperObject;
+function TReport.GetNotes: string;
 begin
-  obj := SO(PChar(json));
-
-  ProgramVersion := obj.S['ProgramVersion'];
-  TES5Hash := obj.S['TES5Hash'];
-  TES4Hash := obj.S['TES4Hash'];
-  FNVHash := obj.S['FNVHash'];
-  FO3Hash := obj.S['FO3Hash'];
-end;
-
-{ TReport Constructor }
-constructor TReport.Create;
-begin
-  notes := TStringList.Create;
-end;
-
-{ TReport to json string }
-function TReport.ToJson: string;
-var
-  obj: ISuperObject;
-begin
-  obj := SO;
-
-  obj.S['game'] := game;
-  obj.S['username'] := username;
-  obj.S['filename'] := filename;
-  obj.S['hash'] := hash;
-  obj.I['recordCount'] := recordCount;
-  obj.I['rating'] := rating;
-  obj.S['mergeVersion'] := mergeVersion;
-  obj.S['notes'] := StringReplace(Trim(notes.Text), #13#10, '@13', [rfReplaceAll]);
-  obj.S['dateSubmitted'] := DateTimeToSQL(dateSubmitted);
-
-  Result := obj.AsJSon;
-end;
-
-{ Json string to TReport }
-procedure TReport.FromJson(json: string);
-var
-  obj: ISuperObject;
-begin
-  obj := SO(PChar(json));
-
-  game := obj.S['game'];
-  username := obj.S['username'];
-  filename := obj.S['filename'];
-  hash := obj.S['hash'];
-  recordCount := obj.I['recordCount'];
-  rating := obj.I['rating'];
-  mergeVersion := obj.S['mergeVersion'];
-  notes.Text := obj.S['notes'];
-  dateSubmitted := SQLToDateTime(obj.S['dateSubmitted']);
+  Result := StringReplace(notes, '@13', #13#10, [rfReplaceAll]);
 end;
 
 procedure TReport.Save(const filename: string);
@@ -2916,7 +2950,7 @@ var
   sl: TStringList;
 begin
   sl := TStringList.Create;
-  sl.Text := ToJson;
+  sl.Text := ToJson(self);
   sl.SaveToFile(filename);
   sl.Free;
 end;
@@ -2927,7 +2961,7 @@ var
 begin
   sl := TStringList.Create;
   sl.LoadFromFile(filename);
-  FromJson(sl.Text);
+  self := TReport(FromJson(sl.Text, self.ClassType));
   sl.Free;
 end;
 
@@ -3213,8 +3247,8 @@ begin
   end;
 end;
 
-{ Checks to see if the plugins in a merge have been modified since it was last
-  merged. }
+// Checks to see if the plugins in a merge have been modified since it was last
+// merged.
 function TMerge.PluginsModified: boolean;
 var
   plugin: TPlugin;
@@ -3223,6 +3257,7 @@ begin
   Result := false;
   // true if number of hashes not equal to number of plugins
   if plugins.Count <> hashes.Count then begin
+    Logger.Write('MERGE', 'Status', 'Plugin count changed on ' + name);
     Result := true;
     exit;
   end;
@@ -3231,16 +3266,15 @@ begin
     plugin := PluginByFilename(plugins[i]);
     if Assigned(plugin) then begin
       if plugin.hash <> hashes[i] then begin
-        if settings.debugMergeStatus then
-          Logger.Write('MERGE', 'Status', plugin.filename + ' has hash ' + plugin.hash + ', '+
-            name + ' has '+hashes[i]);
+        Logger.Write('MERGE', 'Status', plugin.filename + ' has hash ' + plugin.hash + ', '+
+          name + ' has '+hashes[i]);
         Result := true;
       end;
     end;
   end;
 end;
 
-{ Checks if the files associated with a merge exist }
+// Checks if the files associated with a merge exist
 function TMerge.FilesExist: boolean;
 begin
   Result := FileExists(dataPath + filename);
@@ -3251,33 +3285,33 @@ var
   i: Integer;
   plugin: TPlugin;
 begin
-  if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Getting status for '+name);
+  Logger.Write('MERGE', 'Status', 'Getting status for '+name);
   status := 0;
 
   // don't merge if no plugins to merge
   if plugins.Count < 1 then begin
-    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'No plugins to merge');
+    Logger.Write('MERGE', 'Status', 'No plugins to merge');
     status := 1;
     exit;
   end;
 
   // don't merge if mod destination directory is blank
   if settings.mergeDirectory = '' then begin
-    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Merge directory blank');
+    Logger.Write('MERGE', 'Status', 'Merge directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.MODirectory = '') then begin
-    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Mod Organizer Directory blank');
+    Logger.Write('MERGE', 'Status', 'Mod Organizer Directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
   if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
-     if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Mod Organizer Directory invalid');
+     Logger.Write('MERGE', 'Status', 'Mod Organizer Directory invalid');
      status := 2;
      exit;
   end;
@@ -3288,20 +3322,20 @@ begin
 
     // see if plugin is loaded
     if not Assigned(plugin) then begin
-      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Plugin '+plugins[i]+' is missing');
+      Logger.Write('MERGE', 'Status', 'Plugin '+plugins[i]+' is missing');
       status := 3;
       exit;
     end;
 
     if plugin.errors.Count = 0 then begin
-      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', plugin.filename+' needs to be checked for errors.');
+      Logger.Write('MERGE', 'Status', plugin.filename+' needs to be checked for errors.');
       status := 10;
     end
     else if plugin.errors[0] = 'None.' then begin
-      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'No errors in '+plugin.filename);
+      Logger.Write('MERGE', 'Status', 'No errors in '+plugin.filename);
     end
     else begin
-      if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', plugin.filename+' has errors');
+      Logger.Write('MERGE', 'Status', plugin.filename+' has errors');
       status := 4;
       exit;
     end
@@ -3309,14 +3343,14 @@ begin
 
   dataPath := settings.mergeDirectory + name + '\';
   if (not PluginsModified) and FilesExist then begin
-    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Up to date.');
+    Logger.Write('MERGE', 'Status', 'Up to date.');
     status := 5;
     exit;
   end;
 
   // status green, ready to go
   if status = 0 then begin
-    if settings.debugMergeStatus then Logger.Write('MERGE', 'Status', 'Ready to be merged.');
+    Logger.Write('MERGE', 'Status', 'Ready to be merged.');
     if dateBuilt = 0 then
       status := 7
     else
@@ -3329,7 +3363,7 @@ begin
   Result := StatusArray[status].color;
 end;
 
-{ Update the hashes list for the plugins in the merge }
+// Update the hashes list for the plugins in the merge
 procedure TMerge.UpdateHashes;
 var
   i: Integer;
@@ -3343,7 +3377,7 @@ begin
   end;
 end;
 
-{ Get load order for plugins in merge that don't have it }
+// Get load order for plugins in merge that don't have it
 procedure TMerge.GetLoadOrders;
 var
   i: integer;
@@ -3353,14 +3387,28 @@ begin
       plugins.Objects[i] := TObject(PluginLoadOrder(plugins[i]));
 end;
 
-{ Sort plugins by load order position }
+// Sort plugins by load order position
 procedure TMerge.SortPlugins;
 begin
   GetLoadOrders;
   plugins.CustomSort(MergePluginsCompare);
 end;
 
-{ TEntry Constructor }
+{ TFilter }
+constructor TFilter.Create(group: string; enabled: boolean);
+begin
+  self.group := group;
+  self.enabled := enabled;
+end;
+
+constructor TFilter.Create(group, &label: string; enabled: boolean);
+begin
+  self.group := group;
+  self.&label := &label;
+  self.enabled := enabled;
+end;
+
+{ TEntry }
 constructor TEntry.Create;
 begin
   reports := '0';
@@ -3417,7 +3465,7 @@ begin
   loadMessageColor := clPurple;
   clientMessageColor := clBlue;
   mergeMessageColor := $0000CCFF;
-  guiMessageColor := clBlack;
+  pluginMessageColor := clBlack;
   errorMessageColor := clRed;
 
   // generate a new secure key
@@ -3481,7 +3529,7 @@ begin
   ini.WriteInteger('Advanced', 'loadMessageColor', loadMessageColor);
   ini.WriteInteger('Advanced', 'clientMessageColor', clientMessageColor);
   ini.WriteInteger('Advanced', 'mergeMessageColor', mergeMessageColor);
-  ini.WriteInteger('Advanced', 'guiMessageColor', guiMessageColor);
+  ini.WriteInteger('Advanced', 'guiMessageColor', pluginMessageColor);
   ini.WriteInteger('Advanced', 'errorMessageColor', errorMessageColor);
 
   // save server host and port
@@ -3550,7 +3598,7 @@ begin
   loadMessageColor := TColor(ini.ReadInteger('Advanced', 'loadMessageColor', clPurple));
   clientMessageColor := TColor(ini.ReadInteger('Advanced', 'clientMessageColor', clBlue));
   mergeMessageColor := TColor(ini.ReadInteger('Advanced', 'mergeMessageColor', $0000CCFF));
-  guiMessageColor := TColor(ini.ReadInteger('Advanced', 'guiMessageColor', clBlack));
+  pluginMessageColor := TColor(ini.ReadInteger('Advanced', 'guiMessageColor', clBlack));
   errorMessageColor := TColor(ini.ReadInteger('Advanced', 'errorMessageColor', clRed));
 
   // load host and port
@@ -3613,34 +3661,6 @@ begin
   // save file
   ini.UpdateFile;
   ini.Free;
-end;
-
-procedure TStatistics.FromJson(json: string);
-var
-  obj: ISuperObject;
-begin
-  obj := SO(PChar(json));
-
-  timesRun := obj.I['timesRun'];
-  mergesBuilt := obj.I['mergesBuilt'];
-  pluginsChecked := obj.I['pluginsChecked'];
-  pluginsMerged := obj.I['pluginsMerged'];
-  reportsSubmitted := obj.I['reportsSubmitted'];
-end;
-
-function TStatistics.ToJson: string;
-var
-  obj: ISuperObject;
-begin
-  obj := SO();
-
-  obj.I['timesRun'] := timesRun;
-  obj.I['mergesBuilt'] := mergesBuilt;
-  obj.I['pluginsChecked'] := pluginsChecked;
-  obj.I['pluginsMerged'] := pluginsMerged;
-  obj.I['reportsSubmitted'] := reportsSubmitted;
-
-  Result := obj.AsJSon;
 end;
 
 

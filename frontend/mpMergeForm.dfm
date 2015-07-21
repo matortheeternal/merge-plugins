@@ -192,7 +192,7 @@ object MergeForm: TMergeForm
         ExplicitLeft = 0
         ExplicitTop = 0
         ExplicitWidth = 0
-        ExplicitHeight = 579
+        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -237,7 +237,6 @@ object MergeForm: TMergeForm
           OnDblClick = MergeListViewDblClick
           OnDrawItem = MergeListViewDrawItem
           OnKeyDown = MergeListViewKeyDown
-          ExplicitHeight = 573
         end
       end
       object LogTabSheet: TTabSheet
@@ -246,7 +245,7 @@ object MergeForm: TMergeForm
         ExplicitLeft = 0
         ExplicitTop = 0
         ExplicitWidth = 0
-        ExplicitHeight = 579
+        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -285,7 +284,6 @@ object MergeForm: TMergeForm
           ViewStyle = vsReport
           OnData = LogListViewData
           OnDrawItem = LogListViewDrawItem
-          ExplicitHeight = 573
         end
       end
     end
@@ -760,7 +758,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F8019C0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801A40120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1829,7 +1827,7 @@ object MergeForm: TMergeForm
     Top = 112
     object AddToMerge: TMenuItem
       Caption = 'Add to merge'
-      object NewMerge: TMenuItem
+      object NewMergeItem: TMenuItem
         Caption = '<New Merge>'
         OnClick = AddToNewMergeClick
       end
@@ -1867,9 +1865,9 @@ object MergeForm: TMergeForm
       Caption = 'Check plugins for errors'
       OnClick = CheckPluginsForErrorsItemClick
     end
-    object RemoveBadPluginsItem: TMenuItem
-      Caption = 'Remove bad plugins'
-      OnClick = RemoveBadPluginsItemClick
+    object CleanMergeItem: TMenuItem
+      Caption = 'Clean merge'
+      OnClick = CleanMergeItemClick
     end
     object DeleteMergeItem: TMenuItem
       Caption = 'Delete merge'
@@ -1900,7 +1898,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C0101090018007C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010109001800840110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2309,7 +2307,7 @@ object MergeForm: TMergeForm
     Left = 936
     Top = 8
     Bitmap = {
-      494C010101001400B80040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101001400C00040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100002000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -3393,36 +3391,23 @@ object MergeForm: TMergeForm
     OnPopup = LogPopupMenuPopup
     Left = 264
     Top = 112
-    object FilterItem: TMenuItem
-      Caption = 'Filter'
-      object FilterInitItem: TMenuItem
-        Caption = 'Disable INIT'
-        OnClick = FilterInitItemClick
-      end
-      object FilterLoadItem: TMenuItem
-        Caption = 'Disable LOAD'
-        OnClick = FilterLoadItemClick
-      end
-      object FilterClientItem: TMenuItem
-        Caption = 'Disable CLIENT'
-        OnClick = FilterClientItemClick
-      end
-      object FilterMergeItem: TMenuItem
-        Caption = 'Disable MERGE'
-        OnClick = FilterMergeItemClick
-      end
-      object FilterErrorItem: TMenuItem
-        Caption = 'Disable ERROR'
-        OnClick = FilterErrorItemClick
+    object FilterGroupItem: TMenuItem
+      Caption = 'Filter group'
+      object TMenuItem
       end
     end
-    object ToggleAutoScrollItem: TMenuItem
-      Caption = 'Disable auto scroll'
-      OnClick = ToggleAutoScrollItemClick
+    object FilterLabelItem: TMenuItem
+      Caption = 'Filter label'
+      object TMenuItem
+      end
     end
     object CopyToClipboardItem: TMenuItem
       Caption = 'Copy to clipboard'
       OnClick = CopyToClipboardItemClick
+    end
+    object ToggleAutoScrollItem: TMenuItem
+      Caption = 'Disable auto scroll'
+      OnClick = ToggleAutoScrollItemClick
     end
     object SaveAndClearItem: TMenuItem
       Caption = 'Save and clear'

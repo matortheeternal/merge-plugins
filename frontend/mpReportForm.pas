@@ -93,7 +93,7 @@ begin
     report.recordCount := StrToInt(plugin.numRecords);
     report.rating := 4;
     report.mergeVersion := ProgramVersion;
-    report.notes.Text := PreviousNotes;
+    report.SetNotes(PreviousNotes);
     reportsList.Add(report);
   end;
 
@@ -121,7 +121,7 @@ begin
 
   // load user's report details
   cbRating.ItemIndex := report.rating + 1;
-  meNotes.Lines.Text := report.notes.Text;
+  meNotes.Lines.Text := report.GetNotes;
   // activate rating hint
   cbRatingChange(nil);
 
@@ -136,8 +136,8 @@ begin
   // save settings in current entry
   report := TReport(reportsList[currentPlugin]);
   report.rating := cbRating.ItemIndex - 1;
-  report.notes.Text := meNotes.Lines.Text;
-  PreviousNotes := report.notes.Text;
+  report.SetNotes(meNotes.Lines.Text);
+  PreviousNotes := meNotes.Lines.Text;
 
   // if at last plugin, close form with modal result
   if currentPlugin = Pred(pluginsToReport.Count) then begin
@@ -162,7 +162,7 @@ begin
   // save settings in current entry
   report := TReport(reportsList[currentPlugin]);
   report.rating := cbRating.ItemIndex - 1;
-  report.notes.Text := Trim(meNotes.Lines.Text);
+  report.SetNotes(meNotes.Lines.Text);
 
   // go to previous plugin
   Dec(currentPlugin);

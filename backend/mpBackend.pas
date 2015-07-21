@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
-  Controls, Registry, DateUtils, Graphics, ComCtrls, CommCtrl,
+  Controls, Registry, DateUtils, Graphics, ComCtrls, CommCtrl, RTTI,
   // zeosdbo components
   ZConnection, ZDataset, ZDbcCache, ZAbstractRODataset, ZDbcMySQL, ZSequence,
   ZDbcPostgreSQL, DB, ZSqlUpdate, ZDbcInterbase6, ZSqlMonitor, ZAbstractDataset,
@@ -39,8 +39,6 @@ type
     pluginsChecked: integer;
     pluginsMerged: integer;
     reportsSubmitted: integer;
-    procedure FromJson(json: string);
-    function ToJson: string;
   end;
   TUser = class(TObject)
   public
@@ -71,17 +69,6 @@ type
     constructor Create(const fields: TFields); Overload;
     function IsExpired: boolean;
   end;
-  TmpMessage = class(TObject)
-  public
-    id: integer;
-    username: string;
-    auth: string;
-    data: string;
-    constructor Create; Overload;
-    constructor Create(id: integer; username, auth, data: string); Overload;
-    function ToJson: string;
-    procedure FromJson(json: string);
-  end;
   TFilter = class(TObject)
   public
     group: string;
@@ -90,6 +77,15 @@ type
     constructor Create(group: string; enabled: boolean); Overload;
     constructor Create(group, &label: string; enabled: boolean); Overload;
   end;
+  TmpMessage = class(TObject)
+  public
+    id: integer;
+    username: string;
+    auth: string;
+    data: string;
+    constructor Create; Overload;
+    constructor Create(id: integer; username, auth, data: string); Overload;
+  end;
   TmpStatus = class(TObject)
   public
     programVersion: string;
@@ -97,8 +93,6 @@ type
     tes4Hash: string;
     fnvHash: string;
     fo3Hash: string;
-    function ToJson: string;
-    procedure FromJson(json: string);
     procedure Refresh;
   end;
   TReport = class(TObject)
@@ -114,8 +108,6 @@ type
     dateSubmitted: TDateTime;
     constructor Create; Overload;
     constructor Create(const fields: TFields); Overload;
-    function ToJson: string;
-    procedure FromJson(json: string);
   end;
   TEntry = class(TObject)
   public
@@ -179,6 +171,9 @@ type
     procedure Load(const filename: string);
   end;
 
+  { Generic Methods }
+  function ToJson(obj: TObject): string;
+  function FromJson(json: string; classType: TClass): TObject;
   { MySQL methods }
   procedure DBLogin(userID, password, database, host, port: string);
   procedure SQLQuery(query: string);
@@ -211,6 +206,7 @@ type
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
   function DateTimeToSQL(date: TDateTime): string;
+  function SQLToDateTime(date: string): TDateTime;
   function RateStr(date: TDateTime): string;
   function TimeStr(date: TDateTime): string;
   function AppendIfMissing(str, substr: string): string;
@@ -358,6 +354,70 @@ begin
       Blacklist.Remove(entry);
     end;
   end;
+end;
+
+
+{******************************************************************************}
+{ Generic Methods
+  These are generic methods that can be used with any object.
+}
+{******************************************************************************}
+
+function ToJson(obj: TObject): string;
+var
+  rtype: TRTTIType;
+  field: TRTTIField;
+  fieldType: string;
+  jsonObj: ISuperObject;
+begin
+  jsonObj := SO;
+  rtype := TRTTIContext.Create.GetType(obj.ClassType);
+
+  // loop through fields
+  for field in rType.GetFields do begin
+    fieldType := field.FieldType.ToString;
+    // handle datatypes I use
+    if (fieldType = 'string') then
+      jsonObj.S[field.Name] := field.GetValue(obj).ToString
+    else if (fieldType = 'Integer') then
+      jsonObj.I[field.Name] := field.GetValue(obj).AsInteger
+    else if (fieldType = 'TDateTime') then
+      jsonObj.S[field.Name] := field.GetValue(obj).ToString;
+  end;
+
+  Result := jsonObj.AsJSon;
+end;
+
+{
+  Example usage:
+  report := TReport(FromJson(reportJson, report.ClassType));
+}
+function FromJson(json: string; classType: TClass): TObject;
+var
+  rtype: TRTTIType;
+  field: TRTTIField;
+  fieldType: string;
+  context: TRTTIContext;
+  jsonObj: ISuperObject;
+begin
+  jsonObj := SO(PChar(json));
+  context := TRTTIContext.Create;
+  rtype := context.GetType(classType);
+  Result := classType.Create;
+
+  // loop through fields
+  for field in rType.GetFields do begin
+    fieldType := field.FieldType.ToString;
+    // handle datatypes I use
+    if (fieldType = 'string') then
+      field.SetValue(Result, SanitizeForSQL(jsonObj.S[field.Name]))
+    else if (fieldType = 'Integer') then
+      field.SetValue(Result, jsonObj.I[field.Name])
+    else if (fieldType = 'TDateTime') then
+      field.SetValue(Result, SQLToDateTime(jsonObj.S[field.Name]));
+  end;
+
+  context.Free;
 end;
 
 
@@ -1917,14 +1977,8 @@ end;
   - TUser.Dump
   - TUser.LoadDump
   - TmpMessage.Create
-  - TmpMessage.ToJson
-  - TmpMessage.FromJson
-  - TmpStatus.ToJson
-  - TmpStatus.FromJson
   - TReport.Create
   - TReport.Create
-  - TReport.ToJson
-  - TReport.FromJson
   - TEntry.Create
   - TSettings.Create
   - TSettings.Save
@@ -1943,6 +1997,7 @@ begin
   self.text := text;
 end;
 
+{ TBlacklistEntry }
 constructor TBlacklistEntry.Create(ip, username: string; duration: real);
 begin
   self.ip := ip;
@@ -1964,6 +2019,21 @@ begin
   Result := Now > expires;
 end;
 
+{ TFilter }
+constructor TFilter.Create(group: string; enabled: boolean);
+begin
+  self.group := group;
+  self.enabled := enabled;
+end;
+
+constructor TFilter.Create(group, &label: string; enabled: boolean);
+begin
+  self.group := group;
+  self.&label := &label;
+  self.enabled := enabled;
+end;
+
+{ TUser }
 constructor TUser.Create(ip: string);
 begin
   self.ip := ip;
@@ -1996,7 +2066,7 @@ begin
   pluginsMerged := pluginsMerged + stats.pluginsMerged;
 end;
 
-{ TmpMessage Constructor }
+{ TmpMessage }
 constructor TmpMessage.Create;
 begin
   id := 0;
@@ -2010,79 +2080,7 @@ begin
   self.data := data;
 end;
 
-{ TmpMessage to json string }
-function TmpMessage.ToJson: string;
-var
-  obj: ISuperObject;
-begin
-  obj := SO;
-
-  // filename, hash, errors
-  obj.I['id'] := id;
-  obj.S['username'] := username;
-  obj.S['auth'] := auth;
-  obj.S['data'] := data;
-
-  Result := obj.AsJSon;
-end;
-
-{ Json string to TmpMessage }
-procedure TmpMessage.FromJson(json: string);
-var
-  obj: ISuperObject;
-begin
-  obj := SO(PChar(json));
-
-  id := obj.I['id'];
-  username := SanitizeForSQL(obj.S['username']);
-  auth := SanitizeForSQL(obj.S['auth']);
-  data := SanitizeForSQL(obj.S['data']);
-end;
-
-{ Create TFilter object }
-constructor TFilter.Create(group: string; enabled: boolean);
-begin
-  self.group := group;
-  self.enabled := enabled;
-end;
-
-constructor TFilter.Create(group, &label: string; enabled: boolean);
-begin
-  self.group := group;
-  self.&label := &label;
-  self.enabled := enabled;
-end;
-
-{ TmpStatus to json string }
-function TmpStatus.ToJson: string;
-var
-  obj: ISuperObject;
-begin
-  obj := SO;
-
-  obj.S['ProgramVersion'] := ProgramVersion;
-  obj.S['TES5Hash'] := TES5Hash;
-  obj.S['TES4Hash'] := TES4Hash;
-  obj.S['FNVHash'] := FNVHash;
-  obj.S['FO3Hash'] := FO3Hash;
-
-  Result := obj.AsJSon;
-end;
-
-{ Json string to TmpStatus }
-procedure TmpStatus.FromJson(json: string);
-var
-  obj: ISuperObject;
-begin
-  obj := SO(PChar(json));
-
-  ProgramVersion := SanitizeForSQL(obj.S['ProgramVersion']);
-  TES5Hash := SanitizeForSQL(obj.S['TES5Hash']);
-  TES4Hash := SanitizeForSQL(obj.S['TES4Hash']);
-  FNVHash := SanitizeForSQL(obj.S['FNVHash']);
-  FO3Hash := SanitizeForSQL(obj.S['FO3Hash']);
-end;
-
+{ TmpStatus }
 procedure TmpStatus.Refresh;
 var
   NewVersion: string;
@@ -2131,7 +2129,7 @@ begin
   end;
 end;
 
-{ TReport Constructor }
+{ TReport }
 constructor TReport.Create;
 begin
   notes := TStringList.Create;
@@ -2154,45 +2152,7 @@ begin
   dateSubmitted := fields[8].AsDateTime;
 end;
 
-{ TReport to json string }
-function TReport.ToJson: string;
-var
-  obj: ISuperObject;
-begin
-  obj := SO;
-
-  obj.S['game'] := game;
-  obj.S['username'] := username;
-  obj.S['filename'] := filename;
-  obj.S['hash'] := hash;
-  obj.I['recordCount'] := recordCount;
-  obj.I['rating'] := rating;
-  obj.S['mergeVersion'] := mergeVersion;
-  obj.S['notes'] := StringReplace(notes.Text, #13#10, '@13', [rfReplaceAll]);
-  obj.S['dateSubmitted'] := DateTimeToSQL(dateSubmitted);
-
-  Result := obj.AsJSon;
-end;
-
-{ Json string to TReport }
-procedure TReport.FromJson(json: string);
-var
-  obj: ISuperObject;
-begin
-  obj := SO(PChar(json));
-
-  game := SanitizeForSQL(obj.S['game']);
-  username := SanitizeForSQL(obj.S['username']);
-  filename := SanitizeForSQL(obj.S['filename']);
-  hash := SanitizeForSQL(obj.S['hash']);
-  recordCount := obj.I['recordCount'];
-  rating := obj.I['rating'];
-  mergeVersion := SanitizeForSQL(obj.S['mergeVersion']);
-  notes.Text := SanitizeForSQL(obj.S['notes']);
-  dateSubmitted := SQLToDateTime(SanitizeForSQL(obj.S['dateSubmitted']));
-end;
-
-{ TEntry Constructor }
+{ TEntry }
 constructor TEntry.Create;
 begin
   reports := '0';
@@ -2231,7 +2191,7 @@ begin
     reports + ';' + notes;
 end;
 
-{ TSettings constructor }
+{ TSettings }
 constructor TSettings.Create;
 begin
   serverMessageColor := clBlue;
@@ -2242,7 +2202,6 @@ begin
   errorMessageColor := clRed;
 end;
 
-{ Load settings from settings.json }
 procedure TSettings.Load(const filename: string);
 var
   obj: ISuperObject;
@@ -2289,7 +2248,6 @@ begin
   sl.Free;
 end;
 
-{ Save settings to settings.json }
 procedure TSettings.Save(const filename: string);
 var
   obj: ISuperObject;
@@ -2331,36 +2289,7 @@ begin
   obj := nil;
 end;
 
-{ TUserStatistics }
-procedure TUserStatistics.FromJson(json: string);
-var
-  obj: ISuperObject;
-begin
-  obj := SO(PChar(json));
-
-  timesRun := obj.I['timesRun'];
-  mergesBuilt := obj.I['mergesBuilt'];
-  pluginsChecked := obj.I['pluginsChecked'];
-  pluginsMerged := obj.I['pluginsMerged'];
-  reportsSubmitted := obj.I['reportsSubmitted'];
-end;
-
-function TUserStatistics.ToJson: string;
-var
-  obj: ISuperObject;
-begin
-  obj := SO();
-
-  obj.I['timesRun'] := timesRun;
-  obj.I['mergesBuilt'] := mergesBuilt;
-  obj.I['pluginsChecked'] := pluginsChecked;
-  obj.I['pluginsMerged'] := pluginsMerged;
-  obj.I['reportsSubmitted'] := reportsSubmitted;
-
-  Result := obj.AsJSon;
-end;
-
-{ TStatistics constructor }
+{ TServerStatistics }
 constructor TServerStatistics.Create;
 begin
   timesRun := 0;

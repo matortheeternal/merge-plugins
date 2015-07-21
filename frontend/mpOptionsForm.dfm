@@ -321,6 +321,10 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -659,15 +663,15 @@ object OptionsForm: TOptionsForm
           Anchors = [akTop, akRight]
           Caption = 'Merge'
         end
-        object lblGUIColor: TLabel
+        object lblPluginColor: TLabel
           Left = 274
           Top = 47
-          Width = 18
+          Width = 28
           Height = 13
           Margins.Top = 11
           Align = alCustom
           Anchors = [akTop, akRight]
-          Caption = 'GUI'
+          Caption = 'Plugin'
         end
         object lblErrorColor: TLabel
           Left = 274
@@ -717,7 +721,7 @@ object OptionsForm: TOptionsForm
           Anchors = [akTop, akRight]
           TabOrder = 3
         end
-        object cbGUIColor: TColorBox
+        object cbPluginColor: TColorBox
           Left = 392
           Top = 45
           Width = 145
@@ -768,7 +772,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800800010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800880010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

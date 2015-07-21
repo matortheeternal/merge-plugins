@@ -1121,7 +1121,7 @@ var
   response: TmpMessage;
 begin
   response := TmpMessage.Create(id, '', '', data);
-  json := response.ToJson;
+  json := ToJson(response);
   Inc(user.download, Length(json));
   Inc(sessionBandwidth, Length(json));
   AContext.Connection.IOHandler.WriteLn(json);
@@ -1206,7 +1206,7 @@ begin
       note := 'Not authorized';
       if bAuthorized then try
         userStatistics := TUserStatistics.Create;
-        userStatistics.FromJson(msg.data);
+        userStatistics := TUserStatistics(FromJson(msg.data, userStatistics.ClassType));
         user.updateStatistics(userStatistics);
         note := 'Statistics recieved';
         userStatistics.Free;
@@ -1219,7 +1219,7 @@ begin
     end;
 
     MSG_STATUS: begin
-      SendResponse(user, AContext, MSG_STATUS, status.ToJson, false);
+      SendResponse(user, AContext, MSG_STATUS, ToJson(status), false);
       LogMessage('SERVER', 'Response', 'Current status');
     end;
 
@@ -1258,7 +1258,7 @@ begin
       note := 'Not authorized';
       if bAuthorized then try
         report := TReport.Create;
-        report.FromJson(msg.data);
+        report := TReport(FromJson(msg.data, report.ClassType));
         report.username := msg.username;
         report.dateSubmitted := Now;
         report.notes.Text := StringReplace(report.notes.Text, '@13', #13#10, [rfReplaceAll]);
@@ -1321,7 +1321,7 @@ var
 begin
   LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
   msg := TmpMessage.Create;
-  msg.FromJson(LLine);
+  msg := TmpMessage(FromJson(LLine, msg.ClassType));
   size := Length(LLine);
   Inc(sessionBandwidth, size);
   if (msg.id > 0) then
