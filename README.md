@@ -13,7 +13,7 @@ The exectutable will automatically detect load orders for Skyrim, Oblivion, Fall
 * **xEdit**: used for interfacing with Bethesda plugin files.  xEdit was designed by zilav, hlp, Sharlikran and ElminsterAU
 * **superobject**: used for handling json.
 * **Abbrevia**: used for handling zip archives.
-* **ZEOSDBO**: *used for interfacing with MySQL database.
+* **ZEOSDBO**: used for interfacing with MySQL database.
 
 # License
 Merge Plugins is licensed under the MPL.  Please see license.txt for more details.
