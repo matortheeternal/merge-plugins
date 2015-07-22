@@ -4,13 +4,16 @@ Merge Plugins is a standalone application for merging bethesda plugin files.  Th
 # Compiling
 This project can be compiled with RAD Studio Delphi XE, or newer.  You can download a compiled build from the link below:
 
-[Merge Plugins v2.0.0.321](http://puu.sh/iXKcr.zip)
+[Merge Plugins v2.0.0.369](http://puu.sh/j8ba1.zip)
 
 # Usage
 The exectutable will automatically detect load orders for Skyrim, Oblivion, Fallout New Vegas, and Fallout 3.  This exectuable should be run through Mod Organizer if you want it to use mods installed with Mod Organizer.  There are multiple integration features for working with Mod Organizer, so it is the recommended load order tool for use with this utility.
 
 # Credits
-Merge Plugins uses the xEdit API, which was designed by zilav, hlp, Sharlikran and ElminsterAU.  Merge Plugins also uses the superobject library for handling json cleanly and efficiently.
+* xEdit: for interfacing with Bethesda plugin files.  xEdit was designed by zilav, hlp, Sharlikran and ElminsterAU
+* superobject: for handling json.
+* Abbrevia: for handling zip archives.
+* ZEOSDBO: for interfacing with MySQL database.
 
 # License
 Merge Plugins is licensed under the MPL.  Please see license.txt for more details.
