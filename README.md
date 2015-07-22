@@ -10,10 +10,10 @@ This project can be compiled with RAD Studio Delphi XE, or newer.  You can downl
 The exectutable will automatically detect load orders for Skyrim, Oblivion, Fallout New Vegas, and Fallout 3.  This exectuable should be run through Mod Organizer if you want it to use mods installed with Mod Organizer.  There are multiple integration features for working with Mod Organizer, so it is the recommended load order tool for use with this utility.
 
 # Credits
-* xEdit: for interfacing with Bethesda plugin files.  xEdit was designed by zilav, hlp, Sharlikran and ElminsterAU
-* superobject: for handling json.
-* Abbrevia: for handling zip archives.
-* ZEOSDBO: for interfacing with MySQL database.
+* **xEdit**: used for interfacing with Bethesda plugin files.  xEdit was designed by zilav, hlp, Sharlikran and ElminsterAU
+* **superobject**: used for handling json.
+* **Abbrevia**: used for handling zip archives.
+* **ZEOSDBO**: *used for interfacing with MySQL database.
 
 # License
 Merge Plugins is licensed under the MPL.  Please see license.txt for more details.
