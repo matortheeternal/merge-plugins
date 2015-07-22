@@ -75,13 +75,13 @@ type
     kbDebugClient: TCheckBox;
     gbColoring: TGroupBox;
     lblClientColor: TLabel;
-    lblInitColor: TLabel;
+    lblGeneralColor: TLabel;
     lblLoadColor: TLabel;
     lblMergeColor: TLabel;
     lblPluginColor: TLabel;
     lblErrorColor: TLabel;
     cbClientColor: TColorBox;
-    cbInitColor: TColorBox;
+    cbGeneralColor: TColorBox;
     cbLoadColor: TColorBox;
     cbMergeColor: TColorBox;
     cbPluginColor: TColorBox;
@@ -239,7 +239,7 @@ begin
   settings.debugPluginsLoad := kbDebugPluginsLoad.Checked;
   settings.debugLoadOrder := kbDebugLoadOrder.Checked;
   settings.clientMessageColor := cbClientColor.Selected ;
-  settings.initMessageColor := cbInitColor.Selected;
+  settings.generalMessageColor := cbGeneralColor.Selected;
   settings.loadMessageColor := cbLoadColor.Selected;
   settings.mergeMessageColor := cbMergeColor.Selected;
   settings.pluginMessageColor := cbPluginColor.Selected;
@@ -400,7 +400,7 @@ begin
   kbDebugPluginsLoad.Checked := settings.debugPluginsLoad;
   kbDebugLoadOrder.Checked := settings.debugLoadOrder;
   cbClientColor.Selected := settings.clientMessageColor;
-  cbInitColor.Selected := settings.initMessageColor;
+  cbGeneralColor.Selected := settings.generalMessageColor;
   cbLoadColor.Selected := settings.loadMessageColor;
   cbMergeColor.Selected := settings.mergeMessageColor;
   cbPluginColor.Selected := settings.pluginMessageColor;

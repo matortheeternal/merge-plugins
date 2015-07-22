@@ -197,7 +197,7 @@ type
     extractBSAs: boolean;
     buildMergedBSA: boolean;
     batCopy: boolean;
-    initMessageColor: TColor;
+    generalMessageColor: TColor;
     clientMessageColor: TColor;
     loadMessageColor: TColor;
     mergeMessageColor: TColor;
@@ -1396,7 +1396,7 @@ begin
       f.BuildRef;
       if bForceTerminate then begin
         LoaderProgress('Aborted.');
-        exit;
+        break;
       end;
     end;
   except
@@ -1672,7 +1672,7 @@ begin
   ActiveMods := TStringList.Create;
   ActiveProfile := GetActiveProfile;
   GetActiveMods(ActiveMods, ActiveProfile);
-  //Logger.Write('INIT', 'ModOrganizer', 'ActiveMods: '#13#10+ActiveMods.Text);
+  //Logger.Write('GENERAL', 'ModOrganizer', 'ActiveMods: '#13#10+ActiveMods.Text);
 end;
 
 function GetActiveProfile: string;
@@ -1688,7 +1688,7 @@ begin
   // load ini file
   fname := settings.MODirectory + 'ModOrganizer.ini';
   if(not FileExists(fname)) then begin
-    Logger.Write('INIT', 'ModOrganizer', 'Mod Organizer ini file ' + fname + ' does not exist');
+    Logger.Write('GENERAL', 'ModOrganizer', 'Mod Organizer ini file ' + fname + ' does not exist');
     exit;
   end;
   ini := TMemIniFile.Create(fname);
@@ -1773,19 +1773,20 @@ begin
   LabelFilters := TList.Create;
   GroupFilters := TList.Create;
   // INITIALIZE GROUP FILTERS
-  GroupFilters.Add(TFilter.Create('INIT', true));
+  GroupFilters.Add(TFilter.Create('GENERAL', true));
   GroupFilters.Add(TFilter.Create('LOAD', true));
   GroupFilters.Add(TFilter.Create('CLIENT', true));
   GroupFilters.Add(TFilter.Create('MERGE', true));
   GroupFilters.Add(TFilter.Create('PLUGIN', true));
   GroupFilters.Add(TFilter.Create('ERROR', true));
   // INITIALIZE LABEL FILTERS
-  LabelFilters.Add(TFilter.Create('INIT', 'Game', true));
-  LabelFilters.Add(TFilter.Create('INIT', 'Path', true));
-  LabelFilters.Add(TFilter.Create('INIT', 'Definitions', true));
-  LabelFilters.Add(TFilter.Create('INIT', 'Dictionary', true));
-  LabelFilters.Add(TFilter.Create('INIT', 'Load Order', true));
-  LabelFilters.Add(TFilter.Create('INIT', 'Log', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Game', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Status', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Path', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Definitions', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Dictionary', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Load Order', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Log', true));
   LabelFilters.Add(TFilter.Create('LOAD', 'Order', false));
   LabelFilters.Add(TFilter.Create('LOAD', 'Plugins', false));
   LabelFilters.Add(TFilter.Create('LOAD', 'Background', true));
@@ -2005,7 +2006,7 @@ begin
 
   // don't attempt to load dictionary if it doesn't exist
   if not FileExists(dictionaryFilename) then begin
-    Logger.Write('INIT', 'Dictionary', 'No dictionary file '+dictionaryFilename);
+    Logger.Write('GENERAL', 'Dictionary', 'No dictionary file '+dictionaryFilename);
     exit;
   end;
 
@@ -2706,10 +2707,30 @@ begin
 
   // handle dictionary update based on gamemode
   case wbGameMode of
-    gmTES5: bDictionaryUpdate := status.tes5Hash <> RemoteStatus.tes5Hash;
-    gmTES4: bDictionaryUpdate := status.tes4Hash <> RemoteStatus.tes4Hash;
-    gmFNV: bDictionaryUpdate := status.fnvHash <> RemoteStatus.fnvHash;
-    gmFO3: bDictionaryUpdate := status.fo3Hash <> RemoteStatus.fo3Hash;
+    gmTES5: begin
+      bDictionaryUpdate := status.tes5Hash <> RemoteStatus.tes5Hash;
+      if bDictionaryUpdate then
+        Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
+          status.tes5Hash+' != '+RemoteStatus.tes5hash);
+    end;
+    gmTES4: begin
+      bDictionaryUpdate := status.tes4Hash <> RemoteStatus.tes4Hash;
+      if bDictionaryUpdate then
+        Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
+          status.tes4Hash+' != '+RemoteStatus.tes4hash);
+    end;
+    gmFNV: begin
+      bDictionaryUpdate := status.fnvHash <> RemoteStatus.fnvHash;
+      if bDictionaryUpdate then
+        Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
+          status.fnvHash+' != '+RemoteStatus.fnvhash);
+    end;
+    gmFO3: begin
+      bDictionaryUpdate := status.fo3Hash <> RemoteStatus.fo3Hash;
+      if bDictionaryUpdate then
+        Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
+          status.fo3Hash+' != '+RemoteStatus.fo3hash);
+    end;
   end;
 end;
 
@@ -2932,6 +2953,15 @@ begin
     FNVHash := GetCRC32('FNVDictionary.txt');
   if FileExists('FO3Dictionary.txt') then
     FO3Hash := GetCRC32('FO3Dictionary.txt');
+
+  // log messages
+  Logger.Write('GENERAL', 'Status', 'ProgramVersion: '+ProgramVersion);
+  case wbGameMode of
+    gmTES5: Logger.Write('GENERAL', 'Status', 'TES5 Dictionary Hash: '+TES5Hash);
+    gmTES4: Logger.Write('GENERAL', 'Status', 'TES4 Dictionary Hash: '+TES4Hash);
+    gmFO3: Logger.Write('GENERAL', 'Status', 'FO3 Dictionary Hash: '+FNVHash);
+    gmFNV: Logger.Write('GENERAL', 'Status', 'FNV Dictionary Hash: '+FO3Hash);
+  end;
 end;
 
 { TReport }
@@ -3461,7 +3491,7 @@ begin
   handleScriptFragments := false;
   extractBSAs := false;
   buildMergedBSA := false;
-  initMessageColor := clGreen;
+  generalMessageColor := clGreen;
   loadMessageColor := clPurple;
   clientMessageColor := clBlue;
   mergeMessageColor := $0000CCFF;
@@ -3525,7 +3555,7 @@ begin
   ini.WriteBool('Advanced', 'debugLoadOrder', debugLoadOrder);
 
   // save log colors
-  ini.WriteInteger('Advanced', 'initMessageColor', initMessageColor);
+  ini.WriteInteger('Advanced', 'initMessageColor', generalMessageColor);
   ini.WriteInteger('Advanced', 'loadMessageColor', loadMessageColor);
   ini.WriteInteger('Advanced', 'clientMessageColor', clientMessageColor);
   ini.WriteInteger('Advanced', 'mergeMessageColor', mergeMessageColor);
@@ -3594,7 +3624,7 @@ begin
   debugLoadOrder := ini.ReadBool('Advanced', 'debugLoadOrder', false);
 
   // load log colors
-  initMessageColor := TColor(ini.ReadInteger('Advanced', 'initMessageColor', clGreen));
+  generalMessageColor := TColor(ini.ReadInteger('Advanced', 'initMessageColor', clGreen));
   loadMessageColor := TColor(ini.ReadInteger('Advanced', 'loadMessageColor', clPurple));
   clientMessageColor := TColor(ini.ReadInteger('Advanced', 'clientMessageColor', clBlue));
   mergeMessageColor := TColor(ini.ReadInteger('Advanced', 'mergeMessageColor', $0000CCFF));

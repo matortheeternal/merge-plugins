@@ -81,7 +81,9 @@ begin
   // check if there's a load order error merging into the specified file
   plugin := PluginByFilename(edFilename.Text);
   loadOrder := PluginLoadOrder(edFilename.Text);
-  highLoadOrder := PluginLoadOrder(merge.plugins[merge.plugins.Count -1]);
+  highLoadOrder := MaxInt;
+  if merge.plugins.Count > 0 then
+    highLoadOrder := PluginLoadOrder(merge.plugins[merge.plugins.Count -1]);
   loadOrderError := Assigned(plugin) and (loadorder > -1) and (loadOrder < highLoadOrder);
 
   // check if merge exists

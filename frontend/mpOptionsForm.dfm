@@ -321,10 +321,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -636,14 +632,14 @@ object OptionsForm: TOptionsForm
           Height = 13
           Caption = 'Client'
         end
-        object lblInitColor: TLabel
+        object lblGeneralColor: TLabel
           Left = 12
           Top = 47
-          Width = 16
+          Width = 37
           Height = 13
           Margins.Left = 12
           Margins.Top = 11
-          Caption = 'Init'
+          Caption = 'General'
         end
         object lblLoadColor: TLabel
           Left = 12
@@ -692,7 +688,7 @@ object OptionsForm: TOptionsForm
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames, cbCustomColors]
           TabOrder = 0
         end
-        object cbInitColor: TColorBox
+        object cbGeneralColor: TColorBox
           Left = 88
           Top = 45
           Width = 145
@@ -772,7 +768,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800880010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008008C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

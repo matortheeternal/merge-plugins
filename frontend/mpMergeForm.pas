@@ -303,8 +303,8 @@ begin
         raise Exception.Create('Invalid game selection!');
     SetGame(settings.selectedGame);
     wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
-    Logger.Write('INIT', 'Game', 'Using '+wbGameName);
-    Logger.Write('INIT', 'Path', 'Using '+wbDataPath);
+    Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
+    Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
 
     // INITIALIZE SETTINGS FOR GAME
     LoadSettings;
@@ -313,11 +313,11 @@ begin
 
     // INITIALIZE DICTIONARY
     dictionaryFilename := wbAppName+'Dictionary.txt';
-    Logger.Write('INIT', 'Dictionary', 'Using '+dictionaryFilename);
+    Logger.Write('GENERAL', 'Dictionary', 'Using '+dictionaryFilename);
     LoadDictionary;
 
     // INITIALIZE TES5EDIT DEFINITIONS
-    Logger.Write('INIT', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
+    Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
     LoadDefinitions;
 
     // PREPARE TO LOAD PLUGINS
@@ -325,7 +325,7 @@ begin
       wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveProfile+'\plugins.txt'
     else
       wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
-    Logger.Write('INIT', 'Load Order', 'Using '+wbPluginsFileName);
+    Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
     sl := TStringList.Create;
     sl.LoadFromFile(wbPluginsFileName);
     RemoveCommentsAndEmpty(sl);
@@ -411,7 +411,6 @@ begin
   StatusPanelMessage.Caption := 'Background loader finished.';
   xEditLogLabel := 'xEdit';
   FlashWindow(Application.Handle, True);
-  UpdateMerges;
 end;
 
 procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -906,7 +905,8 @@ var
   merge: TMerge;
 begin
   merge := NewMerge;
-  AddPluginsToMerge(merge);
+  if Assigned(merge) then
+    AddPluginsToMerge(merge);
 end;
 
 procedure TMergeForm.CheckForErrorsClick(Sender: TObject);
@@ -1246,8 +1246,8 @@ begin
   Item.SubItems.Add(msg.text);
 
   // handle coloring
-  if (msg.group = 'INIT') then
-    LogListView.Canvas.Font.Color := settings.initMessageColor
+  if (msg.group = 'GENERAL') then
+    LogListView.Canvas.Font.Color := settings.generalMessageColor
   else if (msg.group = 'LOAD') then
     LogListView.Canvas.Font.Color := settings.loadMessageColor
   else if (msg.group = 'CLIENT') then
@@ -1424,7 +1424,7 @@ begin
   LogListView.Items.Count := 0;
   BaseLog.Clear;
   Log.Clear;
-  LogMessage('INIT', 'Log', 'Saved and cleared log.');
+  LogMessage('GENERAL', 'Log', 'Saved and cleared log.');
 end;
 
 
