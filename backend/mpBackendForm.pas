@@ -395,6 +395,7 @@ procedure TBackendForm.UpdateUnapprovedDetails;
 var
   index: integer;
   report: TReport;
+  sl: TStringList;
 begin
   // don't do anything if no item selected
   if not Assigned(UnapprovedListView.Selected) then
@@ -416,7 +417,10 @@ begin
   AddDetailsItem('Record count', IntToStr(report.recordCount));
   AddDetailsItem('Rating', IntToStr(report.rating));
   AddDetailsItem('Merge version', report.mergeVersion);
-  AddDetailsList('Notes', report.notes);
+  sl := TStringList.Create;
+  sl.Text := report.notes;
+  AddDetailsList('Notes', sl);
+  sl.Free;
   AddDetailsItem('Date submitted', DateToStr(report.dateSubmitted));
 end;
 
@@ -424,6 +428,7 @@ procedure TBackendForm.UpdateApprovedDetails;
 var
   index: integer;
   report: TReport;
+  sl: TStringList;
 begin
   // don't do anything if no item selected
   if not Assigned(ApprovedListView.Selected) then
@@ -445,7 +450,10 @@ begin
   AddDetailsItem('Record count', IntToStr(report.recordCount));
   AddDetailsItem('Rating', IntToStr(report.rating));
   AddDetailsItem('Merge version', report.mergeVersion);
-  AddDetailsList('Notes', report.notes);
+  sl := TStringList.Create;
+  sl.Text := report.notes;
+  AddDetailsList('Notes', sl);
+  sl.Free;
   AddDetailsItem('Date submitted', DateToStr(report.dateSubmitted));
 end;
 
@@ -1211,8 +1219,10 @@ begin
         note := 'Statistics recieved';
         userStatistics.Free;
       except
-        on x : Exception do
-          note := 'Failed to load report.';
+        on x : Exception do begin
+          LogMessage('ERROR', 'Server', 'Failed to load statistics '+x.Message);
+          note := 'Failed to load statistics.';
+        end;
       end;
       // respond to user
       SendResponse(user, AContext, MSG_NOTIFY, note);
@@ -1250,7 +1260,7 @@ begin
           stream.Free;
         end
         else
-          LogMessage('ERROR', 'Server', 'MergePlugins.zip doesn''t exist!');
+          LogMessage('ERROR', 'Server', 'User requested '+msg.data);
       end;
     end;
 
@@ -1258,10 +1268,11 @@ begin
       note := 'Not authorized';
       if bAuthorized then try
         report := TReport.Create;
-        report := TReport(FromJson(msg.data, report.ClassType));
+        report := TReport(FromJson(msg.data, TReport));
         report.username := msg.username;
         report.dateSubmitted := Now;
-        report.notes.Text := StringReplace(report.notes.Text, '@13', #13#10, [rfReplaceAll]);
+        report.notes := StringReplace(report.notes, '@13', #13#10, [rfReplaceAll]);
+        report.notes := Wordwrap(report.notes, 70);
         LogMessage('SERVER', 'Message', Format('Recieved report %s %s %s',
           [report.game, report.username, report.filename]));
 
@@ -1292,8 +1303,10 @@ begin
         else if report.game = 'FO3' then
           Inc(statistics.fo3Reports);
       except
-        on x : Exception do
+        on x : Exception do begin
+          LogMessage('ERROR', 'Server', 'Failed to load report '+x.Message);
           note := 'Failed to load report.';
+        end;
       end;
 
       // respond to user
@@ -1320,10 +1333,13 @@ var
   size: integer;
 begin
   LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
-  msg := TmpMessage.Create;
-  msg := TmpMessage(FromJson(LLine, msg.ClassType));
   size := Length(LLine);
   Inc(sessionBandwidth, size);
+  if size < 3 then
+    exit;
+
+  msg := TmpMessage.Create;
+  msg := TmpMessage(FromJson(LLine, msg.ClassType));
   if (msg.id > 0) then
     HandleMessage(msg, size, AContext);
 

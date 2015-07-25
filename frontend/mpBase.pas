@@ -435,6 +435,7 @@ var
   field: TRTTIField;
   fieldType: string;
   jsonObj: ISuperObject;
+  date: TDateTime;
 begin
   jsonObj := SO;
   rtype := TRTTIContext.Create.GetType(obj.ClassType);
@@ -447,8 +448,10 @@ begin
       jsonObj.S[field.Name] := field.GetValue(obj).ToString
     else if (fieldType = 'Integer') then
       jsonObj.I[field.Name] := field.GetValue(obj).AsInteger
-    else if (fieldType = 'TDateTime') then
-      jsonObj.S[field.Name] := field.GetValue(obj).ToString;
+    else if (fieldType = 'TDateTime') then begin
+      date := StrToFloat(field.GetValue(obj).ToString);
+      jsonObj.S[field.Name] := DateTimeToSQL(date);
+    end;
   end;
 
   Result := jsonObj.AsJSon;
@@ -465,6 +468,7 @@ var
   fieldType: string;
   context: TRTTIContext;
   jsonObj: ISuperObject;
+  date: TDateTime;
 begin
   jsonObj := SO(PChar(json));
   context := TRTTIContext.Create;
@@ -479,8 +483,10 @@ begin
       field.SetValue(Result, jsonObj.S[field.Name])
     else if (fieldType = 'Integer') then
       field.SetValue(Result, jsonObj.I[field.Name])
-    else if (fieldType = 'TDateTime') then
-      field.SetValue(Result, SQLToDateTime(jsonObj.S[field.Name]));
+    else if (fieldType = 'TDateTime') then begin
+      date := SQLToDateTime(jsonObj.S[field.Name]);
+      field.SetValue(Result, TValue.From<TDateTime>(date));
+    end;
   end;
 
   context.Free;

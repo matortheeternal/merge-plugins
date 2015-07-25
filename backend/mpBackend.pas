@@ -104,9 +104,8 @@ type
     recordCount: integer;
     rating: integer;
     mergeVersion: string;
-    notes: TStringList;
+    notes: string;
     dateSubmitted: TDateTime;
-    constructor Create; Overload;
     constructor Create(const fields: TFields); Overload;
   end;
   TEntry = class(TObject)
@@ -369,6 +368,7 @@ var
   field: TRTTIField;
   fieldType: string;
   jsonObj: ISuperObject;
+  date: TDateTime;
 begin
   jsonObj := SO;
   rtype := TRTTIContext.Create.GetType(obj.ClassType);
@@ -381,8 +381,10 @@ begin
       jsonObj.S[field.Name] := field.GetValue(obj).ToString
     else if (fieldType = 'Integer') then
       jsonObj.I[field.Name] := field.GetValue(obj).AsInteger
-    else if (fieldType = 'TDateTime') then
-      jsonObj.S[field.Name] := field.GetValue(obj).ToString;
+    else if (fieldType = 'TDateTime') then begin
+      date := StrToFloat(field.GetValue(obj).ToString);
+      jsonObj.S[field.Name] := DateTimeToSQL(date);
+    end;
   end;
 
   Result := jsonObj.AsJSon;
@@ -399,6 +401,7 @@ var
   fieldType: string;
   context: TRTTIContext;
   jsonObj: ISuperObject;
+  date: TDateTime;
 begin
   jsonObj := SO(PChar(json));
   context := TRTTIContext.Create;
@@ -410,11 +413,13 @@ begin
     fieldType := field.FieldType.ToString;
     // handle datatypes I use
     if (fieldType = 'string') then
-      field.SetValue(Result, SanitizeForSQL(jsonObj.S[field.Name]))
+      field.SetValue(Result, jsonObj.S[field.Name])
     else if (fieldType = 'Integer') then
       field.SetValue(Result, jsonObj.I[field.Name])
-    else if (fieldType = 'TDateTime') then
-      field.SetValue(Result, SQLToDateTime(jsonObj.S[field.Name]));
+    else if (fieldType = 'TDateTime') then begin
+      date := SQLToDateTime(jsonObj.S[field.Name]);
+      field.SetValue(Result, TValue.From<TDateTime>(date));
+    end;
   end;
 
   context.Free;
@@ -807,7 +812,7 @@ begin
     'record_count='+IntToStr(report.recordCount)+', '+
     'rating='+IntToStr(report.rating)+', '+
     'merge_version='''+report.mergeVersion+''', '+
-    'notes='''+StringReplace(Trim(report.notes.Text), #13#10, '@13', [rfReplaceAll])+'''';
+    'notes='''+StringReplace(Trim(report.notes), #13#10, '@13', [rfReplaceAll])+'''';
 end;
 
 function ReportValuesClause(report: TReport): string;
@@ -821,7 +826,7 @@ begin
     IntToStr(report.recordCount)+','+
     IntToStr(report.rating)+','''+
     report.mergeVersion+''','''+
-    StringReplace(Trim(report.notes.Text), #13#10, '@13', [rfReplaceAll])+''','''+
+    StringReplace(Trim(report.notes), #13#10, '@13', [rfReplaceAll])+''','''+
     DateTimeToSQL(report.dateSubmitted)+''')';
 end;
 
@@ -1432,7 +1437,7 @@ begin
     header := ApplyTemplate(settings.templateNoHash, slHeader);
 
   // add to entry notes if doing so won't exceed the maximum notes length
-  notes := Report.notes.Text;
+  notes := Report.notes;
   if (Length(header) + Length(notes) + Length(sl.Text) < MAX_NOTES_LENGTH) then begin
     sl.Add(header);
     sl.Add(notes);
@@ -1682,7 +1687,7 @@ begin
   LabelFilters.Add(TFilter.Create('SERVER', 'Disconnected', true));
   LabelFilters.Add(TFilter.Create('SERVER', 'Terminated', true));
   LabelFilters.Add(TFilter.Create('TASK', 'Init', true));
-  LabelFilters.Add(TFilter.Create('TASK', 'Execute', true));
+  LabelFilters.Add(TFilter.Create('TASK', 'Execute', false));
 end;
 
 procedure RebuildLog;
@@ -2144,11 +2149,6 @@ begin
 end;
 
 { TReport }
-constructor TReport.Create;
-begin
-  notes := TStringList.Create;
-end;
-
 constructor TReport.Create(const fields: TFields);
 var
   s: string;
@@ -2160,9 +2160,8 @@ begin
   recordCount := fields[4].AsInteger;
   rating := fields[5].AsInteger;
   mergeVersion := fields[6].AsString;
-  notes := TStringList.Create;
   s := StringReplace(fields[7].AsString, '@13', #13#10, [rfReplaceAll]);
-  notes.Text := Wordwrap(s, 70);
+  notes := Wordwrap(s, 70);
   dateSubmitted := fields[8].AsDateTime;
 end;
 

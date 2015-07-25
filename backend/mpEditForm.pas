@@ -53,7 +53,7 @@ begin
   report.recordCount := StrToInt(edRecordCount.Text);
   report.rating := cbRating.ItemIndex - 1;
   report.mergeVersion := edMergeVersion.Text;
-  report.notes.Text := meNotes.Lines.Text;
+  report.notes := meNotes.Lines.Text;
 end;
 
 procedure TEditForm.edKeyDown(Sender: TObject; var Key: Word;
@@ -74,7 +74,7 @@ begin
     edRecordCount.Text := IntToStr(report.recordCount);
     cbRating.ItemIndex := report.rating + 1;
     edMergeVersion.Text := report.mergeVersion;
-    meNotes.Lines.Text := report.notes.Text;
+    meNotes.Lines.Text := report.notes;
   end;
 end;
 
