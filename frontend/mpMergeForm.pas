@@ -390,7 +390,11 @@ end;
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
   // ATTEMPT TO CONNECT TO SERVER
-  if not bConnecting then ConnectToServer;
+  if (not bConnecting) and (not TCPClient.Connected) then
+    ConnectToServer;
+
+  // SET UP PAPYRUS
+  InitPapyrus;
 
   // START BACKGROUND LOADER
   LoaderCallback := LoaderDone;
@@ -410,6 +414,7 @@ begin
   SetTaskbarProgressState(tbpsNone);
   StatusPanelMessage.Caption := 'Background loader finished.';
   xEditLogLabel := 'xEdit';
+  UpdateMerges;
   FlashWindow(Application.Handle, True);
 end;
 

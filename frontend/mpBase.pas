@@ -21,7 +21,7 @@ uses
   wbDefinitionsTES5;
 
 type
-  TLogMessage = class (TOBject)
+  TLogMessage = class (TObject)
   public
     time: string;
     group: string;
@@ -210,8 +210,7 @@ type
     debugMasters: boolean;
     debugBatchCopying: boolean;
     debugBSAs: boolean;
-    debugPluginsLoad: boolean;
-    debugLoadOrder: boolean;
+    debugScriptFragments: boolean;
     constructor Create; virtual;
     procedure Save(const filename: string);
     procedure Load(const filename: string);
@@ -238,6 +237,7 @@ type
   function GetGameID(name: string): integer;
   function GetGamePath(gameName: string): string;
   procedure LoadDefinitions;
+  procedure InitPapyrus;
   function GetVersionMem: string;
   function FileVersion(const FileName: string): String;
   { Bethesda Plugin Functions }
@@ -278,6 +278,7 @@ type
   procedure GetPluginDates(var sl: TStringList);
   function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
   { Windows API functions }
+  procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
@@ -412,9 +413,9 @@ var
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
-  bConnecting, bUpdateMergeStatus: boolean;
+  bConnecting, bUpdateMergeStatus, bCompilerFound, bDecompilerFound: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
-  ProgramVersion, xEditLogLabel: string;
+  ProgramVersion, xEditLogLabel, decompilerPath, compilerPath: string;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
@@ -497,6 +498,7 @@ end;
   - GetGamePath
   - LoadDataPath
   - LoadDefinitions
+  - InitPapyrus
 }
 {******************************************************************************}
 
@@ -566,6 +568,19 @@ begin
     gmTES4: DefineTES4;
     gmFO3: DefineFO3;
   end;
+end;
+
+{ Sets up links to Papyrus Compiler and Decompiler }
+procedure InitPapyrus;
+begin
+  decompilerPath := ProgramPath + 'decompiler\Champollion.exe';
+  compilerPath := wbDataPath + '..\Papyrus Compiler\PapyrusCompiler.exe';
+  bDecompilerFound := FileExists(decompilerPath);
+  bCompilerFound := FileExists(compilerPath);
+  if bDecompilerFound then
+    Logger.Write('GENERAL', 'Papyrus', 'Decompiler found at '+decompilerPath);
+  if bCompilerFound then
+    Logger.Write('GENERAL', 'Papyrus', 'Compiler found at '+compilerPath);
 end;
 
 { Get program version from memory }
@@ -1046,17 +1061,17 @@ begin
   if Length(FormIDs) <> 0 then try
     p := merge.dataPath + 'seq\';
     if not ForceDirectories(p) then
-      raise Exception.Create('  Unable to create SEQ directory for merge.');
+      raise Exception.Create('Unable to create SEQ directory for merge.');
     s := p + ChangeFileExt(_File.FileName, '.seq');
     FileStream := TFileStream.Create(s, fmCreate);
     FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
-    Tracker.Write('  Created SEQ file: ' + s);
+    Tracker.Write('Created SEQ file: ' + s);
     merge.files.Add(s);
   except
     on e: Exception do begin
       if Assigned(FileStream) then
         FreeAndNil(FileStream);
-      Tracker.Write('  Error: Can''t create SEQ file: ' + s + ', ' + E.Message);
+      Tracker.Write('Error: Can''t create SEQ file: ' + s + ', ' + E.Message);
       Exit;
     end;
   end;
@@ -1424,6 +1439,34 @@ end;
   - RecursiveFileSearch
 }
 {******************************************************************************}
+
+{ Create a new synchronous or asynchronous process }
+procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
+var
+  StartInfo : TStartupInfo;
+  ProcInfo : TProcessInformation;
+  CreateOK : Boolean;
+begin
+  { fill with known state }
+  FillChar(StartInfo, SizeOf(TStartupInfo), #0);
+  FillChar(ProcInfo, SizeOf(TProcessInformation), #0);
+  StartInfo.cb := SizeOf(TStartupInfo);
+  CreateOK := CreateProcess(nil, PChar(ProgramName), nil, nil,False,
+              CREATE_NEW_PROCESS_GROUP+NORMAL_PRIORITY_CLASS,
+              nil, nil, StartInfo, ProcInfo);
+
+  // check if successful
+  if CreateOK then begin
+    if synchronous then
+      WaitForSingleObject(ProcInfo.hProcess, INFINITE);
+  end
+  else
+    ShowMessage('Unable to run '+ProgramName);
+
+  // close handles
+  CloseHandle(ProcInfo.hProcess);
+  CloseHandle(ProcInfo.hThread);
+end;
 
 { Gets a folder by its integer CSID. }
 function GetCSIDLShellFolder(CSIDLFolder: integer): string;
@@ -1861,7 +1904,7 @@ begin
   Result := nil;
   for i := 0 to Pred(LabelFilters.Count) do begin
     filter := TFilter(LabelFilters[i]);
-    if filter.&label = msg.&label then begin
+    if (filter.&label = msg.&label) and (filter.group = msg.group) then begin
       Result := filter;
       exit;
     end;
@@ -2420,7 +2463,9 @@ end;
 
 procedure ConnectToServer;
 begin
-  if bConnecting then exit;
+  if (bConnecting or TCPClient.Connected) then
+    exit;
+
   bConnecting := true;
   try
     Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
@@ -2893,7 +2938,7 @@ end;
 
 {******************************************************************************}
 { Object methods
-  Set of methods for objects TMerge and TPlugin
+  Set of methods for shared objects.
 
   List of methods:
   - TLogMessage.Create
@@ -3551,8 +3596,7 @@ begin
   ini.WriteBool('Advanced', 'debugMasters', debugMasters);
   ini.WriteBool('Advanced', 'debugBatchCopying', debugBatchCopying);
   ini.WriteBool('Advanced', 'debugBSAs', debugBSAs);
-  ini.WriteBool('Advanced', 'debugTempPath', debugPluginsLoad);
-  ini.WriteBool('Advanced', 'debugLoadOrder', debugLoadOrder);
+  ini.WriteBool('Advanced', 'debugScriptFragments', debugScriptFragments);
 
   // save log colors
   ini.WriteInteger('Advanced', 'initMessageColor', generalMessageColor);
@@ -3620,8 +3664,7 @@ begin
   debugMasters := ini.ReadBool('Advanced', 'debugMasters', false);
   debugBatchCopying := ini.ReadBool('Advanced', 'debugBatchCopying', false);
   debugBSAs := ini.ReadBool('Advanced', 'debugBSAs', false);
-  debugPluginsLoad := ini.ReadBool('Advanced', 'debugTempPath', false);
-  debugLoadOrder := ini.ReadBool('Advanced', 'debugLoadOrder', false);
+  debugScriptFragments := ini.ReadBool('Advanced', 'debugScriptFragments', false);
 
   // load log colors
   generalMessageColor := TColor(ini.ReadInteger('Advanced', 'initMessageColor', clGreen));

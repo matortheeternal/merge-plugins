@@ -460,7 +460,6 @@ object OptionsForm: TOptionsForm
           Width = 136
           Height = 17
           Caption = 'Handle Script Fragments'
-          Enabled = False
           TabOrder = 5
         end
         object kbExtractBSAs: TCheckBox
@@ -559,29 +558,13 @@ object OptionsForm: TOptionsForm
           Caption = 'Debug BSAs'
           TabOrder = 6
         end
-        object kbDebugPluginsLoad: TCheckBox
+        object kbDebugScriptFragments: TCheckBox
           Left = 272
           Top = 66
-          Width = 113
+          Width = 137
           Height = 17
-          Caption = 'Debug plugins load'
+          Caption = 'Debug script fragments'
           TabOrder = 7
-        end
-        object kbDebugLoadOrder: TCheckBox
-          Left = 272
-          Top = 89
-          Width = 105
-          Height = 17
-          Caption = 'Debug load order'
-          TabOrder = 8
-        end
-        object kbDebugClient: TCheckBox
-          Left = 272
-          Top = 112
-          Width = 81
-          Height = 17
-          Caption = 'Debug client'
-          TabOrder = 9
         end
       end
       object gbPrivacy: TGroupBox
@@ -768,7 +751,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C0101010008008C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800940010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

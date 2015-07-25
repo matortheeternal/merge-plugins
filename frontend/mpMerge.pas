@@ -22,6 +22,9 @@ uses
 
 implementation
 
+var
+  pexPath, pscPath, compiledPath: string;
+
 {******************************************************************************}
 { Renumbering Methods
   Methods for renumbering formIDs.
@@ -110,10 +113,12 @@ var
   Records: TList;
   renumberAll: boolean;
   BaseFormID, NewFormID: cardinal;
+  header: IwbContainer;
 begin
   if bProgressCancel then exit;
   // inital messages
   renumberAll := merge.renumbering = 'All';
+  Tracker.Write(' ');
   if renumberAll then Tracker.Write('Renumbering All FormIDs')
   else Tracker.Write('Renumbering Conflicting FormIDs');
 
@@ -181,6 +186,10 @@ begin
   if settings.debugRenumbering then
     Tracker.Write('  Renumbered '+IntToStr(total)+' FormIDs');
 
+  // set next object id
+  header := merge.plugin._File.Elements[0] as IwbContainer;
+  header.ElementByPath['HEDR\Next Object ID'].NativeValue :=  BaseFormID;
+
   // free memory
   Records.Free;
 end;
@@ -188,6 +197,410 @@ end;
 procedure RenumberAfter(merge: TMerge);
 begin
   // soon
+end;
+
+
+{******************************************************************************}
+{ Script Fragment Methods
+  Methods for handling script fragments.
+}
+{******************************************************************************}
+
+{ Copies all files from @srcPath to @dstPath, tracking them in @merge }
+procedure CopyFilesForMerge(var merge: TMerge; srcPath, dstPath: string);
+var
+  info: TSearchRec;
+  srcFile, dstFile: string;
+begin
+  if bProgressCancel then exit;
+
+  // exit if the srcPath doesn't exist
+  if not DirectoryExists(srcPath) then begin
+    Tracker.Write('  Directory: '+srcPath+' doesn''t exist');
+    exit;
+  end;
+
+  // if no files in source path, exit
+  if FindFirst(srcPath + '*', faAnyFile, info) <> 0 then begin
+    Tracker.Write('  No files found in '+srcPath);
+    exit;
+  end;
+  // search source path for files
+  repeat
+    if (Length(info.Name) < 8) then
+      continue;  // skip . and ..
+    srcFile := srcPath + info.Name;
+    dstFile := dstPath + info.Name;
+    if settings.batCopy then AddCopyOperation(srcFile, dstFile)
+    else CopyFile(PChar(srcFile), PChar(dstFile), false);
+    merge.files.Add(dstFile);
+  until FindNext(info) <> 0;
+  FindClose(info);
+end;
+
+procedure CompileScripts(srcPath, dstPath: string);
+var
+  info: TSearchRec;
+  total: integer;
+  importPath, flagsPath, compileCommand: string;
+begin
+  if bProgressCancel then exit;
+
+  // exit if no decompiler is available
+  if not bCompilerFound then begin
+    Tracker.Write('  Could not compile scripts in '+srcPath+', no compiler available.');
+    exit;
+  end;
+
+  // exit if the srcPath doesn't exist
+  if not DirectoryExists(srcPath) then begin
+    Tracker.Write('  Directory: '+srcPath+' doesn''t exist');
+    exit;
+  end;
+
+  // if no script files in source path, exit
+  if FindFirst(srcPath + '*.psc', faAnyFile, info) <> 0 then begin
+    Tracker.Write('  No files found matching '+srcPath + '*.psc');
+    exit;
+  end;
+
+  // search source path for script source files
+  total := 0;
+  if settings.debugScriptFragments then
+    Tracker.Write('  Compiling: ');
+  repeat
+    if (Length(info.Name) < 8) then
+      continue;  // skip . and ..
+    Inc(total);
+    if settings.debugScriptFragments then
+      Tracker.Write('    '+info.Name);
+  until FindNext(info) <> 0;
+  FindClose(info);
+  Tracker.Write('    Compiled '+IntToStr(total)+' scripts');
+
+  // prepare to compile
+  srcPath := RemoveFromEnd(srcPath, '\');
+  dstPath := RemoveFromEnd(dstPath, '\');
+  flagsPath := ExtractFilePath(compilerPath) + 'TESV_Papyrus_Flags.flg';
+  importPath := RemoveFromEnd(pscPath, '\') + ';' + wbDataPath + 'scripts\source';
+  compileCommand := Format('"%s" "%s" -o="%s" -f="%s" -i="%s" -a',
+    [compilerPath, srcPath, dstPath, flagsPath, importPath]);
+  if settings.debugScriptFragments then
+    Tracker.Write('  Compile command: '+compileCommand);
+  // execute compiler synchronously
+  ExecNewProcess(PChar(compileCommand), true);
+end;
+
+procedure RenumberScripts(merge: TMerge; srcPath: string);
+var
+  info: TSearchRec;
+  srcFile, oldFormID, oldFileFormID, newFileFormID: string;
+  index, total: Integer;
+  sl: TStringList;
+begin
+  if bProgressCancel then exit;
+
+  // exit if the srcPath doesn't exist
+  if not DirectoryExists(srcPath) then begin
+    Tracker.Write('  Directory: '+srcPath+' doesn''t exist');
+    exit;
+  end;
+
+  // if no script files in source path, exit
+  if FindFirst(srcPath + '*.psc', faAnyFile, info) <> 0 then begin
+    Tracker.Write('  No files found matching '+srcPath + '*.psc');
+    exit;
+  end;
+  // search source path for script source files
+  sl := TStringList.Create;
+  total := 0;
+  repeat
+    if (Length(info.Name) < 8) then
+      continue;  // skip . and ..
+    srcFile := info.Name;
+    oldFormID := Copy(info.Name, Length(srcFile) - 11, 8);
+    oldFileFormID := '00' + Copy(info.Name, Length(srcFile) - 9, 6);
+
+    // exit if we can't find a remapped formID for the source script
+    index := merge.map.IndexOfName(oldFileFormID);
+    if (index = -1) then begin
+      if settings.debugScriptFragments then
+        Tracker.Write(Format('    FormID [%s] was not renumbered in merge %s', [oldFileFormID, merge.name]));
+      continue;
+    end;
+
+    // remap formID in file name and file contents
+    Inc(total);
+    newFileFormID := merge.map.Values[oldFileFormID];
+    if settings.debugScriptFragments then
+      Tracker.Write(Format('    Remapping [%s] to [%s] on %s', [oldFormID, newFileFormID, srcFile]));
+    srcFile := StringReplace(srcFile, oldFormID, newFileFormID, []);
+    sl.LoadFromFile(srcPath + info.Name);
+    sl.Text := StringReplace(sl.Text, oldFormID, newFileFormID, [rfReplaceAll]);
+    sl.SaveToFile(srcPath + srcFile);
+    DeleteFile(srcPath + Info.Name);
+  until FindNext(info) <> 0;
+  Tracker.Write('    Renumbered '+IntToStr(total)+' scripts');
+
+  // clean up
+  FindClose(info);
+  sl.Free;
+end;
+
+procedure DecompileScripts(srcPath, dstPath: string);
+var
+  info: TSearchRec;
+  total: Integer;
+  decompileCommand: string;
+begin
+  if bProgressCancel then exit;
+
+  // exit if no decompiler is available
+  if not bDecompilerFound then begin
+    Tracker.Write('  Could not decompile scripts in '+srcPath+', no decompiler available.');
+    exit;
+  end;
+
+  // exit if the srcPath doesn't exist
+  if not DirectoryExists(srcPath) then begin
+    Tracker.Write('  Directory: '+srcPath+' doesn''t exist');
+    exit;
+  end;
+
+  // if no script files in source path, exit
+  if FindFirst(srcPath + '*.pex', faAnyFile, info) <> 0 then begin
+    Tracker.Write('  No files found matching '+srcPath + '*.pex');
+    exit;
+  end;
+  // search source path for script files
+  total := 0;
+  if settings.debugScriptFragments then
+    Tracker.Write('  Decompiling: ');
+  repeat
+    if (Length(info.Name) < 8) then
+      continue;  // skip . and ..
+    Inc(total);
+    if settings.debugScriptFragments then
+      Tracker.Write('    '+info.Name);
+  until FindNext(info) <> 0;
+  FindClose(info);
+  Tracker.Write('    Decompiled '+IntToStr(total)+' scripts');
+
+  // prepare to decompile
+  srcPath := RemoveFromEnd(srcPath, '\');
+  dstPath := RemoveFromEnd(dstPath, '\');
+  decompileCommand := Format('"%s" "%s" -p "%s"',
+    [decompilerPath, srcPath, dstPath]);
+  if settings.debugScriptFragments then
+    Tracker.Write('  Decompile command: '+decompileCommand);
+  // execute decompiler synchronously
+  ExecNewProcess(PChar(decompileCommand), true);
+end;
+
+{ Copies the script source matching @sfn from @srcpath to @@pscPath }
+function CopySource(sfn, srcpath: string): boolean;
+var
+  srcFile, dstFile: string;
+begin
+  Result := false;
+  srcFile := srcPath + 'source\' + ChangeFileExt(sfn, '.psc');
+  if not FileExists(srcFile) then begin
+    if settings.debugScriptFragments then
+      Tracker.Write('      Couldn''t find script source at '+srcFile);
+    exit;
+  end;
+  dstFile := pscPath + ChangeFileExt(sfn, '.psc');
+  Result := CopyFile(PChar(srcFile), PChar(dstFile), false);
+end;
+
+{ Copies the script matching @fn from @srcpath to @@pexPath }
+function CopyScript(fn, srcpath: string): boolean;
+var
+  srcFile, dstFile: string;
+begin
+  Result := false;
+  srcFile := srcPath + ChangeFileExt(fn, '.pex');
+  if not FileExists(srcFile) then begin
+    if settings.debugScriptFragments then
+      Tracker.Write('      Couldn''t find script at '+srcFile);
+    exit;
+  end;
+  dstFile := pexPath + ChangeFileExt(fn, '.pex');
+  Result := CopyFile(PChar(srcFile), PChar(dstFile), false);
+end;
+
+{ Traverses the DIAL\INFO group in @plugin for script fragments.  When found,
+  script fragments are copied from @srcPath to @dstPath if they correspond
+  to a record that has been renumbered in @merge }
+procedure CopyTopicInfoFragments(var plugin: TPlugin; var merge: TMerge; srcPath: string);
+const
+  infoFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Info VMAD\Script Fragments Info';
+var
+  f: IwbFile;
+  group: IwbGroupRecord;
+  rec, subgroup, container: IwbContainer;
+  element, fragments: IwbElement;
+  i, j, index: Integer;
+  fn, oldFormID, oldFileFormID, newFileFormID: string;
+begin
+  f := plugin._File;
+  // exit if no DIAL records in file
+  if not f.HasGroup('DIAL') then begin
+    if settings.debugScriptFragments then
+      Tracker.Write('      '+plugin.filename+' has no DIAL record ground, skipping.');
+    exit;
+  end;
+
+  // find all DIAL records
+  group := f.GroupBySignature['DIAL'];
+  for i := 0 to Pred(group.ElementCount) do begin
+    element := group.Elements[i];
+    // find all INFO records
+    if not Supports(element, IwbContainer, subgroup) then
+      continue;
+    for j := 0 to Pred(subgroup.ElementCount) do begin
+      rec := subgroup.Elements[j] as IwbContainer;
+      fragments := rec.ElementByPath[infoFragmentsPath];
+      if not Assigned(fragments) then
+        continue;
+      if not Supports(fragments, IwbContainer, container) then
+        continue;
+      fn := container.ElementValues['fileName'];
+      if (Pos('TIF_', fn) > 0) then begin
+        if settings.debugScriptFragments then
+          Tracker.Write('      Found script fragment '+fn);
+        oldFormID := Copy(fn, Length(fn) - 7, 8);
+        oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
+        index := merge.map.IndexOfName(oldFileFormID);
+        if (index = -1) then begin
+          if settings.debugScriptFragments then
+            Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
+          continue;
+        end
+        else begin
+          newFileFormID := merge.map.Values[oldFileFormID];
+          if settings.debugScriptFragments then
+            Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
+          if not CopySource(fn, srcPath) then
+            if not CopyScript(fn, srcPath) then
+              Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+          container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
+        end;
+      end;
+    end;
+  end;
+end;
+
+{ Traverses the QUST group in @plugin for script fragments.  When found,
+  script fragments are copied from @srcPath to @dstPath if they correspond
+  to a record that has been renumbered in @merge }
+procedure CopyQuestFragments(var plugin: TPlugin; var merge: TMerge; srcPath: string);
+const
+  questFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
+var
+  f: IwbFile;
+  group: IwbGroupRecord;
+  rec, container: IwbContainer;
+  fragments: IwbElement;
+  i, index: Integer;
+  fn, oldFormID, oldFileFormID, newFileFormID: string;
+begin
+  f := plugin._File;
+  // exit if no QUST records in file
+  if not f.HasGroup('QUST') then begin
+    if settings.debugScriptFragments then
+      Tracker.Write('      '+plugin.filename+' has no QUST record ground, skipping.');
+    exit;
+  end;
+
+  // find all QUST records
+  group := f.GroupBySignature['QUST'];
+  for i := 0 to Pred(group.ElementCount) do begin
+    rec := group.Elements[i] as IwbContainer;
+    fragments := rec.ElementByPath[questFragmentsPath];
+    if not Assigned(fragments) then
+      continue;
+    if not Supports(fragments, IwbContainer, container) then
+      continue;
+    fn := container.ElementValues['fileName'];
+    if (Pos('QF_', fn) > 0) then begin
+      if settings.debugScriptFragments then
+        Tracker.Write('      Found script fragment '+fn);
+      oldFormID := Copy(fn, Length(fn) - 7, 8);
+      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
+      index := merge.map.IndexOfName(oldFileFormID);
+      if (index = -1) then begin
+        if settings.debugScriptFragments then
+          Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
+        continue;
+      end
+      else begin
+        newFileFormID := merge.map.Values[oldFileFormID];
+        if settings.debugScriptFragments then
+          Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
+        if not CopySource(fn, srcPath) then
+          if not CopyScript(fn, srcPath) then
+            Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+        container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
+      end;
+    end;
+  end;
+end;
+
+{ Traverses the SCEN group in @plugin for script fragments.  When found,
+  script fragments are copied from @srcPath to @dstPath if they correspond
+  to a record that has been renumbered in @merge }
+procedure CopySceneFragments(var plugin: TPlugin; var merge: TMerge; srcPath: string);
+const
+  sceneFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
+var
+  f: IwbFile;
+  group: IwbGroupRecord;
+  rec, container: IwbContainer;
+  fragments: IwbElement;
+  i, index: Integer;
+  fn, oldFormID, oldFileFormID, newFileFormID: string;
+begin
+  f := plugin._File;
+  // exit if no SCEN records in file
+  if not f.HasGroup('SCEN') then begin
+    if settings.debugScriptFragments then
+      Tracker.Write('      '+plugin.filename+' has no SCEN record ground, skipping.');
+    exit;
+  end;
+
+  // find all SCEN records
+  group := f.GroupBySignature['SCEN'];
+  for i := 0 to Pred(group.ElementCount) do begin
+    rec := group.Elements[i] as IwbContainer;
+    fragments := rec.ElementByPath[sceneFragmentsPath];
+    if not Assigned(fragments) then
+      continue;
+    if not Supports(fragments, IwbContainer, container) then
+      continue;
+    fn := container.ElementValues['fileName'];
+    if (Pos('SF_', fn) > 0) then begin
+      if settings.debugScriptFragments then
+        Tracker.Write('      Found script fragment '+fn);
+      oldFormID := Copy(fn, Length(fn) - 7, 8);
+      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
+      index := merge.map.IndexOfName(oldFileFormID);
+      if (index = -1) then begin
+        if settings.debugScriptFragments then
+          Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
+        continue;
+      end
+      else begin
+        newFileFormID := merge.map.Values[oldFileFormID];
+        if settings.debugScriptFragments then
+          Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
+        if not CopySource(fn, srcPath) then
+          if not CopyScript(fn, srcPath) then
+            Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+        container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
+      end;
+    end;
+  end;
 end;
 
 {******************************************************************************}
@@ -200,15 +613,12 @@ end;
 }
 {******************************************************************************}
 
-procedure CopyRecord(aRecord: IwbMainRecord; merge: TMerge; asNew: boolean);
+procedure CopyRecord(aRecord: IwbMainRecord; var merge: TMerge; asNew: boolean);
 var
   aFile: IwbFile;
 begin
   try
     aFile := merge.plugin._File;
-    // see if unknown 15 flag on refr records always causes exception
-    if settings.debugRecordCopying and aRecord.ElementExists['Record Header\Record Flags\Unknown 15'] then
-      Tracker.Write('    ['+aRecord.Signature+':'+IntToHex(aRecord.LoadOrderFormID, 8)+'] Unknown 15 flag set!');
     wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
   except on x : Exception do begin
       Tracker.Write('    Exception copying '+aRecord.Name+': '+x.Message);
@@ -226,7 +636,8 @@ var
   asNew: boolean;
 begin
   if bProgressCancel then exit;
-  
+
+  Tracker.Write(' ');
   Tracker.Write('Copying records');
   //masters := TStringList.Create;
   asNew := merge.method = 'New Records';
@@ -468,7 +879,9 @@ end;
 
 procedure CopyScriptFragments(var plugin: TPlugin; var merge: TMerge; srcPath, dstPath: string);
 begin
-  // soon
+  CopySceneFragments(plugin, merge, srcPath);
+  CopyQuestFragments(plugin, merge, srcPath);
+  CopyTopicInfoFragments(plugin, merge, srcPath);
 end;
 
 procedure CopyGeneralAssets(var plugin: TPlugin; var merge: TMerge);
@@ -587,6 +1000,7 @@ begin
   if bProgressCancel then exit;
   if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then begin
     // if BSA exists, extract scripts from it to temp path and copy
+    Tracker.Write('    Copying script fragments for '+plugin.filename);
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+scriptsPath);
@@ -628,16 +1042,28 @@ var
   FileStream: TFileStream;
   time: TDateTime;
 begin
-  if bProgressCancel then exit;
   // initialize
   Tracker.Write('Building merge: '+merge.name);
   batch := TStringList.Create;
   CopiedFrom := TStringList.Create;
-  mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
-  ForceDirectories(ExtractFilePath(mergeFilePrefix));
   time := Now;
   failed := 'Failed to merge '+merge.name;
   merge.fails.Clear;
+
+  // set up directories
+  pexPath := TempPath + 'pex\';
+  pscPath := TempPath + 'psc\';
+  compiledPath := TempPath + 'compiled\';
+  mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
+  // delete papyrus directories, they should be empty before we begin
+  DeleteDirectory(pexPath);
+  DeleteDirectory(pscPath);
+  DeleteDirectory(compiledPath);
+  // force directories to exist so we can put files in them
+  ForceDirectories(pexPath);
+  ForceDirectories(pscPath);
+  ForceDirectories(compiledPath);
+  ForceDirectories(ExtractFilePath(mergeFilePrefix));
 
   // don't merge if merge has plugins not found in current load order
   pluginsToMerge := TList.Create;
@@ -716,7 +1142,6 @@ begin
       Tracker.Write('Actual masters:');
       Tracker.Write(slMasters.Text);
     end;
-
   except on Exception do
     // nothing
   end;
@@ -727,9 +1152,7 @@ begin
   try
     // overrides merging method
     if merge.method = 'Overrides' then begin
-      Tracker.Write(' ');
-        RenumberBefore(pluginsToMerge, merge);
-      Tracker.Write(' ');
+      RenumberBefore(pluginsToMerge, merge);
       CopyRecords(pluginsToMerge, merge);
     end;
   except
@@ -773,10 +1196,29 @@ begin
     Tracker.Write('  Copying assets for '+plugin.filename);
     CopyAssets(plugin, merge);
   end;
+  // save combined assets
   SaveTranslations(merge);
   SaveINI(merge);
+  // clean up
   languages.Free;
   MergeIni.Free;
+
+  // handle script fragments
+  if settings.handleScriptFragments then begin
+    Tracker.Write(' ');
+    Tracker.Write('Decompiling scripts');
+    DecompileScripts(pexPath, pscPath);
+    Tracker.Write(' ');
+    Tracker.Write('Remapping FormIDs in scripts');
+    RenumberScripts(merge, pscPath);
+    Tracker.Write(' ');
+    Tracker.Write('Compiling scripts');
+    CompileScripts(pscPath, compiledPath);
+    Tracker.Write(' ');
+    Tracker.Write('Copying modified scripts');
+    CopyFilesForMerge(merge, compiledPath, merge.dataPath + 'scripts\');
+    CopyFilesForMerge(merge, pscPath, merge.dataPath + 'scripts\source\');
+  end;
 
   // batch copy assets
   if settings.batCopy and (batch.Count > 0) and (not bProgressCancel) then begin

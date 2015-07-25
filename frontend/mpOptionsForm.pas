@@ -59,8 +59,7 @@ type
     kbDebugMasters: TCheckBox;
     kbDebugBatchCopying: TCheckBox;
     kbDebugBSAs: TCheckBox;
-    kbDebugPluginsLoad: TCheckBox;
-    kbDebugLoadOrder: TCheckBox;
+    kbDebugScriptFragments: TCheckBox;
     kbINIs: TCheckBox;
     btnRegister: TButton;
     lblStatus: TLabel;
@@ -72,7 +71,6 @@ type
     gbPrivacy: TGroupBox;
     kbNoStatistics: TCheckBox;
     kbNoPersistentConnection: TCheckBox;
-    kbDebugClient: TCheckBox;
     gbColoring: TGroupBox;
     lblClientColor: TLabel;
     lblGeneralColor: TLabel;
@@ -236,8 +234,7 @@ begin
   settings.debugMasters := kbDebugMasters.Checked;
   settings.debugBatchCopying := kbDebugBatchCopying.Checked;
   settings.debugBSAs := kbDebugBSAs.Checked;
-  settings.debugPluginsLoad := kbDebugPluginsLoad.Checked;
-  settings.debugLoadOrder := kbDebugLoadOrder.Checked;
+  settings.debugScriptFragments := kbDebugScriptFragments.Checked;
   settings.clientMessageColor := cbClientColor.Selected ;
   settings.generalMessageColor := cbGeneralColor.Selected;
   settings.loadMessageColor := cbLoadColor.Selected;
@@ -397,8 +394,7 @@ begin
   kbDebugMasters.Checked := settings.debugMasters;
   kbDebugBatchCopying.Checked := settings.debugBatchCopying;
   kbDebugBSAs.Checked := settings.debugBSAs;
-  kbDebugPluginsLoad.Checked := settings.debugPluginsLoad;
-  kbDebugLoadOrder.Checked := settings.debugLoadOrder;
+  kbDebugScriptFragments.Checked := settings.debugScriptFragments;
   cbClientColor.Selected := settings.clientMessageColor;
   cbGeneralColor.Selected := settings.generalMessageColor;
   cbLoadColor.Selected := settings.loadMessageColor;

@@ -177,7 +177,7 @@ type
   { MySQL methods }
   procedure DBLogin(userID, password, database, host, port: string);
   procedure SQLQuery(query: string);
-  function SanitizeForSQL(s: string): string;
+  function SanitizeForSQL(const s: string): string;
   //==USERS==
   procedure DBQueryUsers;
   function UserWhereClause(user: TUser): string;
@@ -507,9 +507,23 @@ begin
   end;
 end;
 
-function SanitizeForSQL(s: string): string;
+function StringReplaceExt(const s: string; OldPattern, NewPattern: array of string;
+  Flags: TReplaceFlags): string;
+var
+  i : integer;
 begin
-  Result := StringReplace(s, '''', '''''', [rfReplaceAll]);
+  Assert(Length(OldPattern) = (Length(NewPattern)));
+  Result := S;
+  for  i := Low(OldPattern) to High(OldPattern) do
+    Result := StringReplace(Result, OldPattern[i], NewPattern[i], Flags);
+end;
+
+function SanitizeForSQL(const s: string): string;
+begin
+  Result := StringReplaceExt(s,
+    ['\', #39, #34, #0, #10, #13, #26], ['\\','\'#39,'\'#34,'\0','\n','\r','\Z'] ,
+    [rfReplaceAll]
+  );
 end;
 
 
