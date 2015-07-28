@@ -24,15 +24,11 @@ uses
   mpMerge in 'mpMerge.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
-  mpLogger in 'mpLogger.pas',
-  mpTracker in 'mpTracker.pas',
   mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpGameForm in 'mpGameForm.pas' {GameForm},
-  W7Taskbar in 'W7Taskbar.pas',
-  mpReportForm in 'mpReportForm.pas' {Form1},
-  RttiIni in 'RttiIni.pas';
+  mpReportForm in 'mpReportForm.pas' {Form1};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

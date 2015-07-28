@@ -32,7 +32,7 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_UsePackage>vcl;rtl;vclx;vclactnband;xmlrtl;VclSmp;vclimg;svnui;svn;bdertl;TeeUI;TeeDB;Tee;vcldb;dbrtl;vcldbx;vcltouch;dsnap;dsnapcon;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_110_150;Intraweb_110_150;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DataSnapClient;dbxcds;DbxClientDriver;DataSnapServer;AzureCloud;DBXInterBaseDriver;DBXMySQLDriver;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver</DCC_UsePackage>
-			<DCC_UnitSearchPath>..\lib\Imaging\ZLib;..\lib\abbrevia\source;..\lib\Imaging;..\lib\xedit;..\lib\IniPersist;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\lib\Imaging\ZLib;..\lib\abbrevia\source;..\lib\Imaging;..\lib\xedit;..\lib\mte;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
 			<DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
 			<DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
@@ -97,8 +97,6 @@
 			<DCCReference Include="mpOptionsForm.pas">
 				<Form>OptionsForm</Form>
 			</DCCReference>
-			<DCCReference Include="mpLogger.pas"/>
-			<DCCReference Include="mpTracker.pas"/>
 			<DCCReference Include="mpProgressForm.pas">
 				<Form>ProgressForm</Form>
 			</DCCReference>
@@ -111,11 +109,9 @@
 			<DCCReference Include="mpGameForm.pas">
 				<Form>GameForm</Form>
 			</DCCReference>
-			<DCCReference Include="W7Taskbar.pas"/>
 			<DCCReference Include="mpReportForm.pas">
 				<Form>Form1</Form>
 			</DCCReference>
-			<DCCReference Include="RttiIni.pas"/>
 			<None Include="ModelSupport_MergePlugins\default.txaPackage"/>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
 			<None Include="ModelSupport_MergePlugins\mpTracker\default.txvpck"/>
@@ -174,7 +170,7 @@
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">423</VersionInfo>
+						<VersionInfo Name="Build">425</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -186,7 +182,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.0.0.423</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.0.0.425</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
