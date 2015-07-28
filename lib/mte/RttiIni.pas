@@ -14,8 +14,6 @@ type
     property Section: string read FSection write FSection;
   end;
 
-  EIniPersist = class(Exception);
-
   TRttiIni = class (TObject)
   private
     class function ReadValue(section: string; var ini: TMemIniFile;
