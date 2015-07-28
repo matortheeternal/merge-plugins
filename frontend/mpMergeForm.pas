@@ -268,6 +268,13 @@ begin
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
+    NewButton.Flat := true;
+    BuildButton.Flat := true;
+    ReportButton.Flat := true;
+    DictionaryButton.Flat := true;
+    OptionsButton.Flat := true;
+    UpdateButton.Flat := true;
+    HelpButton.Flat := true;
     IconList.GetBitmap(0, NewButton.Glyph);
     DoubleIconList.GetBitmap(0, BuildButton.Glyph);
     IconList.GetBitmap(2, ReportButton.Glyph);

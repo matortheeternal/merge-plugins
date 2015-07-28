@@ -43,7 +43,6 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Create new merge'
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = CreateMergeButtonClick
@@ -54,7 +53,6 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Build all merges'
-      Flat = True
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
@@ -66,7 +64,6 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Submit reports'
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = ReportButtonClick
@@ -77,7 +74,6 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'View dictionary'
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = DictionaryButtonClick
@@ -88,7 +84,6 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Merge options'
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = OptionsButtonClick
@@ -100,7 +95,6 @@ object MergeForm: TMergeForm
       Height = 40
       Hint = 'Update'
       Anchors = [akTop, akRight]
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = UpdateButtonClick
@@ -112,7 +106,6 @@ object MergeForm: TMergeForm
       Height = 40
       Hint = 'Help'
       Anchors = [akTop, akRight]
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = HelpButtonClick
@@ -189,10 +182,6 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -242,10 +231,6 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -758,7 +743,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801B00120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801B40120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1898,7 +1883,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010109001800900110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010109001800940110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2307,7 +2292,7 @@ object MergeForm: TMergeForm
     Left = 936
     Top = 8
     Bitmap = {
-      494C010101001400CC0040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101001400D00040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100002000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

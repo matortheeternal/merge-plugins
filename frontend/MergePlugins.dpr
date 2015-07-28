@@ -31,7 +31,8 @@ uses
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpGameForm in 'mpGameForm.pas' {GameForm},
   W7Taskbar in 'W7Taskbar.pas',
-  mpReportForm in 'mpReportForm.pas' {Form1};
+  mpReportForm in 'mpReportForm.pas' {Form1},
+  RttiIni in 'RttiIni.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

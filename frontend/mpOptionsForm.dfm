@@ -24,46 +24,12 @@ object OptionsForm: TOptionsForm
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    TabWidth = 70
+    TabWidth = 80
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
-      object lblLanguage: TLabel
-        Left = 6
-        Top = 9
-        Width = 47
-        Height = 13
-        Margins.Left = 6
-        Margins.Top = 6
-        Margins.Right = 6
-        Margins.Bottom = 6
-        Align = alCustom
-        Caption = 'Language'
-      end
-      object cbLanguage: TComboBox
-        Left = 280
-        Top = 6
-        Width = 274
-        Height = 21
-        Margins.Left = 6
-        Margins.Top = 6
-        Margins.Right = 6
-        Margins.Bottom = 6
-        Align = alCustom
-        Style = csDropDownList
-        Anchors = [akTop, akRight]
-        ItemIndex = 0
-        TabOrder = 0
-        Text = 'English'
-        Items.Strings = (
-          'English'
-          'French'
-          'Portugese'
-          'Spanish'
-          'Chinese')
-      end
       object gbStyle: TGroupBox
         Left = 6
-        Top = 133
+        Top = 163
         Width = 548
         Height = 71
         Margins.Left = 6
@@ -72,7 +38,7 @@ object OptionsForm: TOptionsForm
         Margins.Bottom = 6
         Align = alCustom
         Caption = 'Style'
-        TabOrder = 1
+        TabOrder = 0
         object kbSimpleDictionary: TCheckBox
           Left = 12
           Top = 20
@@ -94,7 +60,7 @@ object OptionsForm: TOptionsForm
       end
       object gbUpdating: TGroupBox
         Left = 6
-        Top = 216
+        Top = 246
         Width = 548
         Height = 82
         Margins.Left = 6
@@ -104,7 +70,7 @@ object OptionsForm: TOptionsForm
         Align = alCustom
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Updating'
-        TabOrder = 2
+        TabOrder = 1
         object lblDictionaryStatus: TLabel
           Left = 274
           Top = 23
@@ -188,51 +154,9 @@ object OptionsForm: TOptionsForm
           OnClick = btnUpdateProgramClick
         end
       end
-      object gbGameMode: TGroupBox
-        Left = 6
-        Top = 310
-        Width = 548
-        Height = 54
-        Margins.Left = 6
-        Margins.Top = 6
-        Margins.Right = 6
-        Margins.Bottom = 6
-        Align = alCustom
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'Game mode'
-        TabOrder = 3
-        object lblGameMode: TLabel
-          Left = 12
-          Top = 20
-          Width = 97
-          Height = 13
-          Caption = 'Default game mode:'
-        end
-        object cbGameMode: TComboBox
-          Left = 184
-          Top = 20
-          Width = 202
-          Height = 21
-          Style = csDropDownList
-          ItemIndex = 0
-          TabOrder = 0
-          Text = 'None'
-          Items.Strings = (
-            'None')
-        end
-        object btnUpdateGameMode: TButton
-          Left = 392
-          Top = 18
-          Width = 150
-          Height = 25
-          Caption = 'Change game mode'
-          TabOrder = 1
-          OnClick = btnUpdateGameModeClick
-        end
-      end
       object gbReports: TGroupBox
         Left = 6
-        Top = 39
+        Top = 69
         Width = 548
         Height = 82
         Margins.Left = 6
@@ -241,7 +165,7 @@ object OptionsForm: TOptionsForm
         Margins.Bottom = 6
         Align = alCustom
         Caption = 'Reports'
-        TabOrder = 4
+        TabOrder = 2
         object lblUsername: TLabel
           Left = 12
           Top = 20
@@ -303,91 +227,74 @@ object OptionsForm: TOptionsForm
           TabOrder = 2
           OnClick = btnRegisterClick
         end
+        object btnReset: TButton
+          Left = 467
+          Top = 47
+          Width = 75
+          Height = 25
+          Margins.Right = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'Reset'
+          Enabled = False
+          TabOrder = 3
+          OnClick = btnResetClick
+        end
       end
-      object btnReset: TButton
-        Left = 473
-        Top = 84
-        Width = 75
-        Height = 25
+      object GroupBox1: TGroupBox
+        Left = 6
+        Top = 6
+        Width = 548
+        Height = 51
+        Margins.Left = 6
+        Margins.Top = 6
         Margins.Right = 6
+        Margins.Bottom = 6
         Align = alCustom
-        Anchors = [akTop, akRight]
-        Caption = 'Reset'
-        Enabled = False
-        TabOrder = 5
-        OnClick = btnResetClick
+        Caption = 'Language'
+        TabOrder = 3
+        object lblLanguage: TLabel
+          Left = 12
+          Top = 20
+          Width = 78
+          Height = 13
+          Margins.Left = 6
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Align = alCustom
+          Caption = 'Current languge'
+        end
+        object cbLanguage: TComboBox
+          Left = 265
+          Top = 17
+          Width = 274
+          Height = 21
+          Margins.Left = 6
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Align = alCustom
+          Style = csDropDownList
+          Anchors = [akTop, akRight]
+          ItemIndex = 0
+          TabOrder = 0
+          Text = 'English'
+          Items.Strings = (
+            'English'
+            'French'
+            'Portugese'
+            'Spanish'
+            'Chinese')
+        end
       end
     end
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      object gbModOrganizer: TGroupBox
-        Left = 6
-        Top = 6
-        Width = 548
-        Height = 107
-        Margins.Left = 6
-        Margins.Top = 6
-        Margins.Right = 6
-        Margins.Bottom = 6
-        Caption = 'Mod Organizer'
-        TabOrder = 0
-        object lblModOrganizer: TLabel
-          Left = 12
-          Top = 50
-          Width = 117
-          Height = 13
-          Caption = 'Mod Organizer Directory'
-        end
-        object btnBrowseMO: TSpeedButton
-          Left = 519
-          Top = 47
-          Width = 23
-          Height = 22
-          Hint = 'Browse'
-          Margins.Right = 6
-          ParentShowHint = False
-          ShowHint = True
-          OnClick = btnBrowseMOClick
-        end
-        object kbUsingMO: TCheckBox
-          Left = 12
-          Top = 20
-          Width = 133
-          Height = 17
-          Caption = 'I'#39'm using Mod Organizer'
-          TabOrder = 0
-          OnClick = kbUsingMOClick
-        end
-        object edMODirectory: TEdit
-          Left = 192
-          Top = 47
-          Width = 321
-          Height = 21
-          TabOrder = 1
-        end
-        object btnDetect: TButton
-          Left = 413
-          Top = 16
-          Width = 129
-          Height = 25
-          Margins.Right = 6
-          Caption = 'Detect Directories'
-          TabOrder = 2
-          OnClick = btnDetectClick
-        end
-        object kbCopyGeneral: TCheckBox
-          Left = 12
-          Top = 75
-          Width = 133
-          Height = 17
-          Caption = 'Copy general asssets'
-          TabOrder = 3
-        end
-      end
       object gbAssetCopying: TGroupBox
         Left = 6
-        Top = 125
+        Top = 6
         Width = 548
         Height = 164
         Margins.Left = 6
@@ -395,7 +302,7 @@ object OptionsForm: TOptionsForm
         Margins.Right = 6
         Margins.Bottom = 6
         Caption = 'Asset Handling'
-        TabOrder = 1
+        TabOrder = 0
         object lblMergeDestination: TLabel
           Left = 12
           Top = 24
@@ -487,21 +394,17 @@ object OptionsForm: TOptionsForm
           TabOrder = 8
         end
       end
-    end
-    object AdvancedTabSheet: TTabSheet
-      Caption = 'Advanced'
-      ImageIndex = 2
       object gbDebug: TGroupBox
         Left = 6
-        Top = 6
+        Top = 182
         Width = 548
-        Height = 147
+        Height = 115
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
         Caption = 'Debug'
-        TabOrder = 0
+        TabOrder = 1
         object kbDebugRenumbering: TCheckBox
           Left = 12
           Top = 20
@@ -535,41 +438,45 @@ object OptionsForm: TOptionsForm
           TabOrder = 3
         end
         object kbDebugMasters: TCheckBox
-          Left = 12
-          Top = 112
+          Left = 274
+          Top = 20
           Width = 97
           Height = 17
           Caption = 'Debug masters'
           TabOrder = 4
         end
         object kbDebugBatchCopying: TCheckBox
-          Left = 272
-          Top = 20
+          Left = 274
+          Top = 43
           Width = 129
           Height = 17
           Caption = 'Debug batch copying'
           TabOrder = 5
         end
         object kbDebugBSAs: TCheckBox
-          Left = 272
-          Top = 43
+          Left = 274
+          Top = 66
           Width = 81
           Height = 17
           Caption = 'Debug BSAs'
           TabOrder = 6
         end
         object kbDebugScriptFragments: TCheckBox
-          Left = 272
-          Top = 66
+          Left = 274
+          Top = 89
           Width = 137
           Height = 17
           Caption = 'Debug script fragments'
           TabOrder = 7
         end
       end
+    end
+    object AdvancedTabSheet: TTabSheet
+      Caption = 'Advanced'
+      ImageIndex = 2
       object gbPrivacy: TGroupBox
         Left = 6
-        Top = 165
+        Top = 160
         Width = 548
         Height = 76
         Margins.Left = 6
@@ -577,27 +484,27 @@ object OptionsForm: TOptionsForm
         Margins.Right = 6
         Margins.Bottom = 6
         Caption = 'Privacy'
-        TabOrder = 1
+        TabOrder = 0
         object kbNoStatistics: TCheckBox
           Left = 12
           Top = 20
-          Width = 213
+          Width = 149
           Height = 17
-          Caption = 'Don'#39't send anonymous usage statistics'
+          Caption = 'Don'#39't send usage statistics'
           TabOrder = 0
         end
-      end
-      object kbNoPersistentConnection: TCheckBox
-        Left = 18
-        Top = 208
-        Width = 223
-        Height = 17
-        Caption = 'Only connect to the server when required'
-        TabOrder = 2
+        object kbNoPersistentConnection: TCheckBox
+          Left = 12
+          Top = 43
+          Width = 223
+          Height = 17
+          Caption = 'Only connect to the server when required'
+          TabOrder = 1
+        end
       end
       object gbColoring: TGroupBox
         Left = 6
-        Top = 253
+        Top = 248
         Width = 548
         Height = 107
         Margins.Left = 6
@@ -607,7 +514,7 @@ object OptionsForm: TOptionsForm
         Align = alCustom
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Log Coloring'
-        TabOrder = 3
+        TabOrder = 1
         object lblClientColor: TLabel
           Left = 12
           Top = 20
@@ -722,6 +629,309 @@ object OptionsForm: TOptionsForm
           TabOrder = 5
         end
       end
+      object gbMergeProfile: TGroupBox
+        Left = 6
+        Top = 72
+        Width = 548
+        Height = 76
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Merge Profile'
+        TabOrder = 2
+        object lblCurrentProfile: TLabel
+          Left = 12
+          Top = 20
+          Width = 70
+          Height = 13
+          Caption = 'Current profile'
+        end
+        object cbCurrentProfile: TComboBox
+          Left = 184
+          Top = 16
+          Width = 202
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 0
+        end
+        object btnChangeMergeProfile: TButton
+          Left = 392
+          Top = 14
+          Width = 150
+          Height = 25
+          Caption = 'Switch merge profiles'
+          Enabled = False
+          TabOrder = 1
+          OnClick = btnChangeMergeProfileClick
+        end
+        object kbLinkToMO: TCheckBox
+          Left = 12
+          Top = 47
+          Width = 166
+          Height = 17
+          Caption = 'Link to Mod Organizer profile'
+          TabOrder = 2
+        end
+        object cbModOrganizerProfile: TComboBox
+          Left = 184
+          Top = 45
+          Width = 202
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 3
+        end
+      end
+      object gbGameMode: TGroupBox
+        Left = 6
+        Top = 6
+        Width = 548
+        Height = 54
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Align = alCustom
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Game mode'
+        TabOrder = 3
+        object lblGameMode: TLabel
+          Left = 12
+          Top = 20
+          Width = 93
+          Height = 13
+          Caption = 'Default game mode'
+        end
+        object cbGameMode: TComboBox
+          Left = 184
+          Top = 20
+          Width = 202
+          Height = 21
+          Style = csDropDownList
+          ItemIndex = 0
+          TabOrder = 0
+          Text = 'None'
+          Items.Strings = (
+            'None')
+        end
+        object btnUpdateGameMode: TButton
+          Left = 392
+          Top = 18
+          Width = 150
+          Height = 25
+          Caption = 'Change game mode'
+          TabOrder = 1
+          OnClick = btnUpdateGameModeClick
+        end
+      end
+    end
+    object IntegrationsTabSheet: TTabSheet
+      Caption = 'Integrations'
+      ImageIndex = 3
+      object gbModOrganizer: TGroupBox
+        Left = 6
+        Top = 6
+        Width = 548
+        Height = 107
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Caption = 'Mod Organizer'
+        TabOrder = 0
+        object lblModOrganizerDirectory: TLabel
+          Left = 12
+          Top = 50
+          Width = 123
+          Height = 13
+          Caption = 'Mod Organizer mods path'
+        end
+        object btnBrowseMO: TSpeedButton
+          Left = 519
+          Top = 47
+          Width = 23
+          Height = 22
+          Hint = 'Browse'
+          Margins.Right = 6
+          ParentShowHint = False
+          ShowHint = True
+          OnClick = btnBrowseMOClick
+        end
+        object kbUsingMO: TCheckBox
+          Left = 12
+          Top = 20
+          Width = 133
+          Height = 17
+          Caption = 'I'#39'm using Mod Organizer'
+          TabOrder = 0
+          OnClick = kbUsingMOClick
+        end
+        object edModOrganizerPath: TEdit
+          Left = 192
+          Top = 47
+          Width = 321
+          Height = 21
+          TabOrder = 1
+        end
+        object btnDetect: TButton
+          Left = 402
+          Top = 16
+          Width = 140
+          Height = 25
+          Margins.Right = 6
+          Caption = 'Detect Mod Organizer'
+          TabOrder = 2
+          OnClick = btnDetectClick
+        end
+        object kbCopyGeneralAssets: TCheckBox
+          Left = 12
+          Top = 75
+          Width = 133
+          Height = 17
+          Caption = 'Copy general asssets'
+          TabOrder = 3
+        end
+      end
+      object gbPapyrus: TGroupBox
+        Left = 6
+        Top = 125
+        Width = 548
+        Height = 107
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Caption = 'Papyrus'
+        TabOrder = 1
+        object lblDecompilerPath: TLabel
+          Left = 12
+          Top = 20
+          Width = 137
+          Height = 13
+          Caption = 'Champollion Decompiler path'
+        end
+        object btnBrowseDecompiler: TSpeedButton
+          Left = 519
+          Top = 17
+          Width = 23
+          Height = 22
+          Hint = 'Browse'
+          Margins.Right = 6
+          ParentShowHint = False
+          ShowHint = True
+          OnClick = btnBrowseDecompilerClick
+        end
+        object lblCompilerPath: TLabel
+          Left = 12
+          Top = 47
+          Width = 108
+          Height = 13
+          Caption = 'Papyrus Compiler path'
+        end
+        object btnBrowseCompiler: TSpeedButton
+          Left = 519
+          Top = 45
+          Width = 23
+          Height = 22
+          Hint = 'Browse'
+          Margins.Right = 6
+          ParentShowHint = False
+          ShowHint = True
+          OnClick = btnBrowseCompilerClick
+        end
+        object lblFlagsPath: TLabel
+          Left = 12
+          Top = 75
+          Width = 90
+          Height = 13
+          Caption = 'Papyrus flags path'
+        end
+        object btnBrowseFlags: TSpeedButton
+          Left = 519
+          Top = 72
+          Width = 23
+          Height = 22
+          Hint = 'Browse'
+          Margins.Right = 6
+          ParentShowHint = False
+          ShowHint = True
+          OnClick = btnBrowseFlagsClick
+        end
+        object edDecompilerPath: TEdit
+          Left = 192
+          Top = 17
+          Width = 321
+          Height = 21
+          TabOrder = 0
+        end
+        object edCompilerPath: TEdit
+          Left = 192
+          Top = 45
+          Width = 321
+          Height = 21
+          TabOrder = 1
+        end
+        object edFlagsPath: TEdit
+          Left = 192
+          Top = 72
+          Width = 321
+          Height = 21
+          TabOrder = 2
+        end
+      end
+      object gbBSAs: TGroupBox
+        Left = 6
+        Top = 244
+        Width = 548
+        Height = 77
+        Margins.Left = 6
+        Margins.Top = 6
+        Margins.Right = 6
+        Margins.Bottom = 6
+        Caption = 'BSAs'
+        TabOrder = 2
+        object btnBrowseBSAOpt: TSpeedButton
+          Left = 519
+          Top = 17
+          Width = 23
+          Height = 22
+          Hint = 'Browse'
+          Margins.Right = 6
+          ParentShowHint = False
+          ShowHint = True
+          OnClick = btnBrowseBSAOptClick
+        end
+        object lblBSAOptPath: TLabel
+          Left = 12
+          Top = 20
+          Width = 62
+          Height = 13
+          Caption = 'BSAOpt path'
+        end
+        object lblBSAOptCommands: TLabel
+          Left = 12
+          Top = 47
+          Width = 104
+          Height = 13
+          Caption = 'BSAOpt command line'
+        end
+        object edBsaOptPath: TEdit
+          Left = 192
+          Top = 17
+          Width = 321
+          Height = 21
+          TabOrder = 0
+        end
+        object edBsaOptCommands: TEdit
+          Left = 192
+          Top = 44
+          Width = 348
+          Height = 21
+          TabOrder = 1
+        end
+      end
     end
   end
   object btnCancel: TButton
@@ -751,7 +961,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800940010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800980010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

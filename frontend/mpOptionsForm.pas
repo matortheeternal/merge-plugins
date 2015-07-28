@@ -20,13 +20,6 @@ type
     kbSimplePlugins: TCheckBox;
     btnCancel: TButton;
     btnOK: TButton;
-    gbModOrganizer: TGroupBox;
-    kbUsingMO: TCheckBox;
-    lblModOrganizer: TLabel;
-    edMODirectory: TEdit;
-    btnDetect: TButton;
-    kbCopyGeneral: TCheckBox;
-    btnBrowseMO: TSpeedButton;
     IconList: TImageList;
     gbAssetCopying: TGroupBox;
     lblMergeDestination: TLabel;
@@ -41,25 +34,12 @@ type
     gbUpdating: TGroupBox;
     kbUpdateDictionary: TCheckBox;
     kbUpdateProgram: TCheckBox;
-    gbGameMode: TGroupBox;
-    lblGameMode: TLabel;
-    cbGameMode: TComboBox;
-    btnUpdateGameMode: TButton;
     gbReports: TGroupBox;
     lblUsername: TLabel;
     edUsername: TEdit;
     kbSaveReports: TCheckBox;
     kbBatCopy: TCheckBox;
     AdvancedTabSheet: TTabSheet;
-    gbDebug: TGroupBox;
-    kbDebugRenumbering: TCheckBox;
-    kbDebugMergeStatus: TCheckBox;
-    kbDebugAssetCopying: TCheckBox;
-    kbDebugRecordCopying: TCheckBox;
-    kbDebugMasters: TCheckBox;
-    kbDebugBatchCopying: TCheckBox;
-    kbDebugBSAs: TCheckBox;
-    kbDebugScriptFragments: TCheckBox;
     kbINIs: TCheckBox;
     btnRegister: TButton;
     lblStatus: TLabel;
@@ -84,6 +64,50 @@ type
     cbMergeColor: TColorBox;
     cbPluginColor: TColorBox;
     cbErrorColor: TColorBox;
+    IntegrationsTabSheet: TTabSheet;
+    gbModOrganizer: TGroupBox;
+    lblModOrganizerDirectory: TLabel;
+    btnBrowseMO: TSpeedButton;
+    kbUsingMO: TCheckBox;
+    edModOrganizerPath: TEdit;
+    btnDetect: TButton;
+    gbDebug: TGroupBox;
+    kbDebugRenumbering: TCheckBox;
+    kbDebugMergeStatus: TCheckBox;
+    kbDebugAssetCopying: TCheckBox;
+    kbDebugRecordCopying: TCheckBox;
+    kbDebugMasters: TCheckBox;
+    kbDebugBatchCopying: TCheckBox;
+    kbDebugBSAs: TCheckBox;
+    kbDebugScriptFragments: TCheckBox;
+    kbCopyGeneralAssets: TCheckBox;
+    gbPapyrus: TGroupBox;
+    lblDecompilerPath: TLabel;
+    btnBrowseDecompiler: TSpeedButton;
+    edDecompilerPath: TEdit;
+    edCompilerPath: TEdit;
+    lblCompilerPath: TLabel;
+    btnBrowseCompiler: TSpeedButton;
+    edFlagsPath: TEdit;
+    lblFlagsPath: TLabel;
+    btnBrowseFlags: TSpeedButton;
+    gbMergeProfile: TGroupBox;
+    lblCurrentProfile: TLabel;
+    cbCurrentProfile: TComboBox;
+    btnChangeMergeProfile: TButton;
+    kbLinkToMO: TCheckBox;
+    cbModOrganizerProfile: TComboBox;
+    gbBSAs: TGroupBox;
+    btnBrowseBSAOpt: TSpeedButton;
+    edBsaOptPath: TEdit;
+    lblBSAOptPath: TLabel;
+    lblBSAOptCommands: TLabel;
+    edBsaOptCommands: TEdit;
+    gbGameMode: TGroupBox;
+    lblGameMode: TLabel;
+    cbGameMode: TComboBox;
+    btnUpdateGameMode: TButton;
+    GroupBox1: TGroupBox;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -96,6 +120,11 @@ type
     procedure btnResetClick(Sender: TObject);
     procedure btnUpdateDictionaryClick(Sender: TObject);
     procedure btnUpdateProgramClick(Sender: TObject);
+    procedure btnChangeMergeProfileClick(Sender: TObject);
+    procedure btnBrowseDecompilerClick(Sender: TObject);
+    procedure btnBrowseCompilerClick(Sender: TObject);
+    procedure btnBrowseFlagsClick(Sender: TObject);
+    procedure btnBrowseBSAOptClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -110,37 +139,33 @@ implementation
 {$R *.dfm}
 
 procedure TOptionsForm.btnBrowseAssetDirectoryClick(Sender: TObject);
-var
-  s: string;
 begin
-  // different SelectDirectory starting paths
-  if DirectoryExists(edMergeDirectory.Text) then
-    s := edMergeDirectory.Text
-  else if kbUsingMO.Checked and DirectoryExists(edMODirectory.Text) then
-    s := edMODirectory.Text;
-  // prompt user to select a directory
-  SelectDirectory('Select a directory', '', s, []);
+  BrowseForFolder(edMergeDirectory);
+end;
 
-  // save text to TEdit
-  if s <> '' then
-    edMergeDirectory.Text := AppendIfMissing(s, '\');
+procedure TOptionsForm.btnBrowseBSAOptClick(Sender: TObject);
+begin
+  BrowseForFile(edBsaOptPath, '*.exe');
+end;
+
+procedure TOptionsForm.btnBrowseCompilerClick(Sender: TObject);
+begin
+  BrowseForFile(edCompilerPath, '*.exe');
+end;
+
+procedure TOptionsForm.btnBrowseDecompilerClick(Sender: TObject);
+begin
+  BrowseForFile(edDecompilerPath, '*.exe');
+end;
+
+procedure TOptionsForm.btnBrowseFlagsClick(Sender: TObject);
+begin
+  BrowseForFile(edFlagsPath, '*.flg');
 end;
 
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
-var
-  s: string;
 begin
-  // start in current directory value if valid
-  if DirectoryExists(edMODirectory.Text) then
-    s := edMODirectory.Text;
-  // prompt user to select a directory
-  SelectDirectory('Select a directory', '', s, []);
-
-  // save text to TEdit
-  if s <> '' then
-    edMODirectory.Text := AppendIfMissing(s, '\');
-  if DirectoryExists(edMODirectory.Text + 'mods\') then
-    edMergeDirectory.Text := edMODirectory.Text + 'mods\';
+  BrowseForFolder(edModOrganizerPath);
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
@@ -190,12 +215,12 @@ begin
 
   // if found, set TEdit captions, else alert user
   if (modOrganizerPath <> '') then begin
-    edMODirectory.Text := Copy(modOrganizerPath, 1, length(modOrganizerPath) - 16);
-    edMergeDirectory.Text := edMODirectory.Text + 'mods\';
+    edModOrganizerPath.Text := Copy(modOrganizerPath, 1, length(modOrganizerPath) - 16);
+    edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
   end
   else begin
     MessageDlg('Couldn''t automatically detect Mod Organizer''s file path.  Please enter it manually.', mtConfirmation, [mbOk], 0);
-    edMODirectory.Text := '';
+    edModOrganizerPath.Text := '';
   end;
 end;
 
@@ -203,21 +228,22 @@ procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
   // check if we need to update merge status afterwards
   bUpdateMergeStatus := (settings.usingMO <> kbUsingMO.Checked)
-    or (settings.MODirectory <> edMODirectory.Text)
+    or (settings.MODirectory <> edModOrganizerPath.Text)
     or (settings.mergeDirectory <> edMergeDirectory.Text);
 
-  // save changes to settings
+  // General > Language
   settings.language := cbLanguage.Text;
-  settings.defaultGame := GetGameID(cbGameMode.Text);
+  // General > Reports
   settings.username := edUsername.Text;
   settings.saveReportsLocally := kbSaveReports.Checked;
+  // General > Style
   settings.simpleDictionaryView := kbSimpleDictionary.Checked;
   settings.simplePluginsView := kbSimplePlugins.Checked;
+  // General > Updating
   settings.updateDictionary := kbUpdateDictionary.Checked;
   settings.updateProgram := kbUpdateProgram.Checked;
-  settings.usingMO := kbUsingMO.Checked;
-  settings.MODirectory := edMODirectory.Text;
-  settings.copyGeneralAssets := kbCopyGeneral.Checked;
+
+  // Merging > Asset Handling
   settings.mergeDirectory := edMergeDirectory.Text;
   settings.handleFaceGenData := kbFaceGen.Checked;
   settings.handleVoiceAssets := kbVoiceAssets.Checked;
@@ -227,6 +253,7 @@ begin
   settings.extractBSAs := kbExtractBSAs.Checked;
   settings.buildMergedBSA := kbBuildBSA.Checked;
   settings.batCopy := kbBatCopy.Checked;
+  // Merging > Debug
   settings.debugRenumbering := kbDebugRenumbering.Checked;
   settings.debugMergeStatus := kbDebugMergeStatus.Checked;
   settings.debugAssetCopying := kbDebugAssetCopying.Checked;
@@ -235,12 +262,29 @@ begin
   settings.debugBatchCopying := kbDebugBatchCopying.Checked;
   settings.debugBSAs := kbDebugBSAs.Checked;
   settings.debugScriptFragments := kbDebugScriptFragments.Checked;
+
+  // Advanced > Game Mode
+  settings.defaultGame := GetGameID(cbGameMode.Text);
+  // Advanced > Log Coloring
   settings.clientMessageColor := cbClientColor.Selected ;
   settings.generalMessageColor := cbGeneralColor.Selected;
   settings.loadMessageColor := cbLoadColor.Selected;
   settings.mergeMessageColor := cbMergeColor.Selected;
   settings.pluginMessageColor := cbPluginColor.Selected;
   settings.errorMessageColor := cbErrorColor.Selected;
+
+  // Integrations > Mod Organizer
+  settings.usingMO := kbUsingMO.Checked;
+  settings.MODirectory := edModOrganizerPath.Text;
+  settings.copyGeneralAssets := kbCopyGeneralAssets.Checked;
+  // Integrations > Papyrus
+  settings.decompilerPath := edDecompilerPath.Text;
+  settings.compilerPath := edCompilerPath.Text;
+  settings.flagsPath := edFlagsPath.Text;
+  // Integrations > BSAs
+  settings.bsaOptPath := edBsaOptPath.Text;
+  settings.bsaOptCommands := edBsaOptCommands.Text;
+
   SaveSettings;
 end;
 
@@ -332,6 +376,13 @@ begin
   Close;
 end;
 
+procedure TOptionsForm.btnChangeMergeProfileClick(Sender: TObject);
+begin
+  bChangeMergeProfile := true;
+  btnOKClick(nil);
+  Close;
+end;
+
 procedure TOptionsForm.edUsernameChange(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
@@ -367,17 +418,19 @@ begin
   GetStatus;
   CompareStatuses;
 
-  // load setting
+  // General > Language
   cbLanguage.Text := settings.language;
+  // General > reports
   edUsername.Text := settings.username;
   kbSaveReports.Checked := settings.saveReportsLocally;
+  // General > Style
   kbSimpleDictionary.Checked := settings.simpleDictionaryView;
   kbSimplePlugins.Checked := settings.simplePluginsView;
+  // General > Updating
   kbUpdateDictionary.Checked := settings.updateDictionary;
   kbUpdateProgram.Checked := settings.updateProgram;
-  kbUsingMO.Checked := settings.usingMO;
-  edMODirectory.Text := settings.MODirectory;
-  kbCopyGeneral.Checked := settings.copyGeneralAssets;
+
+  // Merging > Asset handling
   edMergeDirectory.Text := settings.mergeDirectory;
   kbFaceGen.Checked := settings.handleFaceGenData;
   kbVoiceAssets.Checked := settings.handleVoiceAssets;
@@ -387,6 +440,7 @@ begin
   kbExtractBSAs.Checked := settings.extractBSAs;
   kbBuildBSA.Checked := settings.buildMergedBSA;
   kbBatCopy.Checked := settings.batCopy;
+  // Merging > Debug
   kbDebugRenumbering.Checked := settings.debugRenumbering;
   kbDebugMergeStatus.Checked := settings.debugMergeStatus;
   kbDebugAssetCopying.Checked := settings.debugAssetCopying;
@@ -395,12 +449,26 @@ begin
   kbDebugBatchCopying.Checked := settings.debugBatchCopying;
   kbDebugBSAs.Checked := settings.debugBSAs;
   kbDebugScriptFragments.Checked := settings.debugScriptFragments;
-  cbClientColor.Selected := settings.clientMessageColor;
-  cbGeneralColor.Selected := settings.generalMessageColor;
-  cbLoadColor.Selected := settings.loadMessageColor;
-  cbMergeColor.Selected := settings.mergeMessageColor;
-  cbPluginColor.Selected := settings.pluginMessageColor;
-  cbErrorColor.Selected := settings.errorMessageColor;
+
+  // Advanced > Log Coloring
+  cbClientColor.Selected := TColor(settings.clientMessageColor);
+  cbGeneralColor.Selected := TColor(settings.generalMessageColor);
+  cbLoadColor.Selected := TColor(settings.loadMessageColor);
+  cbMergeColor.Selected := TColor(settings.mergeMessageColor);
+  cbPluginColor.Selected := TColor(settings.pluginMessageColor);
+  cbErrorColor.Selected := TColor(settings.errorMessageColor);
+
+  // Integrations > Mod Organizer
+  kbUsingMO.Checked := settings.usingMO;
+  edModOrganizerPath.Text := settings.MODirectory;
+  kbCopyGeneralAssets.Checked := settings.copyGeneralAssets;
+  // Integrations > Papyrus
+  edDecompilerPath.Text := settings.decompilerPath;
+  edCompilerPath.Text := settings.compilerPath;
+  edFlagsPath.Text := settings.flagsPath;
+  // Integrations > BSAs
+  edBsaOptPath.Text := settings.bsaOptPath;
+  edBsaOptCommands.Text := settings.bsaOptCommands;
 
   // load valid game paths
   if GamePathValid(settings.tes5path, 1) then
@@ -460,11 +528,19 @@ begin
     lblProgramStatus.Font.Color := clOrange;
   end;
 
-  // set up buttons
+  // set up browse buttons
   btnBrowseMO.Flat := true;
   btnBrowseAssetDirectory.Flat := true;
+  btnBrowseDecompiler.Flat := true;
+  btnBrowseCompiler.Flat := true;
+  btnBrowseFlags.Flat := true;
+  btnBrowseBsaOpt.Flat := true;
   IconList.GetBitmap(0, btnBrowseMO.Glyph);
   IconList.GetBitmap(0, btnBrowseAssetDirectory.Glyph);
+  IconList.GetBitmap(0, btnBrowseDecompiler.Glyph);
+  IconList.GetBitmap(0, btnBrowseCompiler.Glyph);
+  IconList.GetBitmap(0, btnBrowseFlags.Glyph);
+  IconList.GetBitmap(0, btnBrowseBsaOpt.Glyph);
 end;
 
 procedure TOptionsForm.kbUsingMOClick(Sender: TObject);
@@ -472,10 +548,10 @@ var
   b: boolean;
 begin
   b := kbUsingMO.Checked;
-  edMODirectory.Enabled := b;
+  edModOrganizerPath.Enabled := b;
   btnDetect.Enabled := b;
   btnBrowseMO.Enabled := b;
-  kbCopyGeneral.Enabled := b;
+  kbCopyGeneralAssets.Enabled := b;
 end;
 
 end.

@@ -3,8 +3,9 @@ unit mpBase;
 interface
 
 uses
-  Windows, SysUtils, ShlObj, ShellApi, Classes, IniFiles, Dialogs, Masks,
-  Controls, Registry, Graphics, ComCtrls, CommCtrl, RTTI,
+  Windows, SysUtils, ShlObj, StdCtrls, FileCtrl, ShellApi, Classes, IniFiles,
+  Dialogs, Masks, Controls, Registry, Graphics, ComCtrls, CommCtrl, RTTI,
+  RttiIni,
   // indy components
   IdTCPClient, IdStack, IdGlobal,
   // superobject json library
@@ -168,26 +169,32 @@ type
   end;
   TSettings = class(TObject)
   public
+    [IniSection('General')]
     language: string;
+    username: string;
+    key: string;
+    registered: boolean;
+    saveReportsLocally: boolean;
+    simpleDictionaryView: boolean;
+    simplePluginsView: boolean;
+    updateDictionary: boolean;
+    updateProgram: boolean;
+    [IniSection('Advanced')]
     defaultGame: integer;
     selectedGame: integer;
     tes5path: string;
     fnvpath: string;
     tes4path: string;
     fo3path: string;
-    username: string;
-    key: string;
-    registered: boolean;
     serverHost: string;
     serverPort: integer;
-    saveReportsLocally: boolean;
-    simpleDictionaryView: boolean;
-    simplePluginsView: boolean;
-    updateDictionary: boolean;
-    updateProgram: boolean;
-    usingMO: boolean;
-    MODirectory: string;
-    copyGeneralAssets: boolean;
+    generalMessageColor: Int64;
+    clientMessageColor: Int64;
+    loadMessageColor: Int64;
+    mergeMessageColor: Int64;
+    pluginMessageColor: Int64;
+    errorMessageColor: Int64;
+    [IniSection('Merging')]
     mergeDirectory: string;
     handleFaceGenData: boolean;
     handleVoiceAssets: boolean;
@@ -197,12 +204,6 @@ type
     extractBSAs: boolean;
     buildMergedBSA: boolean;
     batCopy: boolean;
-    generalMessageColor: TColor;
-    clientMessageColor: TColor;
-    loadMessageColor: TColor;
-    mergeMessageColor: TColor;
-    pluginMessageColor: TColor;
-    errorMessageColor: TColor;
     debugRenumbering: boolean;
     debugMergeStatus: boolean;
     debugAssetCopying: boolean;
@@ -211,21 +212,27 @@ type
     debugBatchCopying: boolean;
     debugBSAs: boolean;
     debugScriptFragments: boolean;
+    [IniSection('Integrations')]
+    usingMO: boolean;
+    MODirectory: string;
+    copyGeneralAssets: boolean;
+    compilerPath: string;
+    decompilerPath: string;
+    flagsPath: string;
+    bsaOptPath: string;
+    bsaOptCommands: string;
     constructor Create; virtual;
-    procedure Save(const filename: string);
-    procedure Load(const filename: string);
     procedure GenerateKey;
   end;
   TStatistics = class(TObject)
   public
+    [IniSection('Statistics')]
     timesRun: integer;
     mergesBuilt: integer;
     pluginsChecked: integer;
     pluginsMerged: integer;
     reportsSubmitted: integer;
     constructor Create; virtual;
-    procedure Save(const filename: string);
-    procedure Load(const filename: string);
   end;
 
   { Generic Methods }
@@ -279,6 +286,8 @@ type
   function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
   { Windows API functions }
   procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
+  procedure BrowseForFile(var ed: TEdit; filter: string);
+  procedure BrowseForFolder(var ed: TEdit);
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
@@ -413,7 +422,8 @@ var
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
-  bConnecting, bUpdateMergeStatus, bCompilerFound, bDecompilerFound: boolean;
+  bConnecting, bUpdateMergeStatus, bCompilerFound, bDecompilerFound,
+  bChangeMergeProfile: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
   ProgramVersion, xEditLogLabel, decompilerPath, compilerPath: string;
   batch, ActiveMods: TStringList;
@@ -1474,6 +1484,45 @@ begin
   CloseHandle(ProcInfo.hThread);
 end;
 
+{ Links a file selection through a TOpenDialog to the text stored in @ed,
+  applying filter @filter }
+procedure BrowseForFile(var ed: TEdit; filter: string);
+var
+  openDialog: TOpenDialog;
+begin
+  openDialog := TOpenDialog.Create(ed.Parent);
+
+  if FileExists(ed.Text) then
+    openDialog.InitialDir := ExtractFilePath(ed.Text)
+  else if DirectoryExists(ed.Text) then
+    openDialog.InitialDir := ed.Text
+  else
+    openDialog.InitialDir := wbProgramPath;
+
+  openDialog.Filter := filter;
+  if openDialog.Execute then
+    ed.Text := openDialog.FileName;
+end;
+
+{ Links a file selection through a TOpenDialog to the text stored in @ed,
+  applying filter @filter }
+procedure BrowseForFolder(var ed: TEdit);
+var
+  s: string;
+begin
+  // start in current directory value if valid
+  if DirectoryExists(ed.Text) then
+    s := ed.Text
+  else
+    s := wbProgramPath;
+  // prompt user to select a directory
+  SelectDirectory('Select a directory', '', s, []);
+
+  // save text to TEdit
+  if s <> '' then
+    ed.Text := AppendIfMissing(s, '\');
+end;
+
 { Gets a folder by its integer CSID. }
 function GetCSIDLShellFolder(CSIDLFolder: integer): string;
 begin
@@ -1980,7 +2029,7 @@ end;
 procedure LoadSettings;
 begin
   settings := TSettings.Create;
-  settings.Load('user\settings.ini');
+  TRttiIni.Load('user\settings.ini', settings);
   LoadRegistrationData;
 end;
 
@@ -2013,7 +2062,7 @@ end;
 
 procedure SaveSettings;
 begin
-  settings.Save('user\settings.ini');
+  TRttiIni.Save('user\settings.ini', settings);
   // save registration data to registry if registered
   if (settings.registered) then
     SaveRegistrationData;
@@ -2023,7 +2072,8 @@ procedure LoadStatistics;
 begin
   statistics := TStatistics.Create;
   sessionStatistics := TStatistics.Create;
-  statistics.Load('user\statistics.ini');
+  //statistics.Load('user\statistics.ini');
+  TRttiIni.Load('user\statistics.ini', statistics);
 end;
 
 procedure SaveStatistics;
@@ -2040,7 +2090,8 @@ begin
   sessionStatistics.pluginsChecked := 0;
   sessionStatistics.reportsSubmitted := 0;
   // save to file
-  statistics.Save('user\statistics.ini');
+  //statistics.Save('user\statistics.ini');
+  TRttiIni.Save('user\statistics.ini', statistics);
 end;
 
 procedure LoadDictionary;
@@ -3545,148 +3596,12 @@ begin
   generalMessageColor := clGreen;
   loadMessageColor := clPurple;
   clientMessageColor := clBlue;
-  mergeMessageColor := $0000CCFF;
+  mergeMessageColor := $000080FF;
   pluginMessageColor := clBlack;
   errorMessageColor := clRed;
 
   // generate a new secure key
   GenerateKey;
-end;
-
-procedure TSettings.Save(const filename: string);
-var
-  ini: TMemIniFile;
-  appMerging: string;
-begin
-  ini := TMemIniFile.Create(filename);
-  appMerging := wbAppName + 'Merging';
-
-  // save general settings
-  ini.WriteString('General', 'Language', language);
-  ini.WriteInteger('General', 'defaultGame', defaultGame);
-  ini.WriteString('General', 'tes5path', tes5path);
-  ini.WriteString('General', 'fnvpath', fnvpath);
-  ini.WriteString('General', 'tes4path', tes4path);
-  ini.WriteString('General', 'fo3path', fo3path);
-  ini.WriteString('General', 'username', username);
-  ini.WriteString('General', 'key', key);
-  ini.WriteBool('General', 'registered', registered);
-  ini.WriteBool('General', 'saveReportsLocally', saveReportsLocally);
-  ini.WriteBool('General', 'simpleDictionaryView', simpleDictionaryView);
-  ini.WriteBool('General', 'simplePluginsView', simplePluginsView);
-  ini.WriteBool('General', 'updateDictionary', updateDictionary);
-  ini.WriteBool('General', 'updateProgram', updateProgram);
-
-
-  // save game specific settings
-  if wbAppName <> '' then begin
-    ini.WriteBool(appMerging, 'usingMO', usingMO);
-    ini.WriteString(appMerging, 'MODirectory', MODirectory);
-    ini.WriteBool(appMerging, 'copyGeneralAssets', copyGeneralAssets);
-    ini.WriteString(appMerging, 'mergeDirectory', mergeDirectory);
-    ini.WriteBool(appMerging, 'handleFaceGenData', handleFaceGenData);
-    ini.WriteBool(appMerging, 'handleVoiceAssets', handleVoiceAssets);
-    ini.WriteBool(appMerging, 'handleMCMTranslations', handleMCMTranslations);
-    ini.WriteBool(appMerging, 'handleINIs', handleINIs);
-    ini.WriteBool(appMerging, 'handleScriptFragments', handleScriptFragments);
-    ini.WriteBool(appMerging, 'extractBSAs', extractBSAs);
-    ini.WriteBool(appMerging, 'buildMergedBSA', buildMergedBSA);
-    ini.WriteBool(appMerging, 'batCopy', batCopy);
-  end;
-
-  // save advanced settings
-  ini.WriteBool('Advanced', 'debugRenumbering', debugRenumbering);
-  ini.WriteBool('Advanced', 'debugMergeStatus', debugMergeStatus);
-  ini.WriteBool('Advanced', 'debugAssetCopying', debugAssetCopying);
-  ini.WriteBool('Advanced', 'debugRecordCopying', debugRecordCopying);
-  ini.WriteBool('Advanced', 'debugMasters', debugMasters);
-  ini.WriteBool('Advanced', 'debugBatchCopying', debugBatchCopying);
-  ini.WriteBool('Advanced', 'debugBSAs', debugBSAs);
-  ini.WriteBool('Advanced', 'debugScriptFragments', debugScriptFragments);
-
-  // save log colors
-  ini.WriteInteger('Advanced', 'initMessageColor', generalMessageColor);
-  ini.WriteInteger('Advanced', 'loadMessageColor', loadMessageColor);
-  ini.WriteInteger('Advanced', 'clientMessageColor', clientMessageColor);
-  ini.WriteInteger('Advanced', 'mergeMessageColor', mergeMessageColor);
-  ini.WriteInteger('Advanced', 'guiMessageColor', pluginMessageColor);
-  ini.WriteInteger('Advanced', 'errorMessageColor', errorMessageColor);
-
-  // save server host and port
-  ini.WriteString('Advanced', 'serverHost', serverHost);
-  ini.WriteInteger('Advanced', 'serverPort', serverPort);
-
-  // save file
-  ini.UpdateFile;
-  ini.Free;
-end;
-
-procedure TSettings.Load(const filename: string);
-var
-  ini: TMemIniFile;
-  appMerging, defaultMergeDirectory: string;
-begin
-  ini := TMemIniFile.Create(filename);
-  appMerging := wbAppName + 'Merging';
-  defaultMergeDirectory := ExtractFilePath(ParamStr(0)) + wbGameName + '\';
-
-  // load general settings
-  language := ini.ReadString('General', 'Language', 'English');
-  defaultGame := ini.ReadInteger('General', 'defaultGame', 0);
-  tes5path := ini.ReadString('General', 'tes5path', '');
-  fnvpath := ini.ReadString('General', 'fnvpath', '');
-  tes4path := ini.ReadString('General', 'tes4path', '');
-  fo3path := ini.ReadString('General', 'fo3path', '');
-  username := ini.ReadString('General', 'username', '');
-  key := ini.ReadString('General', 'key', key);
-  registered := ini.ReadBool('General', 'registered', false);
-  saveReportsLocally := ini.ReadBool('General', 'saveReportsLocally', false);
-  simpleDictionaryView := ini.ReadBool('General', 'simpleDictionaryView', false);
-  simplePluginsView := ini.ReadBool('General', 'simplePluginsView', false);
-  updateDictionary := ini.ReadBool('General', 'updateDictionary', false);
-  updateProgram := ini.ReadBool('General', 'updateProgram', false);
-
-  // load game specific settings
-  if wbAppName <> '' then begin
-    usingMO := ini.ReadBool(appMerging, 'usingMO', false);
-    MODirectory := ini.ReadString(appMerging, 'MODirectory', '');
-    copyGeneralAssets := ini.ReadBool(appMerging, 'copyGeneralAssets', false);
-    mergeDirectory := ini.ReadString(appMerging, 'mergeDirectory', defaultMergeDirectory);
-    handleFaceGenData := ini.ReadBool(appMerging, 'handleFaceGenData', false);
-    handleVoiceAssets := ini.ReadBool(appMerging, 'handleVoiceAssets', false);
-    handleMCMTranslations := ini.ReadBool(appMerging, 'handleMCMTranslations', false);
-    handleINIs := ini.ReadBool(appMerging, 'handleINIs', false);
-    handleScriptFragments := ini.ReadBool(appMerging, 'handleScriptFragments', false);
-    extractBSAs := ini.ReadBool(appMerging, 'extractBSAs', false);
-    buildMergedBSA := ini.ReadBool(appMerging, 'buildMergedBSA', false);
-    batCopy := ini.ReadBool(appMerging, 'batCopy', true);
-  end;
-
-  // load advanced settings
-  debugRenumbering := ini.ReadBool('Advanced', 'debugRenumbering', false);
-  debugMergeStatus := ini.ReadBool('Advanced', 'debugMergeStatus', false);
-  debugAssetCopying := ini.ReadBool('Advanced', 'debugAssetCopying', false);
-  debugRecordCopying := ini.ReadBool('Advanced', 'debugRecordCopying', false);
-  debugMasters := ini.ReadBool('Advanced', 'debugMasters', false);
-  debugBatchCopying := ini.ReadBool('Advanced', 'debugBatchCopying', false);
-  debugBSAs := ini.ReadBool('Advanced', 'debugBSAs', false);
-  debugScriptFragments := ini.ReadBool('Advanced', 'debugScriptFragments', false);
-
-  // load log colors
-  generalMessageColor := TColor(ini.ReadInteger('Advanced', 'initMessageColor', clGreen));
-  loadMessageColor := TColor(ini.ReadInteger('Advanced', 'loadMessageColor', clPurple));
-  clientMessageColor := TColor(ini.ReadInteger('Advanced', 'clientMessageColor', clBlue));
-  mergeMessageColor := TColor(ini.ReadInteger('Advanced', 'mergeMessageColor', $0000CCFF));
-  pluginMessageColor := TColor(ini.ReadInteger('Advanced', 'guiMessageColor', clBlack));
-  errorMessageColor := TColor(ini.ReadInteger('Advanced', 'errorMessageColor', clRed));
-
-  // load host and port
-  serverHost := ini.ReadString('Advanced', 'serverHost', 'mergeplugins.us.to');
-  serverPort := ini.ReadInteger('Advanced', 'serverPort', 960);
-
-  // save file
-  ini.UpdateFile;
-  ini.Free;
 end;
 
 procedure TSettings.GenerateKey;
@@ -3708,38 +3623,6 @@ begin
   pluginsChecked := 0;
   pluginsMerged := 0;
   reportsSubmitted := 0;
-end;
-
-procedure TStatistics.Save(const filename: string);
-var
-  ini: TMemIniFile;
-begin
-  ini := TMemIniFile.Create(filename);
-  ini.WriteInteger('Statistics', 'timesRun', timesRun);
-  ini.WriteInteger('Statistics', 'mergesBuilt', mergesBuilt);
-  ini.WriteInteger('Statistics', 'pluginsChecked', pluginsChecked);
-  ini.WriteInteger('Statistics', 'pluginsMerged', pluginsMerged);
-  ini.WriteInteger('Statistics', 'reportsSubmitted', reportsSubmitted);
-
-  // save file
-  ini.UpdateFile;
-  ini.Free;
-end;
-
-procedure TStatistics.Load(const filename: string);
-var
-  ini: TMemIniFile;
-begin
-  ini := TMemIniFile.Create(filename);
-  timesRun := ini.ReadInteger('Statistics', 'timesRun', 0);
-  mergesBuilt := ini.ReadInteger('Statistics', 'mergesBuilt', 0);
-  pluginsChecked := ini.ReadInteger('Statistics', 'pluginsChecked', 0);
-  pluginsMerged := ini.ReadInteger('Statistics', 'pluginsMerged', 0);
-  reportsSubmitted := ini.ReadInteger('Statistics', 'reportsSubmitted', 0);
-
-  // save file
-  ini.UpdateFile;
-  ini.Free;
 end;
 
 
