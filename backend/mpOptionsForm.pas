@@ -122,7 +122,7 @@ begin
   settings.templateNoHash := meTemplateNoHash.Lines.Text;
 
   // save to disk
-  settings.Save('settings.ini');
+  SaveSettings;
 
   // free sample
   slSampleReport.Free;

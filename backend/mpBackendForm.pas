@@ -225,6 +225,12 @@ begin
 
     // GUI ICONS
     Tracker.Write('Loading Icons');
+    ApproveButton.Flat := true;
+    BuildButton.Flat := true;
+    DictionaryButton.Flat := true;
+    OptionsButton.Flat := true;
+    UpdateButton.Flat := true;
+    HelpButton.Flat := true;
     IconList.GetBitmap(0, ApproveButton.Glyph);
     IconList.GetBitmap(1, BuildButton.Glyph);
     IconList.GetBitmap(2, DictionaryButton.Glyph);

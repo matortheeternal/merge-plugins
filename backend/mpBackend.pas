@@ -12,9 +12,9 @@ uses
   AbBase, AbBrowse, AbZBrows, AbZipper, AbArcTyp,
   // superobject
   superobject,
-  // crc32
-  CRC32,
-  // mp components
+  // mte components
+  CRC32, RttiIni,
+  // shared mp components
   mpLogger, mpTracker;
 
 type
@@ -143,8 +143,6 @@ type
     templateHash: string;
     templateNoHash: string;
     constructor Create; Overload;
-    procedure Save(const filename: string);
-    procedure Load(const filename: string);
   end;
   TServerStatistics = class(TObject)
   public
@@ -165,9 +163,6 @@ type
     tes4Logins: integer;
     fnvLogins: integer;
     fo3Logins: integer;
-    constructor Create; virtual;
-    procedure Save(const filename: string);
-    procedure Load(const filename: string);
   end;
 
   { Generic Methods }
@@ -1399,23 +1394,23 @@ end;
 procedure LoadSettings;
 begin
   settings := TSettings.Create;
-  settings.Load('settings.ini');
+  TRttiIni.Load('settings.ini', settings);
 end;
 
 procedure SaveSettings;
 begin
-  settings.Save('settings.ini');
+  TRttiIni.Save('settings.ini', settings);
 end;
 
 procedure LoadStatistics;
 begin
   statistics := TServerStatistics.Create;
-  statistics.Load('statistics.ini');
+  TRttiIni.Load('statistics.ini', statistics);
 end;
 
 procedure SaveStatistics;
 begin
-  statistics.Save('statistics.ini');
+  TRttiIni.Save('statistics.ini', statistics);
 end;
 
 procedure EntryNotes(var sl: TStringList; var report: TReport);
@@ -2214,169 +2209,5 @@ begin
   taskMessageColor := clBlack;
   errorMessageColor := clRed;
 end;
-
-procedure TSettings.Load(const filename: string);
-var
-  obj: ISuperObject;
-  sl: TStringList;
-begin
-  // don't load file if it doesn't exist
-  if not FileExists(filename) then
-    exit;
-
-  // load file into SuperObject to parse it
-  sl := TStringList.Create;
-  sl.LoadFromFile(filename);
-  obj := SO(PChar(sl.Text));
-
-  // load SQL login
-  sqlUser := obj.S['sqlUser'];
-  sqlPassword := obj.S['sqlPassword'];
-  sqlDatabase := obj.S['sqlDatabase'];
-  sqlHost := obj.S['sqlHost'];
-  sqlPort := obj.S['sqlPort'];
-
-  // load log colors
-  serverMessageColor := TColor(obj.I['serverMessageColor']);
-  initMessageColor := TColor(obj.I['initMessageColor']);
-  SQLMessageColor := TColor(obj.I['SQLMessageColor']);
-  dataMessageColor := TColor(obj.I['dictionaryMessageColor']);
-  taskMessageColor := TColor(obj.I['javaMessageColor']);
-  errorMessageColor := TColor(obj.I['errorMessageColor']);
-
-  // load style choices
-  simpleLogView := obj.B['simpleLogView'];
-  simpleDictionaryView := obj.B['simpleDictionaryView'];
-  simpleReportsView := obj.B['simpleReportsView'];
-
-  // load dictionary options
-  bSeparateHashes := obj.B['separateHashes'];
-  bSeparateRecords := obj.B['separateRecords'];
-  bSeparateVersions := obj.B['separateVersions'];
-  templateHash := obj.S['templateHash'];
-  templateNoHash := obj.S['templateNoHash'];
-
-  // finalize
-  obj := nil;
-  sl.Free;
-end;
-
-procedure TSettings.Save(const filename: string);
-var
-  obj: ISuperObject;
-begin
-  // initialize json
-  obj := SO;
-
-  // save SQL login
-  obj.S['sqlUser'] := sqlUser;
-  obj.S['sqlPassword'] := sqlPassword;
-  obj.S['sqlDatabase'] := sqlDatabase;
-  obj.S['sqlHost'] := sqlHost;
-  obj.S['sqlPort'] := sqlPort;
-
-  // save log colors
-  obj.I['serverMessageColor'] := Integer(serverMessageColor);
-  obj.I['initMessageColor'] := Integer(initMessageColor);
-  obj.I['SQLMessageColor'] := Integer(SQLMessageColor);
-  obj.I['dictionaryMessageColor'] := Integer(dataMessageColor);
-  obj.I['javaMessageColor'] := Integer(taskMessageColor);
-  obj.I['errorMessageColor'] := Integer(errorMessageColor);
-
-  // save style choices
-  obj.B['simpleLogView'] := simpleLogView;
-  obj.B['simpleDictionaryView'] := simpleDictionaryView;
-  obj.B['simpleReportsView'] := simpleReportsView;
-
-  // save dictionary options
-  obj.B['separateHashes'] := bSeparateHashes;
-  obj.B['separateRecords'] := bSeparateRecords;
-  obj.B['separateVersions'] := bSeparateVersions;
-  obj.S['templateHash'] := templateHash;
-  obj.S['templateNoHash'] := templateNoHash;
-
-  // save and finalize
-  Tracker.Write(' ');
-  Tracker.Write('Saving to '+filename);
-  obj.SaveTo(filename);
-  obj := nil;
-end;
-
-{ TServerStatistics }
-constructor TServerStatistics.Create;
-begin
-  timesRun := 0;
-  dictionaryUpdates := 0;
-  programUpdates := 0;
-  reportsRecieved := 0;
-  reportsApproved := 0;
-  reportsDenied := 0;
-  totalBandwidth := 0;
-  totalUptime := 0;
-  tes5Reports := 0;
-  tes4Reports := 0;
-  fnvReports := 0;
-  fo3Reports := 0;
-  tes5Logins := 0;
-  tes4Logins := 0;
-  fnvLogins := 0;
-  fo3Logins := 0;
-end;
-
-procedure TServerStatistics.Save(const filename: string);
-var
-  ini: TMemIniFile;
-begin
-  ini := TMemIniFile.Create(filename);
-  ini.WriteInteger('Statistics', 'timesRun', timesRun);
-  ini.WriteInteger('Statistics', 'dictionaryUpdates', dictionaryUpdates);
-  ini.WriteInteger('Statistics', 'programUpdates', programUpdates);
-  ini.WriteInteger('Statistics', 'reportsRecieved', reportsRecieved);
-  ini.WriteInteger('Statistics', 'reportsApproved', reportsApproved);
-  ini.WriteInteger('Statistics', 'reportsDenied', reportsDenied);
-  ini.WriteInteger('Statistics', 'totalBandwidth', totalBandwidth);
-  ini.WriteFloat('Statistics', 'totalUptime', totalUptime);
-  ini.WriteInteger('Statistics', 'tes5ReportsRecieved', tes5Reports);
-  ini.WriteInteger('Statistics', 'tes4ReportsRecieved', tes4Reports);
-  ini.WriteInteger('Statistics', 'fnvReportsRecieved', fnvReports);
-  ini.WriteInteger('Statistics', 'fo3ReportsRecieved', fo3Reports);
-  ini.WriteInteger('Statistics', 'tes5Logins', tes5Logins);
-  ini.WriteInteger('Statistics', 'tes4Logins', tes4Logins);
-  ini.WriteInteger('Statistics', 'fnvLogins', fnvLogins);
-  ini.WriteInteger('Statistics', 'fo3Logins', fo3Logins);
-
-  // save file
-  ini.UpdateFile;
-  ini.Free;
-end;
-
-procedure TServerStatistics.Load(const filename: string);
-var
-  ini: TMemIniFile;
-begin
-  ini := TMemIniFile.Create(filename);
-  timesRun := ini.ReadInteger('Statistics', 'timesRun', 0);
-  dictionaryUpdates := ini.ReadInteger('Statistics', 'dictionaryUpdates', 0);
-  programUpdates := ini.ReadInteger('Statistics', 'programUpdates', 0);
-  reportsRecieved := ini.ReadInteger('Statistics', 'reportsRecieved', 0);
-  reportsApproved := ini.ReadInteger('Statistics', 'reportsApproved', 0);
-  reportsDenied := ini.ReadInteger('Statistics', 'reportsDenied', 0);
-  totalBandwidth := ini.ReadInteger('Statistics', 'totalBandwidth', 0);
-  totalUptime := ini.ReadFloat('Statistics', 'totalUptime', 0);
-  tes5Reports := ini.ReadInteger('Statistics', 'tes5ReportsRecieved', 0);
-  tes4Reports := ini.ReadInteger('Statistics', 'tes4ReportsRecieved', 0);
-  fnvReports := ini.ReadInteger('Statistics', 'fnvReportsRecieved', 0);
-  fo3Reports := ini.ReadInteger('Statistics', 'fo3ReportsRecieved', 0);
-  tes5Logins := ini.ReadInteger('Statistics', 'tes5Logins', 0);
-  tes4Logins := ini.ReadInteger('Statistics', 'tes4Logins', 0);
-  fnvLogins := ini.ReadInteger('Statistics', 'fnvLogins', 0);
-  fo3Logins := ini.ReadInteger('Statistics', 'fo3Logins', 0);
-
-  // save file
-  ini.UpdateFile;
-  ini.Free;
-end;
-
-
 
 end.

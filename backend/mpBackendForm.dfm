@@ -43,7 +43,6 @@ object BackendForm: TBackendForm
       Width = 48
       Height = 40
       Hint = 'Approve report'
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = ApproveButtonClick
@@ -54,7 +53,6 @@ object BackendForm: TBackendForm
       Width = 48
       Height = 40
       Hint = 'Build dictionary files'
-      Flat = True
       ParentShowHint = False
       PopupMenu = RebuildPopupMenu
       ShowHint = True
@@ -66,7 +64,6 @@ object BackendForm: TBackendForm
       Width = 48
       Height = 40
       Hint = 'View dictionary'
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = DictionaryButtonClick
@@ -77,7 +74,6 @@ object BackendForm: TBackendForm
       Width = 48
       Height = 40
       Hint = 'Backend options'
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = OptionsButtonClick
@@ -89,7 +85,6 @@ object BackendForm: TBackendForm
       Height = 40
       Hint = 'Update'
       Anchors = [akTop, akRight]
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = UpdateButtonClick
@@ -101,7 +96,6 @@ object BackendForm: TBackendForm
       Height = 40
       Hint = 'Help'
       Anchors = [akTop, akRight]
-      Flat = True
       ParentShowHint = False
       ShowHint = True
       OnClick = HelpButtonClick
@@ -179,10 +173,6 @@ object BackendForm: TBackendForm
       object ApprovedTabSheet: TTabSheet
         Caption = 'Approved Reports'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object ApprovedListView: TListView
           Left = 3
           Top = 3
@@ -229,10 +219,6 @@ object BackendForm: TBackendForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -435,7 +421,7 @@ object BackendForm: TBackendForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010600F801180220002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600F801240220002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E7E7

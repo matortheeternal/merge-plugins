@@ -23,13 +23,9 @@ uses
   mpBackend in 'mpBackend.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
-  mpLogger in 'mpLogger.pas',
-  mpTracker in 'mpTracker.pas',
   mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpLoginForm in 'mpLoginForm.pas' {LoginForm},
-  W7Taskbar in 'W7Taskbar.pas',
-  CRC32 in 'CRC32.pas',
   mpUserForm in 'mpUserForm.pas' {UserForm},
   mpTaskHandler in 'mpTaskHandler.pas';
 
