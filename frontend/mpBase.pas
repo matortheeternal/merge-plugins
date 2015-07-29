@@ -244,7 +244,6 @@ type
   function GetGameID(name: string): integer;
   function GetGamePath(gameName: string): string;
   procedure LoadDefinitions;
-  procedure InitPapyrus;
   function GetVersionMem: string;
   function FileVersion(const FileName: string): String;
   { Bethesda Plugin Functions }
@@ -422,10 +421,9 @@ var
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
-  bConnecting, bUpdateMergeStatus, bCompilerFound, bDecompilerFound,
-  bChangeMergeProfile: boolean;
+  bConnecting, bUpdateMergeStatus, bChangeMergeProfile: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
-  ProgramVersion, xEditLogLabel, decompilerPath, compilerPath: string;
+  ProgramVersion, xEditLogLabel: string;
   batch, ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
@@ -584,19 +582,6 @@ begin
     gmTES4: DefineTES4;
     gmFO3: DefineFO3;
   end;
-end;
-
-{ Sets up links to Papyrus Compiler and Decompiler }
-procedure InitPapyrus;
-begin
-  decompilerPath := ProgramPath + 'decompiler\Champollion.exe';
-  compilerPath := wbDataPath + '..\Papyrus Compiler\PapyrusCompiler.exe';
-  bDecompilerFound := FileExists(decompilerPath);
-  bCompilerFound := FileExists(compilerPath);
-  if bDecompilerFound then
-    Logger.Write('GENERAL', 'Papyrus', 'Decompiler found at '+decompilerPath);
-  if bCompilerFound then
-    Logger.Write('GENERAL', 'Papyrus', 'Compiler found at '+compilerPath);
 end;
 
 { Get program version from memory }

@@ -32,10 +32,6 @@ object OptionsForm: TOptionsForm
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbStatus: TGroupBox
         Left = 6
         Top = 6
@@ -380,10 +376,6 @@ object OptionsForm: TOptionsForm
     object Dictionary: TTabSheet
       Caption = 'Dictionary'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbConsolidation: TGroupBox
         Left = 6
         Top = 6

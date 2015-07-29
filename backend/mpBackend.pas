@@ -123,11 +123,13 @@ type
   end;
   TSettings = class(TObject)
   public
+    [IniSection('SQL')]
     sqlUser: string;
     sqlPassword: string;
     sqlDatabase: string;
     sqlHost: string;
     sqlPort: string;
+    [IniSection('General')]
     simpleLogView: boolean;
     simpleReportsView: boolean;
     simpleDictionaryView: boolean;
@@ -137,6 +139,7 @@ type
     dataMessageColor: TColor;
     taskMessageColor: TColor;
     errorMessageColor: TColor;
+    [IniSection('Dictionary')]
     bSeparateHashes: boolean;
     bSeparateRecords: boolean;
     bSeparateVersions: boolean;
@@ -146,6 +149,7 @@ type
   end;
   TServerStatistics = class(TObject)
   public
+    [IniSection('Statistics')]
     timesRun: integer;
     uniqueIPs: TStringList;
     dictionaryUpdates: integer;

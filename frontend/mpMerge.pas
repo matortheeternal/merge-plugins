@@ -242,12 +242,12 @@ procedure CompileScripts(srcPath, dstPath: string);
 var
   info: TSearchRec;
   total: integer;
-  importPath, flagsPath, compileCommand: string;
+  importPath, compileCommand: string;
 begin
   if bProgressCancel then exit;
 
   // exit if no decompiler is available
-  if not bCompilerFound then begin
+  if not FileExists(settings.compilerPath) then begin
     Tracker.Write('  Could not compile scripts in '+srcPath+', no compiler available.');
     exit;
   end;
@@ -281,10 +281,9 @@ begin
   // prepare to compile
   srcPath := RemoveFromEnd(srcPath, '\');
   dstPath := RemoveFromEnd(dstPath, '\');
-  flagsPath := ExtractFilePath(compilerPath) + 'TESV_Papyrus_Flags.flg';
   importPath := RemoveFromEnd(pscPath, '\') + ';' + wbDataPath + 'scripts\source';
   compileCommand := Format('"%s" "%s" -o="%s" -f="%s" -i="%s" -a',
-    [compilerPath, srcPath, dstPath, flagsPath, importPath]);
+    [settings.compilerPath, srcPath, dstPath, settings.flagsPath, importPath]);
   if settings.debugScriptFragments then
     Tracker.Write('  Compile command: '+compileCommand);
   // execute compiler synchronously
@@ -356,7 +355,7 @@ begin
   if bProgressCancel then exit;
 
   // exit if no decompiler is available
-  if not bDecompilerFound then begin
+  if not FileExists(settings.decompilerPath) then begin
     Tracker.Write('  Could not decompile scripts in '+srcPath+', no decompiler available.');
     exit;
   end;
@@ -390,7 +389,7 @@ begin
   srcPath := RemoveFromEnd(srcPath, '\');
   dstPath := RemoveFromEnd(dstPath, '\');
   decompileCommand := Format('"%s" "%s" -p "%s"',
-    [decompilerPath, srcPath, dstPath]);
+    [settings.decompilerPath, srcPath, dstPath]);
   if settings.debugScriptFragments then
     Tracker.Write('  Decompile command: '+decompileCommand);
   // execute decompiler synchronously

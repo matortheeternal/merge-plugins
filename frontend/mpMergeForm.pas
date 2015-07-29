@@ -400,9 +400,6 @@ begin
   if (not bConnecting) and (not TCPClient.Connected) then
     ConnectToServer;
 
-  // SET UP PAPYRUS
-  InitPapyrus;
-
   // START BACKGROUND LOADER
   LoaderCallback := LoaderDone;
   SetTaskbarProgressState(tbpsIndeterminate);
