@@ -24,6 +24,7 @@ implementation
 
 var
   pexPath, pscPath, compiledPath: string;
+  mergeFormIndex: integer;
 
 {******************************************************************************}
 { Renumbering Methods
@@ -318,7 +319,7 @@ begin
       continue;  // skip . and ..
     srcFile := info.Name;
     oldFormID := Copy(info.Name, Length(srcFile) - 11, 8);
-    oldFileFormID := '00' + Copy(info.Name, Length(srcFile) - 9, 6);
+    oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(info.Name, Length(srcFile) - 9, 6);
 
     // exit if we can't find a remapped formID for the source script
     index := merge.map.IndexOfName(oldFileFormID);
@@ -469,7 +470,7 @@ begin
         if settings.debugScriptFragments then
           Tracker.Write('      Found script fragment '+fn);
         oldFormID := Copy(fn, Length(fn) - 7, 8);
-        oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
+        oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(fn, Length(fn) - 5, 6);
         index := merge.map.IndexOfName(oldFileFormID);
         if (index = -1) then begin
           if settings.debugScriptFragments then
@@ -526,7 +527,7 @@ begin
       if settings.debugScriptFragments then
         Tracker.Write('      Found script fragment '+fn);
       oldFormID := Copy(fn, Length(fn) - 7, 8);
-      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
+      oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(fn, Length(fn) - 5, 6);
       index := merge.map.IndexOfName(oldFileFormID);
       if (index = -1) then begin
         if settings.debugScriptFragments then
@@ -582,7 +583,7 @@ begin
       if settings.debugScriptFragments then
         Tracker.Write('      Found script fragment '+fn);
       oldFormID := Copy(fn, Length(fn) - 7, 8);
-      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
+      oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(fn, Length(fn) - 5, 6);
       index := merge.map.IndexOfName(oldFileFormID);
       if (index = -1) then begin
         if settings.debugScriptFragments then
@@ -1131,6 +1132,7 @@ begin
     GetMasters(plugin._File, slMasters);
   end;
   try
+    mergeFormIndex := slMasters.Count - merge.plugins.Count;
     slMasters.CustomSort(MergePluginsCompare);
     AddMasters(merge.plugin._File, slMasters);
     if settings.debugMasters then begin
@@ -1272,7 +1274,10 @@ begin
       plugin := pluginsToMerge[i];
       Tracker.Write('  Reloading '+plugin.filename+' from disk');
       LoadOrder := PluginsList.IndexOf(plugin);
+      plugin._File._Release;
       plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
+      plugin._File._AddRef;
+      plugin._File.BuildRef;
     end;
   end;
   if bProgressCancel then exit;
@@ -1295,6 +1300,7 @@ begin
   merge.map.SaveToFile(mergeFilePrefix+'_map.txt');
   merge.files.SaveToFile(mergeFilePrefix+'_files.txt');
   merge.fails.SaveToFile(mergeFilePrefix+'_fails.txt');
+  merge.plugins.SaveToFile(mergeFilePrefix+'_plugins.txt');
 
   // update statistics
   if merge.status = 7 then

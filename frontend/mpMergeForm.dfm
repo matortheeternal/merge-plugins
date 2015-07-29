@@ -182,10 +182,6 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -235,10 +231,6 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -309,6 +301,7 @@ object MergeForm: TMergeForm
       FixedCols = 1
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goAlwaysShowEditor, goThumbTracking]
       ParentDoubleBuffered = False
+      PopupMenu = DetailsPopupMenu
       TabOrder = 0
       TitleCaptions.Strings = (
         'Name'
@@ -751,7 +744,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F801B80120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801BC0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1891,7 +1884,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C010109001800980110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101090018009C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2300,7 +2293,7 @@ object MergeForm: TMergeForm
     Left = 936
     Top = 8
     Bitmap = {
-      494C010101001400D40040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101001400D80040002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100002000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -3405,6 +3398,14 @@ object MergeForm: TMergeForm
     object SaveAndClearItem: TMenuItem
       Caption = 'Save and clear'
       OnClick = SaveAndClearItemClick
+    end
+  end
+  object DetailsPopupMenu: TPopupMenu
+    Left = 720
+    Top = 104
+    object DetailsCopyToClipboardItem: TMenuItem
+      Caption = 'Copy to clipboard'
+      OnClick = DetailsCopyToClipboardItemClick
     end
   end
 end

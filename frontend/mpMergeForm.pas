@@ -91,6 +91,8 @@ type
     ImageProgramUpdate: TImage;
     ImageConnected: TImage;
     FilterLabelItem: TMenuItem;
+    DetailsPopupMenu: TPopupMenu;
+    DetailsCopyToClipboardItem: TMenuItem;
 
     // MERGE FORM EVENTS
     procedure LogMessage(const group, &label, text: string);
@@ -174,6 +176,7 @@ type
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     procedure ToggleAutoScrollItemClick(Sender: TObject);
+    procedure DetailsCopyToClipboardItemClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -607,6 +610,41 @@ begin
   AddDetailsItem('Testers', Wordwrap(s, 70));
   s := ProgramTranslators;
   AddDetailsItem('Translators', Wordwrap(s, 70));
+end;
+
+procedure TMergeForm.DetailsCopyToClipboardItemClick(Sender: TObject);
+var
+  i: Integer;
+  name, value, previousName, previousValue: string;
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+
+  // build stringlist of formatted name value pairs with special formatting for
+  // empty names and empty values
+  name := ' ';
+  value := ' ';
+  for i := 0 to Pred(DetailsEditor.Strings.Count) do begin
+    previousName := name;
+    name := DetailsEditor.Strings.Names[i];
+    previousValue := value;
+    value := DetailsEditor.Strings.ValueFromIndex[i];
+    if (name <> ' ') then
+      sl.Add(Format('%s: %s', [name, value]))
+    else if (value <> ' ') then begin
+      if (previousName <> ' ') then begin
+        sl[sl.Count - 1] := previousName + ':';
+        sl.Add('- '+previousValue);
+      end;
+      sl.Add('- '+value);
+    end
+    else
+      sl.Add(' ');
+  end;
+
+  // copy to clipboard
+  Clipboard.AsText := sl.Text;
+  sl.Free;
 end;
 
 { Handle user clicking URL }
