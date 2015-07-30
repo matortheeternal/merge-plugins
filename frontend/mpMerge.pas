@@ -319,7 +319,7 @@ begin
       continue;  // skip . and ..
     srcFile := info.Name;
     oldFormID := Copy(info.Name, Length(srcFile) - 11, 8);
-    oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(info.Name, Length(srcFile) - 9, 6);
+    oldFileFormID := '00' + Copy(info.Name, Length(srcFile) - 9, 6);
 
     // exit if we can't find a remapped formID for the source script
     index := merge.map.IndexOfName(oldFileFormID);
@@ -331,7 +331,7 @@ begin
 
     // remap formID in file name and file contents
     Inc(total);
-    newFileFormID := merge.map.Values[oldFileFormID];
+    newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
     if settings.debugScriptFragments then
       Tracker.Write(Format('    Remapping [%s] to [%s] on %s', [oldFormID, newFileFormID, srcFile]));
     srcFile := StringReplace(srcFile, oldFormID, newFileFormID, []);
@@ -470,7 +470,7 @@ begin
         if settings.debugScriptFragments then
           Tracker.Write('      Found script fragment '+fn);
         oldFormID := Copy(fn, Length(fn) - 7, 8);
-        oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(fn, Length(fn) - 5, 6);
+        oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
         index := merge.map.IndexOfName(oldFileFormID);
         if (index = -1) then begin
           if settings.debugScriptFragments then
@@ -478,7 +478,7 @@ begin
           continue;
         end
         else begin
-          newFileFormID := merge.map.Values[oldFileFormID];
+        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
           if settings.debugScriptFragments then
             Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
           if not CopySource(fn, srcPath) then
@@ -527,7 +527,7 @@ begin
       if settings.debugScriptFragments then
         Tracker.Write('      Found script fragment '+fn);
       oldFormID := Copy(fn, Length(fn) - 7, 8);
-      oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(fn, Length(fn) - 5, 6);
+      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
       index := merge.map.IndexOfName(oldFileFormID);
       if (index = -1) then begin
         if settings.debugScriptFragments then
@@ -535,7 +535,7 @@ begin
         continue;
       end
       else begin
-        newFileFormID := merge.map.Values[oldFileFormID];
+        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
         if settings.debugScriptFragments then
           Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
         if not CopySource(fn, srcPath) then
@@ -583,7 +583,7 @@ begin
       if settings.debugScriptFragments then
         Tracker.Write('      Found script fragment '+fn);
       oldFormID := Copy(fn, Length(fn) - 7, 8);
-      oldFileFormID := IntToHex(mergeFormIndex, 2) + Copy(fn, Length(fn) - 5, 6);
+      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
       index := merge.map.IndexOfName(oldFileFormID);
       if (index = -1) then begin
         if settings.debugScriptFragments then
@@ -591,7 +591,7 @@ begin
         continue;
       end
       else begin
-        newFileFormID := merge.map.Values[oldFileFormID];
+        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
         if settings.debugScriptFragments then
           Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
         if not CopySource(fn, srcPath) then

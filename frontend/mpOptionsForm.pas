@@ -166,6 +166,8 @@ end;
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
 begin
   BrowseForFolder(edModOrganizerPath);
+  if DirectoryExists(edModOrganizerPath.Text + 'mods\') then
+    edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
