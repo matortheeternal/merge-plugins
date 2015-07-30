@@ -4,8 +4,8 @@ interface
 
 uses
   Classes, SysUtils,
-  // mp components
-  mpBackend, mpLogger;
+  // mte components
+  mpBackend, mpLogger, mteHelpers;
 
 type
   TProcedure = procedure of object;

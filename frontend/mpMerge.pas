@@ -15,6 +15,7 @@ uses
   wbDefinitionsTES4,
   wbDefinitionsTES5;
 
+  function GetMapIndex(var merge: TMerge; fn: string; oldForm: string): integer;
   procedure BuildMerge(var merge: TMerge);
   procedure DeleteOldMergeFiles(var merge: TMerge);
   procedure RebuildMerge(var merge: TMerge);
@@ -23,7 +24,7 @@ uses
 implementation
 
 var
-  pexPath, pscPath, compiledPath: string;
+  pexPath, pscPath, extraPscPath, compiledPath: string;
   mergeFormIndex: integer;
 
 {******************************************************************************}
@@ -283,7 +284,8 @@ begin
   // prepare to compile
   srcPath := RemoveFromEnd(srcPath, '\');
   dstPath := RemoveFromEnd(dstPath, '\');
-  importPath := RemoveFromEnd(pscPath, '\') + ';' + wbDataPath + 'scripts\source';
+  importPath := RemoveFromEnd(pscPath, '\') + ';' +
+    RemoveFromEnd(extraPscPath, '\') + ';' + wbDataPath + 'scripts\source';
   compileCommand := Format('"%s" "%s" -o="%s" -f="%s" -i="%s" -a',
     [settings.compilerPath, srcPath, dstPath, settings.flagsPath, importPath]);
   if settings.debugScriptFragments then
@@ -319,8 +321,8 @@ begin
     if (Length(info.Name) < 8) then
       continue;  // skip . and ..
     srcFile := info.Name;
-    oldFormID := Copy(info.Name, Length(srcFile) - 11, 8);
-    oldFileFormID := '00' + Copy(info.Name, Length(srcFile) - 9, 6);
+    oldFormID := ExtractFormID(srcFile);
+    oldFileFormID := RemoveFileIndex(oldFormID);
 
     // exit if we can't find a remapped formID for the source script
     index := merge.map.IndexOfName(oldFileFormID);
@@ -470,9 +472,9 @@ begin
       if (Pos('TIF_', fn) > 0) then begin
         if settings.debugScriptFragments then
           Tracker.Write('      Found script fragment '+fn);
-        oldFormID := Copy(fn, Length(fn) - 7, 8);
-        oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
-        index := merge.map.IndexOfName(oldFileFormID);
+        oldFormID := ExtractFormID(fn);
+        oldFileFormID := RemoveFileIndex(oldFormID);
+        index := GetMapIndex(merge, plugin.filename, oldFileFormID);
         if (index = -1) then begin
           if settings.debugScriptFragments then
             Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
@@ -527,9 +529,9 @@ begin
     if (Pos('QF_', fn) > 0) then begin
       if settings.debugScriptFragments then
         Tracker.Write('      Found script fragment '+fn);
-      oldFormID := Copy(fn, Length(fn) - 7, 8);
-      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
-      index := merge.map.IndexOfName(oldFileFormID);
+      oldFormID := ExtractFormID(fn);
+      oldFileFormID := RemoveFileIndex(oldFormID);
+      index := GetMapIndex(merge, plugin.filename, oldFileFormID);
       if (index = -1) then begin
         if settings.debugScriptFragments then
           Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
@@ -583,9 +585,9 @@ begin
     if (Pos('SF_', fn) > 0) then begin
       if settings.debugScriptFragments then
         Tracker.Write('      Found script fragment '+fn);
-      oldFormID := Copy(fn, Length(fn) - 7, 8);
-      oldFileFormID := '00' + Copy(fn, Length(fn) - 5, 6);
-      index := merge.map.IndexOfName(oldFileFormID);
+      oldFormID := ExtractFormID(fn);
+      oldFileFormID := RemoveFileIndex(oldFormID);
+      index := GetMapIndex(merge, plugin.filename, oldFileFormID);
       if (index = -1) then begin
         if settings.debugScriptFragments then
           Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
@@ -733,7 +735,7 @@ begin
     // use merge.map to map to new filename if necessary
     srcFile := info.Name;
     dstFile := srcFile;
-    oldForm := Copy(srcFile, 1, 8);
+    oldForm := ExtractFormID(srcFile);
     index := GetMapIndex(merge, plugin.filename, oldForm);
     if (index > -1) then begin
       newForm := merge.map.ValueFromIndex[index];
@@ -776,12 +778,14 @@ begin
       // use merge.map to map to new filename if necessary
       srcFile := info.Name;
       dstFile := srcFile;
-      oldForm := Copy(srcFile, 1, 8);
+      oldForm := ExtractFormID(srcFile);
       index := GetMapIndex(merge, plugin.filename, oldForm);
       if (index > -1) then begin
         newForm := merge.map.ValueFromIndex[index];
         dstFile := StringReplace(srcFile, oldForm, newForm, []);
-      end;
+      end
+      else if settings.debugAssetCopying then
+        Tracker.Write(Format('    Skipping asset %s, [%s] not renumbered', [srcFile, oldForm]));
 
       // copy file
       if settings.debugAssetCopying then
@@ -1054,6 +1058,7 @@ begin
   // set up directories
   pexPath := TempPath + 'pex\';
   pscPath := TempPath + 'psc\';
+  extraPscPath := TempPath + 'extraPsc\';
   compiledPath := TempPath + 'compiled\';
   mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
   // delete papyrus directories, they should be empty before we begin
@@ -1209,6 +1214,8 @@ begin
   if settings.handleScriptFragments then begin
     Tracker.Write(' ');
     Tracker.Write('Decompiling scripts');
+    for i := 0 to Pred(pluginsToMerge.Count) do
+      DecompileScripts(TPlugin(pluginsToMerge[i]).dataPath + 'scripts\', extraPscPath);
     DecompileScripts(pexPath, pscPath);
     Tracker.Write(' ');
     Tracker.Write('Remapping FormIDs in scripts');

@@ -6,15 +6,15 @@ uses
   // delphi units
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl,
-  Menus, Grids, ValEdit, ShlObj, ShellAPI, Clipbrd, StrUtils,
+  Menus, Grids, ValEdit, ShellAPI, Clipbrd, StrUtils,
   // indy components
   IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer,
   IdGlobal, IdSync,
-  // third party libraries
-  superobject, W7Taskbar,
+  // mte components
+  W7Taskbar, RttiJson, mpLogger, mpTracker, mteHelpers,
   // mp units
-  mpBackend, mpLogger, mpDictionaryForm, mpOptionsForm, mpProgressForm,
-  mpTracker, mpEditForm, mpTaskHandler;
+  mpBackend, mpDictionaryForm, mpOptionsForm, mpProgressForm,
+  mpEditForm, mpTaskHandler;
 
 type
   TBackendForm = class(TForm)
@@ -1135,7 +1135,7 @@ var
   response: TmpMessage;
 begin
   response := TmpMessage.Create(id, '', '', data);
-  json := ToJson(response);
+  json := TRttiJson.ToJson(response);
   Inc(user.download, Length(json));
   Inc(sessionBandwidth, Length(json));
   AContext.Connection.IOHandler.WriteLn(json);
@@ -1219,8 +1219,7 @@ begin
     MSG_STATISTICS:  begin
       note := 'Not authorized';
       if bAuthorized then try
-        userStatistics := TUserStatistics.Create;
-        userStatistics := TUserStatistics(FromJson(msg.data, userStatistics.ClassType));
+        userStatistics := TUserStatistics(TRttiJson.FromJson(msg.data, TUserStatistics));
         user.updateStatistics(userStatistics);
         note := 'Statistics recieved';
         userStatistics.Free;
@@ -1235,7 +1234,7 @@ begin
     end;
 
     MSG_STATUS: begin
-      SendResponse(user, AContext, MSG_STATUS, ToJson(status), false);
+      SendResponse(user, AContext, MSG_STATUS, TRttiJson.ToJson(status), false);
       LogMessage('SERVER', 'Response', 'Current status');
     end;
 
@@ -1274,7 +1273,7 @@ begin
       note := 'Not authorized';
       if bAuthorized then try
         report := TReport.Create;
-        report := TReport(FromJson(msg.data, TReport));
+        report := TReport(TRttiJson.FromJson(msg.data, TReport));
         report.username := msg.username;
         report.dateSubmitted := Now;
         report.notes := StringReplace(report.notes, '@13', #13#10, [rfReplaceAll]);
@@ -1344,8 +1343,7 @@ begin
   if size < 3 then
     exit;
 
-  msg := TmpMessage.Create;
-  msg := TmpMessage(FromJson(LLine, msg.ClassType));
+  msg := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
   if (msg.id > 0) then
     HandleMessage(msg, size, AContext);
 

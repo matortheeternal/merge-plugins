@@ -20,7 +20,7 @@ uses
   Controls,
   SysUtils,
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
-  mpBase in 'mpBase.pas',
+  mpFrontend in 'mpFrontend.pas',
   mpMerge in 'mpMerge.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},

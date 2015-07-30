@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, Grids, ValEdit, CommCtrl,
-  mpBackend, mpLogger;
+  mpBackend, mpLogger, mteHelpers;
 
 type
   TDictionaryForm = class(TForm)

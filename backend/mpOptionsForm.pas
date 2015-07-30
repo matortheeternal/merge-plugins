@@ -5,8 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls, Menus,
-  // mp components
-  mpBackend, mpUserForm;
+  // mte components
+  mpBackend, mpUserForm, mteHelpers;
 
 type
   TOptionsForm = class(TForm)
