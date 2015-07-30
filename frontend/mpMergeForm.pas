@@ -462,7 +462,8 @@ begin
   SaveSettings;
 
   // delete temppath
-  DeleteDirectory(TempPath);
+  if not settings.preserveTempPath then
+    DeleteDirectory(TempPath);
   Action := caFree;
 
   // free progress form

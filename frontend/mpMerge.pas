@@ -226,6 +226,7 @@ begin
     Tracker.Write('  No files found in '+srcPath);
     exit;
   end;
+  ForceDirectories(dstPath);
   // search source path for files
   repeat
     if (Length(info.Name) < 8) then

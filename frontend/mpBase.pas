@@ -194,6 +194,7 @@ type
     mergeMessageColor: Int64;
     pluginMessageColor: Int64;
     errorMessageColor: Int64;
+    preserveTempPath: boolean;
     [IniSection('Merging')]
     mergeDirectory: string;
     handleFaceGenData: boolean;
