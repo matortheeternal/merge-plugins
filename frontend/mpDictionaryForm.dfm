@@ -152,7 +152,6 @@ object DictionaryForm: TDictionaryForm
         TabOrder = 0
         OnExit = edExit
         OnKeyPress = edKeyPress
-        ExplicitWidth = 239
       end
       object cbVersion: TComboBox
         Left = 498
@@ -169,7 +168,6 @@ object DictionaryForm: TDictionaryForm
           '>'
           '<'
           '=')
-        ExplicitLeft = 492
       end
       object edRating: TEdit
         Left = 667
@@ -180,7 +178,6 @@ object DictionaryForm: TDictionaryForm
         TabOrder = 6
         OnExit = edExit
         OnKeyPress = edKeyPress
-        ExplicitLeft = 661
       end
       object cbReports: TComboBox
         Left = 766
@@ -197,7 +194,6 @@ object DictionaryForm: TDictionaryForm
           '>'
           '<'
           '=')
-        ExplicitLeft = 760
       end
       object edRecords: TEdit
         Left = 402
@@ -209,7 +205,6 @@ object DictionaryForm: TDictionaryForm
         TabOrder = 2
         OnExit = edExit
         OnKeyPress = edKeyPress
-        ExplicitLeft = 408
       end
       object cbRecords: TComboBox
         Left = 364
@@ -226,7 +221,6 @@ object DictionaryForm: TDictionaryForm
           '>'
           '<'
           '=')
-        ExplicitLeft = 358
       end
       object edVersion: TEdit
         Left = 537
@@ -237,7 +231,6 @@ object DictionaryForm: TDictionaryForm
         TabOrder = 4
         OnExit = edExit
         OnKeyPress = edKeyPress
-        ExplicitLeft = 531
       end
       object cbRating: TComboBox
         Left = 629
@@ -254,7 +247,6 @@ object DictionaryForm: TDictionaryForm
           '>'
           '<'
           '=')
-        ExplicitLeft = 623
       end
       object edReports: TEdit
         Left = 804
@@ -267,7 +259,6 @@ object DictionaryForm: TDictionaryForm
         TabOrder = 8
         OnExit = edExit
         OnKeyPress = edKeyPress
-        ExplicitLeft = 798
       end
     end
   end
@@ -279,10 +270,6 @@ object DictionaryForm: TDictionaryForm
     Align = alClient
     Constraints.MinWidth = 300
     TabOrder = 1
-    ExplicitLeft = 864
-    ExplicitTop = 1
-    ExplicitWidth = 398
-    ExplicitHeight = 680
     object pnlDictionaryInfo: TPanel
       Left = 1
       Top = 1
@@ -290,7 +277,6 @@ object DictionaryForm: TDictionaryForm
       Height = 203
       Align = alTop
       TabOrder = 0
-      ExplicitWidth = 396
       object lblDictionary: TLabel
         Left = 8
         Top = 8
@@ -314,7 +300,6 @@ object DictionaryForm: TDictionaryForm
           '')
         TabOrder = 0
         OnDrawCell = vlDrawCell
-        ExplicitWidth = 388
         ColWidths = (
           150
           235)
@@ -327,8 +312,6 @@ object DictionaryForm: TDictionaryForm
       Height = 477
       Align = alClient
       TabOrder = 1
-      ExplicitWidth = 396
-      ExplicitHeight = 475
       object lblNotes: TLabel
         Left = 5
         Top = 6

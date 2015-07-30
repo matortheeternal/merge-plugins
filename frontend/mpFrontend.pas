@@ -393,8 +393,8 @@ var
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
   bConnecting, bUpdateMergeStatus, bChangeMergeProfile: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
-  ProgramVersion, xEditLogLabel: string;
-  batch, ActiveMods: TStringList;
+  ProgramVersion, xEditLogLabel, DataPath: string;
+  ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
   LastStatusTime: TDateTime;
@@ -436,6 +436,7 @@ begin
     3: wbDataPath := settings.tes4path + 'Data\';
     4: wbDataPath := settings.fo3path + 'Data\';
   end;
+  DataPath := wbDataPath;
 end;
 
 { Get the game ID associated with a game long name }
@@ -718,7 +719,6 @@ var
   rec, subgroup, container: IwbContainer;
   element, fragments: IwbElement;
   i, j: Integer;
-  fn: string;
 begin
   Result := false;
   // exit if no DIAL records in file
@@ -739,8 +739,8 @@ begin
         continue;
       if not Supports(fragments, IwbContainer, container) then
         continue;
-      fn := container.ElementValues['fileName'];
-      Result := Result or (Pos('TIF_', fn) = 1);
+      //fn := container.ElementValues['fileName'];
+      Result := true;
     end;
   end;
 end;
@@ -754,7 +754,6 @@ var
   rec, container: IwbContainer;
   fragments: IwbElement;
   i: Integer;
-  fn: string;
 begin
   Result := false;
   // exit if no QUST records in file
@@ -770,8 +769,8 @@ begin
       continue;
     if not Supports(fragments, IwbContainer, container) then
       continue;
-    fn := container.ElementValues['fileName'];
-    Result := Result or (Pos('QF_', fn) = 1);
+    //fn := container.ElementValues['fileName'];
+    Result := true;
   end;
 end;
 
@@ -784,7 +783,6 @@ var
   rec, container: IwbContainer;
   fragments: IwbElement;
   i: Integer;
-  fn: string;
 begin
   Result := false;
   // exit if no SCEN records in file
@@ -800,8 +798,8 @@ begin
       continue;
     if not Supports(fragments, IwbContainer, container) then
       continue;
-    fn := container.ElementValues['fileName'];
-    Result := Result or (Pos('SF_', fn) = 1);
+    //fn := container.ElementValues['fileName'];
+    Result := true;
   end;
 end;
 
@@ -2576,7 +2574,7 @@ begin
 
   // update blacklisted flag if it was blacklisted
   if IsBlacklisted(filename) then
-    flags := flags + [IS_BLACKLISTED];
+    flags := [IS_BLACKLISTED];
 end;
 
 procedure TPlugin.GetHash;

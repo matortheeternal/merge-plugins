@@ -7,14 +7,17 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl,
   Menus, Grids, ValEdit, ShlObj, ShellAPI, StrUtils, Clipbrd,
+  // indy units
+  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
   // third party libraries
   superobject, W7Taskbar,
+  // mte components
+  mteHelpers, mpTracker, mpLogger,
   // mp units
-  mpBase, mpMerge, mpLogger, mpDictionaryForm, mpOptionsForm, mpProgressForm,
-  mpTracker, mpSplashForm, mpEditForm, mpGameForm, mpReportForm,
+  mpFrontend, mpMerge, mpDictionaryForm, mpOptionsForm, mpProgressForm,
+  mpSplashForm, mpEditForm, mpGameForm, mpReportForm,
   // tes5edit units
-  wbBSA, wbHelpers, wbInterface, wbImplementation, IdBaseComponent, IdComponent,
-  IdTCPConnection, IdTCPClient;
+  wbBSA, wbHelpers, wbInterface, wbImplementation;
 
 type
   TMergeForm = class(TForm)
@@ -1834,7 +1837,6 @@ begin
   UpdateMerges;
   UpdateMergeDetails;
   MergeListView.Repaint;
-  DeleteDirectory(TempPath);
 end;
 
 procedure TMergeForm.ReportOnMergeItemClick(Sender: TObject);

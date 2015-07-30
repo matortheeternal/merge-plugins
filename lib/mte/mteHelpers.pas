@@ -288,7 +288,7 @@ begin
   FillChar(StartInfo, SizeOf(TStartupInfo), #0);
   FillChar(ProcInfo, SizeOf(TProcessInformation), #0);
   StartInfo.cb := SizeOf(TStartupInfo);
-  CreateOK := CreateProcess(nil, PChar(ProgramName), nil, nil,False,
+  CreateOK := CreateProcess(PChar(ProgramName), nil, nil, nil,False,
               CREATE_NEW_PROCESS_GROUP+NORMAL_PRIORITY_CLASS,
               nil, nil, StartInfo, ProcInfo);
 

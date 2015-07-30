@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
   W7Taskbar,
-  mpBase, mpTracker;
+  mpFrontend, mpTracker;
 
 type
   TProgressForm = class(TForm)

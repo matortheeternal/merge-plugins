@@ -4,9 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl,
-  mpBase, mpGameForm,
-  wbInterface, ExtCtrls;
+  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls,
+  // mte units
+  mteHelpers,
+  // mp units
+  mpFrontend, mpGameForm;
 
 type
   TOptionsForm = class(TForm)
@@ -140,32 +142,32 @@ implementation
 
 procedure TOptionsForm.btnBrowseAssetDirectoryClick(Sender: TObject);
 begin
-  BrowseForFolder(edMergeDirectory);
+  BrowseForFolder(edMergeDirectory, ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseBSAOptClick(Sender: TObject);
 begin
-  BrowseForFile(edBsaOptPath, '*.exe');
+  BrowseForFile(edBsaOptPath, '*.exe', ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseCompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edCompilerPath, '*.exe');
+  BrowseForFile(edCompilerPath, '*.exe', ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseDecompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edDecompilerPath, '*.exe');
+  BrowseForFile(edDecompilerPath, '*.exe', ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseFlagsClick(Sender: TObject);
 begin
-  BrowseForFile(edFlagsPath, '*.flg');
+  BrowseForFile(edFlagsPath, '*.flg', ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
 begin
-  BrowseForFolder(edModOrganizerPath);
+  BrowseForFolder(edModOrganizerPath, ProgramPath);
   if DirectoryExists(edModOrganizerPath.Text + 'mods\') then
     edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
 end;
@@ -191,7 +193,7 @@ begin
   if (modOrganizerPath = '') then begin
     ignore := TStringList.Create;
     ignore.Add('data');
-    modOrganizerPath := RecursiveFileSearch('ModOrganizer.exe', wbDataPath + '..\', ignore, 2);
+    modOrganizerPath := RecursiveFileSearch('ModOrganizer.exe', DataPath + '..\', ignore, 2);
   end;
 
   // search each folder in each valid Program Files directory for ModOrganizer.exe
@@ -518,7 +520,7 @@ begin
   if bDictionaryUpdate then begin
     btnUpdateDictionary.Enabled := bDictionaryUpdate;
     lblDictionaryStatus.Caption := 'Update available!';
-    lblDictionaryStatus.Font.Color := clOrange;
+    lblDictionaryStatus.Font.Color := $000080FF;
   end;
 
   // program update
@@ -527,7 +529,7 @@ begin
     lblProgramStatus.Caption := 'Update available!';
     lblProgramStatus.Hint := 'Current Version: '+status.programVersion+
       #13#10'New Version: '+RemoteStatus.programVersion;
-    lblProgramStatus.Font.Color := clOrange;
+    lblProgramStatus.Font.Color := $000080FF;
   end;
 
   // set up browse buttons

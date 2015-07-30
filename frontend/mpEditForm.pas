@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
-  mpBase, mpLogger;
+  mpFrontend, mpLogger;
 
 type
   TEditForm = class(TForm)

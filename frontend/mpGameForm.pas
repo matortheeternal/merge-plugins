@@ -5,7 +5,10 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ImgList, pngimage, StdCtrls, Buttons, FileCtrl,
-  mpBase;
+  // mte units
+  mteHelpers,
+  // mp units
+  mpFrontend;
 
 type
   TGameForm = class(TForm)
