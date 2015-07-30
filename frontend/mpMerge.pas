@@ -242,7 +242,7 @@ procedure CompileScripts(srcPath, dstPath: string);
 var
   info: TSearchRec;
   total: integer;
-  importPath, compileCommand: string;
+  importPath, compileCommand, formatString: string;
 begin
   if bProgressCancel then exit;
 
@@ -283,7 +283,12 @@ begin
   dstPath := RemoveFromEnd(dstPath, '\');
   importPath := RemoveFromEnd(pscPath, '\') + ';' +
     RemoveFromEnd(generalPscPath, '\') + ';' + wbDataPath + 'scripts\source';
-  compileCommand := Format('"%s" "%s" -o="%s" -f="%s" -i="%s" -a > "%s"',
+  if settings.debugScriptFragments then
+    formatString := '"%s" "%s" -o="%s" -f="%s" -i="%s" -a > "%s"'
+  else
+    formatString := '"%s" "%s" -o="%s" -f="%s" -i="%s" -a';
+
+  compileCommand := Format(formatString,
     [settings.compilerPath, srcPath, dstPath, settings.flagsPath, importPath, compileLog]);
   batchCompile.Add(compileCommand);
 end;
@@ -348,7 +353,7 @@ procedure DecompileScripts(srcPath, dstPath: string);
 var
   info: TSearchRec;
   total: Integer;
-  decompileCommand: string;
+  decompileCommand, formatString: string;
 begin
   if bProgressCancel then exit;
 
@@ -386,7 +391,12 @@ begin
   // add decompile operation to batch
   srcPath := RemoveFromEnd(srcPath, '\');
   dstPath := RemoveFromEnd(dstPath, '\');
-  decompileCommand := Format('"%s" "%s" -p "%s" > "%s"',
+  if settings.debugScriptFragments then
+    formatString := '"%s" "%s" -p "%s" > "%s"'
+  else
+    formatString := '"%s" "%s" -p "%s"';
+
+  decompileCommand := Format(formatString,
     [settings.decompilerPath, srcPath, dstPath, decompileLog]);
   batchDecompile.Add(decompileCommand);
 end;
@@ -399,8 +409,8 @@ begin
   Result := false;
   srcFile := srcPath + 'source\' + ChangeFileExt(sfn, '.psc');
   if not FileExists(srcFile) then begin
-    if settings.debugScriptFragments then
-      Tracker.Write('        Couldn''t find script source at '+srcFile);
+    //if settings.debugScriptFragments then
+      //Tracker.Write('        Couldn''t find script source at '+srcFile);
     exit;
   end;
   if settings.debugScriptFragments then
@@ -1027,7 +1037,7 @@ begin
   if bProgressCancel then exit;
   if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then begin
     // if BSA exists, extract scripts from it to temp path and copy
-    Tracker.Write('    Copying script fragments for '+plugin.filename);
+    //Tracker.Write('    Copying script fragments for '+plugin.filename);
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+scriptsPath);
@@ -1037,7 +1047,7 @@ begin
     end;
     CopyScriptFragments(plugin, merge, plugin.dataPath + scriptsPath, merge.dataPath + scriptsPath);
     if plugin.dataPath <> DataPath then
-      CopyGeneralScripts(plugin.dataPath + scriptsPAth);
+      CopyGeneralScripts(plugin.dataPath + scriptsPath);
   end;
 
   // copyGeneralAssets
