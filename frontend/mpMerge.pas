@@ -501,26 +501,24 @@ begin
       if not Supports(fragments, IwbContainer, container) then
         continue;
       fn := container.ElementValues['fileName'];
-      if (Pos('TIF_', fn) > 0) then begin
+      if settings.debugScriptFragments then
+        Tracker.Write('      Found script fragment '+fn);
+      oldFormID := ExtractFormID(fn);
+      oldFileFormID := RemoveFileIndex(oldFormID);
+      index := GetMapIndex(merge, plugin.filename, oldFileFormID);
+      if (index = -1) then begin
         if settings.debugScriptFragments then
-          Tracker.Write('      Found script fragment '+fn);
-        oldFormID := ExtractFormID(fn);
-        oldFileFormID := RemoveFileIndex(oldFormID);
-        index := GetMapIndex(merge, plugin.filename, oldFileFormID);
-        if (index = -1) then begin
-          if settings.debugScriptFragments then
-            Tracker.Write(Format('        Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
-          continue;
-        end
-        else begin
-        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
-          if settings.debugScriptFragments then
-            Tracker.Write(Format('        Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
-          if not CopySource(fn, srcPath, pscPath) then
-            if not CopyScript(fn, srcPath, pexPath) then
-              Tracker.Write('        Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
-          container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
-        end;
+          Tracker.Write(Format('        Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
+        continue;
+      end
+      else begin
+      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
+        if settings.debugScriptFragments then
+          Tracker.Write(Format('        Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
+        if not CopySource(fn, srcPath, pscPath) then
+          if not CopyScript(fn, srcPath, pexPath) then
+            Tracker.Write('        Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+        container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
       end;
     end;
   end;
@@ -558,26 +556,24 @@ begin
     if not Supports(fragments, IwbContainer, container) then
       continue;
     fn := container.ElementValues['fileName'];
-    if (Pos('QF_', fn) > 0) then begin
+    if settings.debugScriptFragments then
+      Tracker.Write('      Found script fragment '+fn);
+    oldFormID := ExtractFormID(fn);
+    oldFileFormID := RemoveFileIndex(oldFormID);
+    index := GetMapIndex(merge, plugin.filename, oldFileFormID);
+    if (index = -1) then begin
       if settings.debugScriptFragments then
-        Tracker.Write('      Found script fragment '+fn);
-      oldFormID := ExtractFormID(fn);
-      oldFileFormID := RemoveFileIndex(oldFormID);
-      index := GetMapIndex(merge, plugin.filename, oldFileFormID);
-      if (index = -1) then begin
-        if settings.debugScriptFragments then
-          Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
-        continue;
-      end
-      else begin
-        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
-        if settings.debugScriptFragments then
-          Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
-        if not CopySource(fn, srcPath, pscPath) then
-          if not CopyScript(fn, srcPath, pexPath) then
-            Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
-        container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
-      end;
+        Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
+      continue;
+    end
+    else begin
+      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
+      if settings.debugScriptFragments then
+        Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
+      if not CopySource(fn, srcPath, pscPath) then
+        if not CopyScript(fn, srcPath, pexPath) then
+          Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+      container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
     end;
   end;
 end;
@@ -614,26 +610,24 @@ begin
     if not Supports(fragments, IwbContainer, container) then
       continue;
     fn := container.ElementValues['fileName'];
-    if (Pos('SF_', fn) > 0) then begin
+    if settings.debugScriptFragments then
+      Tracker.Write('      Found script fragment '+fn);
+    oldFormID := ExtractFormID(fn);
+    oldFileFormID := RemoveFileIndex(oldFormID);
+    index := GetMapIndex(merge, plugin.filename, oldFileFormID);
+    if (index = -1) then begin
       if settings.debugScriptFragments then
-        Tracker.Write('      Found script fragment '+fn);
-      oldFormID := ExtractFormID(fn);
-      oldFileFormID := RemoveFileIndex(oldFormID);
-      index := GetMapIndex(merge, plugin.filename, oldFileFormID);
-      if (index = -1) then begin
-        if settings.debugScriptFragments then
-          Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
-        continue;
-      end
-      else begin
-        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
-        if settings.debugScriptFragments then
-          Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
-        if not CopySource(fn, srcPath, pscPath) then
-          if not CopyScript(fn, srcPath, pexPath) then
-            Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
-        container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
-      end;
+        Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
+      continue;
+    end
+    else begin
+      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
+      if settings.debugScriptFragments then
+        Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
+      if not CopySource(fn, srcPath, pscPath) then
+        if not CopyScript(fn, srcPath, pexPath) then
+          Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+      container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
     end;
   end;
 end;
@@ -717,6 +711,7 @@ const
   voicePath = 'sound\voice\';
   translationPath = 'interface\translations\';
   scriptsPath = 'scripts\';
+  scriptSourcePath = 'scripts\source\';
 var
   languages, CopiedFrom, MergeIni: TStringList;
   translations: array[0..31] of TStringList; // 32 languages maximum
@@ -1285,7 +1280,7 @@ begin
     Tracker.Write(' ');
     Tracker.Write('Copying modified scripts');
     CopyFilesForMerge(merge, compiledPath, merge.dataPath + 'scripts\');
-    CopyFilesForMerge(merge, pscPath, merge.dataPath + 'scripts\source\');
+    CopyFilesForMerge(merge, pscPath, merge.dataPath + scriptSourcePath);
 
     // clean up
     batchDecompile.Free;
