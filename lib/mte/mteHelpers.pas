@@ -21,6 +21,7 @@ uses
   function Wordwrap(var s: string; charCount: integer): string;
   function ContainsMatch(var sl: TStringList; const s: string): boolean;
   function IsURL(s: string): boolean;
+  function IsDotFile(fn: string): boolean;
   procedure SaveStringToFile(s: string; fn: string);
   function ApplyTemplate(const template: string; var map: TStringList): string;
   { Windows API functions }
@@ -236,6 +237,12 @@ end;
 function IsURL(s: string): boolean;
 begin
   Result := (Pos('http://', s) = 1) or (Pos('https://', s) = 1);
+end;
+
+{ Returns true if @fn is . or .. }
+function IsDotFile(fn: string): boolean;
+begin
+  Result := (fn = '.') or (fn = '..');
 end;
 
 { Saves a string @s to a file at @fn }

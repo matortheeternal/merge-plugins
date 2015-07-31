@@ -227,7 +227,7 @@ begin
   ForceDirectories(dstPath);
   // search source path for files
   repeat
-    if (Length(info.Name) < 8) then
+    if IsDotFile(info.Name) then
       continue;  // skip . and ..
     srcFile := srcPath + info.Name;
     dstFile := dstPath + info.Name;
@@ -246,7 +246,7 @@ var
 begin
   if bProgressCancel then exit;
 
-  // exit if no decompiler is available
+  // exit if no compiler is available
   if not FileExists(settings.compilerPath) then begin
     Tracker.Write('  Could not compile scripts in '+srcPath+', no compiler available.');
     exit;
@@ -258,7 +258,7 @@ begin
     exit;
   end;
 
-  // if no script files in source path, exit
+  // if no script source files in source path, exit
   if FindFirst(srcPath + '*.psc', faAnyFile, info) <> 0 then begin
     Tracker.Write('  No files found matching '+srcPath + '*.psc');
     exit;
@@ -269,7 +269,7 @@ begin
   if settings.debugScriptFragments then
     Tracker.Write('  Compiling: ');
   repeat
-    if (Length(info.Name) < 8) then
+    if IsDotFile(info.Name) then
       continue;  // skip . and ..
     Inc(total);
     if settings.debugScriptFragments then
@@ -317,7 +317,7 @@ begin
   sl := TStringList.Create;
   total := 0;
   repeat
-    if (Length(info.Name) < 8) then
+    if IsDotFile(info.Name) then
       continue;  // skip . and ..
     srcFile := info.Name;
     oldFormID := ExtractFormID(srcFile);
@@ -379,7 +379,7 @@ begin
   if settings.debugScriptFragments then
     Tracker.Write('  Decompiling: ');
   repeat
-    if (Length(info.Name) < 8) then
+    if IsDotFile(info.Name) then
       continue;  // skip . and ..
     Inc(total);
     if settings.debugScriptFragments then
@@ -451,7 +451,7 @@ begin
   // search source path for script files
   total := 0;
   repeat
-    if (Length(info.Name) < 8) then
+    if IsDotFile(info.Name) then
       continue;  // skip . and ..
     if FileExists(pexPath + ChangeFileExt(info.Name, '.pex')) or
       FileExists(pscPath + info.Name) then
@@ -757,7 +757,7 @@ begin
     exit;
   // search srcPath for asset files
   repeat
-    if (Length(info.Name) < 8) then
+    if IsDotFile(info.Name) then
       continue;  // skip . and ..
     // use merge.map to map to new filename if necessary
     srcFile := info.Name;
@@ -793,14 +793,14 @@ begin
     exit;
   // search source path for asset folders
   repeat
-    if (Pos('.', folder.Name) = 1) then
+    if IsDotFile(info.Name) then
       continue; // skip . and ..
     ForceDirectories(dstPath + folder.Name); // make folder
     if FindFirst(srcPath + folder.Name + '\*', faAnyFile, info) <> 0 then
       continue; // if folder is empty, skip to next folder
     // search folder for files
     repeat
-      if (Length(info.Name) < 8) then
+      if IsDotFile(info.Name) then
         continue; // skip . and ..
       // use merge.map to map to new filename if necessary
       srcFile := info.Name;
