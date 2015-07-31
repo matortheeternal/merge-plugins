@@ -393,7 +393,7 @@ var
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
   bConnecting, bUpdateMergeStatus, bChangeMergeProfile: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
-  ProgramVersion, xEditLogLabel, DataPath: string;
+  ProgramVersion, xEditLogLabel, DataPath, GamePath: string;
   ActiveMods: TStringList;
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
@@ -436,7 +436,9 @@ begin
     3: wbDataPath := settings.tes4path + 'Data\';
     4: wbDataPath := settings.fo3path + 'Data\';
   end;
+  // set general paths
   DataPath := wbDataPath;
+  GamePath := ExtractPath(DataPath, 1);
 end;
 
 { Get the game ID associated with a game long name }
@@ -2251,9 +2253,9 @@ begin
   try
     with archive do begin
       // The name of the ZIP file to unzip
-      FileName := wbProgramPath + 'MergePlugins.zip';
+      FileName := ProgramPath + 'MergePlugins.zip';
       // Set base (default) directory for all archive operations
-      BaseDirectory := wbProgramPath;
+      BaseDirectory := ProgramPath;
       // Extract all files from the archive to current directory
       ExtractFiles('*.*');
       Result := true;

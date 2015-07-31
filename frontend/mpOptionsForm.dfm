@@ -20,7 +20,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = MergingTabSheet
+    ActivePage = IntegrationsTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
@@ -296,6 +296,10 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbAssetCopying: TGroupBox
         Left = 6
         Top = 6
@@ -738,10 +742,6 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -787,23 +787,13 @@ object OptionsForm: TOptionsForm
           Height = 21
           TabOrder = 1
         end
-        object btnDetect: TButton
-          Left = 402
-          Top = 16
-          Width = 140
-          Height = 25
-          Margins.Right = 6
-          Caption = 'Detect Mod Organizer'
-          TabOrder = 2
-          OnClick = btnDetectClick
-        end
         object kbCopyGeneralAssets: TCheckBox
           Left = 12
           Top = 75
           Width = 133
           Height = 17
           Caption = 'Copy general asssets'
-          TabOrder = 3
+          TabOrder = 2
         end
       end
       object gbPapyrus: TGroupBox
@@ -944,6 +934,16 @@ object OptionsForm: TOptionsForm
           TabOrder = 1
         end
       end
+      object btnDetect: TButton
+        Left = 408
+        Top = 330
+        Width = 140
+        Height = 25
+        Margins.Right = 6
+        Caption = 'Detect Integrations'
+        TabOrder = 3
+        OnClick = btnDetectClick
+      end
     end
   end
   object btnCancel: TButton
@@ -973,7 +973,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800A00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

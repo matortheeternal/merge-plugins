@@ -259,8 +259,9 @@ begin
     InitLog;
     bAutoScroll := true;
     ProgramVersion := GetVersionMem;
-    TempPath := wbProgramPath + 'temp\';
-    LogPath := wbProgramPath + 'logs\';
+    ProgramPath := ExtractFilePath(ParamStr(0));
+    TempPath := ProgramPath + 'temp\';
+    LogPath := ProgramPath + 'logs\';
     ForceDirectories(TempPath);
     ForceDirectories(LogPath);
     MergesList := TList.Create;

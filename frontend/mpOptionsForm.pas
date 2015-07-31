@@ -72,7 +72,6 @@ type
     btnBrowseMO: TSpeedButton;
     kbUsingMO: TCheckBox;
     edModOrganizerPath: TEdit;
-    btnDetect: TButton;
     gbDebug: TGroupBox;
     kbDebugRenumbering: TCheckBox;
     kbDebugMergeStatus: TCheckBox;
@@ -110,12 +109,12 @@ type
     cbGameMode: TComboBox;
     btnUpdateGameMode: TButton;
     GroupBox1: TGroupBox;
+    btnDetect: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
     procedure btnBrowseMOClick(Sender: TObject);
     procedure kbUsingMOClick(Sender: TObject);
-    procedure btnDetectClick(Sender: TObject);
     procedure btnUpdateGameModeClick(Sender: TObject);
     procedure edUsernameChange(Sender: TObject);
     procedure btnRegisterClick(Sender: TObject);
@@ -127,6 +126,8 @@ type
     procedure btnBrowseCompilerClick(Sender: TObject);
     procedure btnBrowseFlagsClick(Sender: TObject);
     procedure btnBrowseBSAOptClick(Sender: TObject);
+    procedure searchForModOrganizer;
+    procedure btnDetectClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -147,22 +148,22 @@ end;
 
 procedure TOptionsForm.btnBrowseBSAOptClick(Sender: TObject);
 begin
-  BrowseForFile(edBsaOptPath, '*.exe', ProgramPath);
+  BrowseForFile(edBsaOptPath, 'Executables|*.exe', ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseCompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edCompilerPath, '*.exe', ProgramPath);
+  BrowseForFile(edCompilerPath, 'Executables|*.exe', DataPath);
 end;
 
 procedure TOptionsForm.btnBrowseDecompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edDecompilerPath, '*.exe', ProgramPath);
+  BrowseForFile(edDecompilerPath, 'Executables|*.exe', ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseFlagsClick(Sender: TObject);
 begin
-  BrowseForFile(edFlagsPath, '*.flg', ProgramPath);
+  BrowseForFile(edFlagsPath, 'Flags files|*.flg', DataPath + 'scripts\source\');
 end;
 
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
@@ -173,10 +174,58 @@ begin
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
+const
+  validDecompilerFilenames: array[1..1] of string = ('Champollion.exe');
+  validCompilerFilenames: array[1..1] of string = ('PapyrusCompiler.exe');
+  validFlagFilenames: array[1..1] of string = ('TESV_Papyrus_Flags.flg');
+  validBsaOptFilenames: array[1..5] of string =
+    ('BSAopt x32.exe',
+    'BSAopt x64.exe',
+    'BSAopt x32 (XP).exe',
+    'BSAopt x64 (XP).exe',
+    'BSAopt.exe');
+  ignore: array[1..4] of string = ('merge', 'logs', 'temp', 'data');
+var
+  path: string;
+  paths: array[1..2] of string;
+begin
+  // paths array
+  paths[1] := ProgramPath;
+  paths[2] := GamePath;
+
+  // search for mod organizer
+  if kbUsingMo.Checked then
+    searchForModOrganizer;
+
+  // search for champollion decompiler
+  path := MultFileSearch(paths, validDecompilerFilenames, ignore, 2);
+  if (path <> '') then
+    edDecompilerPath.Text := path;
+
+  // search for papyrus compiler
+  path := MultFileSearch(paths, validCompilerFilenames, ignore, 2);
+  if (path <> '') then
+    edCompilerPath.Text := path;
+
+  // search for papyrus flags
+  path := DataPath + 'scripts\source\TESV_Papyrus_Flags.flg';
+  if FileExists(path) then
+    edFlagsPath.Text := path;
+
+  // search for bsaopt
+  path := MultFileSearch(paths, validBsaOptFilenames, ignore, 2);
+  if (path <> '') then
+    edBsaOptPath.Text := path;
+end;
+
+procedure TOptionsForm.searchForModOrganizer;
+const
+  validModOrganizerFilenames: array[1..1] of string = ('ModOrganizer.exe');
+  ignore: array[1..1] of string = ('data');
 var
   i: integer;
   modOrganizerPath, paths: string;
-  pathList, ignore: TStringList;
+  pathList: TStringList;
   rec: TSearchRec;
 begin
   // search for installations in ?:\Program Files and ?:\Program Files (x86)
@@ -190,11 +239,8 @@ begin
   modOrganizerPath := FileSearch('Mod Organizer\ModOrganizer.exe', paths);
 
   // search for installations in GamePath
-  if (modOrganizerPath = '') then begin
-    ignore := TStringList.Create;
-    ignore.Add('data');
-    modOrganizerPath := RecursiveFileSearch('ModOrganizer.exe', DataPath + '..\', ignore, 2);
-  end;
+  if (modOrganizerPath = '') then
+    modOrganizerPath := RecursiveFileSearch(GamePath, validModOrganizerFilenames, ignore, 2);
 
   // search each folder in each valid Program Files directory for ModOrganizer.exe
   if (modOrganizerPath = '') then begin
@@ -553,7 +599,6 @@ var
 begin
   b := kbUsingMO.Checked;
   edModOrganizerPath.Enabled := b;
-  btnDetect.Enabled := b;
   btnBrowseMO.Enabled := b;
   kbCopyGeneralAssets.Enabled := b;
 end;

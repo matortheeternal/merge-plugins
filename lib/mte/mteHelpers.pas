@@ -3,8 +3,8 @@ unit mteHelpers;
 interface
 
 uses
-  Windows, SysUtils, Masks, Dialogs, StdCtrls, FileCtrl, ShellApi, Classes,
-  ComCtrls, CommCtrl, DateUtils, shlObj;
+  Windows, SysUtils, Masks, Dialogs, StdCtrls, StrUtils, FileCtrl, ShellApi,
+  Classes, ComCtrls, CommCtrl, DateUtils, shlObj;
 
   { General functions }
   function csvText(s: string): string;
@@ -19,6 +19,7 @@ uses
   function RemoveFromEnd(s1, s2: string): string;
   function IntegerListSum(list: TList; maxIndex: integer): integer;
   function Wordwrap(var s: string; charCount: integer): string;
+  function ExtractPath(path: string; levels: integer): string;
   function ContainsMatch(var sl: TStringList; const s: string): boolean;
   function IsURL(s: string): boolean;
   function IsDotFile(fn: string): boolean;
@@ -31,7 +32,10 @@ uses
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
-  function RecursiveFileSearch(aPath, aFileName: string; ignore: TStringList; maxDepth: integer): string;
+  function MultFileSearch(paths, filenames, ignore: array of string;
+    maxDepth: integer): string;
+  function RecursiveFileSearch(aPath: string; filenames, ignore: array of string;
+   maxDepth: integer): string;
   procedure CopyDirectory(src, dst: string; fIgnore, dIgnore: TStringList);
   procedure GetFilesList(path: string; var fIgnore, dIgnore, list: TStringList);
   procedure CopyFiles(src, dst: string; var list: TStringList);
@@ -220,6 +224,31 @@ begin
   Result := s;
 end;
 
+{ Like ExtractFilePath, but will allow the user to specify how many @levels
+  they want to traverse back.  Specifying @levels = 0 is equivalent to
+  ExtractFilePath.
+
+  Example usage:
+  path := 'C:\Program Files (x86)\Test\Test.exe';
+  ShowMessage(ExtractPath(path, 0)); // 'C:\Program Files (x86)\Test\'
+  ShowMessage(ExtractPath(path, 1)); // 'C:\Program Files (x86)\'
+  ShowMessage(ExtractPath(path, 2)); // 'C:\'
+}
+function ExtractPath(path: string; levels: integer): string;
+var
+  i, n: integer;
+begin
+  n := 0;
+  for i := Length(path) downto 1 do
+    if IsPathDelimiter(path, i) then begin
+      if n = levels then
+        break
+      else
+        Inc(n);
+    end;
+  Result := Copy(path, 1, i);
+end;
+
 { Checks to see if any mask in @sl matches the string @s }
 function ContainsMatch(var sl: TStringList; const s: string): boolean;
 var
@@ -397,52 +426,66 @@ begin
 
   Result := SystemTimeToDateTime(LocalTime);
 end;
+{
+  MultFileSearch: Wraps around RecursiveFileSearch, allowing the searching of
+  multiple paths.
+}
+function MultFileSearch(paths, filenames, ignore: array of string; maxDepth: integer): string;
+var
+  i: Integer;
+  path: string;
+begin
+  for i := Low(paths) to High(paths) do begin
+    path := RecursiveFileSearch(paths[i], filenames, ignore, maxDepth);
+    if path <> '' then
+      break;
+  end;
+  Result := path;
+end;
 
 {
   RecursiveFileSearch:
-  Recursively searches a path for a file matching aFileName, ignoring
-  directories in the ignore TStringList, and not traversing deeper than
-  maxDepth.
+  Recursively searches a path for a file matching @filenames, ignoring
+  directories in @ignore, and not traversing deeper than maxDepth.
 
   Example usage:
-  ignore := TStringList.Create;
-  ignore.Add('Data');
-  p := RecursiveFileSearch('Skyrim.exe', GamePath, ignore, 1, false);
+  p := RecursiveFileSearch(GamePath, filenames, ignore, 1);
   AddMessage(p);
 }
-function RecursiveFileSearch(aPath, aFileName: string; ignore: TStringList; maxDepth: integer): string;
+function RecursiveFileSearch(aPath: string; filenames, ignore: array of string;
+  maxDepth: integer): string;
 var
   skip: boolean;
   i: integer;
-  rec: TSearchRec;
+  info: TSearchRec;
 begin
   Result := '';
   aPath := AppendIfMissing(aPath, PathDelim);
   if Result <> '' then exit;
-  // always ignore . and ..
-  ignore.Add('.');
-  ignore.Add('..');
 
-  if FindFirst(aPath + '*', faAnyFile, rec) = 0 then begin
-    repeat
-      skip := false;
-      for i := 0 to Pred(ignore.Count) do begin
-        skip := Lowercase(rec.Name) = ignore[i];
-        if skip then
-          break;
-      end;
-      if not skip then begin
-        if ((rec.attr and faDirectory) = faDirectory) and (maxDepth > 0) then begin
-          Result := RecursiveFileSearch(aPath+rec.Name, aFileName, ignore, maxDepth - 1);
-        end
-        else if (rec.Name = aFileName) then
-          Result := aPath + rec.Name;
-      end;
-      if (Result <> '') then break;
-    until FindNext(rec) <> 0;
-
-    FindClose(rec);
-  end;
+  // exit if no files in path
+  if FindFirst(aPath + '*', faAnyFile, info) <> 0 then
+    exit;
+  // else loop through all files in path
+  repeat
+    if IsDotFile(info.Name) then
+      continue; // skip . and ..
+    skip := false;
+    for i := Low(ignore) to High(ignore) do begin
+      skip := Lowercase(info.Name) = ignore[i];
+      if skip then
+        break;
+    end;
+    if not skip then begin
+      if ((info.attr and faDirectory) = faDirectory) and (maxDepth > 0) then begin
+        Result := RecursiveFileSearch(aPath+info.Name, filenames, ignore, maxDepth - 1);
+      end
+      else if MatchStr(info.Name, filenames) then
+        Result := aPath + info.Name;
+    end;
+    if (Result <> '') then break;
+  until FindNext(info) <> 0;
+  FindClose(info);
 end;
 
 {
