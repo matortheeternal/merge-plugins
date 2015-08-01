@@ -9,17 +9,15 @@ type
   TTaskBarProgressState = (tbpsNone, tbpsIndeterminate, tbpsNormal, tbpsError,
     tbpsPaused);
 
-function InitializeTaskbarAPI: boolean;
-function SetTaskbarProgressState(const AState: TTaskBarProgressState): boolean;
-function SetTaskbarProgressValue(const ACurrent: UInt64; const AMax: UInt64): boolean;
-function SetTaskbarOverlayIcon(const AIcon: THandle; const ADescription: String): boolean;
+  function InitializeTaskbarAPI: boolean;
+  function SetTaskbarProgressState(const AState: TTaskBarProgressState): boolean;
+  function SetTaskbarProgressValue(const ACurrent: UInt64; const AMax: UInt64): boolean;
+  function SetTaskbarOverlayIcon(const AIcon: THandle; const ADescription: String): boolean;
 
 implementation
 
 const
   TASKBAR_CID: TGUID = '{56FDF344-FD6D-11d0-958A-006097C9A090}';
-
-const
   TBPF_NOPROGRESS = 0;
   TBPF_INDETERMINATE = 1;
   TBPF_NORMAL = 2;
