@@ -21,8 +21,8 @@ uses
 implementation
 
 var
-  pexPath, pscPath, generalPexPath, generalPscPath, compiledPath, compileLog,
-  decompileLog: string;
+  pexPath, pscPath, generalPexPath, generalPscPath, mergedBsaPath, compiledPath,
+  compileLog, decompileLog: string;
   mergeFormIndex: integer;
   UsedFormIDs: array [0..$FFFFFF] of byte;
   batchCopy, batchDecompile, batchCompile: TStringList;
@@ -109,7 +109,7 @@ var
   plugin: TPlugin;
   aFile: IwbFile;
   aRecord: IwbMainRecord;
-  Records: TList;
+  Records: array of IwbMainRecord;
   renumberAll: boolean;
   BaseFormID, NewFormID: cardinal;
   header: IwbContainer;
@@ -123,7 +123,6 @@ begin
 
   // initialize variables
   total := 0;
-  Records := TList.Create;
   BaseFormID := FindHighestFormID(pluginsToMerge, merge) + 128;
   for i := 0 to High(UsedFormIDs) do
     UsedFormIDs[i] := 0;
@@ -140,17 +139,15 @@ begin
     Tracker.Write('  Renumbering FormIDs in ' + plugin.filename);
 
     // build records array because indexed order will change
-    Records.Clear;
     rc := aFile.RecordCount;
-    for j := 0 to Pred(rc) do begin
-      aRecord := aFile.Records[j];
-      Records.Add(Pointer(aRecord));
-    end;
+    SetLength(Records, rc);
+    for j := 0 to Pred(rc) do
+      Records[j] := aFile.Records[j];
 
     // renumber records in file
-    for j := 0 to Pred(rc) do begin
+    for j := Pred(rc) downto 0 do begin
       if bProgressCancel then exit;
-      aRecord := IwbMainRecord(Records[j]);
+      aRecord := Records[j];
       // skip record headers and overrides
       if aRecord.Signature = 'TES4' then continue;
       if IsOverride(aRecord) then continue;
@@ -188,9 +185,6 @@ begin
   // set next object id
   header := merge.plugin._File.Elements[0] as IwbContainer;
   header.ElementByPath['HEDR\Next Object ID'].NativeValue :=  BaseFormID;
-
-  // free memory
-  Records.Free;
 end;
 
 procedure RenumberAfter(merge: TMerge);
@@ -321,6 +315,8 @@ begin
       continue;  // skip . and ..
     srcFile := info.Name;
     oldFormID := ExtractFormID(srcFile);
+    if Length(oldFormID) <> 8 then
+      continue;
     oldFileFormID := RemoveFileIndex(oldFormID);
 
     // exit if we can't find a remapped formID for the source script
@@ -504,6 +500,8 @@ begin
       if settings.debugScriptFragments then
         Tracker.Write('      Found script fragment '+fn);
       oldFormID := ExtractFormID(fn);
+      if Length(oldFormID) <> 8 then
+        continue;
       oldFileFormID := RemoveFileIndex(oldFormID);
       index := GetMapIndex(merge, plugin.filename, oldFileFormID);
       if (index = -1) then begin
@@ -559,6 +557,8 @@ begin
     if settings.debugScriptFragments then
       Tracker.Write('      Found script fragment '+fn);
     oldFormID := ExtractFormID(fn);
+    if Length(oldFormID) <> 8 then
+      continue;
     oldFileFormID := RemoveFileIndex(oldFormID);
     index := GetMapIndex(merge, plugin.filename, oldFileFormID);
     if (index = -1) then begin
@@ -613,6 +613,8 @@ begin
     if settings.debugScriptFragments then
       Tracker.Write('      Found script fragment '+fn);
     oldFormID := ExtractFormID(fn);
+    if Length(oldFormID) <> 8 then
+      continue;
     oldFileFormID := RemoveFileIndex(oldFormID);
     index := GetMapIndex(merge, plugin.filename, oldFileFormID);
     if (index = -1) then begin
@@ -662,7 +664,7 @@ var
   aFile: IwbFile;
   aRecord: IwbMainRecord;
   plugin: TPlugin;
-  asNew: boolean;
+  asNew, isNew: boolean;
 begin
   if bProgressCancel then exit;
 
@@ -684,7 +686,8 @@ begin
       // copy record
       if settings.debugRecordCopying then
         Tracker.Write('    Copying record '+aRecord.Name);
-      CopyRecord(aRecord, merge, asNew);
+      isNew := aRecord.IsMaster and not aRecord.IsInjected;
+      CopyRecord(aRecord, merge, asNew and isNew);
       Tracker.Update(1);
     end;
   end;
@@ -696,6 +699,7 @@ end;
   Methods for copying file-specific assets.
 
   Includes:
+  - GetMapIndex
   - CopyFaceGen
   - CopyVoice
   - CopyTranslations
@@ -763,6 +767,8 @@ begin
     srcFile := info.Name;
     dstFile := srcFile;
     oldForm := ExtractFormID(srcFile);
+    if Length(oldForm) <> 8 then
+      continue;
     index := GetMapIndex(merge, plugin.filename, oldForm);
     if (index > -1) then begin
       newForm := merge.map.ValueFromIndex[index];
@@ -806,6 +812,8 @@ begin
       srcFile := info.Name;
       dstFile := srcFile;
       oldForm := ExtractFormID(srcFile);
+      if Length(oldForm) <> 8 then
+        continue;
       index := GetMapIndex(merge, plugin.filename, oldForm);
       if (index > -1) then begin
         newForm := merge.map.ValueFromIndex[index];
@@ -937,7 +945,7 @@ begin
   fileIgnore.Add('*.esm');
   fileIgnore.Add(ChangeFileExt(plugin.filename, '.seq'));
   fileIgnore.Add(ChangeFileExt(plugin.filename, '.ini'));
-  if settings.extractBSAs then begin
+  if settings.extractBSAs or settings.buildMergedBSA then begin
     fileIgnore.Add('*.bsa');
     fileIgnore.Add('*.bsl');
   end;
@@ -1056,15 +1064,71 @@ end;
   Methods for building, rebuilding, and deleting merges.
 
   Includes:
+  - BuildMergedBSA
   - BuildMerge
   - DeleteOldMergeFiles
   - RebuildMerge
 }
 {******************************************************************************}
 
-procedure BuildMerge(var merge: TMerge);
+procedure BuildMergedBSA(var merge: TMerge; var pluginsToMerge: TList);
 const
-  bPauseBatch = false;
+  fsFaceGeom = 'meshes\actors\character\facegendata\facegeom\%s';
+  fsFaceTint = 'textures\actors\character\facegendata\facetint\%s';
+  fsVoice = 'sound\voice\%s';
+var
+  i: integer;
+  bsaFilename, bsaOptCommand, bsaOptBat: string;
+  plugin: TPlugin;
+  extracted: boolean;
+  ignore, batchBsa: TStringList;
+begin
+  // initialize stringlists
+  ignore := TStringList.Create;
+  batchBsa := TStringList.Create;
+
+  // extract bsas from plugins
+  extracted := false;
+  for i := 0 to Pred(pluginsToMerge.Count) do begin
+    plugin := TPlugin(pluginsToMerge[i]);
+    if HAS_BSA in plugin.flags then begin
+      // prepare paths to ignore
+      ignore.Add(Format(fsFaceGeom,[Lowercase(plugin.filename)]));
+      ignore.Add(Format(fsFaceTint,[Lowercase(plugin.filename)]));
+      ignore.Add(Format(fsVoice,[Lowercase(plugin.filename)]));
+      ignore.Add('seq');
+      // extract bsa
+      extracted := true;
+      bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+      Tracker.Write('  Extracting '+bsaFilename+'\');
+      ExtractBSA(bsaFilename, mergedBsaPath, ignore);
+      ignore.Clear;
+    end;
+  end;
+
+  if extracted then begin
+    // prepare command for BSAOpt
+    bsaFilename := merge.dataPath + ChangeFileExt(merge.filename, '.bsa');
+    bsaOptCommand := Format('"%s" %s "%s" "%s"',
+      [settings.bsaOptPath, settings.bsaOptOptions, mergedBsaPath, bsaFilename]);
+    Tracker.Write('  BSAOpt: '+bsaOptCommand);
+    // create bat script
+    bsaOptBat := TempPath + 'bsaOpt.bat';
+    batchBsa.Add(bsaOptCommand);
+    batchBsa.SaveToFile(bsaOptBat);
+    // execute bat script
+    ExecNewProcess(bsaOptBat, true);
+    // add bsa to merge files if it was made successfully
+    if FileExists(bsaFilename) then
+      merge.files.Add(bsaFilename);
+  end;
+
+  // clean up
+  ignore.Free;
+  batchBsa.Free;
+end;
+
+procedure BuildMerge(var merge: TMerge);
 var
   plugin: TPlugin;
   mergeFile, aFile: IwbFile;
@@ -1089,6 +1153,7 @@ begin
   // delete temp path, it should be empty before we begin
   DeleteDirectory(TempPath);
   // set up directories
+  mergedBsaPath := TempPath + 'mergedBSA\';
   pexPath := TempPath + 'pex\';
   pscPath := TempPath + 'psc\';
   generalPexPath := TempPath + 'generalPex\';
@@ -1096,6 +1161,7 @@ begin
   compiledPath := TempPath + 'compiled\';
   mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
   // force directories to exist so we can put files in them
+  ForceDirectories(mergedBsaPath);
   ForceDirectories(pexPath);
   ForceDirectories(pscPath);
   ForceDirectories(generalPexPath);
@@ -1287,10 +1353,17 @@ begin
     batchCompile.Free;
   end;
 
+  // build merged bsa
+  if settings.buildMergedBSA and FileExists(settings.bsaOptPath)
+  and (settings.bsaOptOptions <> '') then begin
+    Tracker.Write(' ');
+    Tracker.Write('Building Merged BSA...');
+    BuildMergedBSA(merge, pluginsToMerge);
+  end;
+
   // batch copy assets
   if settings.batCopy and (batchCopy.Count > 0) and (not bProgressCancel) then begin
     bfn := mergeFilePrefix + '-Copy.bat';
-    if bPauseBatch then batchCopy.Add('pause');
     batchCopy.SaveToFile(bfn);
     batchCopy.Clear;
     ShellExecute(0, 'open', PChar(bfn), '', PChar(wbProgramPath), SW_SHOWMINNOACTIVE);

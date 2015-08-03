@@ -585,8 +585,6 @@ begin
 end;
 
 procedure TMergeForm.UpdateApplicationDetails;
-var
-  s: string;
 begin
   // prepare list view for application information
   DetailsEditor.Strings.Clear;
@@ -611,10 +609,8 @@ begin
   AddDetailsItem('API Credits', 'superobject, TurboPower Abbrevia, xEdit');
   AddDetailsItem('xEdit Version', xEditVersion);
   AddDetailsItem('xEdit Credits', 'zilav, hlp, Sharlikran, ElminsterAU');
-  s := ProgramTesters;
-  AddDetailsItem('Testers', Wordwrap(s, 70));
-  s := ProgramTranslators;
-  AddDetailsItem('Translators', Wordwrap(s, 70));
+  AddDetailsItem('Testers', Wordwrap(ProgramTesters, 70));
+  AddDetailsItem('Translators', Wordwrap(ProgramTranslators, 70));
 end;
 
 procedure TMergeForm.DetailsCopyToClipboardItemClick(Sender: TObject);

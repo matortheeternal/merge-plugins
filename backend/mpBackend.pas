@@ -825,7 +825,7 @@ begin
     header := ApplyTemplate(settings.templateNoHash, slHeader);
 
   // add to entry notes if doing so won't exceed the maximum notes length
-  notes := Report.notes;
+  notes := Report.notes + '@13';
   if (Length(header) + Length(notes) + Length(sl.Text) < MAX_NOTES_LENGTH) then begin
     sl.Add(header);
     sl.Add(notes);

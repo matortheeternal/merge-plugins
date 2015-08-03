@@ -102,8 +102,8 @@ type
     btnBrowseBSAOpt: TSpeedButton;
     edBsaOptPath: TEdit;
     lblBSAOptPath: TLabel;
-    lblBSAOptCommands: TLabel;
-    edBsaOptCommands: TEdit;
+    lblBSAOptOptions: TLabel;
+    edBsaOptOptions: TEdit;
     gbGameMode: TGroupBox;
     lblGameMode: TLabel;
     cbGameMode: TComboBox;
@@ -128,6 +128,11 @@ type
     procedure btnBrowseBSAOptClick(Sender: TObject);
     procedure searchForModOrganizer;
     procedure btnDetectClick(Sender: TObject);
+    procedure edBsaOptPathExit(Sender: TObject);
+    procedure kbExtractBSAsMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure kbBuildBSAMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
   public
@@ -149,6 +154,7 @@ end;
 procedure TOptionsForm.btnBrowseBSAOptClick(Sender: TObject);
 begin
   BrowseForFile(edBsaOptPath, 'Executables|*.exe', ProgramPath);
+  edBsaOptPathExit(nil);
 end;
 
 procedure TOptionsForm.btnBrowseCompilerClick(Sender: TObject);
@@ -214,8 +220,10 @@ begin
 
   // search for bsaopt
   path := MultFileSearch(paths, validBsaOptFilenames, ignore, 2);
-  if (path <> '') then
+  if (path <> '') then begin
     edBsaOptPath.Text := path;
+    edBsaOptPathExit(nil);
+  end;
 end;
 
 procedure TOptionsForm.searchForModOrganizer;
@@ -269,7 +277,8 @@ begin
     edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
   end
   else begin
-    MessageDlg('Couldn''t automatically detect Mod Organizer''s file path.  Please enter it manually.', mtConfirmation, [mbOk], 0);
+    MessageDlg('Couldn''t automatically detect Mod Organizer''s file path.  '+
+      'Please enter it manually.', mtConfirmation, [mbOk], 0);
     edModOrganizerPath.Text := '';
   end;
 end;
@@ -333,7 +342,7 @@ begin
   settings.flagsPath := edFlagsPath.Text;
   // Integrations > BSAs
   settings.bsaOptPath := edBsaOptPath.Text;
-  settings.bsaOptCommands := edBsaOptCommands.Text;
+  settings.bsaOptOptions := edBsaOptOptions.Text;
 
   SaveSettings;
 end;
@@ -433,6 +442,12 @@ begin
   Close;
 end;
 
+procedure TOptionsForm.edBsaOptPathExit(Sender: TObject);
+begin
+  if FileExists(edBsaOptPath.Text) and (edBsaOptOptions.Text = '') then
+    edBsaOptOptions.Text := Format('-game %s -passthrough -compress 9', [GameMode.bsaOptMode]);
+end;
+
 procedure TOptionsForm.edUsernameChange(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
@@ -518,7 +533,7 @@ begin
   edFlagsPath.Text := settings.flagsPath;
   // Integrations > BSAs
   edBsaOptPath.Text := settings.bsaOptPath;
-  edBsaOptCommands.Text := settings.bsaOptCommands;
+  edBsaOptOptions.Text := settings.bsaOptOptions;
 
   // load valid game paths
   if GamePathValid(settings.tes5path, 1) then
@@ -591,6 +606,18 @@ begin
   IconList.GetBitmap(0, btnBrowseCompiler.Glyph);
   IconList.GetBitmap(0, btnBrowseFlags.Glyph);
   IconList.GetBitmap(0, btnBrowseBsaOpt.Glyph);
+end;
+
+procedure TOptionsForm.kbBuildBSAMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  kbExtractBSAs.Checked := false;
+end;
+
+procedure TOptionsForm.kbExtractBSAsMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  kbBuildBSA.Checked := false;
 end;
 
 procedure TOptionsForm.kbUsingMOClick(Sender: TObject);

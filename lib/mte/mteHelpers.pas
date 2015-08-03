@@ -18,7 +18,7 @@ uses
   function StrEndsWith(s1, s2: string): boolean;
   function RemoveFromEnd(s1, s2: string): string;
   function IntegerListSum(list: TList; maxIndex: integer): integer;
-  function Wordwrap(var s: string; charCount: integer): string;
+  function Wordwrap(s: string; charCount: integer): string;
   function ExtractPath(path: string; levels: integer): string;
   function ContainsMatch(var sl: TStringList; const s: string): boolean;
   function IsURL(s: string): boolean;
@@ -201,7 +201,7 @@ begin
 end;
 
 { Inserts line breaks in string @s before @charCount has been exceeded }
-function Wordwrap(var s: string; charCount: integer): string;
+function Wordwrap(s: string; charCount: integer): string;
 var
   i, lastSpace, counter: Integer;
 begin

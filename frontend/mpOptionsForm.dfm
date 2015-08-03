@@ -20,17 +20,13 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = IntegrationsTabSheet
+    ActivePage = GeneralTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     TabWidth = 80
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbStyle: TGroupBox
         Left = 6
         Top = 163
@@ -296,10 +292,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetCopying: TGroupBox
         Left = 6
         Top = 6
@@ -366,8 +358,8 @@ object OptionsForm: TOptionsForm
           Width = 101
           Height = 17
           Caption = 'Build Merged BSA'
-          Enabled = False
           TabOrder = 4
+          OnMouseUp = kbBuildBSAMouseUp
         end
         object kbFragments: TCheckBox
           Left = 272
@@ -384,6 +376,7 @@ object OptionsForm: TOptionsForm
           Height = 17
           Caption = 'Extract BSAs'
           TabOrder = 6
+          OnMouseUp = kbExtractBSAsMouseUp
         end
         object kbBatCopy: TCheckBox
           Left = 272
@@ -482,13 +475,9 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbPrivacy: TGroupBox
         Left = 6
-        Top = 160
+        Top = 72
         Width = 548
         Height = 76
         Margins.Left = 6
@@ -516,7 +505,7 @@ object OptionsForm: TOptionsForm
       end
       object gbColoring: TGroupBox
         Left = 6
-        Top = 248
+        Top = 160
         Width = 548
         Height = 107
         Margins.Left = 6
@@ -643,7 +632,7 @@ object OptionsForm: TOptionsForm
       end
       object gbMergeProfile: TGroupBox
         Left = 6
-        Top = 72
+        Top = 279
         Width = 548
         Height = 76
         Margins.Left = 6
@@ -654,6 +643,7 @@ object OptionsForm: TOptionsForm
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Merge Profile'
         TabOrder = 2
+        Visible = False
         object lblCurrentProfile: TLabel
           Left = 12
           Top = 20
@@ -912,12 +902,12 @@ object OptionsForm: TOptionsForm
           Height = 13
           Caption = 'BSAOpt path'
         end
-        object lblBSAOptCommands: TLabel
+        object lblBSAOptOptions: TLabel
           Left = 12
           Top = 47
-          Width = 104
+          Width = 75
           Height = 13
-          Caption = 'BSAOpt command line'
+          Caption = 'BSAOpt options'
         end
         object edBsaOptPath: TEdit
           Left = 192
@@ -925,8 +915,9 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 0
+          OnExit = edBsaOptPathExit
         end
-        object edBsaOptCommands: TEdit
+        object edBsaOptOptions: TEdit
           Left = 192
           Top = 44
           Width = 348
@@ -973,7 +964,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800B40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

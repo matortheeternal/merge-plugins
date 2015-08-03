@@ -72,6 +72,7 @@ type
     gameMode: TwbGameMode;
     appName: string;
     exeName: string;
+    bsaOptMode: string;
   end;
   TFilter = class(TObject)
   public
@@ -219,7 +220,7 @@ type
     decompilerPath: string;
     flagsPath: string;
     bsaOptPath: string;
-    bsaOptCommands: string;
+    bsaOptOptions: string;
     constructor Create; virtual;
     procedure GenerateKey;
   end;
@@ -255,7 +256,8 @@ type
   function FaceDataExists(filename: string): boolean;
   function VoiceDataExists(filename: string): boolean;
   function FragmentsExist(f: IwbFile): boolean;
-  procedure ExtractBSA(ContainerName, folder, destination: string);
+  procedure ExtractBSA(ContainerName, folder, destination: string); overload;
+  procedure ExtractBSA(ContainerName, destination: string; var ignore: TStringList); overload;
   function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
   function CheckForErrors(const aIndent: Integer; const aElement: IwbElement; var errors: TStringList): Boolean;
   procedure CreateSEQFile(merge: TMerge);
@@ -319,8 +321,8 @@ type
 
 const
   // IMPORTANT CONSTANTS
-  ProgramTesters = 'bla08, hishy, keithinhanoi, mindw0rk2, steve25469, Teabag, '+
-    'Thalioden, zilav';
+  ProgramTesters = 'bla08, hishy, keithinhanoi, mindw0rk2, steve25469, Kesta, '+
+    'Teabag, Thalioden, zilav';
   ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
   xEditVersion = '3.1.1';
 
@@ -373,13 +375,13 @@ const
   // GAME MODES
   GameArray: array[1..4] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
-      appName: 'TES5'; exeName: 'TESV.exe'; ),
+      appName: 'TES5'; exeName: 'TESV.exe'; bsaOptMode: 'sk'; ),
     ( longName: 'Fallout New Vegas'; gameName: 'FalloutNV'; gameMode: gmFNV;
-      appName: 'FNV'; exeName: 'FalloutNV.exe'; ),
+      appName: 'FNV'; exeName: 'FalloutNV.exe'; bsaOptMode: 'fo'; ),
     ( longName: 'Oblivion'; gameName: 'Oblivion'; gameMode: gmTES4;
-      appName: 'TES4'; exeName: 'Oblivion.exe'; ),
+      appName: 'TES4'; exeName: 'Oblivion.exe'; bsaOptMode: 'ob'; ),
     ( longName: 'Fallout 3'; gameName: 'Fallout3'; gameMode: gmFO3;
-      appName: 'FO3'; exeName: 'Fallout3.exe'; )
+      appName: 'FO3'; exeName: 'Fallout3.exe'; bsaOptMode: 'fo'; )
   );
 
 var
@@ -398,6 +400,7 @@ var
   LoaderCallback: TCallback;
   TCPClient: TidTCPClient;
   LastStatusTime: TDateTime;
+  GameMode: TGameMode;
 
 implementation
 
@@ -427,9 +430,10 @@ end;
 { Sets the game mode in the TES5Edit API }
 procedure SetGame(id: integer);
 begin
-  wbGameName := GameArray[id].gameName;
-  wbGameMode := GameArray[id].gameMode;
-  wbAppName := GameArray[id].appName;
+  GameMode := GameArray[id];
+  wbGameName := GameMode.gameName;
+  wbGameMode := GameMode.gameMode;
+  wbAppName := GameMode.appName;
   case id of
     1: wbDataPath := settings.tes5path + 'Data\';
     2: wbDataPath := settings.fnvpath + 'Data\';
@@ -447,7 +451,7 @@ var
   i: integer;
 begin
   Result := 0;
-  for i := 1 to 4 do
+  for i := Low(GameArray) to High(GameArray) do
     if GameArray[i].longName = name then begin
       Result := i;
       exit;
@@ -826,6 +830,32 @@ begin
   handler.ContainerResourceList(ContainerName, ResourceList, folder);
   for i := 0 to Pred(ResourceList.Count) do
     handler.ResourceCopy(ContainerName, ResourceList[i], destination);
+end;
+
+{ Extracts assets from the BSA @filename to @destination, ignoring assets
+  matching items in @ignore }
+procedure ExtractBSA(ContainerName, destination: string; var ignore: TStringList);
+var
+  ResourceList: TStringList;
+  i, j: Integer;
+  skip: boolean;
+begin
+  if not handler.ContainerExists(ContainerName) then begin
+    Tracker.Write('    '+ContainerName+' not loaded.');
+    exit;
+  end;
+  ResourceList := TStringList.Create;
+  handler.ContainerResourceList(ContainerName, ResourceList, '');
+  for i := 0 to Pred(ResourceList.Count) do begin
+    skip := false;
+    for j := 0 to Pred(ignore.Count) do begin
+      skip := Pos(ignore[j], ResourceList[i]) > 0;
+      if skip then break;
+    end;
+
+    if skip then continue;
+    handler.ResourceCopy(ContainerName, ResourceList[i], destination);
+  end;
 end;
 
 { Recursively traverse a container looking for errors }
