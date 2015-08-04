@@ -5,16 +5,20 @@ interface
 uses Classes, SysUtils;
 
 type
-  TProgressEvent = procedure(const i: integer) of object;
+  TUpdateEvent = procedure(const i: integer) of object;
+  TSetEvent = procedure(const i: integer) of object;
   TLogEvent = procedure(const s: string) of object;
 
   TProgressTracker = class
   private
-    FProgressEvent : TProgressEvent;
+    FUpdateEvent : TUpdateEvent;
+    FSetEvent : TSetEvent;
     FLogEvent : TLogEvent;
   public
-    procedure Update(const i: integer);
-    property OnProgressEvent: TProgressEvent read FProgressEvent write FProgressEvent;
+    procedure SetProgress(const i: integer);
+    property OnSetEvent: TSetEvent read FSetEvent write FSetEvent;
+    procedure UpdateProgress(const i: integer);
+    property OnProgressEvent: TUpdateEvent read FUpdateEvent write FUpdateEvent;
     procedure Write(const s: string);
     property OnLogEvent: TLogEvent read FLogEvent write FLogEvent;
   end;
@@ -24,10 +28,17 @@ var
 
 implementation
 
-procedure TProgressTracker.Update(const i: integer);
+
+procedure TProgressTracker.SetProgress(const i: integer);
 begin
-  if Assigned(FProgressEvent) then
-    FProgressEvent(i);
+  if Assigned(FSetEvent) then
+    FSetEvent(i);
+end;
+
+procedure TProgressTracker.UpdateProgress(const i: integer);
+begin
+  if Assigned(FUpdateEvent) then
+    FUpdateEvent(i);
 end;
 
 procedure TProgressTracker.Write(const s: string);

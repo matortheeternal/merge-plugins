@@ -3,23 +3,40 @@ unit mpFrontend;
 interface
 
 uses
-  Windows, SysUtils, Classes, IniFiles, Dialogs, Registry, Graphics,
+  Windows, SysUtils, Classes, IniFiles, Dialogs, Registry, Graphics, ShlObj,
   // indy components
   IdTCPClient, IdStack, IdGlobal,
   // superobject json library
   superobject,
   // abbrevia components
   AbZBrows, AbUnZper, AbArcTyp, AbMeter, AbBrowse, AbBase,
-  // CRC32
-  CRC32,
   // mte components
-  mpLogger, mpTracker, mteHelpers, RttiIni, RttiJson,
+  CRC32, mpLogger, mpTracker, mteHelpers, RttiIni, RttiJson,
   // xEdit components
   wbBSA, wbHelpers, wbInterface, wbImplementation,
   wbDefinitionsFNV, wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4,
   wbDefinitionsTES5;
 
 type
+  // THREADS AND CALLBACKS
+  TCallback = procedure of object;
+  TInitThread = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
+  TLoaderThread = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
+  // LOGGING
+  TFilter = class(TObject)
+  public
+    group: string;
+    &label: string;
+    enabled: boolean;
+    constructor Create(group: string; enabled: boolean); Overload;
+    constructor Create(group, &label: string; enabled: boolean); Overload;
+  end;
   TLogMessage = class (TObject)
   public
     time: string;
@@ -28,6 +45,7 @@ type
     text: string;
     constructor Create(time, group, &label, text: string); Overload;
   end;
+  // SERVER/CLIENT
   TmpMessage = class(TObject)
   public
     id: integer;
@@ -45,6 +63,27 @@ type
     fo3Hash: string;
     constructor Create; Overload;
   end;
+  // GENERAL
+  TGameMode = Record
+    longName: string;
+    gameName: string;
+    gameMode: TwbGameMode;
+    appName: string;
+    exeName: string;
+    bsaOptMode: string;
+  end;
+  TEntry = class(TObject)
+  public
+    filename: string;
+    hash: string;
+    records: string;
+    version: string;
+    rating: string;
+    reports: string;
+    notes: string;
+    constructor Create; Overload;
+    constructor Create(const s: string); Overload;
+  end;
   TReport = class(TObject)
   public
     game: string;
@@ -61,52 +100,20 @@ type
     procedure Save(const filename: string);
     procedure Load(const filename: string);
   end;
-  TCallback = procedure of object;
-  TLoaderThread = class(TThread)
-  protected
-    procedure Execute; override;
-  end;
-  TGameMode = Record
-    longName: string;
-    gameName: string;
-    gameMode: TwbGameMode;
-    appName: string;
-    exeName: string;
-    bsaOptMode: string;
-  end;
-  TFilter = class(TObject)
-  public
-    group: string;
-    &label: string;
-    enabled: boolean;
-    constructor Create(group: string; enabled: boolean); Overload;
-    constructor Create(group, &label: string; enabled: boolean); Overload;
-  end;
-  TEntry = class(TObject)
-  public
-    filename: string;
-    hash: string;
-    records: string;
-    version: string;
-    rating: string;
-    reports: string;
-    notes: string;
-    constructor Create; Overload;
-    constructor Create(const s: string); Overload;
-  end;
+  // PLUGINS AND MERGES
   TMergeStatus = Record
     id: integer;
     color: integer;
     desc: string[64];
   end;
+  TPluginFlagID = (IS_BLACKLISTED, HAS_ERRORS, NO_ERRORS, HAS_BSA,
+    HAS_FACEDATA, HAS_VOICEDATA, HAS_TRANSLATION, HAS_INI, HAS_FRAGMENTS );
+  TPluginFlags = set of TPluginFlagID;
   TPluginFlag = Record
     id: integer;
     char: char;
     desc: string[128];
   end;
-  TPluginFlagID = (IS_BLACKLISTED, HAS_ERRORS, NO_ERRORS, HAS_BSA,
-    HAS_FACEDATA, HAS_VOICEDATA, HAS_TRANSLATION, HAS_INI, HAS_FRAGMENTS );
-  TPluginFlags = set of TPluginFlagID;
   TPlugin = class(TObject)
   public
     _File: IwbFile;
@@ -166,6 +173,7 @@ type
     function FilesExist: boolean;
     function GetStatusColor: integer;
   end;
+  // SETTINGS AND STATISTICS
   TSettings = class(TObject)
   public
     [IniSection('General')]
@@ -395,9 +403,9 @@ var
   bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
   bConnecting, bUpdateMergeStatus, bChangeMergeProfile: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
-  ProgramVersion, xEditLogLabel, DataPath, GamePath: string;
+  ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath: string;
   ActiveMods: TStringList;
-  LoaderCallback: TCallback;
+  LoaderCallback, InitCallback, ProgressCallback: TCallback;
   TCPClient: TidTCPClient;
   LastStatusTime: TDateTime;
   GameMode: TGameMode;
@@ -868,7 +876,7 @@ var
 begin
   if bProgressCancel then exit;
   if Supports(aElement, IwbMainRecord) then
-    Tracker.Update(1);
+    Tracker.UpdateProgress(1);
 
   Error := aElement.Check;
   if Error <> '' then begin
@@ -901,7 +909,7 @@ begin
   end;
 
   if Supports(aElement, IwbMainRecord) then
-    Tracker.Update(1);
+    Tracker.UpdateProgress(1);
 
   Error := aElement.Check;
   Result := Error <> '';
@@ -1099,48 +1107,6 @@ begin
     Result := -1
   else
     Result := 1;
-end;
-
-{ TLoaderThread }
-procedure LoaderProgress(const s: string);
-begin
-  if s <> '' then
-    Logger.Write('LOAD', 'Background', s);
-  if bForceTerminate then
-    Abort;
-end;
-
-procedure TLoaderThread.Execute;
-var
-  i: Integer;
-  f: IwbFile;
-  plugin: TPlugin;
-begin
-  wbStartTime := Now;
-  try
-    for i := 0 to Pred(PluginsList.Count) do begin
-      plugin := TPlugin(PluginsList[i]);
-      f := plugin._File;
-      if SameText(plugin.filename, wbGameName + '.esm') then
-        continue;
-      LoaderProgress('[' + plugin.filename + '] Building reference info.');
-      f.BuildRef;
-      if bForceTerminate then begin
-        LoaderProgress('Aborted.');
-        break;
-      end;
-    end;
-  except
-    on E: Exception do begin
-      LoaderProgress('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
-      wbLoaderError := true;
-      bDontSave := true;
-    end;
-  end;
-  bLoaderDone := true;
-  LoaderProgress('finished');
-  if Assigned(LoaderCallback) then
-    LoaderCallback;
 end;
 
 
@@ -1759,7 +1725,7 @@ begin
   // loop through merges
   Tracker.Write('Dumping merges to JSON');
   for i := 0 to Pred(MergesList.Count) do begin
-    Tracker.Update(1);
+    Tracker.UpdateProgress(1);
     merge := TMerge(MergesList[i]);
     Tracker.Write('  Dumping '+merge.name);
     json.A['merges'].Add(merge.Dump);
@@ -1769,7 +1735,7 @@ begin
   filename := 'user\' + wbAppName + 'Merges.json';
   Tracker.Write(' ');
   Tracker.Write('Saving to ' + filename);
-  Tracker.Update(1);
+  Tracker.UpdateProgress(1);
   json.SaveTo(filename);
   json := nil;
 end;
@@ -1826,7 +1792,7 @@ begin
   Tracker.Write('Dumping plugin errors to JSON');
   for i := 0 to Pred(PluginsList.Count) do begin
     plugin := PluginsList[i];
-    Tracker.Update(1);
+    Tracker.UpdateProgress(1);
     if (plugin.errors.Count = 0) then
       continue;
     Tracker.Write('  Dumping '+plugin.filename);
@@ -1837,7 +1803,7 @@ begin
   Tracker.Write(' ');
   filename := 'user\' + wbAppName + 'Errors.json';
   Tracker.Write('Saving to '+filename);
-  Tracker.Update(1);
+  Tracker.UpdateProgress(1);
   json.SaveTo(filename);
   json := nil;
 end;
@@ -2385,8 +2351,191 @@ end;
 
 
 {******************************************************************************}
+{ THREAD METHODS
+  These are threads that the program will run for various large jobs which need
+  to be decoupled from general program operation and the GUI.
+
+  List of methods:
+  - TInitThread.Execute
+  - LoaderProgress
+  - TLoaderThread.Execute
+  - TErrorCheckThread.Execute
+  - TMergeThread.Execute
+  - TSaveThread.Execute
+}
+{******************************************************************************}
+
+{ TInitThread}
+procedure TInitThread.Execute;
+var
+  wbPluginsFileName: string;
+  sl: TStringList;
+  i: integer;
+  plugin: TPlugin;
+  aFile: IwbFile;
+begin
+  try
+    // INITIALIZE VARIABLES
+    ProgramVersion := GetVersionMem;
+    ProgramPath := ExtractFilePath(ParamStr(0));
+    TempPath := ProgramPath + 'temp\';
+    LogPath := ProgramPath + 'logs\';
+    ForceDirectories(TempPath);
+    ForceDirectories(LogPath);
+    MergesList := TList.Create;
+    PluginsList := TList.Create;
+    bLoaderDone := false;
+    LastStatusTime := 0;
+    Status := TmpStatus.Create;
+
+    // INITIALIZE CLIENT
+    InitializeClient;
+
+    // INITIALIZE TES5EDIT API
+    wbDisplayLoadOrderFormID := True;
+    wbSortSubRecords := True;
+    wbDisplayShorterNames := True;
+    wbHideUnused := True;
+    wbFlagsAsArray := True;
+    wbRequireLoadOrder := True;
+    wbLanguage := 'English';
+    wbEditAllowed := True;
+    handler := wbCreateContainerHandler;
+    handler._AddRef;
+
+    // SET GAME VARS
+    if settings.selectedGame = 0 then
+      if settings.defaultGame <> 0 then
+        settings.selectedGame := settings.defaultGame
+      else
+        raise Exception.Create('Invalid game selection!');
+    SetGame(settings.selectedGame);
+    wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
+    Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
+    Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
+
+    // INITIALIZE SETTINGS FOR GAME
+    LoadSettings;
+    if settings.usingMO then
+      ModOrganizerInit;
+
+    // INITIALIZE DICTIONARY
+    dictionaryFilename := wbAppName+'Dictionary.txt';
+    Logger.Write('GENERAL', 'Dictionary', 'Using '+dictionaryFilename);
+    LoadDictionary;
+
+    // INITIALIZE TES5EDIT DEFINITIONS
+    Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
+    LoadDefinitions;
+
+    // PREPARE TO LOAD PLUGINS
+    if settings.usingMO then
+      wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveProfile+'\plugins.txt'
+    else
+      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
+    Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
+    sl := TStringList.Create;
+    sl.LoadFromFile(wbPluginsFileName);
+    RemoveCommentsAndEmpty(sl);
+    RemoveMissingFiles(sl);
+    // if GameMode is not Skyrim sort by date modified
+    // else add Update.esm and Skyrim.esm to load order
+    if wbGameMode <> gmTES5 then begin
+      GetPluginDates(sl);
+      sl.CustomSort(PluginListCompare);
+    end
+    else begin
+      if sl.IndexOf('Update.esm') = -1 then
+        sl.Insert(0, 'Update.esm');
+      if sl.IndexOf('Skyrim.esm') = -1 then
+        sl.Insert(0, 'Skyrim.esm');
+    end;
+
+    // PRINT LOAD ORDER TO LOG
+    for i := 0 to Pred(sl.Count) do
+      Logger.Write('LOAD', 'Order', '['+IntToHex(i, 2)+'] '+sl[i]);
+
+    // LOAD PLUGINS
+    for i := 0 to Pred(sl.Count) do begin
+      Tracker.Write('Loading '+sl[i]);
+      plugin := TPlugin.Create;
+      plugin.filename := sl[i];
+      plugin._File := wbFile(wbDataPath + sl[i], i);
+      plugin._File._AddRef;
+      plugin.GetData;
+      PluginsList.Add(Pointer(plugin));
+
+      // load hardcoded dat
+      if i = 0 then begin
+        aFile := wbFile(wbProgramPath + wbGameName + wbHardcodedDat, 0);
+        aFile._AddRef;
+      end;
+    end;
+
+    // LOAD MERGES, PLUGIN ERRORS
+    Tracker.Write('Loading Merges, Plugin Errors');
+    LoadMerges;
+    LoadPluginErrors;
+
+    // CLEAN UP
+    sl.Free;
+  except
+    on x: Exception do begin
+      bDontSave := true;
+      Logger.Write('ERROR', 'Load', x.Message);
+    end;
+  end;
+
+  if Assigned(InitCallback) then
+    InitCallback;
+end;
+
+{ TLoaderThread }
+procedure LoaderProgress(const s: string);
+begin
+  if s <> '' then
+    Logger.Write('LOAD', 'Background', s);
+  if bForceTerminate then
+    Abort;
+end;
+
+procedure TLoaderThread.Execute;
+var
+  i: Integer;
+  f: IwbFile;
+  plugin: TPlugin;
+begin
+  wbStartTime := Now;
+  try
+    for i := 0 to Pred(PluginsList.Count) do begin
+      plugin := TPlugin(PluginsList[i]);
+      f := plugin._File;
+      if SameText(plugin.filename, wbGameName + '.esm') then
+        continue;
+      LoaderProgress('[' + plugin.filename + '] Building reference info.');
+      f.BuildRef;
+      if bForceTerminate then begin
+        LoaderProgress('Aborted.');
+        break;
+      end;
+    end;
+  except
+    on E: Exception do begin
+      LoaderProgress('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
+      wbLoaderError := true;
+      bDontSave := true;
+    end;
+  end;
+  bLoaderDone := true;
+  LoaderProgress('finished');
+  if Assigned(LoaderCallback) then
+    LoaderCallback;
+end;
+
+
+{******************************************************************************}
 { Object methods
-  Set of methods for shared objects.
+  Set of methods for objects.
 
   List of methods:
   - TLogMessage.Create

@@ -155,7 +155,7 @@ begin
       // skip records that aren't conflicting if not renumberAll
       if (not renumberAll) and (UsedFormIDs[OldFormID] = 0) then begin
         UsedFormIDs[OldFormID] := 1;
-        Tracker.Update(1);
+        Tracker.UpdateProgress(1);
         if settings.debugRenumbering and debugSkips then
           Tracker.Write('    Skipping FormID '+IntToHex(OldFormID, 8));
         continue;
@@ -172,7 +172,7 @@ begin
       Inc(BaseFormID);
       Inc(total);
       Inc(fileTotal);
-      Tracker.Update(1);
+      Tracker.UpdateProgress(1);
     end;
 
     // update map with fileTotal
@@ -688,7 +688,7 @@ begin
         Tracker.Write('    Copying record '+aRecord.Name);
       isNew := aRecord.IsMaster and not aRecord.IsInjected;
       CopyRecord(aRecord, merge, asNew and isNew);
-      Tracker.Update(1);
+      Tracker.UpdateProgress(1);
     end;
   end;
 end;

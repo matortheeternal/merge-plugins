@@ -4,9 +4,9 @@ interface
 
 uses
   // delphi units
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl,
-  Menus, Grids, ValEdit, ShlObj, ShellAPI, StrUtils, Clipbrd,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl, Menus, Grids,
+  ValEdit, ShellAPI, StrUtils, Clipbrd,
   // indy units
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
   // third party libraries
@@ -98,11 +98,14 @@ type
     DetailsCopyToClipboardItem: TMenuItem;
 
     // MERGE FORM EVENTS
+    procedure UpdateLog;
     procedure LogMessage(const group, &label, text: string);
     procedure FormCreate(Sender: TObject);
+    procedure InitDone;
     procedure FormShow(Sender: TObject);
     procedure LoaderDone;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure ProgressDone;
     procedure OnTimer(Sender: TObject);
     procedure OnHeartbeatTimer(Sender: TObject);
     procedure OnRepaintTimer(Sender: TObject);
@@ -187,10 +190,12 @@ type
   end;
 
 var
+  splash: TSplashForm;
   MergeForm: TMergeForm;
   LastHint: string;
   LastURLTime: double;
-  bMergesToBuild, bMergesToCheck, bAutoScroll: boolean;
+  bMergesToBuild, bMergesToCheck, bAutoScroll, bCreated, bClosing: boolean;
+  ProgressForm: TProgressForm;
 
 implementation
 
@@ -200,6 +205,7 @@ implementation
 {******************************************************************************}
 { Merge Form Events
   Events for the Merge Form.
+  - UpdateLog
   - LogMessage
   - ProgressMessage
   - FormCreate
@@ -209,25 +215,37 @@ implementation
 }
 {******************************************************************************}
 
+procedure TMergeForm.UpdateLog;
+var
+  bLogActive: boolean;
+begin
+  LogListView.Items.Count := Log.Count;
+  bLogActive := PageControl.ActivePage = LogTabSheet;
+  // autoscroll if active
+  if bAutoScroll and bLogActive then begin
+    //LogListView.ClearSelection;
+    //LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
+    SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+  end;
+  // correct width if active
+  if bLogActive then
+    CorrectListViewWidth(LogListView);
+end;
+
 { Prints a message to the log }
 procedure TMergeForm.LogMessage(const group, &label, text: string);
 var
   msg: TLogMessage;
-  bLogActive: boolean;
 begin
   msg := TLogMessage.Create(FormatDateTime('hh:nn:ss', Now), group, &label, text);
   BaseLog.Add(msg);
+
+  // if message is enabled, add to log
   if MessageEnabled(msg) then begin
     Log.Add(msg);
-    LogListView.Items.Count := Log.Count;
-    bLogActive := PageControl.ActivePage = LogTabSheet;
-    if bAutoScroll and bLogActive then begin
-      LogListView.ClearSelection;
-      LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
-      SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
-    end;
-    if bLogActive then
-      CorrectListViewWidth(LogListView);
+    // if merge form is created, update log list view
+    if bCreated then
+      UpdateLog;
   end;
 end;
 
@@ -235,174 +253,73 @@ procedure ProgressMessage(const s: string);
 begin
   if s = '' then
     exit;
-  MergeForm.LogMessage('LOAD', xEditLogLabel, s);
+  Logger.Write(xEditLogGroup, xEditLogLabel, s);
 end;
 
 { Initialize form, initialize TES5Edit API, and load plugins }
 procedure TMergeForm.FormCreate(Sender: TObject);
-var
-  wbPluginsFileName: string;
-  sl: TStringList;
-  i: integer;
-  plugin: TPlugin;
-  aFile: IwbFile;
-  splash: TSplashForm;
 begin
+  // INITIALIAZE BASE
+  bCreated := false;
+  InitLog;
+  Logger.OnLogEvent := LogMessage;
+  //bAutoScroll := true;
   InitializeTaskbarAPI;
+  SetTaskbarProgressState(tbpsIndeterminate);
+  xEditLogGroup := 'LOAD';
+  xEditLogLabel := 'Plugins';
+  wbProgressCallback := ProgressMessage;
+
+  // CREATE SPLASH
+  splash := TSplashForm.Create(nil);
   try
-    // CREATE SPLASH
-    splash := TSplashForm.Create(nil);
-    splash.Show;
-    SetTaskbarProgressState(tbpsIndeterminate);
-
-    // INITIALIZE VARIABLES
-    InitLog;
-    bAutoScroll := true;
-    ProgramVersion := GetVersionMem;
-    ProgramPath := ExtractFilePath(ParamStr(0));
-    TempPath := ProgramPath + 'temp\';
-    LogPath := ProgramPath + 'logs\';
-    ForceDirectories(TempPath);
-    ForceDirectories(LogPath);
-    MergesList := TList.Create;
-    PluginsList := TList.Create;
-    bLoaderDone := false;
-    LastStatusTime := 0;
-    Status := TmpStatus.Create;
-
-    // INITIALIZE CLIENT
-    InitializeClient;
-
-    // GUI ICONS
-    Tracker.Write('Loading Icons');
-    NewButton.Flat := true;
-    BuildButton.Flat := true;
-    ReportButton.Flat := true;
-    DictionaryButton.Flat := true;
-    OptionsButton.Flat := true;
-    UpdateButton.Flat := true;
-    HelpButton.Flat := true;
-    IconList.GetBitmap(0, NewButton.Glyph);
-    DoubleIconList.GetBitmap(0, BuildButton.Glyph);
-    IconList.GetBitmap(2, ReportButton.Glyph);
-    IconList.GetBitmap(3, DictionaryButton.Glyph);
-    IconList.GetBitmap(4, OptionsButton.Glyph);
-    IconList.GetBitmap(5, UpdateButton.Glyph);
-    IconList.GetBitmap(6, HelpButton.Glyph);
-
-    // STATUSBAR VALUES
-    StatusPanelLanguage.Caption := settings.language;
-    StatusPanelVersion.Caption := 'v'+ProgramVersion;
-
-    // INITIALIZE TES5EDIT API
-    xEditLogLabel := 'Plugins';
-    wbDisplayLoadOrderFormID := True;
-    wbSortSubRecords := True;
-    wbDisplayShorterNames := True;
-    wbHideUnused := True;
-    wbFlagsAsArray := True;
-    wbRequireLoadOrder := True;
-    wbLanguage := 'English';
-    wbEditAllowed := True;
-    wbProgressCallback := ProgressMessage;
-    Logger.OnLogEvent := LogMessage;
-    handler := wbCreateContainerHandler;
-    handler._AddRef;
-
-    // SET GAME VARS
-    if settings.selectedGame = 0 then
-      if settings.defaultGame <> 0 then
-        settings.selectedGame := settings.defaultGame
-      else
-        raise Exception.Create('Invalid game selection!');
-    SetGame(settings.selectedGame);
-    wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
-    Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
-    Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
-
-    // INITIALIZE SETTINGS FOR GAME
-    LoadSettings;
-    if settings.usingMO then
-      ModOrganizerInit;
-
-    // INITIALIZE DICTIONARY
-    dictionaryFilename := wbAppName+'Dictionary.txt';
-    Logger.Write('GENERAL', 'Dictionary', 'Using '+dictionaryFilename);
-    LoadDictionary;
-
-    // INITIALIZE TES5EDIT DEFINITIONS
-    Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
-    LoadDefinitions;
-
-    // PREPARE TO LOAD PLUGINS
-    if settings.usingMO then
-      wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveProfile+'\plugins.txt'
-    else
-      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
-    Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
-    sl := TStringList.Create;
-    sl.LoadFromFile(wbPluginsFileName);
-    RemoveCommentsAndEmpty(sl);
-    RemoveMissingFiles(sl);
-    // if GameMode is not Skyrim sort by date modified
-    // else add Update.esm and Skyrim.esm to load order
-    if wbGameMode <> gmTES5 then begin
-      GetPluginDates(sl);
-      sl.CustomSort(PluginListCompare);
-    end
-    else begin
-      if sl.IndexOf('Update.esm') = -1 then
-        sl.Insert(0, 'Update.esm');
-      if sl.IndexOf('Skyrim.esm') = -1 then
-        sl.Insert(0, 'Skyrim.esm');
-    end;
-
-    // PRINT LOAD ORDER TO LOG
-    for i := 0 to Pred(sl.Count) do
-      Logger.Write('LOAD', 'Order', '['+IntToHex(i, 2)+'] '+sl[i]);
-
-    // LOAD PLUGINS
-    for i := 0 to Pred(sl.Count) do begin
-      Tracker.Write('Loading '+sl[i]);
-      plugin := TPlugin.Create;
-      plugin.filename := sl[i];
-      plugin._File := wbFile(wbDataPath + sl[i], i);
-      plugin._File._AddRef;
-      plugin.GetData;
-      PluginsList.Add(Pointer(plugin));
-
-      // load hardcoded dat
-      if i = 0 then begin
-        aFile := wbFile(wbProgramPath + wbGameName + wbHardcodedDat, 0);
-        aFile._AddRef;
-      end;
-    end;
-
-    // LOAD MERGES, PLUGIN ERRORS
-    Tracker.Write('Loading Merges, Plugin Errors');
-    LoadMerges;
-    LoadPluginErrors;
-    UpdateMerges;
-    UpdatePluginsPopupMenu;
-
-    // FINALIZE
-    sl.Free;
-    PluginsListView.OwnerDraw := not settings.simplePluginsView;
-    PluginsListView.Items.Count := PluginsList.Count;
-    PluginsListView.Columns[1].AutoSize := true;
-    Sleep(250);
+    InitCallback := InitDone;
+    TInitThread.Create;
+    splash.ShowModal;
+  finally
     splash.Free;
-  except
-    on x: Exception do begin
-      bDontSave := true;
-      LogMessage('ERROR', 'Load', x.Message);
-    end;
   end;
+
+  // finalize
+  bCreated := true;
+end;
+
+procedure TMergeForm.InitDone;
+begin
+  splash.ModalResult := mrOk;
 end;
 
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
+  // GUI ICONS
+  //Tracker.Write('Loading Icons');
+  NewButton.Flat := true;
+  BuildButton.Flat := true;
+  ReportButton.Flat := true;
+  DictionaryButton.Flat := true;
+  OptionsButton.Flat := true;
+  UpdateButton.Flat := true;
+  HelpButton.Flat := true;
+  IconList.GetBitmap(0, NewButton.Glyph);
+  DoubleIconList.GetBitmap(0, BuildButton.Glyph);
+  IconList.GetBitmap(2, ReportButton.Glyph);
+  IconList.GetBitmap(3, DictionaryButton.Glyph);
+  IconList.GetBitmap(4, OptionsButton.Glyph);
+  IconList.GetBitmap(5, UpdateButton.Glyph);
+  IconList.GetBitmap(6, HelpButton.Glyph);
+
+  // STATUSBAR VALUES
+  StatusPanelLanguage.Caption := settings.language;
+  StatusPanelVersion.Caption := 'v'+ProgramVersion;
+
+  // UPDATE GUI
+  PluginsListView.OwnerDraw := not settings.simplePluginsView;
+  PluginsListView.Items.Count := PluginsList.Count;
+  UpdateLog;
+  UpdateMerges;
+  UpdatePluginsPopupMenu;
+
   // ATTEMPT TO CONNECT TO SERVER
   if (not bConnecting) and (not TCPClient.Connected) then
     ConnectToServer;
@@ -424,15 +341,16 @@ procedure TMergeForm.LoaderDone;
 begin
   SetTaskbarProgressState(tbpsNone);
   StatusPanelMessage.Caption := 'Background loader finished.';
+  xEditLogGroup := 'GENERAL';
   xEditLogLabel := 'xEdit';
   UpdateMerges;
   FlashWindow(Application.Handle, True);
 end;
 
 procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  ProgressForm: TProgressForm;
 begin
+  bClosing := true;
+
   // show progress form
   ProgressForm := TProgressForm.Create(Self);
   ProgressForm.PopupParent := Self;
@@ -481,20 +399,34 @@ begin
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
 end;
 
+procedure TMergeForm.ProgressDone;
+begin
+  // done checking for errors
+  ProgressForm.SaveLog;
+  ProgressForm.Visible := false;
+  ProgressForm.ShowModal;
+  ProgressForm.Free;
+  Enabled := true;
+
+  // clean up
+  UpdateMerges;
+  PluginsListView.Repaint;
+end;
+
 procedure TMergeForm.OnTimer(Sender: TObject);
 begin
-  if not (TCPClient.Connected or bConnecting) then
+  if not (TCPClient.Connected or bConnecting or bClosing) then
     ConnectToServer;
 end;
 
 procedure TMergeForm.OnRepaintTimer(Sender: TObject);
 begin
-  UpdateStatusPanel;
+  if not bClosing then UpdateStatusPanel;
 end;
 
 procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
 begin
-  if (not bConnecting) and (not ServerAvailable) then
+  if not (bConnecting or bClosing or ServerAvailable) then
     TCPClient.Disconnect;
 end;
 
@@ -1790,6 +1722,7 @@ begin
   end;
 
   // Show progress form
+  xEditLogGroup := 'MERGE';
   ProgressForm := TProgressForm.Create(Self);
   ProgressForm.PopupParent := Self;
   ProgressForm.SetTitle('Merging');
@@ -1831,6 +1764,7 @@ begin
   ProgressForm.Free;
 
   // update mpMergeForm
+  xEditLogGroup := 'GENERAL';
   UpdateMerges;
   UpdateMergeDetails;
   MergeListView.Repaint;
@@ -2023,6 +1957,7 @@ begin
   end;
 
   // make and show progress form
+  xEditLogGroup := 'MERGE';
   ProgressForm := TProgressForm.Create(Self);
   ProgressForm.PopupParent := Self;
   ProgressForm.SetTitle('Merging');
@@ -2068,6 +2003,7 @@ begin
   merges.Free;
 
   // update mpMergeForm
+  xEditLogGroup := 'GENERAL';
   UpdateMerges;
   UpdateMergeDetails;
   MergeListView.Repaint;

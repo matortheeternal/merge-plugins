@@ -89,7 +89,7 @@ end;
 procedure TProgressForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := (fsModal in FormState);
-  if not bProgressCancel then begin
+  if not (bProgressCancel or CanClose) then begin
     Tracker.Write('Cancelling...');
     bProgressCancel := true;
     SetTaskbarProgressState(tbpsError);
@@ -117,6 +117,7 @@ begin
   Height := 129;
   Tracker.OnLogEvent := ProgressMessage;
   Tracker.OnProgressEvent := UpdateProgress;
+  Tracker.OnSetEvent := SetProgress;
   startTime := 0;
 end;
 
