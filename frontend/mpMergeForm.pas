@@ -12,9 +12,9 @@ uses
   // third party libraries
   superobject, W7Taskbar,
   // mte components
-  mteHelpers, mpTracker, mpLogger,
+  mteHelpers, mteTracker, mteLogger, mteProgressForm,
   // mp units
-  mpFrontend, mpMerge, mpDictionaryForm, mpOptionsForm, mpProgressForm,
+  mpFrontend, mpThreads, mpMerge, mpDictionaryForm, mpOptionsForm,
   mpSplashForm, mpEditForm, mpGameForm, mpReportForm,
   // tes5edit units
   wbBSA, wbHelpers, wbInterface, wbImplementation;
@@ -104,7 +104,8 @@ type
     procedure InitDone;
     procedure FormShow(Sender: TObject);
     procedure LoaderDone;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure SaveDone;
     procedure ProgressDone;
     procedure OnTimer(Sender: TObject);
     procedure OnHeartbeatTimer(Sender: TObject);
@@ -175,7 +176,7 @@ type
     procedure SaveAndClearItemClick(Sender: TObject);
     // QUICKBAR BUTTON EVENTS
     procedure CreateMergeButtonClick(Sender: TObject);
-    procedure RebuildButtonClick(Sender: TObject);
+    procedure BuildButtonClick(Sender: TObject);
     procedure ReportButtonClick(Sender: TObject);
     procedure DictionaryButtonClick(Sender: TObject);
     procedure OptionsButtonClick(Sender: TObject);
@@ -195,7 +196,7 @@ var
   LastHint: string;
   LastURLTime: double;
   bMergesToBuild, bMergesToCheck, bAutoScroll, bCreated, bClosing: boolean;
-  ProgressForm: TProgressForm;
+  pForm: TProgressForm;
 
 implementation
 
@@ -347,49 +348,33 @@ begin
   FlashWindow(Application.Handle, True);
 end;
 
-procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TMergeForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  bClosing := true;
-
-  // show progress form
-  ProgressForm := TProgressForm.Create(Self);
-  ProgressForm.PopupParent := Self;
-  ProgressForm.SetTitle('Closing');
-  ProgressForm.Show;
-
-  // send statistics, then disconnect from the server
-  SendStatistics;
-  TCPClient.Disconnect;
-
-  // save ESPs only if it's safe to do so
-  if not bDontSave then begin
+  CanClose := bAllowClose;
+  if not bClosing then begin
+    bClosing := true;
     Enabled := false;
-    ProgressForm.ProgressBar.Max := PluginsList.Count + MergesList.Count + 2;
-    ProgressForm.DetailsButtonClick(nil);
-    // Save plugin errors
-    SavePluginErorrs;
-    ProgressForm.SetProgress(PluginsList.Count + 1);
-    Tracker.Write(' ');
-    // save merges
-    SaveMerges;
-    // finish up
-    ProgressForm.SetProgress(ProgressForm.ProgressBar.Max);
-    // ProgressForm.SaveLog;
-    Application.ProcessMessages;
-    Enabled := true;
+
+    // show progress form
+    pForm := TProgressForm.Create(Self);
+    pForm.LogPath := LogPath;
+    pForm.PopupParent := Self;
+    pForm.Caption := 'Closing';
+    pForm.MaxProgress(PluginsList.Count + MergesList.Count + 2);
+    pForm.Show;
+
+    // start save thread
+    SaveCallback := SaveDone;
+    TSaveThread.Create;
   end;
+end;
 
-  // save statistics and settings
-  SaveStatistics;
-  SaveSettings;
-
-  // delete temppath
-  if not settings.preserveTempPath then
-    DeleteDirectory(TempPath);
-  Action := caFree;
-
-  // free progress form
-  ProgressForm.Free;
+procedure TMergeForm.SaveDone;
+begin
+  // clean up pForm, close form
+  pForm.SetProgress(pForm.ProgressBar.Max);
+  pForm.SaveLog;
+  pForm.Free;
 
   // restart program if update applied
   if bInstallUpdate then
@@ -397,19 +382,33 @@ begin
   // restart program if game mode changed
   if bChangeGameMode then
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
+
+  // allow close and close
+  bAllowClose := true;
+  Close;
 end;
 
 procedure TMergeForm.ProgressDone;
 begin
-  // done checking for errors
-  ProgressForm.SaveLog;
-  ProgressForm.Visible := false;
-  ProgressForm.ShowModal;
-  ProgressForm.Free;
+  xEditLogGroup := 'GENERAL';
+  pForm.SaveLog;
+  pForm.Visible := false;
+  FlashWindow(Application.Handle, True);
+  pForm.ShowModal;
+  pForm.Free;
   Enabled := true;
+  ShowWindow(Application.Handle, SW_RESTORE);
+  SetForegroundWindow(Application.Handle);
 
-  // clean up
+  // free lists
+  if Assigned(timeCosts) then timeCosts.Free;
+  if Assigned(pluginsToCheck) then pluginsToCheck.Free;
+  if Assigned(mergesToBuild) then mergesToBuild.Free;
+
+  // update and repaint
   UpdateMerges;
+  UpdateMergeDetails;
+  MergeListView.Repaint;
   PluginsListView.Repaint;
 end;
 
@@ -891,19 +890,13 @@ end;
 
 procedure TMergeForm.CheckForErrorsClick(Sender: TObject);
 var
-  i: integer;
+  i, timeCost: integer;
   ListItem: TListItem;
   plugin: TPlugin;
-  ProgressForm: TProgressForm;
-  pluginsToCheck: TList;
 begin
+  // create lists
   pluginsToCheck := TList.Create;
-  ProgressForm := TProgressForm.Create(Self);
-  ProgressForm.PopupParent := Self;
-  Enabled := false;
-  ProgressForm.SetTitle('Checking for errors');
-  ProgressForm.Show;
-  ProgressForm.ProgressBar.Max := 0;
+  timeCosts := TList.Create;
 
   for i := 0 to Pred(PluginsListView.Items.Count) do begin
     ListItem := PluginsListView.Items[i];
@@ -913,32 +906,22 @@ begin
     // skip blacklisted plugins and plugins that have already been checked
     if (IS_BLACKLISTED in plugin.flags) or (plugin.errors.Count > 0) then
       continue;
-    ProgressForm.ProgressBar.Max := ProgressForm.ProgressBar.Max + StrToInt(plugin.numRecords);
+    timeCost := StrToInt(plugin.numRecords);
+    timeCosts.Add(Pointer(timeCost));
     pluginsToCheck.Add(plugin);
   end;
 
-  for i := 0 to Pred(pluginsToCheck.Count) do begin
-    if bProgressCancel then continue;
-    plugin := TPlugin(pluginsToCheck[i]);
-    Tracker.Write('Checking for errors in '+plugin.filename);
-    plugin.FindErrors;
-    if bProgressCancel then Tracker.Write('Check for errors canceled.');
-  end;
+  // prepare progress form
+  self.Enabled := false;
+  pForm := TProgressForm.Create(Self);
+  pForm.LogPath := LogPath;
+  pForm.PopupParent := Self;
+  pForm.Caption := 'Checking for errors';
+  pForm.Show;
 
-  // all done!
-  if not bProgressCancel then Tracker.Write('All done!');
-  ProgressForm.SaveLog;
-  ProgressForm.SetProgress(ProgressForm.ProgressBar.Max);
-  ProgressForm.Visible := false;
-  FlashWindow(Application.Handle, True);
-  ProgressForm.ShowModal;
-
-  // clean up
-  Enabled := true;
-  pluginsToCheck.Free;
-  ProgressForm.Free;
-  UpdateMerges;
-  PluginsListView.Repaint;
+  // start error check thread
+  ErrorCheckCallback := ProgressDone;
+  TErrorCheckThread.Create;
 end;
 
 { Remove from Merge }
@@ -1530,7 +1513,6 @@ var
   timeCost, i, j: Integer;
   plugin: TPlugin;
   merge: TMerge;
-  timeCosts, pluginsToCheck: TList;
 begin
   timeCosts := TList.Create;
   pluginsToCheck := TList.Create;
@@ -1563,38 +1545,15 @@ begin
   end;
 
   // Show progress form
-  ProgressForm := TProgressForm.Create(Self);
-  ProgressForm.PopupParent := Self;
-  ProgressForm.SetTitle('Checking for errors');
-  ProgressForm.Show;
-  Enabled := false;
-  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
-
-  // check merges for errors
-  for i := 0 to Pred(pluginsToCheck.Count) do begin
-    if bProgressCancel then continue;
-    plugin := TPlugin(pluginsToCheck[i]);
-    // check plugins for errors
-    Tracker.Write('Checking for errors in '+plugin.filename);
-    plugin.FindErrors;
-    ProgressForm.SetProgress(IntegerListSum(timeCosts, i));
-  end;
-
-  // all done
-  if not bProgressCancel then Tracker.Write('All done!');
-  ProgressForm.SaveLog;
-  ProgressForm.SetProgress(ProgressForm.ProgressBar.Max);
-  ProgressForm.Visible := false;
-  FlashWindow(Application.Handle, True);
-  ProgressForm.ShowModal;
-
-  // clean up
-  Enabled := true;
-  ProgressForm.Free;
-  timeCosts.Free;
-  pluginsToCheck.Free;
-  UpdateMerges;
-  PluginsListView.Repaint;
+  pForm := TProgressForm.Create(Self);
+  pForm.LogPath := LogPath;
+  pForm.PopupParent := Self;
+  pForm.Caption := 'Checking for errors';
+  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
+  pForm.Show;
+  //Enabled := false;
+  ErrorCheckCallback := ProgressDone;
+  TErrorCheckThread.Create;
 end;
 
 { Remove unloaded plugins and plugins with errors }
@@ -1694,10 +1653,9 @@ procedure TMergeForm.BuildMergeItemClick(Sender: TObject);
 var
   timeCost, i: Integer;
   merge: TMerge;
-  timeCosts, merges: TList;
 begin
   timeCosts := TList.Create;
-  merges := TList.Create;
+  mergesToBuild := TList.Create;
 
   // get timecosts
   for i := 0 to Pred(MergeListView.Items.Count) do begin
@@ -1711,63 +1669,27 @@ begin
     Logger.Write('MERGE', 'Build', 'Building '+merge.name);
     timeCost := merge.GetTimeCost * 2;
     timeCosts.Add(Pointer(timeCost));
-    merges.Add(merge);
+    mergesToBuild.Add(merge);
   end;
 
   // free and exit if no merges to check for errors
-  if merges.Count = 0 then begin
+  if mergesToBuild.Count = 0 then begin
     timeCosts.Free;
-    merges.Free;
+    mergesToBuild.Free;
     exit;
   end;
 
   // Show progress form
+  self.Enabled := false;
   xEditLogGroup := 'MERGE';
-  ProgressForm := TProgressForm.Create(Self);
-  ProgressForm.PopupParent := Self;
-  ProgressForm.SetTitle('Merging');
-  ProgressForm.Show;
-  Enabled := false;
-  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
-  Application.ProcessMessages;
-
-  // build merges
-  for i := 0 to Pred(merges.Count) do begin
-    if bProgressCancel then continue;
-    merge := TMerge(merges[i]);
-    try
-      if (merge.status in RebuildStatuses) then
-        RebuildMerge(merge)
-      else
-        BuildMerge(merge);
-    except
-      on x : Exception do begin
-        merge.status := 11;
-        Tracker.Write('Exception: '+x.Message);
-      end;
-    end;
-    Tracker.Write(' '#13#10);
-    ProgressForm.SetProgress(IntegerListSum(timeCosts, i));
-    if bProgressCancel then Tracker.Write('Merging canceled.');
-  end;
-
-  // display progress form after merging
-  ProgressForm.SaveLog;
-  ProgressForm.SetProgress(ProgressForm.ProgressBar.Max);
-  ProgressForm.DetailsButtonClick(nil);
-  ProgressForm.Visible := false;
-  FlashWindow(Application.Handle, True);
-  ProgressForm.ShowModal;
-
-  // free memory
-  Enabled := true;
-  ProgressForm.Free;
-
-  // update mpMergeForm
-  xEditLogGroup := 'GENERAL';
-  UpdateMerges;
-  UpdateMergeDetails;
-  MergeListView.Repaint;
+  pForm := TProgressForm.Create(Self);
+  pForm.LogPath := LogPath;
+  pForm.PopupParent := Self;
+  pForm.Caption := 'Merging';
+  pForm.Show;
+  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
+  MergeCallback := ProgressDone;
+  TMergeThread.Create;
 end;
 
 procedure TMergeForm.ReportOnMergeItemClick(Sender: TObject);
@@ -1921,30 +1843,33 @@ begin
   NewMerge;
 end;
 
-procedure TMergeForm.RebuildButtonClick(Sender: TObject);
+procedure TMergeForm.BuildButtonClick(Sender: TObject);
 var
   i, timeCost: integer;
   merge: TMerge;
-  ProgressForm: TProgressForm;
-  timeCosts, merges: TList;
 begin
+  // exit if the loader isn't done
   if not bLoaderDone then begin
-    Logger.Write('ERROR', 'Merge', 'Loader not done!  Can''t merge yet!');
+    Logger.Write('ERROR', 'Merge', 'Loader not done, can''t merge yet!');
     exit;
   end;
-  if MergesList.Count = 0 then
-    exit;
 
-  // calculate time costs
+  // exit if there are no merges
+  if MergesList.Count = 0 then begin
+    Logger.Write('ERROR', 'Merge', 'There are no merges!');
+    exit;
+  end;
+
+  // calculate time costs, prepare merges
   timeCosts := TList.Create;
-  merges := TList.Create;
+  mergesToBuild := TList.Create;
   for i := 0 to Pred(MergesList.Count) do begin
     merge := TMerge(MergesList[i]);
     Logger.Write('MERGE', 'Build', 'Building '+merge.name);
     if not (merge.status in BuildStatuses) then
       continue;
     timeCost := merge.GetTimeCost * 2;
-    merges.Add(merge);
+    mergesToBuild.Add(merge);
     timeCosts.Add(Pointer(timeCost));
   end;
 
@@ -1952,62 +1877,23 @@ begin
   if timeCosts.Count = 0 then begin
     Logger.Write('ERROR', 'Merge', 'No merges to build!');
     timeCosts.Free;
-    merges.Free;
+    mergesToBuild.Free;
     exit;
   end;
 
   // make and show progress form
+  self.Enabled := false;
   xEditLogGroup := 'MERGE';
-  ProgressForm := TProgressForm.Create(Self);
-  ProgressForm.PopupParent := Self;
-  ProgressForm.SetTitle('Merging');
-  ProgressForm.Show;
-  Enabled := false;
-  ProgressForm.ProgressBar.Max := IntegerListSum(timeCosts, Pred(timeCosts.Count));
-  Application.ProcessMessages;
+  pForm := TProgressForm.Create(Self);
+  pForm.LogPath := LogPath;
+  pForm.PopupParent := Self;
+  pForm.Caption := 'Merging';
+  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
+  pForm.Show;
 
-  // rebuild merges
-  for i := 0 to Pred(merges.count) do begin
-    if bProgressCancel then continue;
-    merge := merges[i];
-    if not (merge.status in BuildStatuses) then
-      continue;
-    try
-      if merge.status = 7 then
-        BuildMerge(merge)
-      else
-        RebuildMerge(merge);
-    except
-      on x : Exception do begin
-        merge.status := 11;
-        Tracker.Write('Exception: '+x.Message);
-      end;
-    end;
-    Tracker.Write(' '#13#10);
-    ProgressForm.SetProgress(IntegerListSum(timeCosts, i));
-    if bProgressCancel then Tracker.Write('Merging canceled.');
-  end;
-
-  // display progress form after merging
-  ProgressForm.SaveLog;
-  ProgressForm.DetailsButtonClick(nil);
-  ProgressForm.SetProgress(ProgressForm.ProgressBar.Max);
-  ProgressForm.Visible := false;
-  FlashWindow(Application.Handle, True);
-  ProgressForm.ShowModal;
-
-  // free memory
-  Enabled := true;
-  ProgressForm.Free;
-  timeCosts.Free;
-  merges.Free;
-
-  // update mpMergeForm
-  xEditLogGroup := 'GENERAL';
-  UpdateMerges;
-  UpdateMergeDetails;
-  MergeListView.Repaint;
-  //PluginsListView.Items.Count := PluginsList.Count;
+  // start merge thread
+  MergeCallback := ProgressDone;
+  TMergeThread.Create;
 end;
 
 { Submit report }

@@ -1,4 +1,4 @@
-unit mpTracker;
+unit mteTracker;
 
 interface
 
@@ -15,6 +15,7 @@ type
     FSetEvent : TSetEvent;
     FLogEvent : TLogEvent;
   public
+    Cancel: boolean;
     procedure SetProgress(const i: integer);
     property OnSetEvent: TSetEvent read FSetEvent write FSetEvent;
     procedure UpdateProgress(const i: integer);
@@ -24,7 +25,7 @@ type
   end;
 
 var
-  Tracker : TProgressTracker;
+  Tracker: TProgressTracker;
 
 implementation
 

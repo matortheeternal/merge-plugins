@@ -11,23 +11,13 @@ uses
   // abbrevia components
   AbZBrows, AbUnZper, AbArcTyp, AbMeter, AbBrowse, AbBase,
   // mte components
-  CRC32, mpLogger, mpTracker, mteHelpers, RttiIni, RttiJson,
-  // xEdit components
-  wbBSA, wbHelpers, wbInterface, wbImplementation,
+  CRC32, mteLogger, mteTracker, mteHelpers, RttiIni, RttiJson,
+  // xedit components
+  wbHelpers, wbInterface, wbImplementation,
   wbDefinitionsFNV, wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4,
   wbDefinitionsTES5;
 
 type
-  // THREADS AND CALLBACKS
-  TCallback = procedure of object;
-  TInitThread = class(TThread)
-  protected
-    procedure Execute; override;
-  end;
-  TLoaderThread = class(TThread)
-  protected
-    procedure Execute; override;
-  end;
   // LOGGING
   TFilter = class(TObject)
   public
@@ -295,6 +285,7 @@ type
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
   procedure SaveReports(var lst: TList; path: string);
+  procedure DeleteTempPath;
   { Plugin and merge methods }
   function PluginLoadOrder(filename: string): integer;
   function PluginByFilename(filename: string): TPlugin;
@@ -394,18 +385,17 @@ const
 
 var
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
-  LabelFilters, GroupFilters: TList;
+  LabelFilters, GroupFilters, timeCosts, pluginsToCheck, mergesToBuild: TList;
   settings: TSettings;
   statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
-  bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bProgressCancel, 
-  bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
-  bConnecting, bUpdateMergeStatus, bChangeMergeProfile: boolean;
+  bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bAuthorized,
+  bProgramUpdate, bDictionaryUpdate, bInstallUpdate, bConnecting,
+  bUpdateMergeStatus, bChangeMergeProfile, bAllowClose: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
   ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath: string;
   ActiveMods: TStringList;
-  LoaderCallback, InitCallback, ProgressCallback: TCallback;
   TCPClient: TidTCPClient;
   LastStatusTime: TDateTime;
   GameMode: TGameMode;
@@ -874,7 +864,7 @@ var
   Container: IwbContainerElementRef;
   i: Integer;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   if Supports(aElement, IwbMainRecord) then
     Tracker.UpdateProgress(1);
 
@@ -903,7 +893,7 @@ var
   Container: IwbContainerElementRef;
   i: Integer;
 begin
-  if bProgressCancel then begin
+  if Tracker.Cancel then begin
     Result := false;
     exit;
   end;
@@ -1555,6 +1545,11 @@ begin
     report.dateSubmitted := Now;
     report.Save(path+ChangeFileExt(report.filename, '.txt'));
   end;
+end;
+
+procedure DeleteTempPath;
+begin
+  DeleteDirectory(TempPath);
 end;
 
 
@@ -2351,189 +2346,6 @@ end;
 
 
 {******************************************************************************}
-{ THREAD METHODS
-  These are threads that the program will run for various large jobs which need
-  to be decoupled from general program operation and the GUI.
-
-  List of methods:
-  - TInitThread.Execute
-  - LoaderProgress
-  - TLoaderThread.Execute
-  - TErrorCheckThread.Execute
-  - TMergeThread.Execute
-  - TSaveThread.Execute
-}
-{******************************************************************************}
-
-{ TInitThread}
-procedure TInitThread.Execute;
-var
-  wbPluginsFileName: string;
-  sl: TStringList;
-  i: integer;
-  plugin: TPlugin;
-  aFile: IwbFile;
-begin
-  try
-    // INITIALIZE VARIABLES
-    ProgramVersion := GetVersionMem;
-    ProgramPath := ExtractFilePath(ParamStr(0));
-    TempPath := ProgramPath + 'temp\';
-    LogPath := ProgramPath + 'logs\';
-    ForceDirectories(TempPath);
-    ForceDirectories(LogPath);
-    MergesList := TList.Create;
-    PluginsList := TList.Create;
-    bLoaderDone := false;
-    LastStatusTime := 0;
-    Status := TmpStatus.Create;
-
-    // INITIALIZE CLIENT
-    InitializeClient;
-
-    // INITIALIZE TES5EDIT API
-    wbDisplayLoadOrderFormID := True;
-    wbSortSubRecords := True;
-    wbDisplayShorterNames := True;
-    wbHideUnused := True;
-    wbFlagsAsArray := True;
-    wbRequireLoadOrder := True;
-    wbLanguage := 'English';
-    wbEditAllowed := True;
-    handler := wbCreateContainerHandler;
-    handler._AddRef;
-
-    // SET GAME VARS
-    if settings.selectedGame = 0 then
-      if settings.defaultGame <> 0 then
-        settings.selectedGame := settings.defaultGame
-      else
-        raise Exception.Create('Invalid game selection!');
-    SetGame(settings.selectedGame);
-    wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
-    Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
-    Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
-
-    // INITIALIZE SETTINGS FOR GAME
-    LoadSettings;
-    if settings.usingMO then
-      ModOrganizerInit;
-
-    // INITIALIZE DICTIONARY
-    dictionaryFilename := wbAppName+'Dictionary.txt';
-    Logger.Write('GENERAL', 'Dictionary', 'Using '+dictionaryFilename);
-    LoadDictionary;
-
-    // INITIALIZE TES5EDIT DEFINITIONS
-    Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
-    LoadDefinitions;
-
-    // PREPARE TO LOAD PLUGINS
-    if settings.usingMO then
-      wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveProfile+'\plugins.txt'
-    else
-      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
-    Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
-    sl := TStringList.Create;
-    sl.LoadFromFile(wbPluginsFileName);
-    RemoveCommentsAndEmpty(sl);
-    RemoveMissingFiles(sl);
-    // if GameMode is not Skyrim sort by date modified
-    // else add Update.esm and Skyrim.esm to load order
-    if wbGameMode <> gmTES5 then begin
-      GetPluginDates(sl);
-      sl.CustomSort(PluginListCompare);
-    end
-    else begin
-      if sl.IndexOf('Update.esm') = -1 then
-        sl.Insert(0, 'Update.esm');
-      if sl.IndexOf('Skyrim.esm') = -1 then
-        sl.Insert(0, 'Skyrim.esm');
-    end;
-
-    // PRINT LOAD ORDER TO LOG
-    for i := 0 to Pred(sl.Count) do
-      Logger.Write('LOAD', 'Order', '['+IntToHex(i, 2)+'] '+sl[i]);
-
-    // LOAD PLUGINS
-    for i := 0 to Pred(sl.Count) do begin
-      Tracker.Write('Loading '+sl[i]);
-      plugin := TPlugin.Create;
-      plugin.filename := sl[i];
-      plugin._File := wbFile(wbDataPath + sl[i], i);
-      plugin._File._AddRef;
-      plugin.GetData;
-      PluginsList.Add(Pointer(plugin));
-
-      // load hardcoded dat
-      if i = 0 then begin
-        aFile := wbFile(wbProgramPath + wbGameName + wbHardcodedDat, 0);
-        aFile._AddRef;
-      end;
-    end;
-
-    // LOAD MERGES, PLUGIN ERRORS
-    Tracker.Write('Loading Merges, Plugin Errors');
-    LoadMerges;
-    LoadPluginErrors;
-
-    // CLEAN UP
-    sl.Free;
-  except
-    on x: Exception do begin
-      bDontSave := true;
-      Logger.Write('ERROR', 'Load', x.Message);
-    end;
-  end;
-
-  if Assigned(InitCallback) then
-    InitCallback;
-end;
-
-{ TLoaderThread }
-procedure LoaderProgress(const s: string);
-begin
-  if s <> '' then
-    Logger.Write('LOAD', 'Background', s);
-  if bForceTerminate then
-    Abort;
-end;
-
-procedure TLoaderThread.Execute;
-var
-  i: Integer;
-  f: IwbFile;
-  plugin: TPlugin;
-begin
-  wbStartTime := Now;
-  try
-    for i := 0 to Pred(PluginsList.Count) do begin
-      plugin := TPlugin(PluginsList[i]);
-      f := plugin._File;
-      if SameText(plugin.filename, wbGameName + '.esm') then
-        continue;
-      LoaderProgress('[' + plugin.filename + '] Building reference info.');
-      f.BuildRef;
-      if bForceTerminate then begin
-        LoaderProgress('Aborted.');
-        break;
-      end;
-    end;
-  except
-    on E: Exception do begin
-      LoaderProgress('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
-      wbLoaderError := true;
-      bDontSave := true;
-    end;
-  end;
-  bLoaderDone := true;
-  LoaderProgress('finished');
-  if Assigned(LoaderCallback) then
-    LoaderCallback;
-end;
-
-
-{******************************************************************************}
 { Object methods
   Set of methods for objects.
 
@@ -2783,7 +2595,7 @@ begin
   CheckForErrors(2, _File as IwbElement, errors);
   //CheckForErrorsLinear(_File as IwbElement, _File.Records[_File.RecordCount - 1], errors);
 
-  if bProgressCancel then
+  if Tracker.Cancel then
     exit;
   if (errors.Count = 0) then
     errors.Add('None.');

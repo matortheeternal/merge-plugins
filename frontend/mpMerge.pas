@@ -5,7 +5,7 @@ interface
 uses
   Windows, SysUtils, Classes, ShellAPI,
   // mte units
-  mteHelpers, mpLogger, mpTracker,
+  mteHelpers, mteLogger, mteTracker,
   // mp units
   mpFrontend,
   // xEdit units
@@ -114,7 +114,7 @@ var
   BaseFormID, NewFormID: cardinal;
   header: IwbContainer;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   // inital messages
   renumberAll := merge.renumbering = 'All';
   Tracker.Write(' ');
@@ -131,7 +131,7 @@ begin
 
   // renumber records in all pluginsToMerge
   for i := 0 to Pred(pluginsToMerge.Count) do begin
-    if bProgressCancel then exit;
+    if Tracker.Cancel then exit;
     plugin := pluginsToMerge[i];
     aFile := plugin._File;
     fileTotal := 0;
@@ -146,7 +146,7 @@ begin
 
     // renumber records in file
     for j := Pred(rc) downto 0 do begin
-      if bProgressCancel then exit;
+      if Tracker.Cancel then exit;
       aRecord := Records[j];
       // skip record headers and overrides
       if aRecord.Signature = 'TES4' then continue;
@@ -205,7 +205,7 @@ var
   info: TSearchRec;
   srcFile, dstFile: string;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
 
   // exit if the srcPath doesn't exist
   if not DirectoryExists(srcPath) then begin
@@ -238,7 +238,7 @@ var
   total: integer;
   importPath, compileCommand, formatString: string;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
 
   // exit if no compiler is available
   if not FileExists(settings.compilerPath) then begin
@@ -294,7 +294,7 @@ var
   index, total: Integer;
   sl: TStringList;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
 
   // exit if the srcPath doesn't exist
   if not DirectoryExists(srcPath) then begin
@@ -351,7 +351,7 @@ var
   total: Integer;
   decompileCommand, formatString: string;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
 
   // exit if no decompiler is available
   if not FileExists(settings.decompilerPath) then begin
@@ -666,7 +666,7 @@ var
   plugin: TPlugin;
   asNew, isNew: boolean;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
 
   Tracker.Write(' ');
   Tracker.Write('Copying records');
@@ -674,13 +674,13 @@ begin
   asNew := merge.method = 'New Records';
   // copy records from all plugins to be merged
   for i := Pred(pluginsToMerge.Count) downto 0 do begin
-    if bProgressCancel then exit;
+    if Tracker.Cancel then exit;
     plugin := TPlugin(pluginsToMerge[i]);
     aFile := plugin._File;
     // copy records from file
     Tracker.Write('  Copying records from '+plugin.filename);
     for j := 0 to Pred(aFile.RecordCount) do begin
-      if bProgressCancel then exit;
+      if Tracker.Cancel then exit;
       aRecord := aFile.Records[j];
       if aRecord.Signature = 'TES4' then Continue;
       // copy record
@@ -752,7 +752,7 @@ var
   oldForm, newForm, dstFile, srcFile: string;
   index: integer;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   srcPath := srcPath + plugin.filename + '\';
   dstPath := dstPath + merge.filename + '\';
   ForceDirectories(dstPath);
@@ -791,7 +791,7 @@ var
   oldForm, newForm, dstFile, srcFile: string;
   index: integer;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   srcPath := srcPath + plugin.filename + '\';
   dstPath := dstPath + merge.filename + '\';
   // if no folders in srcPath, exit
@@ -843,7 +843,7 @@ var
   index: integer;
   sl: TStringList;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   fn := Lowercase(ChangeFileExt(plugin.filename, ''));
   if FindFirst(srcPath+'*.txt', faAnyFile, info) <> 0 then
     exit;
@@ -873,7 +873,7 @@ var
   i: integer;
   output, path: string;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   // exit if we have no translation files to save
   if languages.Count = 0 then exit;
 
@@ -895,7 +895,7 @@ var
   fn: string;
   PluginIni: TStringList;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   // exit if ini doesn't exist
   fn := plugin.dataPath + ChangeFileExt(plugin.filename, '.ini');
   if not FileExists(fn) then exit;
@@ -910,7 +910,7 @@ end;
 
 procedure SaveIni(var merge: TMerge);
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   // exit if we have no ini to save
   if MergeIni.Count = 0 then exit;
   merge.files.Add(merge.name+'\'+ChangeFileExt(merge.filename, '.ini'));
@@ -929,7 +929,7 @@ var
   srcPath, dstPath: string;
   fileIgnore, dirIgnore, filesList: TStringList;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   // remove path delim for robocopy to work correctly
   srcPath := RemoveFromEnd(plugin.dataPath, PathDelim);
   dstPath := RemoveFromEnd(merge.dataPath, PathDelim);
@@ -981,7 +981,7 @@ procedure CopyAssets(var plugin: TPlugin; var merge: TMerge);
 var
   bsaFilename: string;
 begin
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   // get plugin data path
   plugin.GetDataPath;
   //Tracker.Write('  dataPath: '+plugin.dataPath);
@@ -1007,7 +1007,7 @@ begin
   end;
 
   // handleVoiceAssets
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   if settings.handleVoiceAssets and (HAS_VOICEDATA in plugin.flags) then begin
     // if BSA exists, extract voice assets from it to temp path and copy
     if HAS_BSA in plugin.flags then begin
@@ -1032,12 +1032,12 @@ begin
   end;
 
   // handleINI
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   if settings.handleINIs and (HAS_INI in plugin.flags) then
     CopyIni(plugin, merge, plugin.dataPath);
 
   // handleScriptFragments
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then begin
     // if BSA exists, extract scripts from it to temp path and copy
     //Tracker.Write('    Copying script fragments for '+plugin.filename);
@@ -1054,7 +1054,7 @@ begin
   end;
 
   // copyGeneralAssets
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   if settings.copyGeneralAssets then
     CopyGeneralAssets(plugin, merge);
 end;
@@ -1251,7 +1251,7 @@ begin
     // nothing
   end;
   slMasters.Free;
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
   Tracker.Write('Done adding masters');
 
   try
@@ -1362,7 +1362,7 @@ begin
   end;
 
   // batch copy assets
-  if settings.batCopy and (batchCopy.Count > 0) and (not bProgressCancel) then begin
+  if settings.batCopy and (batchCopy.Count > 0) and (not Tracker.Cancel) then begin
     bfn := mergeFilePrefix + '-Copy.bat';
     batchCopy.SaveToFile(bfn);
     batchCopy.Clear;
@@ -1419,7 +1419,7 @@ begin
       plugin._File.BuildRef;
     end;
   end;
-  if bProgressCancel then exit;
+  if Tracker.Cancel then exit;
 
   // update merge plugin hashes
   merge.UpdateHashes;

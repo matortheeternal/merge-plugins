@@ -2,8 +2,8 @@ object ProgressForm: TProgressForm
   Left = 0
   Top = 0
   Caption = 'Progress'
-  ClientHeight = 315
-  ClientWidth = 670
+  ClientHeight = 342
+  ClientWidth = 624
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,53 +11,50 @@ object ProgressForm: TProgressForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poMainFormCenter
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  DesignSize = (
-    670
-    315)
   PixelsPerInch = 96
   TextHeight = 13
   object ProgressLabel: TLabel
     Left = 8
     Top = 8
-    Width = 42
+    Width = 608
     Height = 13
-    Caption = 'Progress'
+    Align = alCustom
+    Anchors = [akLeft, akTop, akRight]
+    AutoSize = False
+    Caption = 'Progress message'
   end
-  object LogMemo: TMemo
+  object DetailsMemo: TMemo
     Left = 8
     Top = 58
-    Width = 654
-    Height = 249
+    Width = 608
+    Height = 245
+    Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    ReadOnly = True
-    ScrollBars = ssBoth
-    TabOrder = 2
-    Visible = False
-    WordWrap = False
+    ScrollBars = ssVertical
+    TabOrder = 0
+  end
+  object DetailsButton: TButton
+    Left = 525
+    Top = 309
+    Width = 91
+    Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
+    Caption = 'Hide details'
+    TabOrder = 1
+    OnClick = ToggleDetails
   end
   object ProgressBar: TProgressBar
     Left = 8
     Top = 27
-    Width = 654
+    Width = 608
     Height = 25
+    Align = alCustom
     Anchors = [akLeft, akTop, akRight]
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    TabOrder = 0
-  end
-  object DetailsButton: TButton
-    Left = 8
-    Top = 58
-    Width = 105
-    Height = 25
-    Caption = 'Show Details'
-    TabOrder = 1
-    OnClick = DetailsButtonClick
+    TabOrder = 2
   end
 end

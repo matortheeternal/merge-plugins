@@ -20,7 +20,7 @@ interface
 
 uses
   Classes, SysUtils, IOUtils,
-  wbInterface, mpLogger;
+  wbInterface;
 
 function wbCreateContainerHandler: IwbContainerHandler;
 

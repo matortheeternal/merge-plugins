@@ -13,7 +13,7 @@ uses
   // superobject
   superobject,
   // mte components
-  CRC32, RttiIni, mteHelpers, mpLogger, mpTracker;
+  CRC32, RttiIni, mteHelpers, mteLogger, mteTracker;
 
 type
   TTaskProcedures = class
@@ -277,7 +277,7 @@ var
   settings: TSettings;
   status: TmpStatus;
   LogPath, ProgramPath, ProgramVersion: string;
-  bLoginSuccess, bProgressCancel, bRebuildTES5, bRebuildTES4, bRebuildFNV,
+  bLoginSuccess, bRebuildTES5, bRebuildTES4, bRebuildFNV,
   bRebuildFO3, bApprovedAscending, bUnapprovedAscending: boolean;
   wbStartTime: TDateTime;
   sessionBandwidth: Int64;

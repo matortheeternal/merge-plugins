@@ -24,11 +24,11 @@ uses
   mpMerge in 'mpMerge.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
-  mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpGameForm in 'mpGameForm.pas' {GameForm},
-  mpReportForm in 'mpReportForm.pas' {Form1};
+  mpReportForm in 'mpReportForm.pas' {Form1},
+  mpThreads in 'mpThreads.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -69,7 +69,6 @@ begin
   Inc(sessionStatistics.timesRun);
   Application.Title := 'Merge Plugins';
   Application.CreateForm(TMergeForm, MergeForm);
-  Application.CreateForm(TProgressForm, ProgressForm);
   Application.CreateForm(TDictionaryForm, DictionaryForm);
   Application.CreateForm(TEditForm, EditForm);
   Application.CreateForm(TGameForm, GameForm);
