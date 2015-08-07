@@ -6,18 +6,20 @@ uses Classes, SysUtils;
 
 type
   TUpdateEvent = procedure(const i: integer) of object;
-  TSetEvent = procedure(const i: integer) of object;
   TLogEvent = procedure(const s: string) of object;
 
   TProgressTracker = class
   private
     FUpdateEvent : TUpdateEvent;
-    FSetEvent : TSetEvent;
+    FSetEvent : TUpdateEvent;
+    FMaxEvent : TUpdateEvent;
     FLogEvent : TLogEvent;
   public
     Cancel: boolean;
+    procedure SetMax(const i: integer);
+    property OnMaxEvent: TUpdateEvent read FMaxEvent write FMaxEvent;
     procedure SetProgress(const i: integer);
-    property OnSetEvent: TSetEvent read FSetEvent write FSetEvent;
+    property OnSetEvent: TUpdateEvent read FSetEvent write FSetEvent;
     procedure UpdateProgress(const i: integer);
     property OnProgressEvent: TUpdateEvent read FUpdateEvent write FUpdateEvent;
     procedure Write(const s: string);
@@ -29,6 +31,12 @@ var
 
 implementation
 
+
+procedure TProgressTracker.SetMax(const i: Integer);
+begin
+  if Assigned(FMaxEvent) then
+    FMaxEvent(i);
+end;
 
 procedure TProgressTracker.SetProgress(const i: integer);
 begin

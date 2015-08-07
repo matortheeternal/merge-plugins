@@ -57,6 +57,7 @@ end;
 procedure TProgressForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SetTaskbarProgressState(tbpsNone);
+  Tracker.OnMaxEvent := nil;
   Tracker.OnProgressEvent := nil;
   Tracker.OnLogEvent := nil;
   Tracker.OnSetEvent := nil;
@@ -78,6 +79,7 @@ begin
   lastHeight := 380;
   SetTaskbarProgressState(tbpsNormal);
   bDetailsVisible := true;
+  Tracker.OnMaxEvent := MaxProgress;
   Tracker.OnProgressEvent := UpdateProgress;
   Tracker.OnLogEvent := Write;
   Tracker.OnSetEvent := SetProgress;

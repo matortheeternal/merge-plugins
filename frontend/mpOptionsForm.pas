@@ -480,8 +480,8 @@ var
   defaultGame: TGameMode;
 begin
   // get status update if we can
-  GetStatus;
-  CompareStatuses;
+  if GetStatus then
+    CompareStatuses;
 
   // General > Language
   cbLanguage.Text := settings.language;

@@ -168,7 +168,7 @@ begin
     // LOAD MERGES, PLUGIN ERRORS
     Tracker.Write('Loading Merges, Plugin Errors');
     LoadMerges;
-    LoadPluginErrors;
+    LoadPluginInfo;
 
     // CLEAN UP
     sl.Free;
@@ -294,7 +294,7 @@ begin
   // save ESPs only if it's safe to do so
   if not bDontSave then begin
     // Save plugin errors
-    SavePluginErorrs;
+    SavePluginInfo;
     Tracker.SetProgress(PluginsList.Count + 1);
     Tracker.Write(' ');
     // save merges

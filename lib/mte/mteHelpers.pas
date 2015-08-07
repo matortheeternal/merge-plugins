@@ -17,7 +17,7 @@ uses
   function AppendIfMissing(str, substr: string): string;
   function StrEndsWith(s1, s2: string): boolean;
   function RemoveFromEnd(s1, s2: string): string;
-  function IntegerListSum(list: TList; maxIndex: integer): integer;
+  function IntegerListSum(list: TStringList; maxIndex: integer): integer;
   function Wordwrap(s: string; charCount: integer): string;
   function ExtractPath(path: string; levels: integer): string;
   function ContainsMatch(var sl: TStringList; const s: string): boolean;
@@ -190,14 +190,14 @@ begin
     Result := Copy(s1, 1, Length(s1) - Length(s2));
 end;
 
-{ Calculates the integer sum of all values in a TList to maxIndex }
-function IntegerListSum(list: TList; maxIndex: integer): integer;
+{ Calculates the integer sum of all values in a TStringList to maxIndex }
+function IntegerListSum(list: TStringList; maxIndex: integer): integer;
 var
   i: Integer;
 begin
   Result := 0;
   for i := 0 to maxIndex do
-    Inc(result, Integer(list[i]));
+    Inc(result, StrToInt(list[i]));
 end;
 
 { Inserts line breaks in string @s before @charCount has been exceeded }

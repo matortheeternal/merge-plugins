@@ -96,8 +96,9 @@ type
     color: integer;
     desc: string[64];
   end;
-  TPluginFlagID = (IS_BLACKLISTED, HAS_ERRORS, NO_ERRORS, HAS_BSA,
-    HAS_FACEDATA, HAS_VOICEDATA, HAS_TRANSLATION, HAS_INI, HAS_FRAGMENTS );
+  TPluginFlagID = (IS_BLACKLISTED, HAS_ERRORS, ERRORS_IGNORED, NO_ERRORS,
+    HAS_BSA, HAS_FACEDATA, HAS_VOICEDATA, HAS_TRANSLATION, HAS_INI,
+    HAS_FRAGMENTS, DISALLOW_MERGING );
   TPluginFlags = set of TPluginFlagID;
   TPluginFlag = Record
     id: integer;
@@ -123,6 +124,8 @@ type
     masters: TStringList;
     errors: TStringList;
     reports: TStringList;
+    bIgnoreErrors: boolean;
+    bDisallowMerging: boolean;
     constructor Create; virtual;
     procedure GetData;
     procedure UpdateData;
@@ -132,8 +135,12 @@ type
     function GetFlagsDescription: string;
     procedure GetDataPath;
     procedure FindErrors;
-    procedure LoadErrorDump(obj: ISuperObject);
-    function ErrorDump: ISuperObject;
+    function HasBeenCheckedForErrors: boolean;
+    function HasErrors: boolean;
+    function CanBeMerged: boolean;
+    function IsInMerge: boolean;
+    procedure LoadInfoDump(obj: ISuperObject);
+    function InfoDump: ISuperObject;
   end;
   TMerge = class(TObject)
   public
@@ -159,6 +166,7 @@ type
     procedure GetStatus;
     procedure GetLoadOrders;
     procedure SortPlugins;
+    procedure Remove(plugin: TPlugin);
     function PluginsModified: boolean;
     function FilesExist: boolean;
     function GetStatusColor: integer;
@@ -296,8 +304,8 @@ type
   procedure UpdatePluginData;
   procedure SaveMerges;
   procedure LoadMerges;
-  procedure SavePluginErorrs;
-  procedure LoadPluginErrors;
+  procedure SavePluginInfo;
+  procedure LoadPluginInfo;
   function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
   { Client methods }
   procedure InitializeClient;
@@ -335,16 +343,18 @@ const
   MSG_REPORT = 7;
 
   // PLUGIN FLAGS
-  FlagsArray: array[0..8] of TPluginFlag = (
+  FlagsArray: array[0..10] of TPluginFlag = (
     ( id: 0; char: 'X'; desc: 'Is blacklisted'; ),
     ( id: 1; char: 'E'; desc: 'Has errors'; ),
-    ( id: 2; char: 'N'; desc: 'Has no errors'; ),
-    ( id: 3; char: 'A'; desc: 'Has a BSA file'; ),
-    ( id: 4; char: 'G'; desc: 'Has FaceGenData'; ),
-    ( id: 5; char: 'V'; desc: 'Has Voice Data'; ),
-    ( id: 6; char: 'T'; desc: 'Has MCM Translations'; ),
-    ( id: 7; char: 'I'; desc: 'Has an INI file'; ),
-    ( id: 8; char: 'F'; desc: 'Has Script fragments'; )
+    ( id: 2; char: 'R'; desc: 'Errors ignored'; ),
+    ( id: 3; char: 'N'; desc: 'Has no errors'; ),
+    ( id: 4; char: 'A'; desc: 'Has a BSA file'; ),
+    ( id: 5; char: 'G'; desc: 'Has FaceGenData'; ),
+    ( id: 6; char: 'V'; desc: 'Has Voice Data'; ),
+    ( id: 7; char: 'T'; desc: 'Has MCM Translations'; ),
+    ( id: 8; char: 'I'; desc: 'Has an INI file'; ),
+    ( id: 9; char: 'F'; desc: 'Has Script fragments'; ),
+    ( id: 10; char: 'D'; desc: 'Disallow merging'; )
   );
 
   // MERGE STATUSES
@@ -385,7 +395,8 @@ const
 
 var
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
-  LabelFilters, GroupFilters, timeCosts, pluginsToCheck, mergesToBuild: TList;
+  LabelFilters, GroupFilters, pluginsToCheck, mergesToBuild: TList;
+  timeCosts: TStringList;
   settings: TSettings;
   statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
@@ -518,7 +529,7 @@ end;
 { Returns true if the input record is an override record }
 function IsOverride(aRecord: IwbMainRecord): boolean;
 begin
-  Result := not aRecord.Equals(aRecord.MasterOrSelf);
+  Result := not aRecord.IsMaster;
 end;
 
 function ExtractFormID(filename: string): string;
@@ -719,8 +730,9 @@ function TopicInfoFragmentsExist(f: IwbFile): boolean;
 const
   infoFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Info VMAD\Script Fragments Info';
 var
+  rec: IwbMainRecord;
   group: IwbGroupRecord;
-  rec, subgroup, container: IwbContainer;
+  subgroup, container: IwbContainer;
   element, fragments: IwbElement;
   i, j: Integer;
 begin
@@ -737,13 +749,15 @@ begin
     if not Supports(element, IwbContainer, subgroup) then
       continue;
     for j := 0 to Pred(subgroup.ElementCount) do begin
-      rec := subgroup.Elements[j] as IwbContainer;
-      fragments := rec.ElementByPath[infoFragmentsPath];
+      if not Supports(subgroup.Elements[j], IwbMainRecord, rec) then
+        continue;
+      if not rec.IsMaster then
+        continue;
+      if not Supports(rec, IwbContainer, container) then
+        continue;
+      fragments := container.ElementByPath[infoFragmentsPath];
       if not Assigned(fragments) then
         continue;
-      if not Supports(fragments, IwbContainer, container) then
-        continue;
-      //fn := container.ElementValues['fileName'];
       Result := true;
     end;
   end;
@@ -754,8 +768,9 @@ function QuestFragmentsExist(f: IwbFile): boolean;
 const
   questFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
 var
+  rec: IwbMainRecord;
   group: IwbGroupRecord;
-  rec, container: IwbContainer;
+  container: IwbContainer;
   fragments: IwbElement;
   i: Integer;
 begin
@@ -767,13 +782,15 @@ begin
   // find all QUST records
   group := f.GroupBySignature['QUST'];
   for i := 0 to Pred(group.ElementCount) do begin
-    rec := group.Elements[i] as IwbContainer;
-    fragments := rec.ElementByPath[questFragmentsPath];
+    if not Supports(group.Elements[i], IwbMainRecord, rec) then
+      continue;
+    if not rec.IsMaster then
+      continue;
+    if not Supports(rec, IwbContainer, container) then
+      continue;
+    fragments := container.ElementByPath[questFragmentsPath];
     if not Assigned(fragments) then
       continue;
-    if not Supports(fragments, IwbContainer, container) then
-      continue;
-    //fn := container.ElementValues['fileName'];
     Result := true;
   end;
 end;
@@ -783,8 +800,9 @@ function SceneFragmentsExist(f: IwbFile): boolean;
 const
   sceneFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
 var
+  rec: IwbMainRecord;
   group: IwbGroupRecord;
-  rec, container: IwbContainer;
+  container: IwbContainer;
   fragments: IwbElement;
   i: Integer;
 begin
@@ -796,13 +814,15 @@ begin
   // find all SCEN records
   group := f.GroupBySignature['SCEN'];
   for i := 0 to Pred(group.ElementCount) do begin
-    rec := group.Elements[i] as IwbContainer;
-    fragments := rec.ElementByPath[sceneFragmentsPath];
+    if not Supports(group.Elements[i], IwbMainRecord, rec) then
+      continue;
+    if not rec.IsMaster then
+      continue;
+    if not Supports(rec, IwbContainer, container) then
+      continue;
+    fragments := container.ElementByPath[sceneFragmentsPath];
     if not Assigned(fragments) then
       continue;
-    if not Supports(fragments, IwbContainer, container) then
-      continue;
-    //fn := container.ElementValues['fileName'];
     Result := true;
   end;
 end;
@@ -1772,7 +1792,7 @@ begin
   sl.Free;
 end;
 
-procedure SavePluginErorrs;
+procedure SavePluginInfo;
 var
   i: Integer;
   plugin: TPlugin;
@@ -1788,22 +1808,22 @@ begin
   for i := 0 to Pred(PluginsList.Count) do begin
     plugin := PluginsList[i];
     Tracker.UpdateProgress(1);
-    if (plugin.errors.Count = 0) then
+    if (not plugin.HasBeenCheckedForErrors) then
       continue;
     Tracker.Write('  Dumping '+plugin.filename);
-    json.A['plugins'].Add(plugin.ErrorDump);
+    json.A['plugins'].Add(plugin.InfoDump);
   end;
 
   // save and finalize
   Tracker.Write(' ');
-  filename := 'user\' + wbAppName + 'Errors.json';
+  filename := 'user\' + wbAppName + 'PluginInfo.json';
   Tracker.Write('Saving to '+filename);
   Tracker.UpdateProgress(1);
   json.SaveTo(filename);
   json := nil;
 end;
 
-procedure LoadPluginErrors;
+procedure LoadPluginInfo;
 var
   plugin: TPlugin;
   obj, pluginItem: ISuperObject;
@@ -1811,7 +1831,7 @@ var
   filename, hash: string;
 begin
   // don't load file if it doesn't exist
-  filename := 'user\' + wbAppName + 'Errors.json';
+  filename := 'user\' + wbAppName + 'PluginInfo.json';
   if not FileExists(filename) then
     exit;
   // load file into SuperObject to parse it
@@ -1828,7 +1848,7 @@ begin
     if not Assigned(plugin) then
       exit;
     if plugin.hash = hash then begin
-      plugin.LoadErrorDump(pluginItem);
+      plugin.LoadInfoDump(pluginItem);
       plugin.GetFlags;
     end;
   end;
@@ -2468,11 +2488,13 @@ begin
     flags := flags + [IS_BLACKLISTED];
     exit;
   end;
-  if (errors.Count > 0) then begin
-    if (errors[0] = 'None.') then
-      flags := flags + [NO_ERRORS]
+  if HasBeenCheckedForErrors then begin
+    if bIgnoreErrors then
+      flags := flags + [ERRORS_IGNORED]
+    else if HasErrors then
+      flags := flags + [HAS_ERRORS]
     else
-      flags := flags + [HAS_ERRORS];
+      flags := flags + [NO_ERRORS];
   end;
   if BSAExists(filename) then
     flags := flags + [HAS_BSA];
@@ -2486,6 +2508,8 @@ begin
     flags := flags + [HAS_VOICEDATA];
   if FragmentsExist(_File) then
     flags := flags + [HAS_FRAGMENTS];
+  if bDisallowMerging then
+    flags := flags + [DISALLOW_MERGING];
 end;
 
 { Returns a string representing the flags in a plugin }
@@ -2605,7 +2629,30 @@ begin
   Inc(sessionStatistics.pluginsChecked);
 end;
 
-function TPlugin.ErrorDump: ISuperObject;
+function TPlugin.HasBeenCheckedForErrors: boolean;
+begin
+  Result := errors.Count > 0;
+end;
+
+function TPlugin.HasErrors: boolean;
+begin
+  Result := false;
+  if HasBeenCheckedForErrors then
+    Result := errors[0] <> 'None.';
+end;
+
+function TPlugin.CanBeMerged: boolean;
+begin
+  Result := HasBeenCheckedForErrors and (not bDisallowMerging) and
+    (bIgnoreErrors or not HasErrors);
+end;
+
+function TPlugin.IsInMerge: boolean;
+begin
+  Result := merge <> ' ';
+end;
+
+function TPlugin.InfoDump: ISuperObject;
 var
   obj: ISuperObject;
   i: integer;
@@ -2615,6 +2662,8 @@ begin
   // filename, hash, errors
   obj.S['filename'] := filename;
   obj.S['hash'] := hash;
+  obj.B['bIgnoreErrors'] := bIgnoreErrors;
+  obj.B['bDisallowMerging'] := bDisallowMerging;
   obj.O['errors'] := SA([]);
   for i := 0 to Pred(errors.Count) do
     obj.A['errors'].S[i] := errors[i];
@@ -2622,10 +2671,15 @@ begin
   Result := obj;
 end;
 
-procedure TPlugin.LoadErrorDump(obj: ISuperObject);
+procedure TPlugin.LoadInfoDump(obj: ISuperObject);
 var
   item: ISuperObject;
 begin
+  // load boolean
+  bIgnoreErrors := obj.AsObject.B['bIgnoreErrors'];
+  bDisallowMerging := obj.AsObject.B['bDisallowMerging'];
+
+  // load errors
   errors.Clear;
   for item in obj['errors'] do
     errors.Add(item.AsString);
@@ -2773,14 +2827,14 @@ begin
   status := 0;
 
   // don't merge if no plugins to merge
-  if plugins.Count < 1 then begin
+  if (plugins.Count < 1) then begin
     Logger.Write('MERGE', 'Status', 'No plugins to merge');
     status := 1;
     exit;
   end;
 
   // don't merge if mod destination directory is blank
-  if settings.mergeDirectory = '' then begin
+  if (settings.mergeDirectory = '') then begin
     Logger.Write('MERGE', 'Status', 'Merge directory blank');
     status := 2;
     exit;
@@ -2811,12 +2865,15 @@ begin
       exit;
     end;
 
-    if plugin.errors.Count = 0 then begin
+    if (not plugin.HasBeenCheckedForErrors) then begin
       Logger.Write('MERGE', 'Status', plugin.filename+' needs to be checked for errors.');
       status := 10;
     end
-    else if plugin.errors[0] = 'None.' then begin
+    else if (not plugin.HasErrors) then begin
       Logger.Write('MERGE', 'Status', 'No errors in '+plugin.filename);
+    end
+    else if plugin.bIgnoreErrors then begin
+      Logger.Write('MERGE', 'Status', 'Errors ignored in '+plugin.filename);
     end
     else begin
       Logger.Write('MERGE', 'Status', plugin.filename+' has errors');
@@ -2876,6 +2933,12 @@ procedure TMerge.SortPlugins;
 begin
   GetLoadOrders;
   plugins.CustomSort(MergePluginsCompare);
+end;
+
+procedure TMerge.Remove(plugin: TPlugin);
+begin
+  plugin.merge := ' ';
+  plugins.Delete(plugins.IndexOf(plugin.filename));
 end;
 
 { TFilter }
@@ -2949,7 +3012,7 @@ begin
   loadMessageColor := clPurple;
   clientMessageColor := clBlue;
   mergeMessageColor := $000080FF;
-  pluginMessageColor := clBlack;
+  pluginMessageColor := $00484848;
   errorMessageColor := clRed;
 
   // generate a new secure key

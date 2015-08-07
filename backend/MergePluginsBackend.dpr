@@ -23,7 +23,6 @@ uses
   mpBackend in 'mpBackend.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
-  mpProgressForm in 'mpProgressForm.pas' {ProgressForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpLoginForm in 'mpLoginForm.pas' {LoginForm},
   mpUserForm in 'mpUserForm.pas' {UserForm},
@@ -63,7 +62,6 @@ begin
   Inc(statistics.timesRun);
   Application.Title := 'Merge Plugins Backend';
   Application.CreateForm(TBackendForm, BackendForm);
-  Application.CreateForm(TProgressForm, ProgressForm);
   Application.CreateForm(TDictionaryForm, DictionaryForm);
   Application.CreateForm(TEditForm, EditForm);
   Application.CreateForm(TLoginForm, LoginForm);

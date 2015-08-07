@@ -97,9 +97,6 @@
 			<DCCReference Include="mpOptionsForm.pas">
 				<Form>OptionsForm</Form>
 			</DCCReference>
-			<DCCReference Include="mpProgressForm.pas">
-				<Form>ProgressForm</Form>
-			</DCCReference>
 			<DCCReference Include="mpEditForm.pas">
 				<Form>EditForm</Form>
 			</DCCReference>
@@ -168,7 +165,7 @@
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">282</VersionInfo>
+						<VersionInfo Name="Build">283</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -180,7 +177,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.0.0.282</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.0.0.283</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
