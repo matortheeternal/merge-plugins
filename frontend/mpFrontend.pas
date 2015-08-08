@@ -1808,7 +1808,7 @@ begin
   for i := 0 to Pred(PluginsList.Count) do begin
     plugin := PluginsList[i];
     Tracker.UpdateProgress(1);
-    if (not plugin.HasBeenCheckedForErrors) then
+    if not (plugin.HasBeenCheckedForErrors or plugin.bDisallowMerging) then
       continue;
     Tracker.Write('  Dumping '+plugin.filename);
     json.A['plugins'].Add(plugin.InfoDump);
