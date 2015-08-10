@@ -427,8 +427,13 @@ end;
 
 procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
 begin
-  if not (bConnecting or bClosing or ServerAvailable) then
-    TCPClient.Disconnect;
+  try
+    if not (bConnecting or bClosing or ServerAvailable) then
+      TCPClient.Disconnect;
+  except
+    on x : Exception do
+      // nothing
+  end;
 end;
 
 procedure TMergeForm.ShowAuthorizationMessage;
