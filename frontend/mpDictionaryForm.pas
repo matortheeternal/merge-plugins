@@ -42,6 +42,7 @@ type
     procedure lvEntriesChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
     procedure lvEntriesData(Sender: TObject; Item: TListItem);
+    procedure UpdateDictionaryDetails;
     procedure vlDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure lvEntriesColumnClick(Sender: TObject; Column: TListColumn);
@@ -113,18 +114,6 @@ begin
   columnToSort := -1;
   lvEntries.OwnerDraw := not settings.simpleDictionaryView;
   lvEntries.Items.Count := tempDictionary.Count;
-
-  // initialize dictionary details
-  vl.InsertRow('Filename', dictionaryFilename, true);
-  vl.InsertRow('File size', FormatByteSize(GetFileSize(dictionaryFilename)), true);
-  vl.InsertRow('Date modified', DateTimeToStr(GetLastModified(dictionaryFilename)), true);
-  vl.InsertRow('Number of entries', IntToStr(dictionary.Count), true);
-  vl.InsertRow('Number of plugins', IntToStr(PluginCount(dictionary)), true);
-  vl.InsertRow('Number of reports', IntToStr(ReportCount(dictionary)), true);
-  vl.InsertRow('Blacklist size', IntToStr(blacklist.Count), true);
-
-  // autosize filename column
-  lvEntries.Columns[0].AutoSize := true;
 end;
 
 procedure TDictionaryForm.FormShow(Sender: TObject);
@@ -149,6 +138,21 @@ begin
   Rect.Left := Rect.Left + 2;
   DrawText(vl.Canvas.Handle, PChar(vl.Cells[aCol, ARow]), -1, Rect,
     DT_SINGLELINE or DT_LEFT OR DT_VCENTER or DT_NOPREFIX);
+end;
+
+// refresh Dictionary Details ValueListEditor
+procedure TDictionaryForm.UpdateDictionaryDetails;
+begin
+  vl.Strings.Clear;
+
+  // initialize dictionary details
+  vl.InsertRow('Filename', dictionaryFilename, true);
+  vl.InsertRow('File size', FormatByteSize(GetFileSize(dictionaryFilename)), true);
+  vl.InsertRow('Date modified', DateTimeToStr(GetLastModified(dictionaryFilename)), true);
+  vl.InsertRow('Number of entries', IntToStr(dictionary.Count), true);
+  vl.InsertRow('Number of reports', IntToStr(ReportCount(dictionary)), true);
+  vl.InsertRow('Entries displayed', IntToStr(tempDictionary.Count), true);
+  vl.InsertRow('Blacklist size', IntToStr(blacklist.Count), true);
 end;
 
 // update meNotes when user changes entry
@@ -333,9 +337,11 @@ begin
 
   // update entries count and repaint
   lvEntries.Items.Count := tempDictionary.Count;
-  //Logger.Write(IntToStr(tempDictionary.Count) + ' entries found!');
   lvEntriesChange(nil, nil, TItemChange(nil));
   lvEntries.Repaint;
+
+  // update details
+  UpdateDictionaryDetails;
 end;
 
 // re-filter when the user changes a filter TComboBox

@@ -53,7 +53,7 @@ type
     gbPrivacy: TGroupBox;
     kbNoStatistics: TCheckBox;
     kbNoPersistentConnection: TCheckBox;
-    gbColoring: TGroupBox;
+    gbLogging: TGroupBox;
     lblClientColor: TLabel;
     lblGeneralColor: TLabel;
     lblLoadColor: TLabel;
@@ -110,6 +110,10 @@ type
     btnUpdateGameMode: TButton;
     GroupBox1: TGroupBox;
     btnDetect: TButton;
+    meTemplate: TMemo;
+    lblSample: TLabel;
+    lblSampleValue: TLabel;
+    lblTemplate: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -133,6 +137,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure kbBuildBSAMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure meTemplateChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -141,6 +146,7 @@ type
 
 var
   OptionsForm: TOptionsForm;
+  slSampleLogMessage: TStringList;
 
 implementation
 
@@ -324,13 +330,14 @@ begin
 
   // Advanced > Game Mode
   settings.defaultGame := GetGameID(cbGameMode.Text);
-  // Advanced > Log Coloring
+  // Advanced > Logging
   settings.clientMessageColor := cbClientColor.Selected ;
   settings.generalMessageColor := cbGeneralColor.Selected;
   settings.loadMessageColor := cbLoadColor.Selected;
   settings.mergeMessageColor := cbMergeColor.Selected;
   settings.pluginMessageColor := cbPluginColor.Selected;
   settings.errorMessageColor := cbErrorColor.Selected;
+  settings.logMessageTemplate := meTemplate.Lines.Text;
 
   // Integrations > Mod Organizer
   settings.usingMO := kbUsingMO.Checked;
@@ -465,6 +472,12 @@ begin
     lblStatus.Hint := 'Username must be 4 or more characters.';
     btnRegister.Enabled := false;
   end
+  else if Length(edUsername.Text) > 32 then begin
+    lblStatus.Caption := 'Invalid username';
+    lblStatus.Font.Color := clRed;
+    lblStatus.Hint := 'Username length cannot exceed 32 characters.';
+    btnRegister.Enabled := false;
+  end
   else begin
     lblStatus.Caption := 'Valid, is it available?';
     lblStatus.Font.Color := clBlack;
@@ -482,6 +495,14 @@ begin
   // get status update if we can
   if GetStatus then
     CompareStatuses;
+
+  // prepare sample log message
+  slSampleLogMessage := TStringList.Create;
+  slSampleLogMessage.Values['Time'] := '12:34:56';
+  slSampleLogMessage.Values['AppTime'] := '00:01:52';
+  slSampleLogMessage.Values['Group'] := 'GENERAL';
+  slSampleLogMessage.Values['Label'] := 'Test';
+  slSampleLogMessage.Values['Text'] := 'This is a test message.';
 
   // General > Language
   cbLanguage.Text := settings.language;
@@ -515,13 +536,14 @@ begin
   kbDebugBSAs.Checked := settings.debugBSAs;
   kbDebugScriptFragments.Checked := settings.debugScriptFragments;
 
-  // Advanced > Log Coloring
+  // Advanced > Logging
   cbClientColor.Selected := TColor(settings.clientMessageColor);
   cbGeneralColor.Selected := TColor(settings.generalMessageColor);
   cbLoadColor.Selected := TColor(settings.loadMessageColor);
   cbMergeColor.Selected := TColor(settings.mergeMessageColor);
   cbPluginColor.Selected := TColor(settings.pluginMessageColor);
   cbErrorColor.Selected := TColor(settings.errorMessageColor);
+  meTemplate.Lines.Text := settings.logMessageTemplate;
 
   // Integrations > Mod Organizer
   kbUsingMO.Checked := settings.usingMO;
@@ -628,6 +650,14 @@ begin
   edModOrganizerPath.Enabled := b;
   btnBrowseMO.Enabled := b;
   kbCopyGeneralAssets.Enabled := b;
+end;
+
+procedure TOptionsForm.meTemplateChange(Sender: TObject);
+var
+  template: string;
+begin
+  template := meTemplate.Lines.Text;
+  lblSampleValue.Caption := ApplyTemplate(template, slSampleLogMessage);
 end;
 
 end.

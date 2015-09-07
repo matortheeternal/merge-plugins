@@ -66,7 +66,7 @@ object EditForm: TEditForm
         Margins.Top = 8
         Margins.Right = 8
         Margins.Bottom = 8
-        Caption = 'Merge Method'
+        Caption = 'Merge method'
       end
       object lblRenumbering: TLabel
         Left = 13

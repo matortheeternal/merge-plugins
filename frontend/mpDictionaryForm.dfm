@@ -47,8 +47,8 @@ object DictionaryForm: TDictionaryForm
       Anchors = [akLeft, akTop, akRight, akBottom]
       Columns = <
         item
+          AutoSize = True
           Caption = 'Filename'
-          Width = 450
         end
         item
           Caption = 'Records'
@@ -315,9 +315,9 @@ object DictionaryForm: TDictionaryForm
       object lblNotes: TLabel
         Left = 5
         Top = 6
-        Width = 67
+        Width = 60
         Height = 13
-        Caption = 'Report notes:'
+        Caption = 'Entry notes:'
       end
       object meNotes: TMemo
         Left = 3

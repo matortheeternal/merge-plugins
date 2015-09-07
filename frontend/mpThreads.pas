@@ -198,7 +198,6 @@ var
   f: IwbFile;
   plugin: TPlugin;
 begin
-  wbStartTime := Now;
   try
     for i := 0 to Pred(PluginsList.Count) do begin
       plugin := TPlugin(PluginsList[i]);

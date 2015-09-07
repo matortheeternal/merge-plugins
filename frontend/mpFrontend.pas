@@ -30,10 +30,11 @@ type
   TLogMessage = class (TObject)
   public
     time: string;
+    appTime: string;
     group: string;
     &label: string;
     text: string;
-    constructor Create(time, group, &label, text: string); Overload;
+    constructor Create(time, appTime, group, &label, text: string); Overload;
   end;
   // SERVER/CLIENT
   TmpMessage = class(TObject)
@@ -199,6 +200,7 @@ type
     mergeMessageColor: Int64;
     pluginMessageColor: Int64;
     errorMessageColor: Int64;
+    logMessageTemplate: string;
     preserveTempPath: boolean;
     [IniSection('Merging')]
     mergeDirectory: string;
@@ -311,6 +313,7 @@ type
   procedure InitializeClient;
   procedure ConnectToServer;
   function ServerAvailable: boolean;
+  procedure SendClientMessage(var msg: TmpMessage);
   function CheckAuthorization: boolean;
   procedure SendGameMode;
   procedure SendStatistics;
@@ -364,13 +367,13 @@ const
     ( id: 2; color: $0000FF; desc: 'Directories invalid'; ),
     ( id: 3; color: $0000FF; desc: 'Plugins not loaded'; ),
     ( id: 4; color: $0000FF; desc: 'Errors in plugins'; ),
-    ( id: 5; color: $900000; desc: 'Up to date'; ),
-    ( id: 6; color: $900000; desc: 'Up to date [Forced]'; ),
-    ( id: 7; color: $009000; desc: 'Ready to be built'; ),
-    ( id: 8; color: $009000; desc: 'Ready to be rebuilt'; ),
-    ( id: 9; color: $009000; desc: 'Ready to be rebuilt [Forced]'; ),
-    ( id: 10; color: $0080ed; desc: 'Check for errors required'; ),
-    ( id: 11; color: $0000FF; desc: 'Merge failed'; )
+    ( id: 5; color: $0000FF; desc: 'Merge failed'; ),
+    ( id: 6; color: $0080ed; desc: 'Check for errors required'; ),
+    ( id: 7; color: $900000; desc: 'Up to date'; ),
+    ( id: 8; color: $900000; desc: 'Up to date [Forced]'; ),
+    ( id: 9; color: $009000; desc: 'Ready to be built'; ),
+    ( id: 10; color: $009000; desc: 'Ready to be rebuilt'; ),
+    ( id: 11; color: $009000; desc: 'Ready to be rebuilt [Forced]'; )
   );
   // STATUS TYPES
   UpToDateStatuses = [5, 6];
@@ -408,7 +411,7 @@ var
   ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath: string;
   ActiveMods: TStringList;
   TCPClient: TidTCPClient;
-  LastStatusTime: TDateTime;
+  AppStartTime, LastStatusTime: TDateTime;
   GameMode: TGameMode;
 
 implementation
@@ -1886,8 +1889,8 @@ begin
   TCPClient := TidTCPClient.Create(nil);
   TCPClient.Host := settings.serverHost;
   TCPClient.Port := settings.serverPort;
-  TCPClient.ReadTimeout := 3000;
-  TCPClient.ConnectTimeout := 2000;
+  TCPClient.ReadTimeout := 5000;
+  TCPClient.ConnectTimeout := 1000;
 end;
 
 procedure ConnectToServer;
@@ -1924,13 +1927,23 @@ begin
   end;
 end;
 
+procedure SendClientMessage(var msg: TmpMessage);
+var
+  msgJson: string;
+begin
+  msgJson := TRttiJson.ToJson(msg);
+  TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+end;
+
 function CheckAuthorization: boolean;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   Result := false;
   if not TCPClient.Connected then
+    exit;
+  if settings.username = '' then
     exit;
   Logger.Write('CLIENT', 'Login', 'Checking if authenticated as "'+settings.username+'"');
 
@@ -1939,13 +1952,11 @@ begin
   try
     // send notify request to server
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, 'Authorized?');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Yes';
   except
@@ -1961,7 +1972,6 @@ end;
 procedure SendGameMode;
 var
   msg: TmpMessage;
-  msgJson: string;
 begin
   if not TCPClient.Connected then
     exit;
@@ -1971,8 +1981,7 @@ begin
   try
     // send notifification to server
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, wbAppName);
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
   except
     on x : Exception do begin
       Logger.Write('ERROR', 'Client', 'Exception sending game mode '+x.Message);
@@ -1983,7 +1992,7 @@ end;
 procedure SendStatistics;
 var
   msg, response: TmpMessage;
-  msgJson, LLine: string;
+  LLine: string;
 begin
   if not TCPClient.Connected then
     exit;
@@ -1993,13 +2002,11 @@ begin
   try
     // send statistics to server
     msg := TmpMessage.Create(MSG_STATISTICS, settings.username, settings.key, TRttiJson.ToJson(sessionStatistics));
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(LLine, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2011,7 +2018,7 @@ end;
 procedure ResetAuth;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   if not TCPClient.Connected then
     exit;
@@ -2022,13 +2029,11 @@ begin
   try
     // send auth reset request to server
     msg := TmpMessage.Create(MSG_AUTH_RESET, settings.username, settings.key, '');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2040,7 +2045,7 @@ end;
 function UsernameAvailable: boolean;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   Result := false;
   if not TCPClient.Connected then
@@ -2052,13 +2057,11 @@ begin
   try
     // send register request to server
     msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, 'Check');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Available';
   except
@@ -2071,7 +2074,7 @@ end;
 function RegisterUser: boolean;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   Result := false;
   if not TCPClient.Connected then
@@ -2083,13 +2086,11 @@ begin
   try
     // send register request to server
     msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, '');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = ('Registered ' + settings.username);
   except
@@ -2102,7 +2103,7 @@ end;
 function GetStatus: boolean;
 var
   msg, response: TmpMessage;
-  msgJson, LLine: string;
+  LLine: string;
 begin
   Result := false;
   if not TCPClient.Connected then
@@ -2117,15 +2118,12 @@ begin
   try
     // send status request to server
     msg := TmpMessage.Create(MSG_STATUS, settings.username, settings.key, '');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(LLine, response.ClassType));
-    RemoteStatus := TmpStatus.Create;
-    RemoteStatus := TmpStatus(TRttiJson.FromJson(response.data, RemoteStatus.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
+    RemoteStatus := TmpStatus(TRttiJson.FromJson(response.data, TmpStatus));
     //Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2211,7 +2209,7 @@ end;
 function UpdateDictionary: boolean;
 var
   msg: TmpMessage;
-  msgJson, filename: string;
+  filename: string;
   stream: TFileStream;
 begin
   Result := false;
@@ -2225,8 +2223,7 @@ begin
   try
     // send request to server
     msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, filename);
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     stream := TFileStream.Create(filename, fmCreate + fmShareDenyNone);
@@ -2286,7 +2283,7 @@ end;
 function DownloadProgram: boolean;
 var
   msg: TmpMessage;
-  msgJson, filename: string;
+  filename: string;
   stream: TFileStream;
 begin
   Result := false;
@@ -2306,8 +2303,7 @@ begin
   try
     // send request to server
     msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, 'Program');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     Logger.Write('CLIENT', 'Update', 'Downloading '+filename);
@@ -2331,7 +2327,7 @@ var
   i: integer;
   report: TReport;
   msg, response: TmpMessage;
-  reportJson, msgJson, LLine: string;
+  reportJson, LLine: string;
 begin
   Result := false;
 
@@ -2346,8 +2342,7 @@ begin
 
       // send report to server
       msg := TmpMessage.Create(MSG_REPORT, settings.username, settings.key, reportJson);
-      msgJson := TRttiJson.ToJson(msg);
-      TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+      SendClientMessage(msg);
 
       // get response
       LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
@@ -2398,9 +2393,10 @@ end;
 }
 {******************************************************************************}
 
-constructor TLogMessage.Create(time, group, &label, text: string);
+constructor TLogMessage.Create(time, appTime, group, &label, text: string);
 begin
   self.time := time;
+  self.appTime := appTime;
   self.group := group;
   self.&label := &label;
   self.text := text;
@@ -3014,6 +3010,7 @@ begin
   mergeMessageColor := $000080FF;
   pluginMessageColor := $00484848;
   errorMessageColor := clRed;
+  logMessageTemplate := '[{{AppTime}}] ({{Group}}) {{Label}}: {{Text}}';
 
   // generate a new secure key
   GenerateKey;

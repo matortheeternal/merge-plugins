@@ -243,7 +243,10 @@ procedure TMergeForm.LogMessage(const group, &label, text: string);
 var
   msg: TLogMessage;
 begin
-  msg := TLogMessage.Create(FormatDateTime('hh:nn:ss', Now), group, &label, text);
+  msg := TLogMessage.Create(
+    FormatDateTime('hh:nn:ss', Now),
+    FormatDateTime('hh:nn:ss', Now - AppStartTime),
+    group, &label, text);
   BaseLog.Add(msg);
 
   // if message is enabled, add to log
@@ -267,6 +270,7 @@ procedure TMergeForm.FormCreate(Sender: TObject);
 begin
   // INITIALIAZE BASE
   bCreated := false;
+  AppStartTime := Now;
   InitLog;
   Logger.OnLogEvent := LogMessage;
   //bAutoScroll := true;
@@ -740,7 +744,7 @@ var
 begin
   icon := TIcon.Create;
   FlagList.GetIcon(flag.id, icon);
-  canvas.Draw(x, y, icon);
+  canvas.Draw(x, y - 1, icon);
   icon.Free;
 end;
 
@@ -839,18 +843,20 @@ end;
 procedure TMergeForm.PluginsPopupMenuPopup(Sender: TObject);
 var
   i: integer;
-  bPluginInMerge, bBlacklisted, bNeedsErrorCheck, bHasErrors, bIgnoreErrors,
-  bDisallowMerging: boolean;
+  bPluginInMerge, bBlacklisted, bAllNeedErrorCheck, bHasErrors, bAllIgnoreErrors,
+  bAllDoNotMerge, bAllPluginsInMerge, bAllPluginsHaveErrors: boolean;
   ListItem: TListItem;
   plugin: TPlugin;
 begin
   // initialize selection booleans
   bBlacklisted := false;
   bPluginInMerge := false;
-  bNeedsErrorCheck := false;
   bHasErrors := false;
-  bIgnoreErrors := false;
-  bDisallowMerging := false;
+  bAllNeedErrorCheck := true;
+  bAllDoNotMerge := true;
+  bAllIgnoreErrors := true;
+  bAllPluginsInMerge := true;
+  bAllPluginsHaveErrors := true;
 
   // loop through selection
   for i := 0 to Pred(PluginsListView.Items.Count) do begin
@@ -859,31 +865,34 @@ begin
       continue;
 
     plugin := PluginsList[i];
-    bBlacklisted := (IS_BLACKLISTED in plugin.flags);
-    bPluginInMerge := plugin.IsInMerge;
-    bNeedsErrorCheck := (not plugin.HasBeenCheckedForErrors);
-    bHasErrors := plugin.HasErrors;
-    bIgnoreErrors := plugin.bIgnoreErrors;
-    bDisallowMerging := plugin.bDisallowMerging;
+    bBlacklisted := bBlacklisted or (IS_BLACKLISTED in plugin.flags);
+    bPluginInMerge := bPluginInMerge or plugin.IsInMerge;
+    bHasErrors := bHasErrors or plugin.HasErrors;
+    // ALL
+    bAllNeedErrorCheck := bAllNeedErrorCheck and not plugin.HasBeenCheckedForErrors;
+    bAllIgnoreErrors := bAllIgnoreErrors and plugin.bIgnoreErrors;
+    bAllDoNotMerge := bAllDoNotMerge and plugin.bDisallowMerging;
+    bAllPluginsInMerge := bAllPluginsInMerge and plugin.IsInMerge;
+    bAllPluginsHaveErrors := bAllPluginsHaveErrors and plugin.HasErrors;
   end;
 
   // toggle menu item captions
-  if bDisallowMerging then
+  if bAllDoNotMerge then
     PluginsPopupMenu.Items[5].Caption := 'Allow merging'
   else
     PluginsPopupMenu.Items[5].Caption := 'Disallow merging';
-  if bIgnoreErrors then
+  if bAllIgnoreErrors then
     PluginsPopupMenu.Items[4].Caption := 'Unignore errors'
   else
     PluginsPopupMenu.Items[4].Caption := 'Ignore errors';
 
 
   // disable/enable menu items
-  PluginsPopupMenu.Items[0].Enabled := not (bBlacklisted or bPluginInMerge or bDisallowMerging);
-  PluginsPopupMenu.Items[1].Enabled := bPluginInMerge and not bBlacklisted;
+  PluginsPopupMenu.Items[0].Enabled := not (bBlacklisted or bPluginInMerge or bAllDoNotMerge);
+  PluginsPopupMenu.Items[1].Enabled := bAllPluginsInMerge;
   PluginsPopupMenu.Items[2].Enabled := not bBlacklisted;
-  PluginsPopupMenu.Items[3].Enabled := bLoaderDone and bNeedsErrorCheck and not bBlacklisted;
-  PluginsPopupMenu.Items[4].Enabled := bHasErrors and not (bBlacklisted or bNeedsErrorCheck);
+  PluginsPopupMenu.Items[3].Enabled := bLoaderDone and bAllNeedErrorCheck and not bBlacklisted;
+  PluginsPopupMenu.Items[4].Enabled := bHasErrors and not bBlacklisted;
   PluginsPopupMenu.Items[5].Enabled := not (bBlacklisted or bPluginInMerge);
   PluginsPopupMenu.Items[6].Enabled := not bBlacklisted;
 end;
@@ -1140,7 +1149,6 @@ procedure TMergeForm.UpdateMergeDetails;
 var
   mergeItem: TListItem;
   merge: TMerge;
-  prop: TItemProp;
   sl: TStringList;
 begin
   // don't do anything if no item selected
@@ -1161,14 +1169,8 @@ begin
   AddDetailsItem('Date built', DateBuiltString(merge.dateBuilt));
   AddDetailsList('Plugins', merge.plugins);
   AddDetailsItem(' ', ' ');
-  prop := AddDetailsItem('Merge method', merge.method, false);
-  prop.EditStyle := esPickList;
-  prop.PickList.Add('Overrides');
-  prop.PickList.Add('New records');
-  prop := AddDetailsItem('Renumbering', merge.renumbering, false);
-  prop.EditStyle := esPickList;
-  prop.PickList.Add('Conflicting');
-  prop.PickList.Add('All');
+  AddDetailsItem('Merge method', merge.method, false);
+  AddDetailsItem('Renumbering', merge.renumbering, false);
   if merge.files.Count < 250 then begin
     sl := TStringList.Create;
     sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
@@ -1308,6 +1310,7 @@ begin
     exit;
   msg := TLogMessage(Log[Item.Index]);
   Item.Caption := msg.time;
+  Item.SubItems.Add(msg.appTime);
   Item.SubItems.Add(msg.group);
   Item.SubItems.Add(msg.&label);
   Item.SubItems.Add(msg.text);
@@ -1333,9 +1336,8 @@ var
   i, x, y: integer;
   ListView: TListView;
   R: TRect;
-  msg, FormatString: string;
-  ItemArray: array of TVarRec;
-  Column: TListColumn;
+  msg: string;
+  map: TStringList;
 begin
   ListView := TListView(Sender);
   if Item.Selected then begin
@@ -1343,28 +1345,11 @@ begin
     ListView.Canvas.FillRect(Rect);
   end;
 
-  // prepare format string
-  FormatString := '';
-  for i := 0 to Pred(ListView.Columns.Count) do begin
-    Column := ListView.Columns[i];
-    if Column.Caption = 'Time' then
-      FormatString := FormatString + '[%s] ';
-    if Column.Caption = 'Group' then
-      FormatString := FormatString + '(%s) ';
-    if Column.Caption = 'Label' then
-      FormatString := FormatString + '%s: ';
-    if Column.Caption = 'Text' then
-      FormatString := FormatString + '%s';
-  end;
-
-  // prepare item array
-  SetLength(ItemArray, 1 + Item.SubItems.Count);
-  ItemArray[0].VType := vtUnicodeString;
-  ItemArray[0].VUnicodeString := Pointer(Item.Caption);
-  for i := 0 to Pred(Item.SubItems.Count) do begin
-    ItemArray[i + 1].VType := vtUnicodeString;
-    ItemArray[i + 1].VUnicodeString := Pointer(Item.SubItems[i]);
-  end;
+  // prepare map
+  map := TStringList.Create;
+  map.Values[ListView.Columns[0].Caption] := Item.Caption;
+  for i := 0 to Pred(Item.SubItems.Count) do
+    map.Values[ListView.Columns[i + 1].Caption] := Item.SubItems[i];
 
   // prepare text rect
   R := Rect;
@@ -1373,8 +1358,11 @@ begin
   y := (Rect.Bottom - Rect.Top - ListView.Canvas.TextHeight('Hg')) div 2 + Rect.Top;
 
   // draw message
-  msg := Format(FormatString, ItemArray);
+  msg := ApplyTemplate(settings.logMessageTemplate, map);
   ListView.Canvas.TextRect(R, x, y, msg);
+
+  // clean up
+  map.Free;
 end;
 
 
