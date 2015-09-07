@@ -223,6 +223,7 @@ type
   { User methods }
   function Authorized(ip, username, auth: string): boolean;
   function ResetAuth(ip, username, auth: string): boolean;
+  function UsernameAvailable(username: string): boolean;
   function GetUser(ip, username, auth: string): TUser; Overload;
   function GetUser(ip: string): TUser; Overload;
   function AddUser(ip: string): TUser; Overload;
@@ -1293,6 +1294,29 @@ begin
       exit;
     end;
   end;
+end;
+
+function UsernameAvailable(username: string): boolean;
+var
+  i: Integer;
+  user: TUser;
+begin
+  // assume false
+  Result := false;
+
+  // check if username is too short or too long
+  if (Length(username) < 4) or (Length(username) > 24) then
+    exit;
+
+  // check if username is already taken
+  for i := 0 to Pred(Users.Count) do begin
+    user := TUser(Users[i]);
+    if SameText(user.username, username) then
+      exit;
+  end;
+
+  // all checks passed, true
+  Result := true;
 end;
 
 function GetUser(ip, username, auth: string): TUser;

@@ -1195,10 +1195,10 @@ begin
 
     MSG_REGISTER: begin
       note := 'Username unavailable';
-      if (GetUser(ip, msg.username, msg.auth) = nil) then begin
+      if UsernameAvailable(msg.username) then begin
         if msg.data = 'Check' then
           note := 'Available'
-        else begin
+        else if msg.data = 'Register' then begin
           UpdateUser(ip, msg.username, msg.auth);
           note := 'Registered '+msg.username;
         end;

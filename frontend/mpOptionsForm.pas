@@ -365,9 +365,9 @@ begin
   end;
 
   if (btnRegister.Caption = 'Register') then begin
-    settings.username := edUsername.Text;
-    if RegisterUser then begin
+    if RegisterUser(edUsername.Text) then begin
       settings.registered := true;
+      settings.username := edUsername.Text;
       SaveSettings;
       lblStatus.Caption := 'Registered';
       lblStatus.Font.Color := clGreen;
@@ -382,7 +382,7 @@ begin
     end;
   end
   else begin
-    if UsernameAvailable then begin
+    if UsernameAvailable(edUsername.Text) then begin
       lblStatus.Caption := 'Username available!';
       lblStatus.Font.Color := clBlue;
       lblStatus.Hint := 'Click register to claim it.';
@@ -469,13 +469,13 @@ begin
   if Length(edUsername.Text) < 4 then begin
     lblStatus.Caption := 'Invalid username';
     lblStatus.Font.Color := clRed;
-    lblStatus.Hint := 'Username must be 4 or more characters.';
+    lblStatus.Hint := 'Username length must be at least 4 characters.';
     btnRegister.Enabled := false;
   end
-  else if Length(edUsername.Text) > 32 then begin
+  else if Length(edUsername.Text) > 24 then begin
     lblStatus.Caption := 'Invalid username';
     lblStatus.Font.Color := clRed;
-    lblStatus.Hint := 'Username length cannot exceed 32 characters.';
+    lblStatus.Hint := 'Username length cannot exceed 24 characters.';
     btnRegister.Enabled := false;
   end
   else begin

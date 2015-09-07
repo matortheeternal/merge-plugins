@@ -318,8 +318,8 @@ type
   procedure SendGameMode;
   procedure SendStatistics;
   procedure ResetAuth;
-  function UsernameAvailable: boolean;
-  function RegisterUser: boolean;
+  function UsernameAvailable(username: string): boolean;
+  function RegisterUser(username: string): boolean;
   function GetStatus: boolean;
   function VersionCompare(v1, v2: string): boolean;
   procedure CompareStatuses;
@@ -2042,7 +2042,7 @@ begin
   end;
 end;
 
-function UsernameAvailable: boolean;
+function UsernameAvailable(username: string): boolean;
 var
   msg, response: TmpMessage;
   line: string;
@@ -2050,13 +2050,13 @@ begin
   Result := false;
   if not TCPClient.Connected then
     exit;
-  Logger.Write('CLIENT', 'Login', 'Checking username availability "'+settings.username+'"');
+  Logger.Write('CLIENT', 'Login', 'Checking username availability "'+username+'"');
 
   // attempt to register user
   // throws exception if server is unavailable
   try
     // send register request to server
-    msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, 'Check');
+    msg := TmpMessage.Create(MSG_REGISTER, username, settings.key, 'Check');
     SendClientMessage(msg);
 
     // get response
@@ -2071,7 +2071,7 @@ begin
   end;
 end;
 
-function RegisterUser: boolean;
+function RegisterUser(username: string): boolean;
 var
   msg, response: TmpMessage;
   line: string;
@@ -2079,20 +2079,20 @@ begin
   Result := false;
   if not TCPClient.Connected then
     exit;
-  Logger.Write('CLIENT', 'Login', 'Registering username "'+settings.username+'"');
+  Logger.Write('CLIENT', 'Login', 'Registering username "'+username+'"');
 
   // attempt to register user
   // throws exception if server is unavailable
   try
     // send register request to server
-    msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, '');
+    msg := TmpMessage.Create(MSG_REGISTER, username, settings.key, 'Register');
     SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
-    Result := response.data = ('Registered ' + settings.username);
+    Result := response.data = ('Registered ' + username);
   except
     on x : Exception do begin
       Logger.Write('ERROR', 'Client', 'Exception registering username '+x.Message);
