@@ -1798,16 +1798,44 @@ begin
   sl.Free;
 end;
 
-procedure SavePluginInfo;
+function IndexOfDump(a: TSuperArray; plugin: TPlugin): Integer;
 var
   i: Integer;
-  plugin: TPlugin;
-  json: ISuperObject;
-  filename: string;
+  obj: ISuperObject;
 begin
-  // initialize json
-  json := SO;
-  json.O['plugins'] := SA([]);
+  Result := -1;
+  for i := 0 to Pred(a.Length) do begin
+    obj := a.O[i];
+    if (obj.S['filename'] = plugin.filename)
+    and (obj.S['hash'] = plugin.hash) then begin
+      Result := i;
+      exit;
+    end;
+  end;
+end;
+
+procedure SavePluginInfo;
+var
+  i, index: Integer;
+  plugin: TPlugin;
+  obj: ISuperObject;
+  filename: string;
+  sl: TStringList;
+begin
+  // don't load file if it doesn't exist
+  filename := 'user\' + wbAppName + 'PluginInfo.json';
+  if FileExists(filename) then begin
+    // load file text into SuperObject to parse it
+    sl := TStringList.Create;
+    sl.LoadFromFile(filename);
+    obj := SO(PChar(sl.Text));
+    sl.Free;
+  end
+  else begin
+    // initialize new json object
+    obj := SO;
+    obj.O['plugins'] := SA([]);
+  end;
 
   // loop through plugins
   Tracker.Write('Dumping plugin errors to JSON');
@@ -1817,16 +1845,19 @@ begin
     if not (plugin.HasBeenCheckedForErrors or plugin.bDisallowMerging) then
       continue;
     Tracker.Write('  Dumping '+plugin.filename);
-    json.A['plugins'].Add(plugin.InfoDump);
+    index := IndexOfDump(obj.A['plugins'], plugin);
+    if index = -1 then
+      obj.A['plugins'].Add(plugin.InfoDump)
+    else
+      obj.A['plugins'].O[index] := plugin.InfoDump;
   end;
 
   // save and finalize
   Tracker.Write(' ');
-  filename := 'user\' + wbAppName + 'PluginInfo.json';
   Tracker.Write('Saving to '+filename);
   Tracker.UpdateProgress(1);
-  json.SaveTo(filename);
-  json := nil;
+  obj.SaveTo(filename);
+  obj := nil;
 end;
 
 procedure LoadPluginInfo;
@@ -1852,7 +1883,7 @@ begin
     hash := pluginItem.AsObject.S['hash'];
     plugin := PluginByFileName(filename);
     if not Assigned(plugin) then
-      exit;
+      continue;
     if plugin.hash = hash then begin
       plugin.LoadInfoDump(pluginItem);
       plugin.GetFlags;

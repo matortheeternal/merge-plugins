@@ -24,7 +24,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = IntegrationsTabSheet
+    ActivePage = GeneralTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
@@ -310,9 +310,9 @@ object OptionsForm: TOptionsForm
         object lblMergeDestination: TLabel
           Left = 12
           Top = 24
-          Width = 134
+          Width = 132
           Height = 13
-          Caption = 'Merge Destination Directory'
+          Caption = 'Merge destination directory'
         end
         object btnBrowseAssetDirectory: TSpeedButton
           Left = 519
