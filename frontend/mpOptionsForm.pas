@@ -633,12 +633,14 @@ begin
 
   // set up browse buttons
   btnBrowseMO.Flat := true;
+  btnBrowseMOMods.Flat := true;
   btnBrowseAssetDirectory.Flat := true;
   btnBrowseDecompiler.Flat := true;
   btnBrowseCompiler.Flat := true;
   btnBrowseFlags.Flat := true;
   btnBrowseBsaOpt.Flat := true;
   IconList.GetBitmap(0, btnBrowseMO.Glyph);
+  IconList.GetBitmap(0, btnBrowseMOMods.Glyph);
   IconList.GetBitmap(0, btnBrowseAssetDirectory.Glyph);
   IconList.GetBitmap(0, btnBrowseDecompiler.Glyph);
   IconList.GetBitmap(0, btnBrowseCompiler.Glyph);

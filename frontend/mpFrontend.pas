@@ -2998,6 +2998,7 @@ end;
 { TSettings constructor }
 constructor TSettings.Create;
 begin
+  // default settings
   language := 'English';
   serverHost := 'mergeplugins.us.to';
   serverPort := 960;
@@ -3012,9 +3013,11 @@ begin
   handleFaceGenData := true;
   handleVoiceAssets := true;
   handleMCMTranslations := true;
+  handleINIs := true;
   handleScriptFragments := false;
   extractBSAs := false;
   buildMergedBSA := false;
+  batCopy := true;
   generalMessageColor := clGreen;
   loadMessageColor := clPurple;
   clientMessageColor := clBlue;
