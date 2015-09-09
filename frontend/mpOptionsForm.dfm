@@ -24,7 +24,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = GeneralTabSheet
+    ActivePage = IntegrationsTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
@@ -296,10 +296,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetCopying: TGroupBox
         Left = 6
         Top = 6
@@ -786,10 +782,6 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -804,13 +796,31 @@ object OptionsForm: TOptionsForm
         object lblModOrganizerDirectory: TLabel
           Left = 12
           Top = 50
-          Width = 123
+          Width = 95
           Height = 13
-          Caption = 'Mod Organizer mods path'
+          Caption = 'Mod Organizer path'
         end
         object btnBrowseMO: TSpeedButton
           Left = 519
           Top = 47
+          Width = 23
+          Height = 22
+          Hint = 'Browse'
+          Margins.Right = 6
+          ParentShowHint = False
+          ShowHint = True
+          OnClick = btnBrowseMOClick
+        end
+        object Label1: TLabel
+          Left = 12
+          Top = 77
+          Width = 123
+          Height = 13
+          Caption = 'Mod Organizer mods path'
+        end
+        object SpeedButton1: TSpeedButton
+          Left = 519
+          Top = 74
           Width = 23
           Height = 22
           Hint = 'Browse'
@@ -836,12 +846,19 @@ object OptionsForm: TOptionsForm
           TabOrder = 1
         end
         object kbCopyGeneralAssets: TCheckBox
-          Left = 12
-          Top = 75
+          Left = 192
+          Top = 20
           Width = 133
           Height = 17
           Caption = 'Copy general asssets'
           TabOrder = 2
+        end
+        object Edit1: TEdit
+          Left = 192
+          Top = 74
+          Width = 321
+          Height = 21
+          TabOrder = 3
         end
       end
       object gbPapyrus: TGroupBox
@@ -984,7 +1001,7 @@ object OptionsForm: TOptionsForm
         end
       end
       object btnDetect: TButton
-        Left = 408
+        Left = 414
         Top = 330
         Width = 140
         Height = 25
@@ -1022,7 +1039,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800D00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800D40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

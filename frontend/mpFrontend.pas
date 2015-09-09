@@ -383,6 +383,7 @@ const
 
   // DELAYS
   StatusDelay = 2.0 / (60.0 * 24.0); // 2 minutes
+  MaxConnectionAttempts = 3;
 
   // GAME MODES
   GameArray: array[1..4] of TGameMode = (
@@ -409,6 +410,7 @@ var
   bUpdateMergeStatus, bChangeMergeProfile, bAllowClose: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
   ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath: string;
+  ConnectionAttempts: Integer;
   ActiveMods: TStringList;
   TCPClient: TidTCPClient;
   AppStartTime, LastStatusTime: TDateTime;
@@ -1891,24 +1893,32 @@ begin
   TCPClient.Port := settings.serverPort;
   TCPClient.ReadTimeout := 5000;
   TCPClient.ConnectTimeout := 1000;
+  ConnectionAttempts := 0;
 end;
 
 procedure ConnectToServer;
 begin
-  if (bConnecting or TCPClient.Connected) then
+  if (bConnecting or TCPClient.Connected)
+  or (ConnectionAttempts >= MaxConnectionAttempts) then
     exit;
 
   bConnecting := true;
   try
     Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
     TCPClient.Connect;
+    Logger.Write('CLIENT', 'Connect', 'Connection successful!');
     CheckAuthorization;
     SendGameMode;
     GetStatus;
     CompareStatuses;
-  except on x: Exception do
-    //if x.Message <> 'Already connected.' then
-      Logger.Write('CLIENT', 'Connect', 'Server unavailable. '+x.Message);
+  except
+    on x: Exception do begin
+      Logger.Write('ERROR', 'Connect', 'Connection failed.');
+      Inc(ConnectionAttempts);
+      if ConnectionAttempts = MaxConnectionAttempts then
+        Logger.Write('CLIENT', 'Connect', 'Maximum connection attempts reached.  '+
+          'Click the disconnected icon in the status bar to retry.');
+    end;
   end;
   bConnecting := false;
 end;
@@ -1916,14 +1926,14 @@ end;
 function ServerAvailable: boolean;
 begin
   Result := false;
-  if not TCPClient.Connected then
-    exit;
 
   try
-    TCPClient.IOHandler.WriteLn('', TIdTextEncoding.Default);
-    Result := true;
+    if TCPClient.Connected then begin
+      TCPClient.IOHandler.WriteLn('', TIdTextEncoding.Default);
+      Result := true;
+    end;
   except on Exception do
-    // server is unavailable
+    // we're not connected
   end;
 end;
 

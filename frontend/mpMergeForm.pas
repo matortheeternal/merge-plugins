@@ -189,6 +189,7 @@ type
     procedure DetailsCopyToClipboardItemClick(Sender: TObject);
     procedure IgnoreErrorsItemClick(Sender: TObject);
     procedure DoNotMergeItemClick(Sender: TObject);
+    procedure ImageDisconnectedClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -432,11 +433,16 @@ end;
 procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
 begin
   try
-    if not (bConnecting or bClosing or ServerAvailable) then
-      TCPClient.Disconnect;
+    if TCPClient.IOHandler.Opened and
+    not (bConnecting or bClosing or ServerAvailable) then
+      raise Exception.Create('Connection unavailable');
   except
-    on x : Exception do
-      // nothing
+    on x : Exception do begin
+      if Assigned(TCPClient) and Assigned(TCPClient.IOHandler) then begin
+        Logger.Write('CLIENT', 'Connection', 'Connection to server lost.');
+        TCPClient.IOHandler.CloseGracefully;
+      end;
+    end;
   end;
 end;
 
@@ -1907,6 +1913,15 @@ begin
   // update
   UpdateMerges;
   UpdateListViews;
+end;
+
+procedure TMergeForm.ImageDisconnectedClick(Sender: TObject);
+begin
+  if (not TCPClient.Connected)
+  and (ConnectionAttempts = MaxConnectionAttempts) then begin
+    Logger.Write('CLIENT', 'Connect', 'Retrying connecting to the server.');
+    ConnectionAttempts := 0;
+  end;
 end;
 
 { Double click to edit merge }

@@ -114,6 +114,9 @@ type
     lblSample: TLabel;
     lblSampleValue: TLabel;
     lblTemplate: TLabel;
+    Label1: TLabel;
+    Edit1: TEdit;
+    SpeedButton1: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
