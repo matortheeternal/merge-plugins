@@ -222,7 +222,8 @@ type
     debugScriptFragments: boolean;
     [IniSection('Integrations')]
     usingMO: boolean;
-    MODirectory: string;
+    MOPath: string;
+    MOModsPath: string;
     copyGeneralAssets: boolean;
     compilerPath: string;
     decompilerPath: string;
@@ -1156,7 +1157,7 @@ begin
     exit;
 
   // load ini file
-  fname := settings.MODirectory + 'ModOrganizer.ini';
+  fname := settings.MOPath + 'ModOrganizer.ini';
   if(not FileExists(fname)) then begin
     Logger.Write('GENERAL', 'ModOrganizer', 'Mod Organizer ini file ' + fname + ' does not exist');
     exit;
@@ -1179,7 +1180,7 @@ begin
     exit;
 
   // prepare to load modlist
-  modlistFilePath := settings.MODirectory + 'profiles/' + profileName + '/modlist.txt';
+  modlistFilePath := settings.MOPath + 'profiles/' + profileName + '/modlist.txt';
   modlist.Clear;
 
   // exit if modlist file doesn't exist
@@ -1215,7 +1216,7 @@ begin
   // check for file in each mod folder in modlist
   for i := 0 to Pred(modlist.Count) do begin
     modName := modlist[i];
-    filePath := settings.MODirectory + 'mods\' + modName + '\' + filename;
+    filePath := settings.MOModsPath + modName + '\' + filename;
     if (FileExists(filePath)) then begin
       Result := modName;
       exit;
@@ -2613,7 +2614,7 @@ begin
   if settings.usingMO then begin
     modName := GetModContainingFile(ActiveMods, filename);
     if modName <> '' then
-      dataPath := settings.MODirectory + 'mods\' + modName + '\';
+      dataPath := settings.MOModsPath + modName + '\';
   end;
 end;
 
@@ -2847,14 +2848,14 @@ begin
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
-  if settings.usingMO and (settings.MODirectory = '') then begin
+  if settings.usingMO and (settings.MOPath = '') then begin
     Logger.Write('MERGE', 'Status', 'Mod Organizer Directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
-  if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
+  if settings.usingMO and not DirectoryExists(settings.MOPath) then begin
      Logger.Write('MERGE', 'Status', 'Mod Organizer Directory invalid');
      status := 2;
      exit;
@@ -3005,7 +3006,7 @@ begin
   updateDictionary := false;
   updateProgram := false;
   usingMO := false;
-  MODirectory := '';
+  MOPath := '';
   copyGeneralAssets := false;
   mergeDirectory := wbDataPath;
   handleFaceGenData := true;

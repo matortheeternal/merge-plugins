@@ -793,7 +793,7 @@ object OptionsForm: TOptionsForm
         Margins.Bottom = 6
         Caption = 'Mod Organizer'
         TabOrder = 0
-        object lblModOrganizerDirectory: TLabel
+        object lblModOrganizerPath: TLabel
           Left = 12
           Top = 50
           Width = 95
@@ -811,14 +811,14 @@ object OptionsForm: TOptionsForm
           ShowHint = True
           OnClick = btnBrowseMOClick
         end
-        object Label1: TLabel
+        object lblModOrganizerModsPath: TLabel
           Left = 12
           Top = 77
           Width = 123
           Height = 13
           Caption = 'Mod Organizer mods path'
         end
-        object SpeedButton1: TSpeedButton
+        object btnBrowseMOMods: TSpeedButton
           Left = 519
           Top = 74
           Width = 23
@@ -827,7 +827,7 @@ object OptionsForm: TOptionsForm
           Margins.Right = 6
           ParentShowHint = False
           ShowHint = True
-          OnClick = btnBrowseMOClick
+          OnClick = btnBrowseMOModsClick
         end
         object kbUsingMO: TCheckBox
           Left = 12
@@ -853,7 +853,7 @@ object OptionsForm: TOptionsForm
           Caption = 'Copy general asssets'
           TabOrder = 2
         end
-        object Edit1: TEdit
+        object edModOrganizerModsPath: TEdit
           Left = 192
           Top = 74
           Width = 321

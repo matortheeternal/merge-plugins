@@ -68,7 +68,7 @@ type
     cbErrorColor: TColorBox;
     IntegrationsTabSheet: TTabSheet;
     gbModOrganizer: TGroupBox;
-    lblModOrganizerDirectory: TLabel;
+    lblModOrganizerPath: TLabel;
     btnBrowseMO: TSpeedButton;
     kbUsingMO: TCheckBox;
     edModOrganizerPath: TEdit;
@@ -114,9 +114,9 @@ type
     lblSample: TLabel;
     lblSampleValue: TLabel;
     lblTemplate: TLabel;
-    Label1: TLabel;
-    Edit1: TEdit;
-    SpeedButton1: TSpeedButton;
+    lblModOrganizerModsPath: TLabel;
+    edModOrganizerModsPath: TEdit;
+    btnBrowseMOMods: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -141,6 +141,7 @@ type
     procedure kbBuildBSAMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure meTemplateChange(Sender: TObject);
+    procedure btnBrowseMOModsClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -184,8 +185,15 @@ end;
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
 begin
   BrowseForFolder(edModOrganizerPath, ProgramPath);
-  if DirectoryExists(edModOrganizerPath.Text + 'mods\') then
+  if DirectoryExists(edModOrganizerPath.Text + 'mods\') then begin
+    edModOrganizerModsPath.Text := edModOrganizerPath.Text + 'mods\';
     edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+  end;
+end;
+
+procedure TOptionsForm.btnBrowseMOModsClick(Sender: TObject);
+begin
+  BrowseForFolder(edModOrganizerModsPath, ProgramPath);
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
@@ -283,7 +291,10 @@ begin
   // if found, set TEdit captions, else alert user
   if (modOrganizerPath <> '') then begin
     edModOrganizerPath.Text := Copy(modOrganizerPath, 1, length(modOrganizerPath) - 16);
-    edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+    if DirectoryExists(edModOrganizerPath.Text + 'mods\') then begin
+      edModOrganizerModsPath.Text := edModOrganizerPath.Text + 'mods\';
+      edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+    end;
   end
   else begin
     MessageDlg('Couldn''t automatically detect Mod Organizer''s file path.  '+
@@ -296,7 +307,7 @@ procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
   // check if we need to update merge status afterwards
   bUpdateMergeStatus := (settings.usingMO <> kbUsingMO.Checked)
-    or (settings.MODirectory <> edModOrganizerPath.Text)
+    or (settings.MOPath <> edModOrganizerPath.Text)
     or (settings.mergeDirectory <> edMergeDirectory.Text);
 
   // General > Language
@@ -344,7 +355,8 @@ begin
 
   // Integrations > Mod Organizer
   settings.usingMO := kbUsingMO.Checked;
-  settings.MODirectory := edModOrganizerPath.Text;
+  settings.MOPath := edModOrganizerPath.Text;
+  settings.MOModsPath := edModOrganizerModsPath.Text;
   settings.copyGeneralAssets := kbCopyGeneralAssets.Checked;
   // Integrations > Papyrus
   settings.decompilerPath := edDecompilerPath.Text;
@@ -550,7 +562,8 @@ begin
 
   // Integrations > Mod Organizer
   kbUsingMO.Checked := settings.usingMO;
-  edModOrganizerPath.Text := settings.MODirectory;
+  edModOrganizerPath.Text := settings.MOPath;
+  edModOrganizerModsPath.Text := settings.MOModsPath;
   kbCopyGeneralAssets.Checked := settings.copyGeneralAssets;
   // Integrations > Papyrus
   edDecompilerPath.Text := settings.decompilerPath;
@@ -651,7 +664,9 @@ var
 begin
   b := kbUsingMO.Checked;
   edModOrganizerPath.Enabled := b;
+  edModOrganizerModsPath.Enabled := b;
   btnBrowseMO.Enabled := b;
+  btnBrowseMOMods.Enabled := b;
   kbCopyGeneralAssets.Enabled := b;
 end;
 
