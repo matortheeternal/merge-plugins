@@ -97,6 +97,8 @@ begin
     Result := TValue.From(ini.ReadInteger(section, field.Name, 0))
   else if fieldType = 'Int64' then
     Result := TValue.From(ini.ReadInteger(section, field.Name, 0))
+  else if fieldType = 'TDateTime' then
+    Result := TValue.From(ini.ReadFloat(section, field.Name, 0))
   else if fieldType = 'Boolean' then
     Result := TValue.From(ini.ReadBool(section, field.Name, false));
 end;
@@ -113,6 +115,8 @@ begin
     ini.WriteInteger(section, field.Name, aValue.AsInteger)
   else if fieldType = 'Int64' then
     ini.WriteInteger(section, field.Name, aValue.AsInt64)
+  else if fieldType = 'TDateTime' then
+    ini.WriteFloat(section, field.Name, aValue.AsType<TDateTime>)
   else if fieldType = 'Boolean' then
     ini.WriteBool(section, field.Name, aValue.AsBoolean)
 end;
