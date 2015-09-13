@@ -24,17 +24,13 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = GeneralTabSheet
+    ActivePage = AdvancedTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     TabWidth = 80
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbStyle: TGroupBox
         Left = 6
         Top = 163
@@ -300,10 +296,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetCopying: TGroupBox
         Left = 6
         Top = 6
@@ -487,10 +479,6 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbPrivacy: TGroupBox
         Left = 6
         Top = 72
@@ -648,62 +636,6 @@ object OptionsForm: TOptionsForm
       end
       object gbMergeProfile: TGroupBox
         Left = 6
-        Top = 279
-        Width = 548
-        Height = 76
-        Margins.Left = 6
-        Margins.Top = 6
-        Margins.Right = 6
-        Margins.Bottom = 6
-        Align = alCustom
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'Merge Profile'
-        TabOrder = 2
-        Visible = False
-        object lblCurrentProfile: TLabel
-          Left = 12
-          Top = 20
-          Width = 70
-          Height = 13
-          Caption = 'Current profile'
-        end
-        object cbCurrentProfile: TComboBox
-          Left = 184
-          Top = 16
-          Width = 202
-          Height = 21
-          Style = csDropDownList
-          TabOrder = 0
-        end
-        object btnChangeMergeProfile: TButton
-          Left = 392
-          Top = 14
-          Width = 150
-          Height = 25
-          Caption = 'Switch merge profiles'
-          Enabled = False
-          TabOrder = 1
-          OnClick = btnChangeMergeProfileClick
-        end
-        object kbLinkToMO: TCheckBox
-          Left = 12
-          Top = 47
-          Width = 166
-          Height = 17
-          Caption = 'Link to Mod Organizer profile'
-          TabOrder = 2
-        end
-        object cbModOrganizerProfile: TComboBox
-          Left = 184
-          Top = 45
-          Width = 202
-          Height = 21
-          Style = csDropDownList
-          TabOrder = 3
-        end
-      end
-      object gbGameMode: TGroupBox
-        Left = 6
         Top = 6
         Width = 548
         Height = 54
@@ -713,45 +645,38 @@ object OptionsForm: TOptionsForm
         Margins.Bottom = 6
         Align = alCustom
         Anchors = [akLeft, akTop, akRight]
-        Caption = 'Game mode'
-        TabOrder = 3
-        object lblGameMode: TLabel
+        Caption = 'Merge Profile'
+        TabOrder = 2
+        object lblCurrentProfile: TLabel
           Left = 12
-          Top = 20
-          Width = 93
+          Top = 24
+          Width = 70
           Height = 13
-          Caption = 'Default game mode'
+          Caption = 'Current profile'
         end
-        object cbGameMode: TComboBox
+        object cbCurrentProfile: TComboBox
           Left = 184
           Top = 20
           Width = 202
           Height = 21
           Style = csDropDownList
-          ItemIndex = 0
           TabOrder = 0
-          Text = 'None'
-          Items.Strings = (
-            'None')
         end
-        object btnUpdateGameMode: TButton
+        object btnChangeMergeProfile: TButton
           Left = 392
           Top = 18
           Width = 150
           Height = 25
-          Caption = 'Change game mode'
+          Caption = 'Switch merge profiles'
+          Enabled = False
           TabOrder = 1
-          OnClick = btnUpdateGameModeClick
+          OnClick = btnChangeMergeProfileClick
         end
       end
     end
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -984,7 +909,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800C00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800C80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

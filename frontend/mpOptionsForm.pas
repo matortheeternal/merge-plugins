@@ -96,18 +96,12 @@ type
     lblCurrentProfile: TLabel;
     cbCurrentProfile: TComboBox;
     btnChangeMergeProfile: TButton;
-    kbLinkToMO: TCheckBox;
-    cbModOrganizerProfile: TComboBox;
     gbBSAs: TGroupBox;
     btnBrowseBSAOpt: TSpeedButton;
     edBsaOptPath: TEdit;
     lblBSAOptPath: TLabel;
     lblBSAOptOptions: TLabel;
     edBsaOptOptions: TEdit;
-    gbGameMode: TGroupBox;
-    lblGameMode: TLabel;
-    cbGameMode: TComboBox;
-    btnUpdateGameMode: TButton;
     GroupBox1: TGroupBox;
     btnDetect: TButton;
     procedure FormCreate(Sender: TObject);
