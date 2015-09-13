@@ -102,7 +102,7 @@ object ReportForm: TReportForm
       45)
     object lblFilename: TLabel
       Left = 6
-      Top = 3
+      Top = 2
       Width = 298
       Height = 21
       Align = alCustom

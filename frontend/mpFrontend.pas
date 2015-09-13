@@ -30,10 +30,11 @@ type
   TLogMessage = class (TObject)
   public
     time: string;
+    appTime: string;
     group: string;
     &label: string;
     text: string;
-    constructor Create(time, group, &label, text: string); Overload;
+    constructor Create(time, appTime, group, &label, text: string); Overload;
   end;
   // SERVER/CLIENT
   TmpMessage = class(TObject)
@@ -196,6 +197,7 @@ type
     mergeMessageColor: Int64;
     pluginMessageColor: Int64;
     errorMessageColor: Int64;
+    logMessageTemplate: string;
     preserveTempPath: boolean;
     [IniSection('Merging')]
     mergeDirectory: string;
@@ -217,7 +219,8 @@ type
     debugScriptFragments: boolean;
     [IniSection('Integrations')]
     usingMO: boolean;
-    MODirectory: string;
+    MOPath: string;
+    MOModsPath: string;
     copyGeneralAssets: boolean;
     compilerPath: string;
     decompilerPath: string;
@@ -317,12 +320,13 @@ type
   procedure InitializeClient;
   procedure ConnectToServer;
   function ServerAvailable: boolean;
+  procedure SendClientMessage(var msg: TmpMessage);
   function CheckAuthorization: boolean;
   procedure SendGameMode;
   procedure SendStatistics;
   procedure ResetAuth;
-  function UsernameAvailable: boolean;
-  function RegisterUser: boolean;
+  function UsernameAvailable(username: string): boolean;
+  function RegisterUser(username: string): boolean;
   function GetStatus: boolean;
   function VersionCompare(v1, v2: string): boolean;
   procedure CompareStatuses;
@@ -370,13 +374,13 @@ const
     ( id: 2; color: $0000FF; desc: 'Directories invalid'; ),
     ( id: 3; color: $0000FF; desc: 'Plugins not loaded'; ),
     ( id: 4; color: $0000FF; desc: 'Errors in plugins'; ),
-    ( id: 5; color: $900000; desc: 'Up to date'; ),
-    ( id: 6; color: $900000; desc: 'Up to date [Forced]'; ),
-    ( id: 7; color: $009000; desc: 'Ready to be built'; ),
-    ( id: 8; color: $009000; desc: 'Ready to be rebuilt'; ),
-    ( id: 9; color: $009000; desc: 'Ready to be rebuilt [Forced]'; ),
-    ( id: 10; color: $0080ed; desc: 'Check for errors required'; ),
-    ( id: 11; color: $0000FF; desc: 'Merge failed'; )
+    ( id: 5; color: $0000FF; desc: 'Merge failed'; ),
+    ( id: 6; color: $0080ed; desc: 'Check for errors required'; ),
+    ( id: 7; color: $900000; desc: 'Up to date'; ),
+    ( id: 8; color: $900000; desc: 'Up to date [Forced]'; ),
+    ( id: 9; color: $009000; desc: 'Ready to be built'; ),
+    ( id: 10; color: $009000; desc: 'Ready to be rebuilt'; ),
+    ( id: 11; color: $009000; desc: 'Ready to be rebuilt [Forced]'; )
   );
   // STATUS TYPES
   UpToDateStatuses = [5, 6];
@@ -386,6 +390,7 @@ const
 
   // DELAYS
   StatusDelay = 2.0 / (60.0 * 24.0); // 2 minutes
+  MaxConnectionAttempts = 3;
 
   // GAME MODES
   GameArray: array[1..4] of TGameMode = (
@@ -414,9 +419,10 @@ var
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveModProfile,
   ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath,
   ProfilePath: string;
+  ConnectionAttempts: Integer;
   ActiveMods: TStringList;
   TCPClient: TidTCPClient;
-  LastStatusTime: TDateTime;
+  AppStartTime, LastStatusTime: TDateTime;
   GameMode: TGameMode;
 
 implementation
@@ -1153,7 +1159,7 @@ begin
     exit;
 
   // load ini file
-  fname := settings.MODirectory + 'ModOrganizer.ini';
+  fname := settings.MOPath + 'ModOrganizer.ini';
   if(not FileExists(fname)) then begin
     Logger.Write('GENERAL', 'ModOrganizer', 'Mod Organizer ini file ' + fname + ' does not exist');
     exit;
@@ -1176,7 +1182,7 @@ begin
     exit;
 
   // prepare to load modlist
-  modlistFilePath := settings.MODirectory + 'profiles/' + profileName + '/modlist.txt';
+  modlistFilePath := settings.MOPath + 'profiles/' + profileName + '/modlist.txt';
   modlist.Clear;
 
   // exit if modlist file doesn't exist
@@ -1212,7 +1218,7 @@ begin
   // check for file in each mod folder in modlist
   for i := 0 to Pred(modlist.Count) do begin
     modName := modlist[i];
-    filePath := settings.MODirectory + 'mods\' + modName + '\' + filename;
+    filePath := settings.MOModsPath + modName + '\' + filename;
     if (FileExists(filePath)) then begin
       Result := modName;
       exit;
@@ -1792,16 +1798,44 @@ begin
   sl.Free;
 end;
 
-procedure SavePluginInfo;
+function IndexOfDump(a: TSuperArray; plugin: TPlugin): Integer;
 var
   i: Integer;
-  plugin: TPlugin;
-  json: ISuperObject;
-  filename: string;
+  obj: ISuperObject;
 begin
-  // initialize json
-  json := SO;
-  json.O['plugins'] := SA([]);
+  Result := -1;
+  for i := 0 to Pred(a.Length) do begin
+    obj := a.O[i];
+    if (obj.S['filename'] = plugin.filename)
+    and (obj.S['hash'] = plugin.hash) then begin
+      Result := i;
+      exit;
+    end;
+  end;
+end;
+
+procedure SavePluginInfo;
+var
+  i, index: Integer;
+  plugin: TPlugin;
+  obj: ISuperObject;
+  filename: string;
+  sl: TStringList;
+begin
+  // don't load file if it doesn't exist
+  filename := 'user\' + wbAppName + 'PluginInfo.json';
+  if FileExists(filename) then begin
+    // load file text into SuperObject to parse it
+    sl := TStringList.Create;
+    sl.LoadFromFile(filename);
+    obj := SO(PChar(sl.Text));
+    sl.Free;
+  end
+  else begin
+    // initialize new json object
+    obj := SO;
+    obj.O['plugins'] := SA([]);
+  end;
 
   // loop through plugins
   Tracker.Write('Dumping plugin errors to JSON');
@@ -1811,7 +1845,11 @@ begin
     if not (plugin.HasBeenCheckedForErrors or plugin.bDisallowMerging) then
       continue;
     Tracker.Write('  Dumping '+plugin.filename);
-    json.A['plugins'].Add(plugin.InfoDump);
+    index := IndexOfDump(obj.A['plugins'], plugin);
+    if index = -1 then
+      obj.A['plugins'].Add(plugin.InfoDump)
+    else
+      obj.A['plugins'].O[index] := plugin.InfoDump;
   end;
 
   // save and finalize
@@ -1819,8 +1857,8 @@ begin
   filename := ProfilePath + 'PluginInfo.json';
   Tracker.Write('Saving to '+filename);
   Tracker.UpdateProgress(1);
-  json.SaveTo(filename);
-  json := nil;
+  obj.SaveTo(filename);
+  obj := nil;
 end;
 
 procedure LoadPluginInfo;
@@ -1846,7 +1884,7 @@ begin
     hash := pluginItem.AsObject.S['hash'];
     plugin := PluginByFileName(filename);
     if not Assigned(plugin) then
-      exit;
+      continue;
     if plugin.hash = hash then begin
       plugin.LoadInfoDump(pluginItem);
       plugin.GetFlags;
@@ -1886,26 +1924,34 @@ begin
   TCPClient := TidTCPClient.Create(nil);
   TCPClient.Host := settings.serverHost;
   TCPClient.Port := settings.serverPort;
-  TCPClient.ReadTimeout := 3000;
-  TCPClient.ConnectTimeout := 2000;
+  TCPClient.ReadTimeout := 5000;
+  TCPClient.ConnectTimeout := 1000;
+  ConnectionAttempts := 0;
 end;
 
 procedure ConnectToServer;
 begin
-  if (bConnecting or TCPClient.Connected) then
+  if (bConnecting or TCPClient.Connected)
+  or (ConnectionAttempts >= MaxConnectionAttempts) then
     exit;
 
   bConnecting := true;
   try
     Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
     TCPClient.Connect;
+    Logger.Write('CLIENT', 'Connect', 'Connection successful!');
     CheckAuthorization;
     SendGameMode;
     GetStatus;
     CompareStatuses;
-  except on x: Exception do
-    //if x.Message <> 'Already connected.' then
-      Logger.Write('CLIENT', 'Connect', 'Server unavailable. '+x.Message);
+  except
+    on x: Exception do begin
+      Logger.Write('ERROR', 'Connect', 'Connection failed.');
+      Inc(ConnectionAttempts);
+      if ConnectionAttempts = MaxConnectionAttempts then
+        Logger.Write('CLIENT', 'Connect', 'Maximum connection attempts reached.  '+
+          'Click the disconnected icon in the status bar to retry.');
+    end;
   end;
   bConnecting := false;
 end;
@@ -1913,24 +1959,34 @@ end;
 function ServerAvailable: boolean;
 begin
   Result := false;
-  if not TCPClient.Connected then
-    exit;
 
   try
-    TCPClient.IOHandler.WriteLn('', TIdTextEncoding.Default);
-    Result := true;
+    if TCPClient.Connected then begin
+      TCPClient.IOHandler.WriteLn('', TIdTextEncoding.Default);
+      Result := true;
+    end;
   except on Exception do
-    // server is unavailable
+    // we're not connected
   end;
+end;
+
+procedure SendClientMessage(var msg: TmpMessage);
+var
+  msgJson: string;
+begin
+  msgJson := TRttiJson.ToJson(msg);
+  TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
 end;
 
 function CheckAuthorization: boolean;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   Result := false;
   if not TCPClient.Connected then
+    exit;
+  if settings.username = '' then
     exit;
   Logger.Write('CLIENT', 'Login', 'Checking if authenticated as "'+settings.username+'"');
 
@@ -1939,13 +1995,11 @@ begin
   try
     // send notify request to server
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, 'Authorized?');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Yes';
   except
@@ -1961,7 +2015,6 @@ end;
 procedure SendGameMode;
 var
   msg: TmpMessage;
-  msgJson: string;
 begin
   if not TCPClient.Connected then
     exit;
@@ -1971,8 +2024,7 @@ begin
   try
     // send notifification to server
     msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, wbAppName);
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
   except
     on x : Exception do begin
       Logger.Write('ERROR', 'Client', 'Exception sending game mode '+x.Message);
@@ -1983,7 +2035,7 @@ end;
 procedure SendStatistics;
 var
   msg, response: TmpMessage;
-  msgJson, LLine: string;
+  LLine: string;
 begin
   if not TCPClient.Connected then
     exit;
@@ -1993,13 +2045,11 @@ begin
   try
     // send statistics to server
     msg := TmpMessage.Create(MSG_STATISTICS, settings.username, settings.key, TRttiJson.ToJson(sessionStatistics));
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(LLine, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2011,7 +2061,7 @@ end;
 procedure ResetAuth;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   if not TCPClient.Connected then
     exit;
@@ -2022,13 +2072,11 @@ begin
   try
     // send auth reset request to server
     msg := TmpMessage.Create(MSG_AUTH_RESET, settings.username, settings.key, '');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2037,28 +2085,26 @@ begin
   end;
 end;
 
-function UsernameAvailable: boolean;
+function UsernameAvailable(username: string): boolean;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   Result := false;
   if not TCPClient.Connected then
     exit;
-  Logger.Write('CLIENT', 'Login', 'Checking username availability "'+settings.username+'"');
+  Logger.Write('CLIENT', 'Login', 'Checking username availability "'+username+'"');
 
   // attempt to register user
   // throws exception if server is unavailable
   try
     // send register request to server
-    msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, 'Check');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    msg := TmpMessage.Create(MSG_REGISTER, username, settings.key, 'Check');
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Available';
   except
@@ -2068,30 +2114,28 @@ begin
   end;
 end;
 
-function RegisterUser: boolean;
+function RegisterUser(username: string): boolean;
 var
   msg, response: TmpMessage;
-  msgJson, line: string;
+  line: string;
 begin
   Result := false;
   if not TCPClient.Connected then
     exit;
-  Logger.Write('CLIENT', 'Login', 'Registering username "'+settings.username+'"');
+  Logger.Write('CLIENT', 'Login', 'Registering username "'+username+'"');
 
   // attempt to register user
   // throws exception if server is unavailable
   try
     // send register request to server
-    msg := TmpMessage.Create(MSG_REGISTER, settings.username, settings.key, '');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    msg := TmpMessage.Create(MSG_REGISTER, username, settings.key, 'Register');
+    SendClientMessage(msg);
 
     // get response
     line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(line, response.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
-    Result := response.data = ('Registered ' + settings.username);
+    Result := response.data = ('Registered ' + username);
   except
     on x : Exception do begin
       Logger.Write('ERROR', 'Client', 'Exception registering username '+x.Message);
@@ -2102,7 +2146,7 @@ end;
 function GetStatus: boolean;
 var
   msg, response: TmpMessage;
-  msgJson, LLine: string;
+  LLine: string;
 begin
   Result := false;
   if not TCPClient.Connected then
@@ -2117,15 +2161,12 @@ begin
   try
     // send status request to server
     msg := TmpMessage.Create(MSG_STATUS, settings.username, settings.key, '');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
-    response := TmpMessage.Create;
-    response := TmpMessage(TRttiJson.FromJson(LLine, response.ClassType));
-    RemoteStatus := TmpStatus.Create;
-    RemoteStatus := TmpStatus(TRttiJson.FromJson(response.data, RemoteStatus.ClassType));
+    response := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
+    RemoteStatus := TmpStatus(TRttiJson.FromJson(response.data, TmpStatus));
     //Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2211,7 +2252,7 @@ end;
 function UpdateDictionary: boolean;
 var
   msg: TmpMessage;
-  msgJson, filename: string;
+  filename: string;
   stream: TFileStream;
 begin
   Result := false;
@@ -2225,8 +2266,7 @@ begin
   try
     // send request to server
     msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, filename);
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     stream := TFileStream.Create(filename, fmCreate + fmShareDenyNone);
@@ -2286,7 +2326,7 @@ end;
 function DownloadProgram: boolean;
 var
   msg: TmpMessage;
-  msgJson, filename: string;
+  filename: string;
   stream: TFileStream;
 begin
   Result := false;
@@ -2306,8 +2346,7 @@ begin
   try
     // send request to server
     msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, 'Program');
-    msgJson := TRttiJson.ToJson(msg);
-    TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+    SendClientMessage(msg);
 
     // get response
     Logger.Write('CLIENT', 'Update', 'Downloading '+filename);
@@ -2331,7 +2370,7 @@ var
   i: integer;
   report: TReport;
   msg, response: TmpMessage;
-  reportJson, msgJson, LLine: string;
+  reportJson, LLine: string;
 begin
   Result := false;
 
@@ -2346,8 +2385,7 @@ begin
 
       // send report to server
       msg := TmpMessage.Create(MSG_REPORT, settings.username, settings.key, reportJson);
-      msgJson := TRttiJson.ToJson(msg);
-      TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+      SendClientMessage(msg);
 
       // get response
       LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
@@ -2398,9 +2436,10 @@ end;
 }
 {******************************************************************************}
 
-constructor TLogMessage.Create(time, group, &label, text: string);
+constructor TLogMessage.Create(time, appTime, group, &label, text: string);
 begin
   self.time := time;
+  self.appTime := appTime;
   self.group := group;
   self.&label := &label;
   self.text := text;
@@ -2607,7 +2646,7 @@ begin
   if settings.usingMO then begin
     modName := GetModContainingFile(ActiveMods, filename);
     if modName <> '' then
-      dataPath := settings.MODirectory + 'mods\' + modName + '\';
+      dataPath := settings.MOModsPath + modName + '\';
   end;
 end;
 
@@ -2841,14 +2880,14 @@ begin
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
-  if settings.usingMO and (settings.MODirectory = '') then begin
+  if settings.usingMO and (settings.MOPath = '') then begin
     Logger.Write('MERGE', 'Status', 'Mod Organizer Directory blank');
     status := 2;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
-  if settings.usingMO and not DirectoryExists(settings.MODirectory) then begin
+  if settings.usingMO and not DirectoryExists(settings.MOPath) then begin
      Logger.Write('MERGE', 'Status', 'Mod Organizer Directory invalid');
      status := 2;
      exit;
@@ -2991,6 +3030,7 @@ end;
 { TSettings constructor }
 constructor TSettings.Create;
 begin
+  // default settings
   language := 'English';
   serverHost := 'mergeplugins.us.to';
   serverPort := 960;
@@ -2999,21 +3039,24 @@ begin
   updateDictionary := false;
   updateProgram := false;
   usingMO := false;
-  MODirectory := '';
+  MOPath := '';
   copyGeneralAssets := false;
   mergeDirectory := wbDataPath;
   handleFaceGenData := true;
   handleVoiceAssets := true;
   handleMCMTranslations := true;
+  handleINIs := true;
   handleScriptFragments := false;
   extractBSAs := false;
   buildMergedBSA := false;
+  batCopy := true;
   generalMessageColor := clGreen;
   loadMessageColor := clPurple;
   clientMessageColor := clBlue;
   mergeMessageColor := $000080FF;
   pluginMessageColor := $00484848;
   errorMessageColor := clRed;
+  logMessageTemplate := '[{{AppTime}}] ({{Group}}) {{Label}}: {{Text}}';
 
   // generate a new secure key
   GenerateKey;

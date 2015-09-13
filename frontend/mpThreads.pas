@@ -119,7 +119,7 @@ begin
 
     // PREPARE TO LOAD PLUGINS
     if settings.usingMO then
-      wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveModProfile+'\plugins.txt'
+      wbPluginsFileName := settings.MOPath + 'profiles\'+ActiveProfile+'\plugins.txt'
     else
       wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
     Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
@@ -194,7 +194,6 @@ var
   f: IwbFile;
   plugin: TPlugin;
 begin
-  wbStartTime := Now;
   try
     for i := 0 to Pred(PluginsList.Count) do begin
       plugin := TPlugin(PluginsList[i]);

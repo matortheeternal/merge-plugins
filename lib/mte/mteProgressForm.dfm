@@ -15,6 +15,7 @@ object ProgressForm: TProgressForm
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object ProgressLabel: TLabel
@@ -38,7 +39,7 @@ object ProgressForm: TProgressForm
     TabOrder = 0
   end
   object DetailsButton: TButton
-    Left = 525
+    Left = 428
     Top = 309
     Width = 91
     Height = 25
@@ -56,5 +57,16 @@ object ProgressForm: TProgressForm
     Align = alCustom
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 2
+  end
+  object CancelButton: TButton
+    Left = 525
+    Top = 309
+    Width = 91
+    Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
+    Caption = 'Cancel'
+    TabOrder = 3
+    OnClick = CancelButtonClick
   end
 end

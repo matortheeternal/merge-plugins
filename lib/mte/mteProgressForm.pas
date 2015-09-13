@@ -14,6 +14,7 @@ type
     DetailsButton: TButton;
     ProgressBar: TProgressBar;
     ProgressLabel: TLabel;
+    CancelButton: TButton;
     procedure UpdateProgress(const i: Integer);
     procedure Write(const s: string);
     procedure SaveLog;
@@ -23,6 +24,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ToggleDetails(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure CancelButtonClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
@@ -54,6 +57,11 @@ begin
   end;
 end;
 
+procedure TProgressForm.CancelButtonClick(Sender: TObject);
+begin
+  Close;
+end;
+
 procedure TProgressForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SetTaskbarProgressState(tbpsNone);
@@ -83,6 +91,12 @@ begin
   Tracker.OnProgressEvent := UpdateProgress;
   Tracker.OnLogEvent := Write;
   Tracker.OnSetEvent := SetProgress;
+end;
+
+procedure TProgressForm.FormShow(Sender: TObject);
+begin
+  if (fsModal in FormState) then
+    CancelButton.Caption := 'Close';
 end;
 
 procedure TProgressForm.MaxProgress(const i: Integer);

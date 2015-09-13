@@ -305,14 +305,14 @@ object OptionsForm: TOptionsForm
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
-        Caption = 'Asset Handling'
+        Caption = 'Asset handling'
         TabOrder = 0
         object lblMergeDestination: TLabel
           Left = 12
           Top = 24
-          Width = 134
+          Width = 132
           Height = 13
-          Caption = 'Merge Destination Directory'
+          Caption = 'Merge destination directory'
         end
         object btnBrowseAssetDirectory: TSpeedButton
           Left = 519
@@ -343,7 +343,7 @@ object OptionsForm: TOptionsForm
           Top = 77
           Width = 117
           Height = 17
-          Caption = 'Handle Voice Assets'
+          Caption = 'Handle voice assets'
           TabOrder = 2
         end
         object kbTranslations: TCheckBox
@@ -351,7 +351,7 @@ object OptionsForm: TOptionsForm
           Top = 100
           Width = 139
           Height = 17
-          Caption = 'Handle MCM Translations'
+          Caption = 'Handle MCM translations'
           Ctl3D = False
           ParentCtl3D = False
           TabOrder = 3
@@ -361,7 +361,7 @@ object OptionsForm: TOptionsForm
           Top = 100
           Width = 101
           Height = 17
-          Caption = 'Build Merged BSA'
+          Caption = 'Build merged BSA'
           TabOrder = 4
           OnMouseUp = kbBuildBSAMouseUp
         end
@@ -370,7 +370,7 @@ object OptionsForm: TOptionsForm
           Top = 54
           Width = 136
           Height = 17
-          Caption = 'Handle Script Fragments'
+          Caption = 'Handle script fragments'
           TabOrder = 5
         end
         object kbExtractBSAs: TCheckBox
@@ -393,9 +393,9 @@ object OptionsForm: TOptionsForm
         object kbINIs: TCheckBox
           Left = 12
           Top = 123
-          Width = 79
+          Width = 101
           Height = 17
-          Caption = 'Handle INIs'
+          Caption = 'Handle INI files'
           TabOrder = 8
         end
       end
@@ -507,18 +507,18 @@ object OptionsForm: TOptionsForm
           TabOrder = 1
         end
       end
-      object gbColoring: TGroupBox
+      object gbLogging: TGroupBox
         Left = 6
         Top = 160
         Width = 548
-        Height = 107
+        Height = 190
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
         Align = alCustom
         Anchors = [akLeft, akTop, akRight]
-        Caption = 'Log Coloring'
+        Caption = 'Logging'
         TabOrder = 1
         object lblClientColor: TLabel
           Left = 12
@@ -529,7 +529,7 @@ object OptionsForm: TOptionsForm
         end
         object lblGeneralColor: TLabel
           Left = 12
-          Top = 47
+          Top = 48
           Width = 37
           Height = 13
           Margins.Left = 12
@@ -538,7 +538,7 @@ object OptionsForm: TOptionsForm
         end
         object lblLoadColor: TLabel
           Left = 12
-          Top = 74
+          Top = 76
           Width = 23
           Height = 13
           Margins.Left = 12
@@ -556,7 +556,7 @@ object OptionsForm: TOptionsForm
         end
         object lblPluginColor: TLabel
           Left = 274
-          Top = 47
+          Top = 48
           Width = 28
           Height = 13
           Margins.Top = 11
@@ -566,13 +566,46 @@ object OptionsForm: TOptionsForm
         end
         object lblErrorColor: TLabel
           Left = 274
-          Top = 74
+          Top = 76
           Width = 29
           Height = 13
           Margins.Top = 11
           Align = alCustom
           Anchors = [akTop, akRight]
           Caption = 'Errors'
+        end
+        object lblSample: TLabel
+          Left = 12
+          Top = 155
+          Width = 34
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'Sample'
+        end
+        object lblSampleValue: TLabel
+          Left = 88
+          Top = 155
+          Width = 232
+          Height = 13
+          Margins.Left = 6
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '[12:34] (GENERAL) Test: This is a test message.'
+        end
+        object lblTemplate: TLabel
+          Left = 12
+          Top = 109
+          Width = 44
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = 'Template'
         end
         object cbClientColor: TColorBox
           Left = 88
@@ -633,6 +666,19 @@ object OptionsForm: TOptionsForm
           Anchors = [akTop, akRight]
           TabOrder = 5
         end
+        object meTemplate: TMemo
+          Left = 88
+          Top = 109
+          Width = 449
+          Height = 37
+          Align = alCustom
+          Anchors = [akLeft, akTop, akRight]
+          Lines.Strings = (
+            '[{{Time}}] ({{Group}}) {{Label}}: {{Text}}')
+          ScrollBars = ssVertical
+          TabOrder = 6
+          OnChange = meTemplateChange
+        end
       end
       object gbMergeProfile: TGroupBox
         Left = 6
@@ -688,12 +734,12 @@ object OptionsForm: TOptionsForm
         Margins.Bottom = 6
         Caption = 'Mod Organizer'
         TabOrder = 0
-        object lblModOrganizerDirectory: TLabel
+        object lblModOrganizerPath: TLabel
           Left = 12
           Top = 50
-          Width = 123
+          Width = 95
           Height = 13
-          Caption = 'Mod Organizer mods path'
+          Caption = 'Mod Organizer path'
         end
         object btnBrowseMO: TSpeedButton
           Left = 519
@@ -705,6 +751,24 @@ object OptionsForm: TOptionsForm
           ParentShowHint = False
           ShowHint = True
           OnClick = btnBrowseMOClick
+        end
+        object lblModOrganizerModsPath: TLabel
+          Left = 12
+          Top = 77
+          Width = 123
+          Height = 13
+          Caption = 'Mod Organizer mods path'
+        end
+        object btnBrowseMOMods: TSpeedButton
+          Left = 519
+          Top = 74
+          Width = 23
+          Height = 22
+          Hint = 'Browse'
+          Margins.Right = 6
+          ParentShowHint = False
+          ShowHint = True
+          OnClick = btnBrowseMOModsClick
         end
         object kbUsingMO: TCheckBox
           Left = 12
@@ -723,12 +787,19 @@ object OptionsForm: TOptionsForm
           TabOrder = 1
         end
         object kbCopyGeneralAssets: TCheckBox
-          Left = 12
-          Top = 75
+          Left = 192
+          Top = 20
           Width = 133
           Height = 17
           Caption = 'Copy general asssets'
           TabOrder = 2
+        end
+        object edModOrganizerModsPath: TEdit
+          Left = 192
+          Top = 74
+          Width = 321
+          Height = 21
+          TabOrder = 3
         end
       end
       object gbPapyrus: TGroupBox
@@ -871,7 +942,7 @@ object OptionsForm: TOptionsForm
         end
       end
       object btnDetect: TButton
-        Left = 408
+        Left = 414
         Top = 330
         Width = 140
         Height = 25

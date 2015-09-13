@@ -245,6 +245,10 @@ object MergeForm: TMergeForm
               Width = 80
             end
             item
+              Caption = 'AppTime'
+              Width = 80
+            end
+            item
               Caption = 'Group'
               Width = 80
             end
@@ -593,6 +597,7 @@ object MergeForm: TMergeForm
           00000000C0030000800100008000000000000000000000000000000000000000
           0000000000010000000100000001000080010000F0010000F0010000F0010000
           F8030000}
+        OnClick = ImageDisconnectedClick
       end
       object ImageConnected: TImage
         Left = 6
@@ -3366,7 +3371,7 @@ object MergeForm: TMergeForm
       000000000000}
   end
   object ReconnectTimer: TTimer
-    Interval = 30000
+    Interval = 10000
     OnTimer = OnTimer
     Left = 784
     Top = 8

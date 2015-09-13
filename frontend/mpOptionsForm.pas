@@ -53,7 +53,7 @@ type
     gbPrivacy: TGroupBox;
     kbNoStatistics: TCheckBox;
     kbNoPersistentConnection: TCheckBox;
-    gbColoring: TGroupBox;
+    gbLogging: TGroupBox;
     lblClientColor: TLabel;
     lblGeneralColor: TLabel;
     lblLoadColor: TLabel;
@@ -68,7 +68,7 @@ type
     cbErrorColor: TColorBox;
     IntegrationsTabSheet: TTabSheet;
     gbModOrganizer: TGroupBox;
-    lblModOrganizerDirectory: TLabel;
+    lblModOrganizerPath: TLabel;
     btnBrowseMO: TSpeedButton;
     kbUsingMO: TCheckBox;
     edModOrganizerPath: TEdit;
@@ -104,6 +104,13 @@ type
     edBsaOptOptions: TEdit;
     GroupBox1: TGroupBox;
     btnDetect: TButton;
+    meTemplate: TMemo;
+    lblSample: TLabel;
+    lblSampleValue: TLabel;
+    lblTemplate: TLabel;
+    lblModOrganizerModsPath: TLabel;
+    edModOrganizerModsPath: TEdit;
+    btnBrowseMOMods: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -127,6 +134,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure kbBuildBSAMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure meTemplateChange(Sender: TObject);
+    procedure btnBrowseMOModsClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -135,6 +144,7 @@ type
 
 var
   OptionsForm: TOptionsForm;
+  slSampleLogMessage: TStringList;
 
 implementation
 
@@ -169,8 +179,15 @@ end;
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
 begin
   BrowseForFolder(edModOrganizerPath, ProgramPath);
-  if DirectoryExists(edModOrganizerPath.Text + 'mods\') then
+  if DirectoryExists(edModOrganizerPath.Text + 'mods\') then begin
+    edModOrganizerModsPath.Text := edModOrganizerPath.Text + 'mods\';
     edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+  end;
+end;
+
+procedure TOptionsForm.btnBrowseMOModsClick(Sender: TObject);
+begin
+  BrowseForFolder(edModOrganizerModsPath, ProgramPath);
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
@@ -268,7 +285,10 @@ begin
   // if found, set TEdit captions, else alert user
   if (modOrganizerPath <> '') then begin
     edModOrganizerPath.Text := Copy(modOrganizerPath, 1, length(modOrganizerPath) - 16);
-    edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+    if DirectoryExists(edModOrganizerPath.Text + 'mods\') then begin
+      edModOrganizerModsPath.Text := edModOrganizerPath.Text + 'mods\';
+      edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+    end;
   end
   else begin
     MessageDlg('Couldn''t automatically detect Mod Organizer''s file path.  '+
@@ -281,7 +301,7 @@ procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
   // check if we need to update merge status afterwards
   bUpdateMergeStatus := (settings.usingMO <> kbUsingMO.Checked)
-    or (settings.MODirectory <> edModOrganizerPath.Text)
+    or (settings.MOPath <> edModOrganizerPath.Text)
     or (settings.mergeDirectory <> edMergeDirectory.Text);
 
   // General > Language
@@ -316,17 +336,19 @@ begin
   settings.debugBSAs := kbDebugBSAs.Checked;
   settings.debugScriptFragments := kbDebugScriptFragments.Checked;
 
-  // Advanced > Log Coloring
+  // Advanced > Logging
   settings.clientMessageColor := cbClientColor.Selected ;
   settings.generalMessageColor := cbGeneralColor.Selected;
   settings.loadMessageColor := cbLoadColor.Selected;
   settings.mergeMessageColor := cbMergeColor.Selected;
   settings.pluginMessageColor := cbPluginColor.Selected;
   settings.errorMessageColor := cbErrorColor.Selected;
+  settings.logMessageTemplate := meTemplate.Lines.Text;
 
   // Integrations > Mod Organizer
   settings.usingMO := kbUsingMO.Checked;
-  settings.MODirectory := edModOrganizerPath.Text;
+  settings.MOPath := edModOrganizerPath.Text;
+  settings.MOModsPath := edModOrganizerModsPath.Text;
   settings.copyGeneralAssets := kbCopyGeneralAssets.Checked;
   // Integrations > Papyrus
   settings.decompilerPath := edDecompilerPath.Text;
@@ -350,9 +372,9 @@ begin
   end;
 
   if (btnRegister.Caption = 'Register') then begin
-    settings.username := edUsername.Text;
-    if RegisterUser then begin
+    if RegisterUser(edUsername.Text) then begin
       settings.registered := true;
+      settings.username := edUsername.Text;
       SaveSettings;
       lblStatus.Caption := 'Registered';
       lblStatus.Font.Color := clGreen;
@@ -367,7 +389,7 @@ begin
     end;
   end
   else begin
-    if UsernameAvailable then begin
+    if UsernameAvailable(edUsername.Text) then begin
       lblStatus.Caption := 'Username available!';
       lblStatus.Font.Color := clBlue;
       lblStatus.Hint := 'Click register to claim it.';
@@ -454,7 +476,13 @@ begin
   if Length(edUsername.Text) < 4 then begin
     lblStatus.Caption := 'Invalid username';
     lblStatus.Font.Color := clRed;
-    lblStatus.Hint := 'Username must be 4 or more characters.';
+    lblStatus.Hint := 'Username length must be at least 4 characters.';
+    btnRegister.Enabled := false;
+  end
+  else if Length(edUsername.Text) > 24 then begin
+    lblStatus.Caption := 'Invalid username';
+    lblStatus.Font.Color := clRed;
+    lblStatus.Hint := 'Username length cannot exceed 24 characters.';
     btnRegister.Enabled := false;
   end
   else begin
@@ -471,6 +499,14 @@ begin
   // get status update if we can
   if GetStatus then
     CompareStatuses;
+
+  // prepare sample log message
+  slSampleLogMessage := TStringList.Create;
+  slSampleLogMessage.Values['Time'] := '12:34:56';
+  slSampleLogMessage.Values['AppTime'] := '00:01:52';
+  slSampleLogMessage.Values['Group'] := 'GENERAL';
+  slSampleLogMessage.Values['Label'] := 'Test';
+  slSampleLogMessage.Values['Text'] := 'This is a test message.';
 
   // General > Language
   cbLanguage.Text := settings.language;
@@ -504,17 +540,19 @@ begin
   kbDebugBSAs.Checked := settings.debugBSAs;
   kbDebugScriptFragments.Checked := settings.debugScriptFragments;
 
-  // Advanced > Log Coloring
+  // Advanced > Logging
   cbClientColor.Selected := TColor(settings.clientMessageColor);
   cbGeneralColor.Selected := TColor(settings.generalMessageColor);
   cbLoadColor.Selected := TColor(settings.loadMessageColor);
   cbMergeColor.Selected := TColor(settings.mergeMessageColor);
   cbPluginColor.Selected := TColor(settings.pluginMessageColor);
   cbErrorColor.Selected := TColor(settings.errorMessageColor);
+  meTemplate.Lines.Text := settings.logMessageTemplate;
 
   // Integrations > Mod Organizer
   kbUsingMO.Checked := settings.usingMO;
-  edModOrganizerPath.Text := settings.MODirectory;
+  edModOrganizerPath.Text := settings.MOPath;
+  edModOrganizerModsPath.Text := settings.MOModsPath;
   kbCopyGeneralAssets.Checked := settings.copyGeneralAssets;
   // Integrations > Papyrus
   edDecompilerPath.Text := settings.decompilerPath;
@@ -570,12 +608,14 @@ begin
 
   // set up browse buttons
   btnBrowseMO.Flat := true;
+  btnBrowseMOMods.Flat := true;
   btnBrowseAssetDirectory.Flat := true;
   btnBrowseDecompiler.Flat := true;
   btnBrowseCompiler.Flat := true;
   btnBrowseFlags.Flat := true;
   btnBrowseBsaOpt.Flat := true;
   IconList.GetBitmap(0, btnBrowseMO.Glyph);
+  IconList.GetBitmap(0, btnBrowseMOMods.Glyph);
   IconList.GetBitmap(0, btnBrowseAssetDirectory.Glyph);
   IconList.GetBitmap(0, btnBrowseDecompiler.Glyph);
   IconList.GetBitmap(0, btnBrowseCompiler.Glyph);
@@ -601,8 +641,18 @@ var
 begin
   b := kbUsingMO.Checked;
   edModOrganizerPath.Enabled := b;
+  edModOrganizerModsPath.Enabled := b;
   btnBrowseMO.Enabled := b;
+  btnBrowseMOMods.Enabled := b;
   kbCopyGeneralAssets.Enabled := b;
+end;
+
+procedure TOptionsForm.meTemplateChange(Sender: TObject);
+var
+  template: string;
+begin
+  template := meTemplate.Lines.Text;
+  lblSampleValue.Caption := ApplyTemplate(template, slSampleLogMessage);
 end;
 
 end.
