@@ -296,10 +296,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetCopying: TGroupBox
         Left = 6
         Top = 6
@@ -599,6 +595,12 @@ object OptionsForm: TOptionsForm
           Margins.Right = 6
           Margins.Bottom = 6
           Caption = '[12:34] (GENERAL) Test: This is a test message.'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clGreen
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
         end
         object lblTemplate: TLabel
           Left = 12
@@ -704,13 +706,22 @@ object OptionsForm: TOptionsForm
           Height = 13
           Caption = 'Current profile'
         end
-        object cbCurrentProfile: TComboBox
-          Left = 184
-          Top = 20
-          Width = 202
-          Height = 21
-          Style = csDropDownList
-          TabOrder = 0
+        object lblCurrentProfileName: TLabel
+          Left = 151
+          Top = 24
+          Width = 89
+          Height = 13
+          Margins.Left = 6
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '<PROFILE NAME>'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clGreen
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
         end
         object btnChangeMergeProfile: TButton
           Left = 392
@@ -718,8 +729,7 @@ object OptionsForm: TOptionsForm
           Width = 150
           Height = 25
           Caption = 'Switch merge profiles'
-          Enabled = False
-          TabOrder = 1
+          TabOrder = 0
           OnClick = btnChangeMergeProfileClick
         end
       end
@@ -727,10 +737,6 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6

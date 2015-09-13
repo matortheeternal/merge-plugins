@@ -29,7 +29,7 @@ uses
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpReportForm in 'mpReportForm.pas' {Form1},
-  mpThreads in 'mpThreads.pas' {$R *.res};
+  mpThreads in 'mpThreads.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

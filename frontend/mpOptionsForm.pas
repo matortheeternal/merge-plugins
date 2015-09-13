@@ -94,7 +94,6 @@ type
     btnBrowseFlags: TSpeedButton;
     gbMergeProfile: TGroupBox;
     lblCurrentProfile: TLabel;
-    cbCurrentProfile: TComboBox;
     btnChangeMergeProfile: TButton;
     gbBSAs: TGroupBox;
     btnBrowseBSAOpt: TSpeedButton;
@@ -111,18 +110,18 @@ type
     lblModOrganizerModsPath: TLabel;
     edModOrganizerModsPath: TEdit;
     btnBrowseMOMods: TSpeedButton;
+    lblCurrentProfileName: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
     procedure btnBrowseMOClick(Sender: TObject);
     procedure kbUsingMOClick(Sender: TObject);
-    procedure btnUpdateGameModeClick(Sender: TObject);
+    procedure btnChangeMergeProfileClick(Sender: TObject);
     procedure edUsernameChange(Sender: TObject);
     procedure btnRegisterClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure btnUpdateDictionaryClick(Sender: TObject);
     procedure btnUpdateProgramClick(Sender: TObject);
-    procedure btnChangeMergeProfileClick(Sender: TObject);
     procedure btnBrowseDecompilerClick(Sender: TObject);
     procedure btnBrowseCompilerClick(Sender: TObject);
     procedure btnBrowseFlagsClick(Sender: TObject);
@@ -442,13 +441,6 @@ begin
   end;
 end;
 
-procedure TOptionsForm.btnUpdateGameModeClick(Sender: TObject);
-begin
-  bChangeGameMode := true;
-  btnOKClick(nil);
-  Close;
-end;
-
 procedure TOptionsForm.btnChangeMergeProfileClick(Sender: TObject);
 begin
   bChangeMergeProfile := true;
@@ -540,6 +532,8 @@ begin
   kbDebugBSAs.Checked := settings.debugBSAs;
   kbDebugScriptFragments.Checked := settings.debugScriptFragments;
 
+  // Advanced > Profile
+  lblCurrentProfileName.Caption := settings.profile;
   // Advanced > Logging
   cbClientColor.Selected := TColor(settings.clientMessageColor);
   cbGeneralColor.Selected := TColor(settings.generalMessageColor);

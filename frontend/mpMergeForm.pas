@@ -390,8 +390,8 @@ begin
   if bInstallUpdate then
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
   // restart program if game mode changed
-  if bChangeGameMode then
-    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '-sg', '', SW_SHOWNORMAL);
+  if bChangeMergeProfile then
+    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
 
   // allow close and close
   bAllowClose := true;
@@ -2051,7 +2051,7 @@ begin
   UpdateListViews;
 
   // if user selected to change game mode, close application
-  if bChangeGameMode then
+  if bChangeMergeProfile then
     Close;
 
   // if user selected to update program, close application
