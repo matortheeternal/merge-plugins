@@ -19,6 +19,8 @@ uses
   Dialogs,
   Controls,
   SysUtils,
+  mpProfileForm in 'mpProfileForm.pas' {ProfileForm},
+  mpProfilePanel in 'mpProfilePanel.pas',
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
   mpFrontend in 'mpFrontend.pas',
   mpMerge in 'mpMerge.pas',
@@ -26,9 +28,8 @@ uses
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
-  mpGameForm in 'mpGameForm.pas' {GameForm},
   mpReportForm in 'mpReportForm.pas' {Form1},
-  mpThreads in 'mpThreads.pas';
+  mpThreads in 'mpThreads.pas' {$R *.res};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -40,7 +41,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
-  bSelectGame: boolean;
+  bProfileProvided: boolean;
   ProgramPath: string;
 begin
   // set important vars
@@ -49,20 +50,20 @@ begin
   ProgramPath := ExtractFilePath(ParamStr(0));
 
   // get command line arguments
-  bSelectGame := FindCmdLineSwitch('sg');
+  bProfileProvided := FindCmdLineSwitch('profile');
 
   // initialize application, load settings
   Application.Initialize;
-  ForceDirectories(ProgramPath+'user');
+  ForceDirectories(ProgramPath + 'profiles');
   LoadSettings;
   LoadStatistics;
 
   // have user select game mode
-  if (bSelectGame) or (settings.defaultGame = 0) then begin
-    GameForm := TGameForm.Create(nil);
-    if not (GameForm.ShowModal = mrOk) then
+  if not bProfileProvided then begin
+    ProfileForm := TProfileForm.Create(nil);
+    if not (ProfileForm.ShowModal = mrOk) then
       exit;
-    GameForm.Free;
+    ProfileForm.Free;
   end;
 
   // run main application
@@ -71,7 +72,7 @@ begin
   Application.CreateForm(TMergeForm, MergeForm);
   Application.CreateForm(TDictionaryForm, DictionaryForm);
   Application.CreateForm(TEditForm, EditForm);
-  Application.CreateForm(TGameForm, GameForm);
+  Application.CreateForm(TProfileForm, ProfileForm);
   Application.CreateForm(TOptionsForm, OptionsForm);
   Application.CreateForm(TSplashForm, SplashForm);
   Application.CreateForm(TReportForm, ReportForm);

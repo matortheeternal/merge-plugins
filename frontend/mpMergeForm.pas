@@ -15,7 +15,7 @@ uses
   mteHelpers, mteTracker, mteLogger, mteProgressForm,
   // mp units
   mpFrontend, mpThreads, mpMerge, mpDictionaryForm, mpOptionsForm,
-  mpSplashForm, mpEditForm, mpGameForm, mpReportForm,
+  mpSplashForm, mpEditForm, mpReportForm,
   // tes5edit units
   wbBSA, wbHelpers, wbInterface, wbImplementation;
 
@@ -800,7 +800,7 @@ var
   plugin: TPlugin;
 begin
   pt := PluginsListView.ScreenToClient(Mouse.CursorPos);
-  li := PluginsListView.GetItemAt(pt.x, pt.y) ;
+  li := PluginsListView.GetItemAt(pt.x, pt.y);
   // if not over an item, exit
   if not Assigned(li) then
     exit;

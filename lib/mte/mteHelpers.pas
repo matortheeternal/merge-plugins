@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, Masks, Dialogs, StdCtrls, StrUtils, FileCtrl, ShellApi,
-  Classes, ComCtrls, CommCtrl, DateUtils, shlObj;
+  Classes, ComCtrls, CommCtrl, DateUtils, shlObj, IOUtils;
 
   { General functions }
   function csvText(s: string): string;
@@ -26,6 +26,7 @@ uses
   procedure SaveStringToFile(s: string; fn: string);
   function ApplyTemplate(const template: string; var map: TStringList): string;
   { Windows API functions }
+  function FileNameValid(filename: string): boolean;
   procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
   procedure BrowseForFile(var ed: TEdit; filter, initDir: string);
   procedure BrowseForFolder(var ed: TEdit; initDir: string);
@@ -42,6 +43,7 @@ uses
   procedure CorrectListViewWidth(var lv: TListView);
   function GetVersionMem: string;
   function FileVersion(const FileName: string): String;
+  procedure DeleteDirectory(const path: string);
 
 implementation
 
@@ -312,6 +314,13 @@ end;
   - RecursiveFileSearch
 }
 {******************************************************************************}
+
+{ Returns true if the input filename is valid }
+function FileNameValid(filename: string): boolean;
+begin
+  Result := (Length(Trim(filename)) > 0) and
+    TPath.HasValidFileNameChars(filename, false);
+end;
 
 { Create a new synchronous or asynchronous process }
 procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
@@ -676,6 +685,19 @@ begin
   finally
     FreeMem(PVerInfo, VerInfoSize);
   end;
+end;
+
+{ Deletes the directory at @path and all files it contains }
+procedure DeleteDirectory(const path: string);
+var
+  ShOp: TSHFileOpStruct;
+begin
+  ShOp.Wnd := 0;
+  ShOp.wFunc := FO_DELETE;
+  ShOp.pFrom := PChar(path + #0);
+  ShOp.pTo := nil;
+  ShOp.fFlags := FOF_NOCONFIRMATION or FOF_ALLOWUNDO or FOF_NO_UI;
+  SHFileOperation(ShOp);
 end;
 
 end.

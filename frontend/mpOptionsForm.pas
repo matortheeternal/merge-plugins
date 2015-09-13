@@ -8,7 +8,7 @@ uses
   // mte units
   mteHelpers,
   // mp units
-  mpFrontend, mpGameForm;
+  mpFrontend;
 
 type
   TOptionsForm = class(TForm)
@@ -322,8 +322,6 @@ begin
   settings.debugBSAs := kbDebugBSAs.Checked;
   settings.debugScriptFragments := kbDebugScriptFragments.Checked;
 
-  // Advanced > Game Mode
-  settings.defaultGame := GetGameID(cbGameMode.Text);
   // Advanced > Log Coloring
   settings.clientMessageColor := cbClientColor.Selected ;
   settings.generalMessageColor := cbGeneralColor.Selected;
@@ -475,9 +473,6 @@ begin
 end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);
-var
-  index: integer;
-  defaultGame: TGameMode;
 begin
   // get status update if we can
   if GetStatus then
@@ -534,20 +529,6 @@ begin
   // Integrations > BSAs
   edBsaOptPath.Text := settings.bsaOptPath;
   edBsaOptOptions.Text := settings.bsaOptOptions;
-
-  // load valid game paths
-  if GamePathValid(settings.tes5path, 1) then
-    cbGameMode.Items.Add(GameArray[1].longName);
-  if GamePathValid(settings.fnvpath, 2) then
-    cbGameMode.Items.Add(GameArray[2].longName);
-  if GamePathValid(settings.tes4path, 3) then
-    cbGameMode.Items.Add(GameArray[3].longName);
-  if GamePathValid(settings.fo3path, 4) then
-    cbGameMode.Items.Add(GameArray[4].longName);
-  defaultGame := GameArray[settings.defaultGame];
-  index := cbGameMode.Items.IndexOf(defaultGame.longName);
-  if index > -1 then
-    cbGameMode.ItemIndex := index;
 
   // disable controls if not using mod organizer
   kbUsingMOClick(nil);

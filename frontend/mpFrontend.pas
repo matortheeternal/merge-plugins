@@ -175,6 +175,9 @@ type
   TSettings = class(TObject)
   public
     [IniSection('General')]
+    profile: string;
+    gameMode: integer;
+    gamePath: string;
     language: string;
     username: string;
     key: string;
@@ -185,12 +188,6 @@ type
     updateDictionary: boolean;
     updateProgram: boolean;
     [IniSection('Advanced')]
-    defaultGame: integer;
-    selectedGame: integer;
-    tes5path: string;
-    fnvpath: string;
-    tes4path: string;
-    fo3path: string;
     serverHost: string;
     serverPort: integer;
     generalMessageColor: Int64;
@@ -239,6 +236,15 @@ type
     pluginsMerged: integer;
     reportsSubmitted: integer;
     constructor Create; virtual;
+  end;
+  TProfile = class(TObject)
+  public
+    name: string;
+    gameMode: Integer;
+    gamePath: string;
+    constructor Create(name: string); virtual;
+    procedure Delete;
+    procedure Rename(name: string);
   end;
 
   { Initialization Methods }
@@ -385,10 +391,10 @@ const
   GameArray: array[1..4] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
       appName: 'TES5'; exeName: 'TESV.exe'; bsaOptMode: 'sk'; ),
-    ( longName: 'Fallout New Vegas'; gameName: 'FalloutNV'; gameMode: gmFNV;
-      appName: 'FNV'; exeName: 'FalloutNV.exe'; bsaOptMode: 'fo'; ),
     ( longName: 'Oblivion'; gameName: 'Oblivion'; gameMode: gmTES4;
       appName: 'TES4'; exeName: 'Oblivion.exe'; bsaOptMode: 'ob'; ),
+    ( longName: 'Fallout New Vegas'; gameName: 'FalloutNV'; gameMode: gmFNV;
+      appName: 'FNV'; exeName: 'FalloutNV.exe'; bsaOptMode: 'fo'; ),
     ( longName: 'Fallout 3'; gameName: 'Fallout3'; gameMode: gmFO3;
       appName: 'FO3'; exeName: 'Fallout3.exe'; bsaOptMode: 'fo'; )
   );
@@ -398,14 +404,16 @@ var
   LabelFilters, GroupFilters, pluginsToCheck, mergesToBuild: TList;
   timeCosts: TStringList;
   settings: TSettings;
+  profile: TProfile;
   statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
   bDontSave, bChangeGameMode, bForceTerminate, bLoaderDone, bAuthorized,
   bProgramUpdate, bDictionaryUpdate, bInstallUpdate, bConnecting,
   bUpdateMergeStatus, bChangeMergeProfile, bAllowClose: boolean;
-  TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveProfile,
-  ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath: string;
+  TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveModProfile,
+  ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath,
+  ProfilePath: string;
   ActiveMods: TStringList;
   TCPClient: TidTCPClient;
   LastStatusTime: TDateTime;
@@ -443,15 +451,9 @@ begin
   wbGameName := GameMode.gameName;
   wbGameMode := GameMode.gameMode;
   wbAppName := GameMode.appName;
-  case id of
-    1: wbDataPath := settings.tes5path + 'Data\';
-    2: wbDataPath := settings.fnvpath + 'Data\';
-    3: wbDataPath := settings.tes4path + 'Data\';
-    4: wbDataPath := settings.fo3path + 'Data\';
-  end;
+  wbDataPath := profile.gamePath + 'Data\';
   // set general paths
   DataPath := wbDataPath;
-  GamePath := ExtractPath(DataPath, 1);
 end;
 
 { Get the game ID associated with a game long name }
@@ -1135,8 +1137,8 @@ end;
 procedure ModOrganizerInit;
 begin
   ActiveMods := TStringList.Create;
-  ActiveProfile := GetActiveProfile;
-  GetActiveMods(ActiveMods, ActiveProfile);
+  ActiveModProfile := GetActiveProfile;
+  GetActiveMods(ActiveMods, ActiveModProfile);
   //Logger.Write('GENERAL', 'ModOrganizer', 'ActiveMods: '#13#10+ActiveMods.Text);
 end;
 
@@ -1396,7 +1398,7 @@ end;
 procedure LoadSettings;
 begin
   settings := TSettings.Create;
-  TRttiIni.Load('user\settings.ini', settings);
+  TRttiIni.Load(ProfilePath + 'settings.ini', settings);
   LoadRegistrationData;
 end;
 
@@ -1429,7 +1431,7 @@ end;
 
 procedure SaveSettings;
 begin
-  TRttiIni.Save('user\settings.ini', settings);
+  TRttiIni.Save(ProfilePath + 'settings.ini', settings);
   // save registration data to registry if registered
   if (settings.registered) then
     SaveRegistrationData;
@@ -1439,8 +1441,7 @@ procedure LoadStatistics;
 begin
   statistics := TStatistics.Create;
   sessionStatistics := TStatistics.Create;
-  //statistics.Load('user\statistics.ini');
-  TRttiIni.Load('user\statistics.ini', statistics);
+  TRttiIni.Load('statistics.ini', statistics);
 end;
 
 procedure SaveStatistics;
@@ -1457,8 +1458,7 @@ begin
   sessionStatistics.pluginsChecked := 0;
   sessionStatistics.reportsSubmitted := 0;
   // save to file
-  //statistics.Save('user\statistics.ini');
-  TRttiIni.Save('user\statistics.ini', statistics);
+  TRttiIni.Save('statistics.ini', statistics);
 end;
 
 procedure LoadDictionary;
@@ -1747,7 +1747,7 @@ begin
   end;
 
   // save and finalize
-  filename := 'user\' + wbAppName + 'Merges.json';
+  filename := ProfilePath + 'Merges.json';
   Tracker.Write(' ');
   Tracker.Write('Saving to ' + filename);
   Tracker.UpdateProgress(1);
@@ -1767,7 +1767,7 @@ var
   filename: string;
 begin
   // don't load file if it doesn't exist
-  filename := 'user\' + wbAppName + 'Merges.json';
+  filename := ProfilePath + 'Merges.json';
   if not FileExists(filename) then
     exit;
   // load file into SuperObject to parse it
@@ -1816,7 +1816,7 @@ begin
 
   // save and finalize
   Tracker.Write(' ');
-  filename := 'user\' + wbAppName + 'PluginInfo.json';
+  filename := ProfilePath + 'PluginInfo.json';
   Tracker.Write('Saving to '+filename);
   Tracker.UpdateProgress(1);
   json.SaveTo(filename);
@@ -1831,7 +1831,7 @@ var
   filename, hash: string;
 begin
   // don't load file if it doesn't exist
-  filename := 'user\' + wbAppName + 'PluginInfo.json';
+  filename := ProfilePath + 'PluginInfo.json';
   if not FileExists(filename) then
     exit;
   // load file into SuperObject to parse it
@@ -2430,11 +2430,11 @@ begin
 
   // log messages
   Logger.Write('GENERAL', 'Status', 'ProgramVersion: '+ProgramVersion);
-  case wbGameMode of
-    gmTES5: Logger.Write('GENERAL', 'Status', 'TES5 Dictionary Hash: '+TES5Hash);
-    gmTES4: Logger.Write('GENERAL', 'Status', 'TES4 Dictionary Hash: '+TES4Hash);
-    gmFO3: Logger.Write('GENERAL', 'Status', 'FO3 Dictionary Hash: '+FNVHash);
-    gmFNV: Logger.Write('GENERAL', 'Status', 'FNV Dictionary Hash: '+FO3Hash);
+  case profile.gameMode of
+    1: Logger.Write('GENERAL', 'Status', 'TES5 Dictionary Hash: '+TES5Hash);
+    2: Logger.Write('GENERAL', 'Status', 'TES4 Dictionary Hash: '+TES4Hash);
+    3: Logger.Write('GENERAL', 'Status', 'FO3 Dictionary Hash: '+FNVHash);
+    4: Logger.Write('GENERAL', 'Status', 'FNV Dictionary Hash: '+FO3Hash);
   end;
 end;
 
@@ -3038,6 +3038,36 @@ begin
   pluginsChecked := 0;
   pluginsMerged := 0;
   reportsSubmitted := 0;
+end;
+
+
+{ TProfile }
+constructor TProfile.Create(name: string);
+begin
+  self.name := name;
+end;
+
+procedure TProfile.Delete;
+var
+  profilePath: string;
+begin
+  profilePath := ProgramPath + 'profiles\' + name;
+  if DirectoryExists(profilePath) then
+    DeleteDirectory(profilePath);
+end;
+
+procedure TProfile.Rename(name: string);
+var
+  oldProfilePath, newProfilePath: string;
+begin
+  // rename old profile folder if necessary
+  oldProfilePath := ProgramPath + 'profiles\' + self.name;
+  newProfilePath := ProgramPath + 'profiles\' + name;
+  if DirectoryExists(oldProfilePath) then
+    RenameFile(oldProfilePath, newProfilePath);
+
+  // then change name in the object
+  self.name := name;
 end;
 
 

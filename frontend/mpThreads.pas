@@ -70,11 +70,12 @@ begin
   try
     // INITIALIZE VARIABLES
     ProgramVersion := GetVersionMem;
-    ProgramPath := ExtractFilePath(ParamStr(0));
     TempPath := ProgramPath + 'temp\';
     LogPath := ProgramPath + 'logs\';
+    ProfilePath := ProgramPath + 'profiles\' + profile.name + '\';
     ForceDirectories(TempPath);
     ForceDirectories(LogPath);
+    ForceDirectories(ProfilePath);
     MergesList := TList.Create;
     PluginsList := TList.Create;
     bLoaderDone := false;
@@ -97,12 +98,7 @@ begin
     handler._AddRef;
 
     // SET GAME VARS
-    if settings.selectedGame = 0 then
-      if settings.defaultGame <> 0 then
-        settings.selectedGame := settings.defaultGame
-      else
-        raise Exception.Create('Invalid game selection!');
-    SetGame(settings.selectedGame);
+    SetGame(profile.gameMode);
     wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
     Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
     Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
@@ -123,7 +119,7 @@ begin
 
     // PREPARE TO LOAD PLUGINS
     if settings.usingMO then
-      wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveProfile+'\plugins.txt'
+      wbPluginsFileName := settings.MODirectory + 'profiles\'+ActiveModProfile+'\plugins.txt'
     else
       wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
     Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
