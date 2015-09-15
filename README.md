@@ -4,7 +4,7 @@ Merge Plugins is a standalone application for merging bethesda plugin files.  Th
 # Compiling
 This project can be compiled with RAD Studio Delphi XE, or newer.  You can download a compiled build from the link below:
 
-[Merge Plugins v2.0.0.578](http://puu.sh/k9uck.zip)
+[Merge Plugins v2.0.0.593](http://puu.sh/kbFwB.zip)
 
 # Usage
 The exectutable will automatically detect load orders for Skyrim, Oblivion, Fallout New Vegas, and Fallout 3.  This exectuable should be run through Mod Organizer if you want it to use mods installed with Mod Organizer.  There are multiple integration features for working with Mod Organizer, so it is the recommended load order tool for use with this utility.
