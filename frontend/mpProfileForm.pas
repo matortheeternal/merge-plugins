@@ -6,7 +6,7 @@ uses
   Windows, SysUtils, Classes, Controls, Forms, StdCtrls, Graphics, ImgList,
   Menus, Dialogs, ExtCtrls,
   // mte components
-  RttiIni,
+  RttiIni, mteHelpers,
   // mp components
   mpFrontend, mpProfilePanel;
 
@@ -90,28 +90,36 @@ end;
 
 procedure TProfileForm.LoadProfiles;
 var
-  path: string;
+  path, settingsPath: string;
   info: TSearchRec;
   p: TProfilePanel;
 begin
   path := ProgramPath + 'profiles\';
   if not DirectoryExists(path) then begin
+    //ShowMessage(path+ 'doesn''t exist, creating default profiles...');
     CreateDefaultProfiles;
     exit;
   end;
 
-  // if no profiles found, create default profiles and exit
-  if FindFirst(path + '*\settings.ini', faAnyFile, info) <> 0 then begin
+  if FindFirst(path + '*', faAnyFile or faDirectory, info) <> 0 then begin
+    //ShowMessage('No '+path+ '* folders found, creating default profiles...');
     CreateDefaultProfiles;
     exit;
   end;
   // add found profiles
   repeat
+    if IsDotFile(info.Name) then
+      continue;
+    settingsPath := path + info.Name + '\settings.ini';
+    if not FileExists(settingsPath) then
+      continue;
     settings := TSettings.Create;
-    TRttiIni.Load(info.Name, settings);
-    p := CreateNewProfile(settings.profile);
-    p.SetGame(settings.gameMode);
-    p.SetPath(settings.gamePath);
+    TRttiIni.Load(settingsPath, settings);
+    if settings.profile <> '' then begin
+      p := CreateNewProfile(settings.profile);
+      p.SetGame(settings.gameMode);
+      p.SetPath(settings.gamePath);
+    end;
   until FindNext(info) <> 0;
 end;
 

@@ -147,17 +147,30 @@ begin
     // LOAD PLUGINS
     for i := 0 to Pred(sl.Count) do begin
       Tracker.Write('Loading '+sl[i]);
-      plugin := TPlugin.Create;
-      plugin.filename := sl[i];
-      plugin._File := wbFile(wbDataPath + sl[i], i);
-      plugin._File._AddRef;
-      plugin.GetData;
-      PluginsList.Add(Pointer(plugin));
+      try
+        plugin := TPlugin.Create;
+        plugin.filename := sl[i];
+        plugin._File := wbFile(wbDataPath + sl[i], i);
+        plugin._File._AddRef;
+        plugin.GetData;
+        PluginsList.Add(Pointer(plugin));
+      except
+        on x: Exception do begin
+          Logger.Write('ERROR', 'Load', 'Exception loading '+sl[i]+', '+x.Message);
+          bDontSave := true;
+        end;
+      end;
 
       // load hardcoded dat
-      if i = 0 then begin
+      if i = 0 then try
         aFile := wbFile(wbProgramPath + wbGameName + wbHardcodedDat, 0);
         aFile._AddRef;
+      except
+        on x: Exception do begin
+          Logger.Write('ERROR', 'Load', 'Exception loading '+wbGameName+wbHardcodedDat+
+           ', please download and install this dat file!');
+          raise x;
+        end;
       end;
     end;
 
@@ -170,6 +183,8 @@ begin
     sl.Free;
   except
     on x: Exception do begin
+      if Assigned(sl) then
+        sl.Free;
       bDontSave := true;
       Logger.Write('ERROR', 'Load', x.Message);
     end;

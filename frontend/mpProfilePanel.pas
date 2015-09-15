@@ -238,10 +238,10 @@ end;
 procedure TProfilePanel.PathChanged(Sender: TObject);
 begin
   // set in profile
-  aProfile.gamePath := edPath.Text;
+  aProfile.gamePath := AppendIfMissing(edPath.Text, '\');
 
   // reflect validity in the GUI
-  if GamePathValid(edPath.Text, aProfile.gameMode) then begin
+  if GamePathValid(aProfile.gamePath, aProfile.gameMode) then begin
     Valid := true;
     Cursor := crHandPoint;
     GameImage.Cursor := crHandPoint;
