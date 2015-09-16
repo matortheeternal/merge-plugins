@@ -64,7 +64,15 @@ procedure TProfileForm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   i: Integer;
   p: TProfilePanel;
+  aProfile: TProfile;
 begin
+  // save all profiles
+  for i := 0 to Pred(ProfilePanels.Count) do begin
+    p := TProfilePanel(ProfilePanels[i]);
+    aProfile := p.GetProfile;
+    SaveProfile(aProfile);
+  end;
+
   // set profile if user clicked OK
   if ModalResult = mrOK then begin
     for i := 0 to Pred(ProfilePanels.Count) do begin

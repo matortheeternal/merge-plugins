@@ -293,8 +293,13 @@ type
   procedure SaveLog(var Log: TList);
   function MessageEnabled(msg: TLogMessage): boolean;
   { Dictionary and Settings methods }
-  procedure LoadSettings;
-  procedure SaveSettings;
+  procedure SaveProfile(var p: TProfile);
+  procedure LoadRegistrationData(var s: TSettings);
+  procedure LoadSettings; overload;
+  function LoadSettings(path: string): TSettings; overload;
+  procedure SaveRegistrationData(var s: TSettings);
+  procedure SaveSettings; overload;
+  procedure SaveSettings(var s: TSettings; path: string); overload;
   procedure LoadStatistics;
   procedure SaveStatistics;
   procedure LoadDictionary;
@@ -1369,7 +1374,29 @@ end;
 }
 {******************************************************************************}
 
-procedure LoadRegistrationData;
+procedure SaveProfile(var p: TProfile);
+var
+  path: string;
+  pSettings: TSettings;
+begin
+  // get profile path
+  path := ProgramPath + 'profiles\' + p.name + '\settings.ini';
+  ForceDirectories(ExtractFilePath(path));
+
+  // load settings if they exist, else create them
+  if FileExists(path) then
+    pSettings := LoadSettings(path)
+  else
+    pSettings := TSettings.Create;
+
+  // save profile details to settings
+  pSettings.profile := p.name;
+  pSettings.gameMode := p.gameMode;
+  pSettings.gamePath := p.gamePath;
+  SaveSettings(pSettings, path);
+end;
+
+procedure LoadRegistrationData(var s: TSettings);
 const
   sMergePluginsRegKey = 'Software\\Merge Plugins\\';
   sMergePluginsRegKey64 = 'Software\\Wow6432Node\\Merge Plugins\\';
@@ -1389,9 +1416,9 @@ begin
         exit;
 
     if reg.ReadBool('Registered') then begin
-      settings.username := reg.ReadString('Username');
-      settings.key := reg.ReadString('Key');
-      settings.registered := true;
+      s.username := reg.ReadString('Username');
+      s.key := reg.ReadString('Key');
+      s.registered := true;
     end;
   except on Exception do
     // nothing
@@ -1405,10 +1432,17 @@ procedure LoadSettings;
 begin
   settings := TSettings.Create;
   TRttiIni.Load(ProfilePath + 'settings.ini', settings);
-  LoadRegistrationData;
+  LoadRegistrationData(settings);
 end;
 
-procedure SaveRegistrationData;
+function LoadSettings(path: string): TSettings;
+begin
+  Result := TSettings.Create;
+  TRttiIni.Load(path, Result);
+  LoadRegistrationData(Result);
+end;
+
+procedure SaveRegistrationData(var s: TSettings);
 const
   sMergePluginsRegKey = 'Software\\Merge Plugins\\';
   sMergePluginsRegKey64 = 'Software\\Wow6432Node\\Merge Plugins\\';
@@ -1424,9 +1458,9 @@ begin
       if not reg.OpenKey(sMergePluginsRegKey64, true) then
         exit;
 
-    reg.WriteString('Username', settings.username);
-    reg.WriteString('Key', settings.key);
-    reg.WriteBool('Registered', settings.registered);
+    reg.WriteString('Username', s.username);
+    reg.WriteString('Key', s.key);
+    reg.WriteBool('Registered', s.registered);
   except on Exception do
     // nothing
   end;
@@ -1438,9 +1472,16 @@ end;
 procedure SaveSettings;
 begin
   TRttiIni.Save(ProfilePath + 'settings.ini', settings);
+  if settings.registered then
+    SaveRegistrationData(settings);
+end;
+
+procedure SaveSettings(var s: TSettings; path: string);
+begin
+  TRttiIni.Save(path, s);
   // save registration data to registry if registered
-  if (settings.registered) then
-    SaveRegistrationData;
+  if (s.registered) then
+    SaveRegistrationData(s);
 end;
 
 procedure LoadStatistics;
@@ -3092,9 +3133,9 @@ end;
 
 procedure TProfile.Delete;
 var
-  profilePath: string;
+  path: string;
 begin
-  profilePath := ProgramPath + 'profiles\' + name;
+  path := ProgramPath + 'profiles\' + name;
   if DirectoryExists(profilePath) then
     DeleteDirectory(profilePath);
 end;
