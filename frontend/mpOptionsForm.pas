@@ -246,6 +246,10 @@ var
   pathList: TStringList;
   rec: TSearchRec;
 begin
+  // search for installations in GamePath
+  if (modOrganizerPath = '') then
+    modOrganizerPath := RecursiveFileSearch(GamePath, validModOrganizerFilenames, ignore, 2);
+
   // search for installations in ?:\Program Files and ?:\Program Files (x86)
   for i := 65 to 90 do begin
     if DirectoryExists(chr(i) + ':\Program Files') then
@@ -255,10 +259,6 @@ begin
   end;
 
   modOrganizerPath := FileSearch('Mod Organizer\ModOrganizer.exe', paths);
-
-  // search for installations in GamePath
-  if (modOrganizerPath = '') then
-    modOrganizerPath := RecursiveFileSearch(GamePath, validModOrganizerFilenames, ignore, 2);
 
   // search each folder in each valid Program Files directory for ModOrganizer.exe
   if (modOrganizerPath = '') then begin

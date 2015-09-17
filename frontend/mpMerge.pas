@@ -3,7 +3,7 @@ unit mpMerge;
 interface
 
 uses
-  Windows, SysUtils, Classes, ShellAPI,
+  Windows, SysUtils, Classes, ShellAPI, Controls, Dialogs,
   // mte units
   mteHelpers, mteLogger, mteTracker,
   // mp units
@@ -1078,17 +1078,53 @@ const
   fsVoice = 'sound\voice\%s';
 var
   i: integer;
+  totalArchiveSize: Int64;
   bsaFilename, bsaOptCommand, bsaOptBat: string;
   plugin: TPlugin;
-  extracted: boolean;
+  bSkip, bExtracted: boolean;
   ignore, batchBsa: TStringList;
+  mr: Integer;
 begin
+  // get total BSA size
+  bSkip := false;
+  totalArchiveSize := 0;
+  for i := 0 to Pred(pluginsToMerge.Count) do begin
+    plugin := TPlugin(pluginsToMerge[i]);
+    if HAS_BSA in plugin.flags then begin
+      bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+      Inc(totalArchiveSize, GetFileSize(bsaFilename));
+    end;
+  end;
+
+  // prompt user if total BSA size exceeds 2gb
+  if (totalArchiveSize > 2147483648) and
+  not (settings.bForceOversizedBSA or settings.bSkipOversizedBSA) then begin
+    mr := MessageDlg('Merged BSA filesize will likely exceed 2.0GB, which will cause BSA creation to fail.  Continue?',
+      mtWarning, [mbYesToAll, mbYes, mbNoToAll, mbNo], 0);
+    case mr of
+      mrNo: bSkip := true;
+      mrNoToAll: begin
+        bSkip := true;
+        settings.bSkipOversizedBSA := true;
+        SaveSettings;
+      end;
+      mrYesToAll: begin
+        settings.bForceOversizedBSA := true;
+        SaveSettings;
+      end;
+    end;
+  end;
+
+  // exit if skipping
+  if bSkip or (settings.bSkipOversizedBSA and (totalArchiveSize > 2147483648)) then
+    exit;
+
   // initialize stringlists
   ignore := TStringList.Create;
   batchBsa := TStringList.Create;
 
   // extract bsas from plugins
-  extracted := false;
+  bExtracted := false;
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := TPlugin(pluginsToMerge[i]);
     if HAS_BSA in plugin.flags then begin
@@ -1098,15 +1134,16 @@ begin
       ignore.Add(Format(fsVoice,[Lowercase(plugin.filename)]));
       ignore.Add('seq');
       // extract bsa
-      extracted := true;
+      bExtracted := true;
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+      Inc(totalArchiveSize, GetFileSize(bsaFilename));
       Tracker.Write('  Extracting '+bsaFilename+'\');
       ExtractBSA(bsaFilename, mergedBsaPath, ignore);
       ignore.Clear;
     end;
   end;
 
-  if extracted then begin
+  if bExtracted then begin
     // prepare command for BSAOpt
     bsaFilename := merge.dataPath + ChangeFileExt(merge.filename, '.bsa');
     bsaOptCommand := Format('"%s" %s "%s" "%s"',
@@ -1177,7 +1214,7 @@ begin
     if not Assigned(plugin) then begin
       Tracker.Write(failed + ', couldn''t find plugin '+merge.plugins[i]);
       pluginsToMerge.Free;
-      merge.status := 11;
+      merge.status := msFailed;
       exit;
     end;
     pluginsToMerge.Add(plugin);
@@ -1202,7 +1239,7 @@ begin
   // don't merge if mergeFile not assigned
   if not Assigned(merge.plugin) then begin
     Tracker.Write(failed + ', couldn''t assign merge file.');
-    merge.status := 11;
+    merge.status := msFailed;
     exit;
   end;
 
@@ -1216,7 +1253,7 @@ begin
         Tracker.Write(failed + ', '+plugin.filename +
           ' is at a lower load order position than '+merge.filename);
         pluginsToMerge.Free;
-        merge.status := 11;
+        merge.status := msFailed;
         exit;
       end;
     end;
@@ -1280,7 +1317,7 @@ begin
       // exit
       Tracker.Write(' ');
       Tracker.Write('Merge failed.');
-      merge.status := 11;
+      merge.status := msFailed;
       exit;
     end;
   end;
@@ -1442,7 +1479,7 @@ begin
   merge.plugins.SaveToFile(mergeFilePrefix+'_plugins.txt');
 
   // update statistics
-  if merge.status = 7 then
+  if merge.status = msBuildReady then
     Inc(sessionStatistics.pluginsMerged, merge.plugins.Count);
   Inc(sessionStatistics.mergesBuilt);
 
@@ -1452,7 +1489,7 @@ begin
   // done merging
   time := (Now - time) * 86400;
   merge.dateBuilt := Now;
-  merge.status := 5;
+  merge.status := msUpToDate;
   Tracker.Write('Done merging '+merge.name+' ('+FormatFloat('0.###', time) + 's)');
 end;
 

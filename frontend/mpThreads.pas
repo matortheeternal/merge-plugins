@@ -277,7 +277,7 @@ begin
         BuildMerge(merge);
     except
       on x : Exception do begin
-        merge.status := 11;
+        merge.status := msFailed;
         Tracker.Write('Exception: '+x.Message);
       end;
     end;

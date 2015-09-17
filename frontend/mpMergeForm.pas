@@ -749,7 +749,7 @@ var
   icon: TIcon;
 begin
   icon := TIcon.Create;
-  FlagList.GetIcon(flag.id, icon);
+  FlagList.GetIcon(Ord(flag.id), icon);
   canvas.Draw(x, y - 1, icon);
   icon.Free;
 end;
@@ -1168,7 +1168,7 @@ begin
 
   // get merge information
   merge := MergesList[MergeListView.ItemIndex];
-  AddDetailsItem('Status', StatusArray[merge.status].desc, false);
+  AddDetailsItem('Status', StatusArray[Ord(merge.status)].desc, false);
   AddDetailsItem('Merge name', merge.name, true);
   AddDetailsItem('Filename', merge.filename, true);
   AddDetailsItem('Plugin count', IntToStr(merge.plugins.Count));
@@ -1210,7 +1210,7 @@ begin
       merge.GetStatus;
     if (merge.status in BuildStatuses) then
       bMergesToBuild := true;
-    if (merge.status = 10) then
+    if (merge.status = msCheckErrors) then
       bMergesToCheck := true;
   end;
 
@@ -1271,7 +1271,7 @@ begin
   Item.SubItems.Add(merge.filename);
   Item.SubItems.Add(IntToStr(merge.plugins.count));
   Item.SubItems.Add(DateBuiltString(merge.dateBuilt));
-  MergeListView.Canvas.Font.Color := StatusArray[merge.status].color;
+  MergeListView.Canvas.Font.Color := StatusArray[Ord(merge.status)].color;
   MergeListView.Canvas.Font.Style := MergeListView.Canvas.Font.Style + [fsBold];
 end;
 
@@ -1530,8 +1530,8 @@ begin
     bNeverBuilt := bNeverBuilt or (merge.dateBuilt = 0);
     bHasBuildStatus := bHasBuildStatus or (merge.status in BuildStatuses);
     bHasUpToDateStatus := bHasUpToDateStatus or (merge.status in UpToDateStatuses);
-    bHasCheckStatus := bHasCheckStatus or (merge.status = 10);
-    bHasErrorStatus := bHasErrorStatus or (merge.status = 3) or (merge.status = 4);
+    bHasCheckStatus := bHasCheckStatus or (merge.status = msCheckErrors);
+    bHasErrorStatus := bHasErrorStatus or (merge.status in ErrorStatuses);
   end;
 
   bHasSelection := (mergesSelected > 0);
@@ -1620,7 +1620,7 @@ begin
     if not MergeListView.Items[i].Selected then
       continue;
     merge := TMerge(MergesList[i]);
-    if not (merge.status = 10) then
+    if not (merge.status = msCheckErrors) then
       continue;
 
     // else loop through plugins
@@ -1879,11 +1879,11 @@ begin
     merge := TMerge(MergesList[i]);
     Logger.Write('MERGE', 'Status', 'Forced rebuild status on '+merge.name);
     // if forced up to date, set to Ready to be rebuilt
-    if merge.status = 6 then
-      merge.status := 8
+    if merge.status = msUpToDateForced then
+      merge.status := msRebuildReady
     // if normal up to date, set to Ready to rebuilt [forced]
-    else if merge.status = 5 then
-      merge.Status := 9;
+    else if merge.status = msUpToDate then
+      merge.Status := msRebuildReadyForced;
   end;
 
   // update
@@ -1903,11 +1903,11 @@ begin
     merge := TMerge(MergesList[i]);
     Logger.Write('MERGE', 'Status', 'Ignored rebuild status on '+merge.name);
     // if force rebuild, set to Up to date
-    if merge.status = 9 then
-      merge.status := 5
+    if merge.status = msRebuildReadyForced then
+      merge.status := msUpToDate
     // if normal rebuild, set to Up to date [Forced]
-    else if merge.status = 8 then
-      merge.Status := 6;
+    else if merge.status = msRebuildReady then
+      merge.Status := msUpToDateForced;
   end;
 
   // update

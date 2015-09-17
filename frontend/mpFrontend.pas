@@ -92,8 +92,11 @@ type
     procedure Load(const filename: string);
   end;
   // PLUGINS AND MERGES
+  TMergeStatusID = ( msUnknown, msNoPlugins, msDirInvalid, msUnloaded,
+    msErrors, msFailed, msCheckErrors, msUpToDate, msUpToDateForced,
+    msBuildReady, msRebuildReady, msRebuildReadyForced );
   TMergeStatus = Record
-    id: integer;
+    id: TMergeStatusID;
     color: integer;
     desc: string[64];
   end;
@@ -102,7 +105,7 @@ type
     HAS_FRAGMENTS, DISALLOW_MERGING );
   TPluginFlags = set of TPluginFlagID;
   TPluginFlag = Record
-    id: integer;
+    id: TPluginFlagID;
     char: char;
     desc: string[128];
   end;
@@ -151,7 +154,7 @@ type
     plugins: TStringList;
     hashes: TStringList;
     masters: TStringList;
-    status: integer;
+    status: TMergeStatusID;
     method: string;
     renumbering: string;
     dataPath: string;
@@ -209,6 +212,8 @@ type
     extractBSAs: boolean;
     buildMergedBSA: boolean;
     batCopy: boolean;
+    bForceOversizedBSA: boolean;
+    bSkipOversizedBSA: boolean;
     debugRenumbering: boolean;
     debugMergeStatus: boolean;
     debugAssetCopying: boolean;
@@ -349,6 +354,7 @@ const
   xEditVersion = '3.1.1';
 
   // MSG IDs
+  MSG_UNKNOWN = 0;
   MSG_NOTIFY = 1;
   MSG_REGISTER = 2;
   MSG_AUTH_RESET = 3;
@@ -359,39 +365,40 @@ const
 
   // PLUGIN FLAGS
   FlagsArray: array[0..10] of TPluginFlag = (
-    ( id: 0; char: 'X'; desc: 'Is blacklisted'; ),
-    ( id: 1; char: 'E'; desc: 'Has errors'; ),
-    ( id: 2; char: 'R'; desc: 'Errors ignored'; ),
-    ( id: 3; char: 'N'; desc: 'Has no errors'; ),
-    ( id: 4; char: 'A'; desc: 'Has a BSA file'; ),
-    ( id: 5; char: 'G'; desc: 'Has FaceGenData'; ),
-    ( id: 6; char: 'V'; desc: 'Has Voice Data'; ),
-    ( id: 7; char: 'T'; desc: 'Has MCM Translations'; ),
-    ( id: 8; char: 'I'; desc: 'Has an INI file'; ),
-    ( id: 9; char: 'F'; desc: 'Has Script fragments'; ),
-    ( id: 10; char: 'D'; desc: 'Disallow merging'; )
+    ( id: IS_BLACKLISTED; char: 'X'; desc: 'Is blacklisted'; ),
+    ( id: HAS_ERRORS; char: 'E'; desc: 'Has errors'; ),
+    ( id: ERRORS_IGNORED; char: 'R'; desc: 'Errors ignored'; ),
+    ( id: NO_ERRORS; char: 'N'; desc: 'Has no errors'; ),
+    ( id: HAS_BSA; char: 'A'; desc: 'Has a BSA file'; ),
+    ( id: HAS_FACEDATA; char: 'G'; desc: 'Has FaceGenData'; ),
+    ( id: HAS_VOICEDATA; char: 'V'; desc: 'Has Voice Data'; ),
+    ( id: HAS_TRANSLATION; char: 'T'; desc: 'Has MCM Translations'; ),
+    ( id: HAS_INI; char: 'I'; desc: 'Has an INI file'; ),
+    ( id: HAS_FRAGMENTS; char: 'F'; desc: 'Has Script fragments'; ),
+    ( id: DISALLOW_MERGING; char: 'D'; desc: 'Disallow merging'; )
   );
 
   // MERGE STATUSES
   StatusArray: array[0..11] of TMergeStatus = (
-    ( id: 0; color: $808080; desc: 'Unknown'; ),
-    ( id: 1; color: $0000FF; desc: 'No plugins to merge'; ),
-    ( id: 2; color: $0000FF; desc: 'Directories invalid'; ),
-    ( id: 3; color: $0000FF; desc: 'Plugins not loaded'; ),
-    ( id: 4; color: $0000FF; desc: 'Errors in plugins'; ),
-    ( id: 5; color: $0000FF; desc: 'Merge failed'; ),
-    ( id: 6; color: $0080ed; desc: 'Check for errors required'; ),
-    ( id: 7; color: $900000; desc: 'Up to date'; ),
-    ( id: 8; color: $900000; desc: 'Up to date [Forced]'; ),
-    ( id: 9; color: $009000; desc: 'Ready to be built'; ),
-    ( id: 10; color: $009000; desc: 'Ready to be rebuilt'; ),
-    ( id: 11; color: $009000; desc: 'Ready to be rebuilt [Forced]'; )
+    ( id: msUnknown; color: $808080; desc: 'Unknown'; ),
+    ( id: msNoPlugins; color: $0000FF; desc: 'No plugins to merge'; ),
+    ( id: msDirInvalid; color: $0000FF; desc: 'Directories invalid'; ),
+    ( id: msUnloaded; color: $0000FF; desc: 'Plugins not loaded'; ),
+    ( id: msErrors; color: $0000FF; desc: 'Errors in plugins'; ),
+    ( id: msFailed; color: $0000FF; desc: 'Merge failed'; ),
+    ( id: msCheckErrors; color: $0080ed; desc: 'Check for errors required'; ),
+    ( id: msUpToDate; color: $900000; desc: 'Up to date'; ),
+    ( id: msUpToDateForced; color: $900000; desc: 'Up to date [Forced]'; ),
+    ( id: msBuildReady; color: $009000; desc: 'Ready to be built'; ),
+    ( id: msRebuildReady; color: $009000; desc: 'Ready to be rebuilt'; ),
+    ( id: msRebuildReadyForced; color: $009000; desc: 'Ready to be rebuilt [Forced]'; )
   );
   // STATUS TYPES
-  UpToDateStatuses = [5, 6];
-  BuildStatuses = [7, 8, 9];
-  RebuildStatuses = [8, 9];
-  ForcedStatuses = [6, 9];
+  ErrorStatuses = [msUnknown, msNoPlugins, msDirInvalid, msUnloaded, msErrors];
+  UpToDateStatuses = [msUpToDate, msUpToDateForced];
+  BuildStatuses = [msBuildReady, msRebuildReady, msRebuildReadyForced];
+  RebuildStatuses = [msRebuildReady, msRebuildReadyForced];
+  ForcedStatuses = [msUpToDateForced, msRebuildReadyForced];
 
   // DELAYS
   StatusDelay = 2.0 / (60.0 * 24.0); // 2 minutes
@@ -2770,7 +2777,7 @@ constructor TMerge.Create;
 begin
   name := 'NewMerge';
   filename := 'NewMerge.esp';
-  status := 0;
+  status := msUnknown;
   dateBuilt := 0;
   plugins := TStringList.Create;
   hashes := TStringList.Create;
@@ -2904,33 +2911,33 @@ var
   plugin: TPlugin;
 begin
   Logger.Write('MERGE', 'Status', 'Getting status for '+name);
-  status := 0;
+  status := msUnknown;
 
   // don't merge if no plugins to merge
   if (plugins.Count < 1) then begin
     Logger.Write('MERGE', 'Status', 'No plugins to merge');
-    status := 1;
+    status := msNoPlugins;
     exit;
   end;
 
   // don't merge if mod destination directory is blank
   if (settings.mergeDirectory = '') then begin
     Logger.Write('MERGE', 'Status', 'Merge directory blank');
-    status := 2;
+    status := msDirInvalid;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.MOPath = '') then begin
     Logger.Write('MERGE', 'Status', 'Mod Organizer Directory blank');
-    status := 2;
+    status := msDirInvalid;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
   if settings.usingMO and not DirectoryExists(settings.MOPath) then begin
      Logger.Write('MERGE', 'Status', 'Mod Organizer Directory invalid');
-     status := 2;
+     status := msDirInvalid;
      exit;
   end;
 
@@ -2941,13 +2948,13 @@ begin
     // see if plugin is loaded
     if not Assigned(plugin) then begin
       Logger.Write('MERGE', 'Status', 'Plugin '+plugins[i]+' is missing');
-      status := 3;
+      status := msUnloaded;
       exit;
     end;
 
     if (not plugin.HasBeenCheckedForErrors) then begin
       Logger.Write('MERGE', 'Status', plugin.filename+' needs to be checked for errors.');
-      status := 10;
+      status := msCheckErrors;
     end
     else if (not plugin.HasErrors) then begin
       Logger.Write('MERGE', 'Status', 'No errors in '+plugin.filename);
@@ -2957,7 +2964,7 @@ begin
     end
     else begin
       Logger.Write('MERGE', 'Status', plugin.filename+' has errors');
-      status := 4;
+      status := msErrors;
       exit;
     end
   end;
@@ -2965,23 +2972,23 @@ begin
   dataPath := settings.mergeDirectory + name + '\';
   if (not PluginsModified) and FilesExist then begin
     Logger.Write('MERGE', 'Status', 'Up to date.');
-    status := 5;
+    status := msUpToDate;
     exit;
   end;
 
   // status green, ready to go
-  if status = 0 then begin
+  if status = msUnknown then begin
     Logger.Write('MERGE', 'Status', 'Ready to be merged.');
     if dateBuilt = 0 then
-      status := 7
+      status := msBuildReady
     else
-      status := 8;
+      status := msRebuildReady;
   end;
 end;
 
 function TMerge.GetStatusColor: integer;
 begin
-  Result := StatusArray[status].color;
+  Result := StatusArray[Ord(status)].color;
 end;
 
 // Update the hashes list for the plugins in the merge
