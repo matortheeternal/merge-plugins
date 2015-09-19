@@ -35,6 +35,7 @@ object ProgressForm: TProgressForm
     Height = 245
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
+    ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 0
   end

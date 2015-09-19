@@ -199,6 +199,11 @@ end;
 }
 {******************************************************************************}
 
+const
+  scriptsPathTemplate = 'VMAD - Virtual Machine Adapter\Data\%s VMAD\Scripts';
+  fragmentsPathTemplate = 'VMAD - Virtual Machine Adapter\Data\%s VMAD\Script Fragments %s';
+  innerFragmentsPathTemplate = 'VMAD - Virtual Machine Adapter\Data\%s VMAD\Script Fragments %s\%s Fragments';
+
 { Copies all files from @srcPath to @dstPath, tracking them in @merge }
 procedure CopyFilesForMerge(var merge: TMerge; srcPath, dstPath: string);
 var
@@ -460,19 +465,61 @@ begin
   Tracker.Write('    Copied '+IntToStr(total)+' general scripts');
 end;
 
+{ Changes the fragment filename on @rec of type @rt at from @fn to @nfn.
+  Checks three locations on the record's Virtual Machine Adapter for the
+  fragment's filename:
+    VMAD\Data\@rt VMAD\Scripts\[i]\scriptName
+    VMAD\Data\@rt VMAD\Script Fragments @rt\fileName
+    VMAD\Data\@rt VMAD\Script Fragments @rt\@rt Fragments\[i]\scriptName
+}
+procedure ChangeFragmentFileName(rec: IwbContainer; rt, fn, nfn: string);
+var
+  scriptsPath, fragmentsPath, innerFragmentsPath: string;
+  i: Integer;
+  scripts, script, scriptFragments, innerFragments, fragment: IwbElement;
+  container, innerContainer: IwbContainer;
+begin
+  scriptsPath := Format(scriptsPathTemplate, [rt]);
+  fragmentsPath := Format(fragmentsPathTemplate, [rt, rt]);
+  innerFragmentsPath := Format(innerFragmentsPathTemplate, [rt, rt, rt]);
+  // handle scripts
+  scripts := rec.ElementByPath[scriptsPath];
+  if Assigned(scripts) and Supports(scripts, IwbContainer, container) then begin
+    for i := 0 to Pred(container.ElementCount) do begin
+      script := container.Elements[i];
+      if Supports(script, IwbContainer, innerContainer) then
+        if (innerContainer.ElementEditValues['scriptName'] = fn) then
+          innerContainer.ElementEditValues['scriptName'] := nfn;
+    end;
+  end;
+  // handle script fragments
+  scriptFragments := rec.ElementByPath[fragmentsPath];
+  if Assigned(scriptFragments) and Supports(scriptFragments, IwbContainer, container) then
+    if (container.ElementEditValues['fileName'] = fn) then
+      container.ElementEditValues['fileName'] := nfn;
+  // handle inner fragments
+  innerFragments := rec.ElementByPath[innerFragmentsPath];
+  if Assigned(innerFragments) and Supports(innerFragments, IwbContainer, container) then begin
+    for i := 0 to Pred(container.ElementCount) do begin
+      fragment := container.Elements[i];
+      if Supports(fragment, IwbContainer, innerContainer) then
+        if (innerContainer.ElementEditValues['scriptName'] = fn) then
+          innerContainer.ElementEditValues['scriptName'] := nfn;
+    end;
+  end;
+end;
+
 { Traverses the DIAL\INFO group in @plugin for script fragments.  When found,
   script fragments are copied from @srcPath if they correspond to a record that
   has been renumbered in @merge }
 procedure CopyTopicInfoFragments(var plugin: TPlugin; var merge: TMerge; srcPath: string);
-const
-  infoFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Info VMAD\Script Fragments Info';
 var
   f: IwbFile;
   group: IwbGroupRecord;
   rec, subgroup, container: IwbContainer;
   element, fragments: IwbElement;
   i, j, index: Integer;
-  fn, oldFormID, oldFileFormID, newFileFormID: string;
+  fn, nfn, oldFormID, oldFileFormID, newFileFormID, infoFragmentsPath: string;
 begin
   f := merge.plugin._File;
   // exit if no DIAL records in file
@@ -483,6 +530,7 @@ begin
   end;
 
   // find all DIAL records
+  infoFragmentsPath := Format(fragmentsPathTemplate, ['Info', 'Info']);
   group := f.GroupBySignature['DIAL'];
   for i := 0 to Pred(group.ElementCount) do begin
     element := group.Elements[i];
@@ -516,7 +564,8 @@ begin
         if not CopySource(fn, srcPath, pscPath) then
           if not CopyScript(fn, srcPath, pexPath) then
             Tracker.Write('        Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
-        container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
+        nfn := StringReplace(fn, oldFormID, newFileFormID, []);
+        ChangeFragmentFileName(rec, 'Info', fn, nfn);
       end;
     end;
   end;
@@ -526,15 +575,13 @@ end;
   script fragments are copied from @srcPath to @dstPath if they correspond
   to a record that has been renumbered in @merge }
 procedure CopyQuestFragments(var plugin: TPlugin; var merge: TMerge; srcPath: string);
-const
-  questFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
 var
   f: IwbFile;
   group: IwbGroupRecord;
   rec, container: IwbContainer;
   fragments: IwbElement;
   i, index: Integer;
-  fn, oldFormID, oldFileFormID, newFileFormID: string;
+  fn, nfn, oldFormID, oldFileFormID, newFileFormID, questFragmentsPath: string;
 begin
   f := merge.plugin._File;
   // exit if no QUST records in file
@@ -545,6 +592,7 @@ begin
   end;
 
   // find all QUST records
+  questFragmentsPath := Format(fragmentsPathTemplate, ['Quest', 'Quest']);
   group := f.GroupBySignature['QUST'];
   for i := 0 to Pred(group.ElementCount) do begin
     rec := group.Elements[i] as IwbContainer;
@@ -573,7 +621,8 @@ begin
       if not CopySource(fn, srcPath, pscPath) then
         if not CopyScript(fn, srcPath, pexPath) then
           Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
-      container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
+      nfn := StringReplace(fn, oldFormID, newFileFormID, []);
+      ChangeFragmentFileName(rec, 'Quest', fn, nfn);
     end;
   end;
 end;
@@ -582,15 +631,13 @@ end;
   script fragments are copied from @srcPath to @dstPath if they correspond
   to a record that has been renumbered in @merge }
 procedure CopySceneFragments(var plugin: TPlugin; var merge: TMerge; srcPath: string);
-const
-  sceneFragmentsPath = 'VMAD - Virtual Machine Adapter\Data\Quest VMAD\Script Fragments Quest';
 var
   f: IwbFile;
   group: IwbGroupRecord;
-  rec, container: IwbContainer;
+  rec, container, fContainer: IwbContainer;
   fragments: IwbElement;
   i, index: Integer;
-  fn, oldFormID, oldFileFormID, newFileFormID: string;
+  fn, nfn, oldFormID, oldFileFormID, newFileFormID, sceneFragmentsPath: string;
 begin
   f := merge.plugin._File;
   // exit if no SCEN records in file
@@ -601,6 +648,7 @@ begin
   end;
 
   // find all SCEN records
+  sceneFragmentsPath := Format(fragmentsPathTemplate, ['Scene', 'Scene']);
   group := f.GroupBySignature['SCEN'];
   for i := 0 to Pred(group.ElementCount) do begin
     rec := group.Elements[i] as IwbContainer;
@@ -629,7 +677,8 @@ begin
       if not CopySource(fn, srcPath, pscPath) then
         if not CopyScript(fn, srcPath, pexPath) then
           Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
-      container.ElementEditValues['fileName'] := StringReplace(fn, oldFormID, newFileFormID, []);
+      nfn := StringReplace(fn, oldFormID, newFileFormID, []);
+      ChangeFragmentFileName(rec, 'Scene', fn, nfn);
     end;
   end;
 end;
@@ -1126,6 +1175,8 @@ begin
   // extract bsas from plugins
   bExtracted := false;
   for i := 0 to Pred(pluginsToMerge.Count) do begin
+    if Tracker.Cancel then
+      break;
     plugin := TPlugin(pluginsToMerge[i]);
     if HAS_BSA in plugin.flags then begin
       // prepare paths to ignore
@@ -1141,6 +1192,13 @@ begin
       ExtractBSA(bsaFilename, mergedBsaPath, ignore);
       ignore.Clear;
     end;
+  end;
+
+  // if user cancelled
+  if Tracker.Cancel then begin
+    ignore.Free;
+    batchBsa.Free;
+    exit;
   end;
 
   if bExtracted then begin
@@ -1329,24 +1387,26 @@ begin
   end;
 
   // copy assets
-  Tracker.Write(' ');
-  Tracker.Write('Copying assets');
-  languages := TStringList.Create;
-  MergeIni := TStringList.Create;
-  for i := Pred(pluginsToMerge.Count) downto 0 do begin
-    plugin := pluginsToMerge[i];
-    Tracker.Write('  Copying assets for '+plugin.filename);
-    CopyAssets(plugin, merge);
+  if not Tracker.Cancel then begin
+    Tracker.Write(' ');
+    Tracker.Write('Copying assets');
+    languages := TStringList.Create;
+    MergeIni := TStringList.Create;
+    for i := Pred(pluginsToMerge.Count) downto 0 do begin
+      plugin := pluginsToMerge[i];
+      Tracker.Write('  Copying assets for '+plugin.filename);
+      CopyAssets(plugin, merge);
+    end;
+    // save combined assets
+    SaveTranslations(merge);
+    SaveINI(merge);
+    // clean up
+    languages.Free;
+    MergeIni.Free;
   end;
-  // save combined assets
-  SaveTranslations(merge);
-  SaveINI(merge);
-  // clean up
-  languages.Free;
-  MergeIni.Free;
 
   // decompile, remap, and recompile script fragments
-  if settings.handleScriptFragments then begin
+  if settings.handleScriptFragments and not Tracker.Cancel then begin
     // prep
     batchDecompile := TStringList.Create;
     batchCompile := TStringList.Create;
@@ -1392,7 +1452,7 @@ begin
 
   // build merged bsa
   if settings.buildMergedBSA and FileExists(settings.bsaOptPath)
-  and (settings.bsaOptOptions <> '') then begin
+  and (settings.bsaOptOptions <> '') and (not Tracker.Cancel) then begin
     Tracker.Write(' ');
     Tracker.Write('Building Merged BSA...');
     BuildMergedBSA(merge, pluginsToMerge);
@@ -1407,20 +1467,23 @@ begin
   end;
 
   // create SEQ file
-  CreateSEQFile(merge);
+  if not Tracker.Cancel then
+    CreateSEQFile(merge);
 
   // set description
-  desc := 'Merged Plugin: ';
-  for i := 0 to Pred(pluginsToMerge.Count) do begin
-    plugin := pluginsToMerge[i];
-    aFile := plugin._File;
-    mergeDesc := (aFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'];
-    if Pos('Merged Plugin', mergeDesc) > 0 then
-      desc := desc+StringReplace(mergeDesc, 'Merged Plugin:', '', [rfReplaceAll])
-    else
-      desc := desc+#13#10+'  '+merge.plugins[i];
+  if not Tracker.Cancel then begin
+    desc := 'Merged Plugin: ';
+    for i := 0 to Pred(pluginsToMerge.Count) do begin
+      plugin := pluginsToMerge[i];
+      aFile := plugin._File;
+      mergeDesc := (aFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'];
+      if Pos('Merged Plugin', mergeDesc) > 0 then
+        desc := desc+StringReplace(mergeDesc, 'Merged Plugin:', '', [rfReplaceAll])
+      else
+        desc := desc+#13#10+'  '+merge.plugins[i];
+    end;
+    (mergeFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'] := desc;
   end;
-  (mergeFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'] := desc;
 
   // clean masters
   mergeFile.CleanMasters;

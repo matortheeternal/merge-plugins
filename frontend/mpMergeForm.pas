@@ -417,6 +417,7 @@ begin
 
   // update
   UpdateListViews;
+  UpdateMerges;
 end;
 
 procedure TMergeForm.OnTimer(Sender: TObject);

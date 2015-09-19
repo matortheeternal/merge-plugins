@@ -218,7 +218,8 @@ end;
 
 procedure TProfilePanel.NameChanged(Sender: TObject);
 begin
-  if FileNameValid(edName.Text) then
+  if FileNameValid(edName.Text) and
+  (not DirectoryExists(ProgramPath + 'profiles\' + edName.Text)) then
     aProfile.Rename(edName.Text);
 end;
 
