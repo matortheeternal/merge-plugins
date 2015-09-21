@@ -634,7 +634,7 @@ procedure CopySceneFragments(var plugin: TPlugin; var merge: TMerge; srcPath: st
 var
   f: IwbFile;
   group: IwbGroupRecord;
-  rec, container, fContainer: IwbContainer;
+  rec, container: IwbContainer;
   fragments: IwbElement;
   i, index: Integer;
   fn, nfn, oldFormID, oldFileFormID, newFileFormID, sceneFragmentsPath: string;

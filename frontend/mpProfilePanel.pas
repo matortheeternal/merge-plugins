@@ -174,6 +174,9 @@ begin
   // set event handlers
   self.OnClick := ToggleSelect;
   GameImage.OnClick := ToggleSelect;
+  lblName.OnClick := ToggleSelect;
+  lblGame.OnClick := ToggleSelect;
+  lblPath.OnClick := ToggleSelect;
   btnBrowse.OnClick := Browse;
   edName.OnChange := NameChanged;
   edPath.OnChange := PathChanged;

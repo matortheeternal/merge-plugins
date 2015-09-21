@@ -178,7 +178,7 @@ object OptionsForm: TOptionsForm
           Align = alCustom
           Caption = 'Username'
         end
-        object lblStatus: TLabel
+        object lblStatusValue: TLabel
           Left = 274
           Top = 45
           Width = 187
@@ -198,6 +198,14 @@ object OptionsForm: TOptionsForm
           ParentShowHint = False
           ShowHint = True
         end
+        object lblStatus: TLabel
+          Left = 12
+          Top = 45
+          Width = 91
+          Height = 13
+          Align = alCustom
+          Caption = 'Registration status'
+        end
         object edUsername: TEdit
           Left = 274
           Top = 18
@@ -206,15 +214,6 @@ object OptionsForm: TOptionsForm
           Align = alCustom
           TabOrder = 0
           OnChange = edUsernameChange
-        end
-        object kbSaveReports: TCheckBox
-          Left = 12
-          Top = 40
-          Width = 117
-          Height = 17
-          Align = alCustom
-          Caption = 'Save reports locally'
-          TabOrder = 1
         end
         object btnRegister: TButton
           Left = 467
@@ -228,7 +227,7 @@ object OptionsForm: TOptionsForm
           Caption = 'Check'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 2
+          TabOrder = 1
           OnClick = btnRegisterClick
         end
         object btnReset: TButton
@@ -241,7 +240,7 @@ object OptionsForm: TOptionsForm
           Anchors = [akTop, akRight]
           Caption = 'Reset'
           Enabled = False
-          TabOrder = 3
+          TabOrder = 2
           OnClick = btnResetClick
         end
       end
@@ -737,10 +736,6 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -998,7 +993,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800D00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800D40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

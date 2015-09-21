@@ -94,6 +94,11 @@ begin
     report.rating := 4;
     report.mergeVersion := ProgramVersion;
     report.SetNotes(PreviousNotes);
+
+    // if user already made a report for this plugin, load it
+    LoadReport(report);
+
+    // add report to list
     reportsList.Add(report);
   end;
 

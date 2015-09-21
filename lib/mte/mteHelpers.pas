@@ -209,11 +209,12 @@ var
 begin
   counter := 0;
   lastSpace := 0;
-  for i := 1 to Length(s) do begin
+  for i := 1 to Length(s) - 1 do begin
     Inc(counter);
     if (s[i] = ' ') or (s[i] = ',') then
       lastSpace := i;
-    if (s[i] = #13) or (s[i] = #10) then begin
+    if (s[i] = #13) or (s[i] = #10)
+    or (s[i + 1] = #13) or (s[i + 1] = #10) then begin
       lastSpace := 0;
       counter := 0;
     end;

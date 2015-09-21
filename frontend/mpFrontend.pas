@@ -89,7 +89,6 @@ type
     procedure SetNotes(notes: string);
     function GetNotes: string;
     procedure Save(const filename: string);
-    procedure Load(const filename: string);
   end;
   // PLUGINS AND MERGES
   TMergeStatusID = ( msUnknown, msNoPlugins, msDirInvalid, msUnloaded,
@@ -186,7 +185,6 @@ type
     username: string;
     key: string;
     registered: boolean;
-    saveReportsLocally: boolean;
     simpleDictionaryView: boolean;
     simplePluginsView: boolean;
     updateDictionary: boolean;
@@ -297,7 +295,7 @@ type
   procedure RebuildLog;
   procedure SaveLog(var Log: TList);
   function MessageEnabled(msg: TLogMessage): boolean;
-  { Dictionary and Settings methods }
+  { Loading and saving methods }
   procedure SaveProfile(var p: TProfile);
   procedure LoadRegistrationData(var s: TSettings);
   procedure LoadSettings; overload;
@@ -308,12 +306,18 @@ type
   procedure LoadStatistics;
   procedure SaveStatistics;
   procedure LoadDictionary;
+  procedure SaveMerges;
+  procedure LoadMerges;
+  procedure SavePluginInfo;
+  procedure LoadPluginInfo;
+  procedure SaveReports(var lst: TList; path: string);
+  procedure LoadReport(var report: TReport); overload
+  procedure LoadReport(const filename: string; var report: TReport); overload;
+  { Helper methods }
+  procedure DeleteTempPath;
   function GetRatingColor(rating: real): integer;
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
-  procedure SaveReports(var lst: TList; path: string);
-  procedure DeleteTempPath;
-  { Plugin and merge methods }
   function PluginLoadOrder(filename: string): integer;
   function PluginByFilename(filename: string): TPlugin;
   function MergeByName(merges: TList; name: string): TMerge;
@@ -321,10 +325,6 @@ type
   function CreateNewMerge(merges: TList): TMerge;
   function CreateNewPlugin(filename: string): TPlugin;
   procedure UpdatePluginData;
-  procedure SaveMerges;
-  procedure LoadMerges;
-  procedure SavePluginInfo;
-  procedure LoadPluginInfo;
   function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
   { Client methods }
   procedure InitializeClient;
@@ -344,6 +344,7 @@ type
   function UpdateProgram: boolean;
   function DownloadProgram: boolean;
   function SendReports(var lst: TList): boolean;
+  function SendPendingReports: boolean;
 
 
 const
@@ -1367,17 +1368,26 @@ begin
 end;
 
 {******************************************************************************}
-{ Dictionary, Settings, and Statistics methods
-  Set of methods for managing the dictionary.
+{ Loading and saving methods
+  Set of methods for loading and saving data.
 
   List of methods:
+  - SaveProfile
+  - SaveRegistrationData
+  - LoadRegistrationData
+  - SaveSettings
   - LoadSettings
+  - SaveStatistics
   - LoadStatistics
   - LoadDictionary
-  - GetRatingColor
-  - GetRating
-  - IsBlackListed
-  - GetEntry
+  - SaveMerges
+  - LoadMerges
+  - IndexOfDump
+  - SavePluginErrors
+  - LoadPluginErrors
+  - SaveReports
+  - ReportExists
+  - LoadReport
 }
 {******************************************************************************}
 
@@ -1401,6 +1411,33 @@ begin
   pSettings.gameMode := p.gameMode;
   pSettings.gamePath := p.gamePath;
   SaveSettings(pSettings, path);
+end;
+
+procedure SaveRegistrationData(var s: TSettings);
+const
+  sMergePluginsRegKey = 'Software\\Merge Plugins\\';
+  sMergePluginsRegKey64 = 'Software\\Wow6432Node\\Merge Plugins\\';
+var
+  reg: TRegistry;
+begin
+  reg := TRegistry.Create(KEY_READ);
+  reg.RootKey := HKEY_LOCAL_MACHINE;
+
+  try
+    reg.Access := KEY_WRITE;
+    if not reg.OpenKey(sMergePluginsRegKey, true) then
+      if not reg.OpenKey(sMergePluginsRegKey64, true) then
+        exit;
+
+    reg.WriteString('Username', s.username);
+    reg.WriteString('Key', s.key);
+    reg.WriteBool('Registered', s.registered);
+  except on Exception do
+    // nothing
+  end;
+
+  reg.CloseKey();
+  reg.Free;
 end;
 
 procedure LoadRegistrationData(var s: TSettings);
@@ -1435,47 +1472,6 @@ begin
   reg.Free;
 end;
 
-procedure LoadSettings;
-begin
-  settings := TSettings.Create;
-  TRttiIni.Load(ProfilePath + 'settings.ini', settings);
-  LoadRegistrationData(settings);
-end;
-
-function LoadSettings(path: string): TSettings;
-begin
-  Result := TSettings.Create;
-  TRttiIni.Load(path, Result);
-  LoadRegistrationData(Result);
-end;
-
-procedure SaveRegistrationData(var s: TSettings);
-const
-  sMergePluginsRegKey = 'Software\\Merge Plugins\\';
-  sMergePluginsRegKey64 = 'Software\\Wow6432Node\\Merge Plugins\\';
-var
-  reg: TRegistry;
-begin
-  reg := TRegistry.Create(KEY_READ);
-  reg.RootKey := HKEY_LOCAL_MACHINE;
-
-  try
-    reg.Access := KEY_WRITE;
-    if not reg.OpenKey(sMergePluginsRegKey, true) then
-      if not reg.OpenKey(sMergePluginsRegKey64, true) then
-        exit;
-
-    reg.WriteString('Username', s.username);
-    reg.WriteString('Key', s.key);
-    reg.WriteBool('Registered', s.registered);
-  except on Exception do
-    // nothing
-  end;
-
-  reg.CloseKey();
-  reg.Free;
-end;
-
 procedure SaveSettings;
 begin
   TRttiIni.Save(ProfilePath + 'settings.ini', settings);
@@ -1491,11 +1487,18 @@ begin
     SaveRegistrationData(s);
 end;
 
-procedure LoadStatistics;
+procedure LoadSettings;
 begin
-  statistics := TStatistics.Create;
-  sessionStatistics := TStatistics.Create;
-  TRttiIni.Load('statistics.ini', statistics);
+  settings := TSettings.Create;
+  TRttiIni.Load(ProfilePath + 'settings.ini', settings);
+  LoadRegistrationData(settings);
+end;
+
+function LoadSettings(path: string): TSettings;
+begin
+  Result := TSettings.Create;
+  TRttiIni.Load(path, Result);
+  LoadRegistrationData(Result);
 end;
 
 procedure SaveStatistics;
@@ -1513,6 +1516,13 @@ begin
   sessionStatistics.reportsSubmitted := 0;
   // save to file
   TRttiIni.Save('statistics.ini', statistics);
+end;
+
+procedure LoadStatistics;
+begin
+  statistics := TStatistics.Create;
+  sessionStatistics := TStatistics.Create;
+  TRttiIni.Load('statistics.ini', statistics);
 end;
 
 procedure LoadDictionary;
@@ -1545,239 +1555,6 @@ begin
 
   // free temporary stringlist
   sl.Free;
-end;
-
-function GetRatingColor(rating: real): integer;
-var
-  k1, k2: real;
-  r, g: byte;
-begin
-  if rating = -2.0 then begin
-    Result := $707070;
-    exit;
-  end;
-
-  if rating = -1.0 then begin
-    Result := $000000;
-    exit;
-  end;
-
-  if (rating > 2.0) then begin
-    k2 := (rating - 2.0)/2.0;
-    k1 := 1.0 - k2;
-    r := Trunc($E5 * k1 + $00 * k2);
-    g := Trunc($A8 * k1 + $90 * k2);
-  end
-  else begin
-    k2 := (rating/2.0);
-    k1 := 1.0 - k2;
-    r := Trunc($FF * k1 + $E5 * k2);
-    g := Trunc($00 * k1 + $A8 * k2);
-  end;
-
-  Result := g * 256 + r;
-end;
-
-function GetEntry(pluginName, numRecords, version: string): TEntry;
-var
-  i: Integer;
-  entry: TEntry;
-begin
-  Result := TEntry.Create;
-  for i := 0 to Pred(dictionary.Count) do begin
-    entry := TEntry(dictionary[i]);
-    if entry.filename = pluginName then begin
-      Result := entry;
-      exit;
-    end;
-  end;
-end;
-
-function IsBlacklisted(const filename: string): boolean;
-var
-  i: Integer;
-  entry: TEntry;
-begin
-  Result := false;
-  for i := 0 to Pred(blacklist.Count) do begin
-    entry := TEntry(blacklist[i]);
-    if entry.filename = filename then begin
-      Result := true;
-      break;
-    end;
-  end;
-end;
-
-procedure SaveReports(var lst: TList; path: string);
-var
-  i: Integer;
-  report: TReport;
-begin
-  ForceDirectories(ExtractFilePath(path));
-  for i := 0 to Pred(lst.Count) do begin
-    report := TReport(lst[i]);
-    report.dateSubmitted := Now;
-    report.Save(path+ChangeFileExt(report.filename, '.txt'));
-  end;
-end;
-
-procedure DeleteTempPath;
-begin
-  DeleteDirectory(TempPath);
-end;
-
-
-{******************************************************************************}
-{ Plugin and Merge methods
-  Methods for dealing with plugins and merges.
-
-  List of methods:
-  - PluginLoadOrder
-  - PluginByFilename
-  - MergeByName
-  - MergeByFilename
-  - CreateNewMerge
-  - CreateNewPlugin
-  - SaveMerges
-  - LoadMerges
-  - SavePluginErrors
-  - LoadPluginErrors
-  - MergePluginsCompare
-}
-{******************************************************************************}
-
-{ Gets the load order of the plugin matching the given name }
-function PluginLoadOrder(filename: string): integer;
-var
-  i: integer;
-  plugin: TPlugin;
-begin
-  Result := -1;
-  for i := 0 to Pred(PluginsList.Count) do begin
-    plugin := TPlugin(PluginsList[i]);
-    if plugin.filename = filename then begin
-      Result := i;
-      exit;
-    end;
-  end;
-end;
-
-{ Gets a plugin matching the given name. }
-function PluginByFilename(filename: string): TPlugin;
-var
-  i: integer;
-  plugin: TPlugin;
-begin
-  Result := nil;
-  for i := 0 to Pred(PluginsList.count) do begin
-    plugin := TPlugin(PluginsList[i]);
-    if plugin.filename = filename then begin
-      Result := plugin;
-      exit;
-    end;
-  end;
-end;
-
-{ Gets a merge matching the given name. }
-function MergeByName(merges: TList; name: string): TMerge;
-var
-  i: integer;
-  merge: TMerge;
-begin
-  Result := nil;
-  for i := 0 to Pred(merges.Count) do begin
-    merge := TMerge(merges[i]);
-    if merge.name = name then begin
-      Result := merge;
-      exit;
-    end;
-  end;
-end;
-
-
-{ Gets a merge matching the given name. }
-function MergeByFilename(merges: TList; filename: string): TMerge;
-var
-  i: integer;
-  merge: TMerge;
-begin
-  Result := nil;
-  for i := 0 to Pred(merges.Count) do begin
-    merge := TMerge(merges[i]);
-    if merge.filename = filename then begin
-      Result := merge;
-      exit;
-    end;
-  end;
-end;
-
-{ Create a new merge with non-conflicting name and filename }
-function CreateNewMerge(merges: TList): TMerge;
-var
-  i: Integer;
-  merge: TMerge;
-  name: string;
-begin
-  merge := TMerge.Create;
-
-  // deal with conflicting merge names
-  i := 0;
-  name := merge.name;
-  while Assigned(MergeByName(merges, name)) do begin
-    Inc(i);
-    name := 'NewMerge' + IntToStr(i);
-  end;
-  merge.name := name;
-
-  // deal with conflicting merge filenames
-  i := 0;
-  name := merge.filename;
-  while Assigned(MergeByFilename(merges, name)) do begin
-    Inc(i);
-    name := 'NewMerge' + IntToStr(i) + '.esp';
-  end;
-  merge.filename := name;
-
-  Result := merge;
-end;
-
-{ Create a new plugin }
-function CreateNewPlugin(filename: string): TPlugin;
-var
-  aFile: IwbFile;
-  LoadOrder: integer;
-  plugin: TPlugin;
-begin
-  Result := nil;
-  LoadOrder := PluginsList.Count + 1;
-  // fail if maximum load order reached
-  if LoadOrder > 254 then begin
-    Tracker.Write('Maximum load order reached!  Can''t create file '+filename);
-    exit;
-  end;
-
-  // create new plugin file
-  aFile := wbNewFile(wbDataPath + filename, LoadOrder);
-  aFile._AddRef;
-
-  // create new plugin object
-  plugin := TPlugin.Create;
-  plugin.filename := filename;
-  plugin._File := aFile;
-  PluginsList.Add(plugin);
-
-  Result := plugin;
-end;
-
-procedure UpdatePluginData;
-var
-  i: Integer;
-  plugin: TPlugin;
-begin
-  for i := 0 to Pred(PluginsList.Count) do begin
-    plugin := TPlugin(PluginsList[i]);
-    plugin.UpdateData;
-  end;
 end;
 
 procedure SaveMerges;
@@ -1944,6 +1721,264 @@ begin
   sl.Free;
 end;
 
+procedure SaveReports(var lst: TList; path: string);
+var
+  i: Integer;
+  report: TReport;
+  fn: string;
+begin
+  //ForceDirectories(path);
+  for i := 0 to Pred(lst.Count) do begin
+    report := TReport(lst[i]);
+    report.dateSubmitted := Now;
+    fn := Format('%s-%s.txt', [report.filename, report.hash]);
+    report.Save(path + fn);
+  end;
+end;
+
+procedure LoadReport(var report: TReport);
+var
+  fn, unsubmittedPath, submittedPath: string;
+begin
+  fn := Format('%s-%s.txt', [report.filename, report.hash]);
+  unsubmittedPath := 'reports\' + fn;
+  submittedPath := 'reports\submitted\' + fn;
+  if FileExists(unsubmittedPath) then
+    LoadReport(unsubmittedPath, report)
+  else if FileExists(submittedPath) then
+    LoadReport(submittedPath, report);
+end;
+
+procedure LoadReport(const filename: string; var report: TReport);
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  sl.LoadFromFile(filename);
+  report := TReport(TRttiJson.FromJson(sl.Text, report.ClassType));
+  sl.Free;
+end;
+
+
+{******************************************************************************}
+{ Helper methods
+  Set of methods to help with working with Merge Plugins types.
+
+  List of methods:
+  - DeleteTempPath
+  - GetRatingColor
+  - GetEntry
+  - IsBlacklisted
+  - PluginLoadOrder
+  - PluginByFilename
+  - MergeByName
+  - MergeByFilename
+  - CreateNewMerge
+  - CreateNewPlugin
+  - MergePluginsCompare
+}
+{******************************************************************************}
+
+procedure DeleteTempPath;
+begin
+  DeleteDirectory(TempPath);
+end;
+
+function GetRatingColor(rating: real): integer;
+var
+  k1, k2: real;
+  r, g: byte;
+begin
+  if rating = -2.0 then begin
+    Result := $707070;
+    exit;
+  end;
+
+  if rating = -1.0 then begin
+    Result := $000000;
+    exit;
+  end;
+
+  if (rating > 2.0) then begin
+    k2 := (rating - 2.0)/2.0;
+    k1 := 1.0 - k2;
+    r := Trunc($E5 * k1 + $00 * k2);
+    g := Trunc($A8 * k1 + $90 * k2);
+  end
+  else begin
+    k2 := (rating/2.0);
+    k1 := 1.0 - k2;
+    r := Trunc($FF * k1 + $E5 * k2);
+    g := Trunc($00 * k1 + $A8 * k2);
+  end;
+
+  Result := g * 256 + r;
+end;
+
+function GetEntry(pluginName, numRecords, version: string): TEntry;
+var
+  i: Integer;
+  entry: TEntry;
+begin
+  Result := TEntry.Create;
+  for i := 0 to Pred(dictionary.Count) do begin
+    entry := TEntry(dictionary[i]);
+    if entry.filename = pluginName then begin
+      Result := entry;
+      exit;
+    end;
+  end;
+end;
+
+function IsBlacklisted(const filename: string): boolean;
+var
+  i: Integer;
+  entry: TEntry;
+begin
+  Result := false;
+  for i := 0 to Pred(blacklist.Count) do begin
+    entry := TEntry(blacklist[i]);
+    if entry.filename = filename then begin
+      Result := true;
+      break;
+    end;
+  end;
+end;
+
+{ Gets the load order of the plugin matching the given name }
+function PluginLoadOrder(filename: string): integer;
+var
+  i: integer;
+  plugin: TPlugin;
+begin
+  Result := -1;
+  for i := 0 to Pred(PluginsList.Count) do begin
+    plugin := TPlugin(PluginsList[i]);
+    if plugin.filename = filename then begin
+      Result := i;
+      exit;
+    end;
+  end;
+end;
+
+{ Gets a plugin matching the given name. }
+function PluginByFilename(filename: string): TPlugin;
+var
+  i: integer;
+  plugin: TPlugin;
+begin
+  Result := nil;
+  for i := 0 to Pred(PluginsList.count) do begin
+    plugin := TPlugin(PluginsList[i]);
+    if plugin.filename = filename then begin
+      Result := plugin;
+      exit;
+    end;
+  end;
+end;
+
+{ Gets a merge matching the given name. }
+function MergeByName(merges: TList; name: string): TMerge;
+var
+  i: integer;
+  merge: TMerge;
+begin
+  Result := nil;
+  for i := 0 to Pred(merges.Count) do begin
+    merge := TMerge(merges[i]);
+    if merge.name = name then begin
+      Result := merge;
+      exit;
+    end;
+  end;
+end;
+
+
+{ Gets a merge matching the given name. }
+function MergeByFilename(merges: TList; filename: string): TMerge;
+var
+  i: integer;
+  merge: TMerge;
+begin
+  Result := nil;
+  for i := 0 to Pred(merges.Count) do begin
+    merge := TMerge(merges[i]);
+    if merge.filename = filename then begin
+      Result := merge;
+      exit;
+    end;
+  end;
+end;
+
+{ Create a new merge with non-conflicting name and filename }
+function CreateNewMerge(merges: TList): TMerge;
+var
+  i: Integer;
+  merge: TMerge;
+  name: string;
+begin
+  merge := TMerge.Create;
+
+  // deal with conflicting merge names
+  i := 0;
+  name := merge.name;
+  while Assigned(MergeByName(merges, name)) do begin
+    Inc(i);
+    name := 'NewMerge' + IntToStr(i);
+  end;
+  merge.name := name;
+
+  // deal with conflicting merge filenames
+  i := 0;
+  name := merge.filename;
+  while Assigned(MergeByFilename(merges, name)) do begin
+    Inc(i);
+    name := 'NewMerge' + IntToStr(i) + '.esp';
+  end;
+  merge.filename := name;
+
+  Result := merge;
+end;
+
+{ Create a new plugin }
+function CreateNewPlugin(filename: string): TPlugin;
+var
+  aFile: IwbFile;
+  LoadOrder: integer;
+  plugin: TPlugin;
+begin
+  Result := nil;
+  LoadOrder := PluginsList.Count + 1;
+  // fail if maximum load order reached
+  if LoadOrder > 254 then begin
+    Tracker.Write('Maximum load order reached!  Can''t create file '+filename);
+    exit;
+  end;
+
+  // create new plugin file
+  aFile := wbNewFile(wbDataPath + filename, LoadOrder);
+  aFile._AddRef;
+
+  // create new plugin object
+  plugin := TPlugin.Create;
+  plugin.filename := filename;
+  plugin._File := aFile;
+  PluginsList.Add(plugin);
+
+  Result := plugin;
+end;
+
+procedure UpdatePluginData;
+var
+  i: Integer;
+  plugin: TPlugin;
+begin
+  for i := 0 to Pred(PluginsList.Count) do begin
+    plugin := TPlugin(PluginsList[i]);
+    plugin.UpdateData;
+  end;
+end;
+
 { Comparator for sorting plugins in merge }
 function MergePluginsCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
@@ -1992,6 +2027,7 @@ begin
     SendGameMode;
     GetStatus;
     CompareStatuses;
+    SendPendingReports;
   except
     on x: Exception do begin
       Logger.Write('ERROR', 'Connect', 'Connection failed.');
@@ -2421,6 +2457,8 @@ var
   reportJson, LLine: string;
 begin
   Result := false;
+  if not TCPClient.Connected then
+    exit;
 
   // attempt to send reports
   // throws exception if server is unavailable
@@ -2448,6 +2486,53 @@ begin
       Logger.Write('ERROR', 'Client', 'Exception sending reports '+x.Message);
     end;
   end;
+end;
+
+function SendPendingReports: boolean;
+var
+  lst: TList;
+  info: TSearchRec;
+  report: TReport;
+  path: string;
+  i: Integer;
+begin
+  Result := false;
+  if not TCPClient.Connected then
+    exit;
+
+  // exit if no reports to load
+  path := ProgramPath + 'reports\';
+  if FindFirst(path + '*', faAnyFile, info) <> 0 then
+    exit;  
+  lst := TList.Create;
+  // load reports into list
+  repeat
+    if IsDotFile(info.Name) then
+      continue;
+    if not StrEndsWith(info.Name, '.txt') then
+      continue;
+    try
+      report := TReport.Create;
+      LoadReport(path + info.Name, report);
+      DeleteFile(path + info.Name);
+      report.Save(path + 'submitted\' + info.Name);
+      lst.Add(report);
+    except
+      on x: Exception do
+        Logger.Write('ERROR', 'General', Format('Unable to load report at %s%s: %s', [path, info.Name, x.Message]));
+    end;
+  until FindNext(info) <> 0;
+
+  // send reports if any were found
+  if lst.Count > 0 then
+    Result := SendReports(lst);
+
+  // free reports in list, then list
+  for i := Pred(lst.Count) downto 0 do begin
+    report := TReport(lst[i]);
+    report.Free;
+  end;
+  lst.Free;
 end;
 
 
@@ -2542,17 +2627,13 @@ var
 begin
   sl := TStringList.Create;
   sl.Text := TRttiJson.ToJson(self);
-  sl.SaveToFile(filename);
-  sl.Free;
-end;
-
-procedure TReport.Load(const filename: string);
-var
-  sl: TStringList;
-begin
-  sl := TStringList.Create;
-  sl.LoadFromFile(filename);
-  self := TReport(TRttiJson.FromJson(sl.Text, self.ClassType));
+  try
+    ForceDirectories(ExtractFilePath(filename));
+    sl.SaveToFile(filename);
+  except
+    on x: Exception do
+      ShowMessage(Format('Unabled to save report %s: %s', [filename, x.Message]));
+  end;
   sl.Free;
 end;
 

@@ -39,12 +39,11 @@ type
     gbReports: TGroupBox;
     lblUsername: TLabel;
     edUsername: TEdit;
-    kbSaveReports: TCheckBox;
     kbBatCopy: TCheckBox;
     AdvancedTabSheet: TTabSheet;
     kbINIs: TCheckBox;
     btnRegister: TButton;
-    lblStatus: TLabel;
+    lblStatusValue: TLabel;
     btnReset: TButton;
     btnUpdateDictionary: TButton;
     btnUpdateProgram: TButton;
@@ -111,6 +110,7 @@ type
     edModOrganizerModsPath: TEdit;
     btnBrowseMOMods: TSpeedButton;
     lblCurrentProfileName: TLabel;
+    lblStatus: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -307,7 +307,6 @@ begin
   settings.language := cbLanguage.Text;
   // General > Reports
   settings.username := edUsername.Text;
-  settings.saveReportsLocally := kbSaveReports.Checked;
   // General > Style
   settings.simpleDictionaryView := kbSimpleDictionary.Checked;
   settings.simplePluginsView := kbSimplePlugins.Checked;
@@ -504,7 +503,6 @@ begin
   cbLanguage.Text := settings.language;
   // General > reports
   edUsername.Text := settings.username;
-  kbSaveReports.Checked := settings.saveReportsLocally;
   // General > Style
   kbSimpleDictionary.Checked := settings.simpleDictionaryView;
   kbSimplePlugins.Checked := settings.simplePluginsView;
