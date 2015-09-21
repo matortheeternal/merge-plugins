@@ -2344,6 +2344,7 @@ begin
     exit;
   filename := wbAppName+'Dictionary.txt';
   Logger.Write('CLIENT', 'Update',  filename);
+  Tracker.Write('Updating '+filename);
 
   // attempt to request dictionary
   // throws exception if server is unavailable
@@ -2424,6 +2425,7 @@ begin
   end;
 
   Logger.Write('CLIENT', 'Update', 'Merge Plugins v'+RemoteStatus.programVersion);
+  Tracker.Write('Updating program to v'+RemoteStatus.programVersion);
 
   // attempt to request dictionary
   // throws exception if server is unavailable

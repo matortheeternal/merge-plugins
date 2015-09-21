@@ -109,6 +109,7 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure SaveDone;
     procedure ProgressDone;
+    procedure AutoUpdate;
     procedure OnTimer(Sender: TObject);
     procedure OnHeartbeatTimer(Sender: TObject);
     procedure OnRepaintTimer(Sender: TObject);
@@ -285,6 +286,7 @@ begin
   splash := TSplashForm.Create(nil);
   try
     InitCallback := InitDone;
+    UpdateCallback := AutoUpdate;
     TInitThread.Create;
     splash.ShowModal;
   finally
@@ -303,6 +305,17 @@ end;
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
+  // HANDLE AUTO-UPDATE
+  if bInstallUpdate then begin
+    Logger.Write('CLIENT', 'Disconnect', 'Disconnecting...');
+    TCPClient.Disconnect;
+    bAllowClose := true;
+    bClosing := true;
+    Logger.Write('GENERAL', 'Update', 'Restarting.');
+    ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
+    Close;
+  end;
+
   // GUI ICONS
   //Tracker.Write('Loading Icons');
   NewButton.Flat := true;
@@ -389,7 +402,7 @@ begin
   // restart program if update applied
   if bInstallUpdate then
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
-  // restart program if game mode changed
+  // restart program if user wants merge profile change
   if bChangeMergeProfile then
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
 
@@ -418,6 +431,22 @@ begin
   // update
   UpdateListViews;
   UpdateMerges;
+end;
+
+procedure TMergeForm.AutoUpdate;
+begin
+  if settings.updateDictionary then begin
+    // update dictionary
+    if bDictionaryUpdate and UpdateDictionary then begin
+      status := TmpStatus.Create;
+      CompareStatuses;
+    end;
+  end;
+  if settings.updateProgram then begin
+    // update program
+    if bProgramUpdate and DownloadProgram then
+      bInstallUpdate := UpdateProgram;
+  end;
 end;
 
 procedure TMergeForm.OnTimer(Sender: TObject);

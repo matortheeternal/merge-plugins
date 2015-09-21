@@ -38,7 +38,7 @@ type
 
 var
   InitCallback, LoaderCallback, ErrorCheckCallback, MergeCallback,
-  SaveCallback: TCallback;
+  SaveCallback, UpdateCallback: TCallback;
 
 implementation
 
@@ -107,6 +107,23 @@ begin
     LoadSettings;
     if settings.usingMO then
       ModOrganizerInit;
+
+    // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
+    if settings.updateDictionary or settings.updateProgram then try
+      Tracker.Write('Checking for updates');
+      ConnectToServer;
+      if TCPClient.Connected then begin
+        UpdateCallback;
+        if bInstallUpdate then begin
+          InitCallback;
+          exit;
+        end;
+      end;
+    except
+      on x: Exception do
+        Logger.Write('CLIENT', 'Update', 'Failed to get automatic update '+x.Message);
+    end;
+
 
     // INITIALIZE DICTIONARY
     dictionaryFilename := wbAppName+'Dictionary.txt';
