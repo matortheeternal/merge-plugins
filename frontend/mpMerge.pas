@@ -101,24 +101,24 @@ begin
   aRecord.LoadOrderFormID := NewFormID;
 end;
 
-procedure RenumberBefore(var pluginsToMerge: TList; var merge: TMerge);
+procedure RenumberRecords(var pluginsToMerge: TList; var merge: TMerge);
 const
   debugSkips = false;
 var
-  i, j, rc, OldFormID, total, fileTotal: integer;
+  i, j, rc, total, fileTotal: integer;
   plugin: TPlugin;
   aFile: IwbFile;
   aRecord: IwbMainRecord;
   Records: array of IwbMainRecord;
-  renumberAll: boolean;
-  BaseFormID, NewFormID: cardinal;
+  bRenumberAll: boolean;
+  BaseFormID, NewFormID, OldFormID: cardinal;
   header: IwbContainer;
 begin
   if Tracker.Cancel then exit;
   // inital messages
-  renumberAll := merge.renumbering = 'All';
+  bRenumberAll := merge.renumbering = 'All';
   Tracker.Write(' ');
-  if renumberAll then Tracker.Write('Renumbering All FormIDs')
+  if bRenumberAll then Tracker.Write('Renumbering All FormIDs')
   else Tracker.Write('Renumbering Conflicting FormIDs');
 
   // initialize variables
@@ -148,12 +148,12 @@ begin
     for j := Pred(rc) downto 0 do begin
       if Tracker.Cancel then exit;
       aRecord := Records[j];
-      // skip record headers and overrides
+      // skip file headers and overrides
       if aRecord.Signature = 'TES4' then continue;
       if IsOverride(aRecord) then continue;
       OldFormID := LocalFormID(aRecord);
       // skip records that aren't conflicting if not renumberAll
-      if (not renumberAll) and (UsedFormIDs[OldFormID] = 0) then begin
+      if (not bRenumberAll) and (UsedFormIDs[OldFormID] = 0) then begin
         UsedFormIDs[OldFormID] := 1;
         Tracker.UpdateProgress(1);
         if settings.debugRenumbering and debugSkips then
@@ -187,11 +187,88 @@ begin
   header.ElementByPath['HEDR\Next Object ID'].NativeValue :=  BaseFormID;
 end;
 
-procedure RenumberAfter(merge: TMerge);
+function IsFormID(def: IwbNamedDef): boolean;
+const
+  formTypes: array[1..4] of string =
+    ('SubRecord of TwbFormID',
+    'SubRecord of TwbFormIDChecked',
+    'TwbFormID',
+    'TwbFormIDChecked');
+var
+  i: Integer;
 begin
-  // soon
+  for i := Low(formTypes) to High(formTypes) do begin
+    Result := def.DefTypeName = formTypes[i];
+    if Result then break;
+  end;
 end;
 
+procedure RemapReferences(aElement: IwbElement; var merge: TMerge;
+  var total: Integer);
+var
+  aContainer: IwbContainerElementRef;
+  oldID, newID: string;
+  oldElement: IwbElement;
+  oldRecord: IwbMainRecord;
+  i: Integer;
+begin
+  if Supports(aElement, IwbContainerElementRef, aContainer) then begin
+    if aContainer.Name = 'Record Header' then
+      exit;
+    for i := 0 to Pred(aContainer.ElementCount) do
+      RemapReferences(aContainer.Elements[i], merge, total);
+  end;
+  if IsFormID(aElement.Def) then begin
+    oldElement := aElement.LinksTo;
+    if Supports(oldElement, IwbMainRecord, oldRecord) then begin
+      oldID := IntToHex(oldRecord.LoadOrderFormID, 8);
+      if merge.lmap.IndexOfName(oldID) > -1 then begin
+        newID := merge.lmap.Values[oldID];
+        if settings.debugRenumbering then
+          Tracker.Write(Format('      Changing reference from [%s] to [%s]',
+            [oldID, newID]));
+        aElement.NativeValue := StrToInt('$' + newID);
+        Inc(total);
+      end;
+    end;
+  end;
+end;
+  
+procedure RemapRecords(var merge: TMerge);
+var
+  i, total: integer;
+  aFile: IwbFile;
+  aRecord: IwbMainRecord;
+begin
+  if Tracker.Cancel then exit;
+  // inital messages
+  Tracker.Write(' ');
+  Tracker.Write('Remapping records');
+
+  // remap references in merge file 
+  total := 0;
+  aFile := merge.plugin._File;
+  Tracker.Write('  Renumbering records in ' + merge.filename);
+
+    // renumber records in file
+  for i := Pred(aFile.RecordCount) downto 0 do begin
+    if Tracker.Cancel then exit;
+    aRecord := aFile.Records[i];
+    // skip file headers
+    if aRecord.Signature = 'TES4' then continue;
+
+    // remap references on record
+    if settings.debugRenumbering then
+      Tracker.Write(Format('    Remapping references on %s', [aRecord.Name]));
+    RemapReferences(aRecord, merge, total);
+
+    // increment tracker position
+    Tracker.UpdateProgress(1);
+  end;
+
+  if settings.debugRenumbering then
+    Tracker.Write('  Remapped '+IntToStr(total)+' references');
+end;
 
 {******************************************************************************}
 { Script Fragment Methods
@@ -696,10 +773,21 @@ end;
 procedure CopyRecord(aRecord: IwbMainRecord; var merge: TMerge; asNew: boolean);
 var
   aFile: IwbFile;
+  mElement: IwbElement;
+  mRecord: IwbMainRecord;
+  oldLoadID, newLoadID, oldID, newID: string;
 begin
   try
     aFile := merge.plugin._File;
-    wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
+    mElement := wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
+    if asNew and Supports(mElement, IwbMainRecord, mRecord) then begin
+      oldLoadID := IntToHex(aRecord.LoadOrderFormID, 8);
+      newLoadID := IntToHex(mRecord.LoadOrderFormID, 8);
+      oldID := IntToHex(aRecord.FormID, 8);
+      newID := IntToHex(aRecord.FormID, 8);
+      merge.map.Values[oldID] := NewID;
+      merge.lmap.Values[oldLoadID] := newLoadID;
+    end;
   except on x : Exception do begin
       Tracker.Write('    Exception copying '+aRecord.Name+': '+x.Message);
       merge.fails.Add(aRecord.Name+': '+x.Message);
@@ -720,12 +808,14 @@ begin
   Tracker.Write(' ');
   Tracker.Write('Copying records');
   //masters := TStringList.Create;
-  asNew := merge.method = 'New Records';
+  asNew := merge.method = 'New records';
   // copy records from all plugins to be merged
   for i := Pred(pluginsToMerge.Count) downto 0 do begin
     if Tracker.Cancel then exit;
     plugin := TPlugin(pluginsToMerge[i]);
     aFile := plugin._File;
+    if asNew then
+      merge.map.Add(StringReplace(plugin.filename, '=', '-', [rfReplaceAll])+'=0');
     // copy records from file
     Tracker.Write('  Copying records from '+plugin.filename);
     for j := 0 to Pred(aFile.RecordCount) do begin
@@ -1351,21 +1441,28 @@ begin
 
   try
     // overrides merging method
-    if merge.method = 'Overrides' then begin
-      RenumberBefore(pluginsToMerge, merge);
-      CopyRecords(pluginsToMerge, merge);
-    end;
+    if merge.method = 'Overrides' then
+      RenumberRecords(pluginsToMerge, merge);
+
+    // copy records
+    CopyRecords(pluginsToMerge, merge);
+
+    // new records merging method
+    if merge.method = 'New records' then
+      RemapRecords(merge);
   except
     // exception, discard changes to source plugin, free merge file, and exit
     on x : Exception do begin
       Tracker.Write('Exception: '+x.Message);
       Tracker.Write(' ');
-      Tracker.Write('Discarding changes to source plugins');
-      for i := 0 to Pred(pluginsToMerge.Count) do begin
-        plugin := pluginsToMerge[i];
-        Tracker.Write('  Reloading '+plugin.filename+' from disk');
-        LoadOrder := PluginsList.IndexOf(plugin);
-        plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
+      if merge.method = 'Overrides' then begin
+        Tracker.Write('Discarding changes to source plugins');
+        for i := 0 to Pred(pluginsToMerge.Count) do begin
+          plugin := pluginsToMerge[i];
+          Tracker.Write('  Reloading '+plugin.filename+' from disk');
+          LoadOrder := PluginsList.IndexOf(plugin);
+          plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
+        end;
       end;
 
       // release merge file
@@ -1378,12 +1475,6 @@ begin
       merge.status := msFailed;
       exit;
     end;
-  end;
-
-  // new records merging method
-  if merge.method = 'New records' then begin
-     CopyRecords(pluginsToMerge, merge);
-     RenumberAfter(merge);
   end;
 
   // copy assets

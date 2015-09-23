@@ -503,7 +503,7 @@ begin
   AddDetailsItem('Total uptime', TimeStr(statistics.totalUptime + sessionUptime));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Website', 'http://www.nexusmods.com/skyrim/mods/37981');
-  AddDetailsItem('API Credits', 'superobject, TurboPower Abbrevia, ZeosDBO, xEdit');
+  AddDetailsItem('API Credits', 'superobject, TurboPower Abbrevia, ZeosDBO');
 end;
 
 { Handle user clicking URL }

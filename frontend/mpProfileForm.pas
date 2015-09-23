@@ -267,6 +267,7 @@ procedure TProfileForm.SelectionChanged(Sender: TObject);
 var
   i: Integer;
   p: TProfilePanel;
+  bSelected: boolean;
 begin
   // deselect all panels except the sender
   for i := 0 to Pred(ProfilePanels.Count) do begin
@@ -275,8 +276,11 @@ begin
       p.Deselect
   end;
 
-  // enable ok button if profile panel is selected
-  btnOk.Enabled := TProfilePanel(Sender).Selected;
+  // enable and focus ok button if profile panel is selected
+  bSelected := TProfilePanel(Sender).Selected;
+  btnOk.Enabled := bSelected;
+  if bSelected then self.FocusControl(btnOk)
+  else self.FocusControl(btnCancel);
 end;
 
 procedure TProfileForm.DeleteClicked(Sender: TObject);

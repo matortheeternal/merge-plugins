@@ -159,6 +159,7 @@ type
     dataPath: string;
     plugin: TPlugin;
     map: TStringList;
+    lmap: TStringList;
     files: TStringList;
     fails: TStringList;
     constructor Create; virtual;
@@ -349,8 +350,7 @@ type
 
 const
   // IMPORTANT CONSTANTS
-  ProgramTesters = 'bla08, hishy, keithinhanoi, mindw0rk2, steve25469, Kesta, '+
-    'Teabag, Thalioden, zilav';
+  ProgramTesters = 'bla08, hishy, Kesta';
   ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
   xEditVersion = '3.1.1';
 
@@ -2866,6 +2866,7 @@ begin
   hashes := TStringList.Create;
   masters := TStringList.Create;
   map := TStringList.Create;
+  lmap := TStringList.Create;
   files := TStringList.Create;
   method := 'Overrides';
   renumbering := 'Conflicting';
