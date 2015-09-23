@@ -78,25 +78,27 @@ end;
 
 procedure TProfileForm.RealignPanels;
 var
-  i, vpos: Integer;
+  i, vPos, pCount: Integer;
   p: TProfilePanel;
 begin
-  // just an alias
-  vpos := ScrollBox.VertScrollBar.ScrollPos;
+  // just some aliases
+  vPos := ScrollBox.VertScrollBar.ScrollPos;
+  pCount := ProfilePanels.Count;
 
-  // realign NewProfilePanel
-  NewProfilePanel.Top := 100 * ProfilePanels.Count - vpos;
-  NewProfilePanel.Width := ScrollBox.ClientWidth;
-
-  // realign general profile panels
-  for i := Pred(ProfilePanels.Count) downto 0 do begin
+  // adjust tops
+  NewProfilePanel.Top := 100 * pCount - vPos;
+  for i := Pred(pCount) downto 0 do begin
     p := TProfilePanel(ProfilePanels[i]);
-    p.SetTop(100 * i - vpos);
+    p.SetTop(100 * i - vPos);
+  end;
+  PaddingLabel.Top := 100 * (pCount + 1) - vPos - PaddingLabel.Height;
+
+  // adjust widths
+  NewProfilePanel.Width := ScrollBox.ClientWidth;
+  for i := Pred(pCount) downto 0 do begin
+    p := TProfilePanel(ProfilePanels[i]);
     p.SetWidth(ScrollBox.ClientWidth);
   end;
-
-  // realign padding label
-  PaddingLabel.Top := 100 * (ProfilePanels.Count + 1) - PaddingLabel.Height;
 end;
 
 procedure TProfileForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -181,7 +183,7 @@ var
   p: TProfilePanel;
 begin
   for i := Low(GameArray) to High(GameArray) do begin
-    path := GetGamePath(GameArray[i].gameName);
+    path := GetGamePath(GameArray[i]);
     name := GameArray[i].gameName + 'Profile';
     if path <> '' then begin
       p := CreateNewProfile(name);

@@ -61,6 +61,7 @@ type
     gameMode: TwbGameMode;
     appName: string;
     exeName: string;
+    appIDs: string;
     bsaOptMode: string;
   end;
   TEntry = class(TObject)
@@ -258,7 +259,7 @@ type
   function GamePathValid(path: string; id: integer): boolean;
   procedure SetGame(id: integer);
   function GetGameID(name: string): integer;
-  function GetGamePath(gameName: string): string;
+  function GetGamePath(mode: TGameMode): string;
   procedure LoadDefinitions;
   { Bethesda Plugin Functions }
   function IsOverride(aRecord: IwbMainRecord): boolean;
@@ -408,13 +409,17 @@ const
   // GAME MODES
   GameArray: array[1..4] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
-      appName: 'TES5'; exeName: 'TESV.exe'; bsaOptMode: 'sk'; ),
+      appName: 'TES5'; exeName: 'TESV.exe'; appIDs: '72850';
+      bsaOptMode: 'sk'; ),
     ( longName: 'Oblivion'; gameName: 'Oblivion'; gameMode: gmTES4;
-      appName: 'TES4'; exeName: 'Oblivion.exe'; bsaOptMode: 'ob'; ),
+      appName: 'TES4'; exeName: 'Oblivion.exe'; appIDs: '22330,900883';
+      bsaOptMode: 'ob'; ),
     ( longName: 'Fallout New Vegas'; gameName: 'FalloutNV'; gameMode: gmFNV;
-      appName: 'FNV'; exeName: 'FalloutNV.exe'; bsaOptMode: 'fo'; ),
+      appName: 'FNV'; exeName: 'FalloutNV.exe'; appIDs: '22380,2028016';
+      bsaOptMode: 'fo'; ),
     ( longName: 'Fallout 3'; gameName: 'Fallout3'; gameMode: gmFO3;
-      appName: 'FO3'; exeName: 'Fallout3.exe'; bsaOptMode: 'fo'; )
+      appName: 'FO3'; exeName: 'Fallout3.exe'; appIDs: '22300,22370';
+      bsaOptMode: 'fo'; )
   );
 
 var
@@ -488,25 +493,67 @@ begin
     end;
 end;
 
-{ Gets the path of a game from registry key or app path }
-function GetGamePath(gameName: string): string;
-const
-  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+{ Tries to load various registry keys }
+function TryRegistryKeys(var keys: TStringList): string;
+var
+  i: Integer;
+  path, name: string;
 begin
-  Result := '';
   with TRegistry.Create do try
     RootKey := HKEY_LOCAL_MACHINE;
 
-    if not OpenKeyReadOnly(sBethRegKey + gameName + '\') then
-      if not OpenKeyReadOnly(sBethRegKey64 + gameName + '\') then
-        exit;
-
-    Result := ReadString('Installed Path');
+    // try all keys
+    for i := 0 to Pred(keys.Count) do begin
+      path := ExtractFilePath(keys[i]);
+      name := ExtractFileName(keys[i]);
+      if OpenKeyReadOnly(path) then begin
+        Result := ReadString(name);
+        break;
+      end;
+    end;
   finally
     Free;
   end;
+end;
 
+{ Gets the path of a game from registry key or app path }
+function GetGamePath(mode: TGameMode): string;
+const
+  sBethRegKey     = '\SOFTWARE\Bethesda Softworks\';
+  sBethRegKey64   = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+  sSteamRegKey    = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+
+    'Steam App ';
+  sSteamRegKey64  = '\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\'+
+    'Uninstall\Steam App ';
+var
+  i: Integer;
+  gameName: string;
+  keys, appIDs: TStringList;
+begin
+  Result := '';
+
+  // initialize variables
+  gameName := mode.gameName;
+  keys := TStringList.Create;
+  appIDs := TStringList.Create;
+  appIDs.CommaText := mode.appIDs;
+
+  // add keys to check
+  keys.Add(sBethRegKey + gameName + '\Installed Path');
+  keys.Add(sBethRegKey64 + gameName + '\Installed Path');
+  for i := 0 to Pred(appIDs.Count) do begin
+    keys.Add(sSteamRegKey + appIDs[i] + '\InstallLocation');
+    keys.Add(sSteamRegKey64 + appIDs[i] + '\InstallLocation');
+  end;
+
+  // try to find path from registry
+  Result := TryRegistryKeys(keys);
+
+  // free memory
+  keys.Free;
+  appIDs.Free;
+
+  // set result
   if Result <> '' then
     Result := IncludeTrailingPathDelimiter(Result);
 end;
