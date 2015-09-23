@@ -427,7 +427,7 @@ var
   LabelFilters, GroupFilters, pluginsToCheck, mergesToBuild: TList;
   timeCosts: TStringList;
   settings: TSettings;
-  profile: TProfile;
+  CurrentProfile: TProfile;
   statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
@@ -475,7 +475,7 @@ begin
   wbGameName := GameMode.gameName;
   wbGameMode := GameMode.gameMode;
   wbAppName := GameMode.appName;
-  wbDataPath := profile.gamePath + 'Data\';
+  wbDataPath := CurrentProfile.gamePath + 'Data\';
   // set general paths
   DataPath := wbDataPath;
 end;
@@ -2651,7 +2651,7 @@ begin
 
   // log messages
   Logger.Write('GENERAL', 'Status', 'ProgramVersion: '+ProgramVersion);
-  case profile.gameMode of
+  case CurrentProfile.gameMode of
     1: Logger.Write('GENERAL', 'Status', 'TES5 Dictionary Hash: '+TES5Hash);
     2: Logger.Write('GENERAL', 'Status', 'TES4 Dictionary Hash: '+TES4Hash);
     3: Logger.Write('GENERAL', 'Status', 'FO3 Dictionary Hash: '+FNVHash);

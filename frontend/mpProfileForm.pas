@@ -119,7 +119,7 @@ begin
     for i := 0 to Pred(ProfilePanels.Count) do begin
       p := TProfilePanel(ProfilePanels[i]);
       if p.Selected then begin
-        profile := p.GetProfile;
+        CurrentProfile := p.GetProfile;
         break;
       end;
     end;
@@ -152,6 +152,7 @@ var
   path, settingsPath: string;
   info: TSearchRec;
   p: TProfilePanel;
+  aSettings: TSettings;
 begin
   path := ProgramPath + 'profiles\';
   if not DirectoryExists(path) then
@@ -166,12 +167,12 @@ begin
     settingsPath := path + info.Name + '\settings.ini';
     if not FileExists(settingsPath) then
       continue;
-    settings := TSettings.Create;
-    TRttiIni.Load(settingsPath, settings);
-    if settings.profile <> '' then begin
-      p := CreateNewProfile(settings.profile);
-      p.SetGame(settings.gameMode);
-      p.SetPath(settings.gamePath);
+    aSettings := TSettings.Create;
+    TRttiIni.Load(settingsPath, aSettings);
+    if aSettings.profile <> '' then begin
+      p := CreateNewProfile(aSettings.profile);
+      p.SetGame(aSettings.gameMode);
+      p.SetPath(aSettings.gamePath);
     end;
   until FindNext(info) <> 0;
 end;

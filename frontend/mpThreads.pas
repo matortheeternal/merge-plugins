@@ -72,7 +72,7 @@ begin
     ProgramVersion := GetVersionMem;
     TempPath := ProgramPath + 'temp\';
     LogPath := ProgramPath + 'logs\';
-    ProfilePath := ProgramPath + 'profiles\' + profile.name + '\';
+    ProfilePath := ProgramPath + 'profiles\' + CurrentProfile.name + '\';
     ForceDirectories(TempPath);
     ForceDirectories(LogPath);
     ForceDirectories(ProfilePath);
@@ -98,7 +98,7 @@ begin
     handler._AddRef;
 
     // SET GAME VARS
-    SetGame(profile.gameMode);
+    SetGame(CurrentProfile.gameMode);
     wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
     Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
     Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
