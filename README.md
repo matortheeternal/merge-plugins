@@ -1,8 +1,5 @@
 ## Description
-Merge Plugins Standalone (or just Merge Plugins), is a tool for combining mods from Bethesda games which have .ESP/.ESM files.  It uses the xEdit codebase as an API, and can be used with Skyrim, Oblivion, Fallout New Vegas, and Fallout 3.  Merge Plugins Standalone is the successor of my Merge Plugins xEdit Script.
-
-## Gallery
-[Screenshot Gallery](http://imgur.com/a/P3Df2)
+Merge Plugins Standalone (or just Merge Plugins), is a tool for combining mods from Bethesda games which have .ESP/.ESM files.  It uses the xEdit codebase as an API, and can be used with Skyrim, Oblivion, Fallout New Vegas, and Fallout 3.  Merge Plugins Standalone is the successor of my Merge Plugins xEdit Script.  Feel free to check out the [screenshot gallery](http://imgur.com/a/P3Df2) to get an idea of the look and feel of Merge Plugins.
 
 ## Compiling
 This project can be compiled with RAD Studio Delphi XE, or newer.  You can download a compiled build from the link below:
