@@ -3226,8 +3226,8 @@ var
   path: string;
 begin
   path := ProgramPath + 'profiles\' + name;
-  if DirectoryExists(profilePath) then
-    DeleteDirectory(profilePath);
+  if DirectoryExists(path) then
+    DeleteDirectory(path);
 end;
 
 procedure TProfile.Rename(name: string);

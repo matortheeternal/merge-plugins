@@ -3,8 +3,8 @@ unit mpProfilePanel;
 interface
 
 uses
-  SysUtils, Classes, Controls, Graphics, Buttons, StdCtrls, ExtCtrls, ImgList,
-  Types,
+  SysUtils, Classes, Controls, Dialogs, Graphics, Buttons, StdCtrls, ExtCtrls,
+  ImgList, Types,
   // mte components
   mteHelpers,
   // mp components
@@ -22,8 +22,10 @@ type
     procedure Deselect;
     procedure Select;
     procedure SetTop(top: Integer);
+    procedure SetWidth(width: Integer);
     function GetProfile: TProfile;
-    procedure SetCallback(callback: TNotifyEvent);
+    procedure SetSelectCallback(callback: TNotifyEvent);
+    procedure SetDeleteCallback(callback: TNotifyEvent);
     procedure SetGame(i: integer);
     procedure SetPath(path: string);
   private
@@ -39,9 +41,12 @@ type
     cbGame: TComboBox;
     edPath: TEdit;
     btnBrowse: TSpeedButton;
+    btnDelete: TSpeedButton;
     GameIcons: TImageList;
     SelectCallback: TNotifyEvent;
+    DeleteCallback: TNotifyEvent;
     procedure Browse(Sender: TObject);
+    procedure Delete(Sender: TObject);
     procedure NameChanged(Sender: TObject);
     procedure GameChanged(Sender: TObject);
     procedure PathChanged(Sender: TObject);
@@ -67,7 +72,7 @@ begin
   // set up panel
   inherited Create(AOwner);
   Parent := AOwner as TWinControl;
-  Width := (AOwner as TWinControl).Width - 4;
+  Width := (AOwner as TWinControl).ClientWidth;
   Height := 100;
   Left := 0;
   Top := 0;
@@ -84,7 +89,7 @@ begin
   Selected := false;
   ColorInvalid := $e6e6f0;
   ColorValid := $e6f0e6;
-  ColorSelected := $f0ece0;
+  ColorSelected := $f0ece4;
 
   // create components
   GameImage := TImage.Create(self);
@@ -94,6 +99,7 @@ begin
   edName := TEdit.Create(self);
   cbGame := TComboBox.Create(self);
   edPath := TEdit.Create(self);
+  btnDelete := TSpeedButton.Create(self);
   btnBrowse := TSpeedButton.Create(self);
 
   // set up GameImage
@@ -171,6 +177,18 @@ begin
   btnBrowse.Align := alCustom;
   btnBrowse.Anchors := [akLeft, akTop];
 
+  // set up btnDelete
+  btnDelete.Parent := self;
+  btnDelete.Top := 4;
+  btnDelete.Left := 410;
+  btnDelete.Width := 22;
+  btnDelete.Height := 23;
+  btnDelete.Flat := true;
+  btnDelete.Transparent := true;
+  GeneralIcons.GetBitmap(1, btnDelete.Glyph);
+  btnDelete.Align := alCustom;
+  btnDelete.Anchors := [akLeft, akTop];
+
   // set event handlers
   self.OnClick := ToggleSelect;
   GameImage.OnClick := ToggleSelect;
@@ -178,6 +196,7 @@ begin
   lblGame.OnClick := ToggleSelect;
   lblPath.OnClick := ToggleSelect;
   btnBrowse.OnClick := Browse;
+  btnDelete.OnClick := Delete;
   edName.OnChange := NameChanged;
   edPath.OnChange := PathChanged;
   cbGame.OnChange := GameChanged;
@@ -217,6 +236,11 @@ begin
 
   // then update in profile
   aProfile.gamePath := edPath.Text;
+end;
+
+procedure TProfilePanel.Delete(Sender: TObject);
+begin
+  if Assigned(DeleteCallback) then DeleteCallback(self);
 end;
 
 procedure TProfilePanel.NameChanged(Sender: TObject);
@@ -267,14 +291,24 @@ begin
   self.top := top;
 end;
 
+procedure TProfilePanel.SetWidth(width: Integer);
+begin
+  self.width := width;
+end;
+
 function TProfilePanel.GetProfile: TProfile;
 begin
   Result := aProfile;
 end;
 
-procedure TProfilePanel.SetCallback(callback: TNotifyEvent);
+procedure TProfilePanel.SetSelectCallback(callback: TNotifyEvent);
 begin
   SelectCallback := callback;
+end;
+
+procedure TProfilePanel.SetDeleteCallback(callback: TNotifyEvent);
+begin
+  DeleteCallback := callback;
 end;
 
 procedure TProfilePanel.SetGame(i: Integer);

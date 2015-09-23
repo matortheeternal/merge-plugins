@@ -3,12 +3,12 @@ unit mpProfileForm;
 interface
 
 uses
-  Windows, SysUtils, Classes, Controls, Forms, StdCtrls, Graphics, ImgList,
-  Menus, Dialogs, ExtCtrls,
+  Windows, Messages, SysUtils, Classes, Controls, Forms, StdCtrls, Graphics,
+  ImgList, Menus, Dialogs, ExtCtrls,
   // mte components
   RttiIni, mteHelpers,
   // mp components
-  mpFrontend, mpProfilePanel;
+  mpFrontend, mpProfilePanel, pngimage;
 
 type
   TProfileForm = class(TForm)
@@ -20,24 +20,39 @@ type
     DeleteProfileItem: TMenuItem;
     GeneralIcons: TImageList;
     ScrollBox: TScrollBox;
+    NewProfilePanel: TPanel;
+    NewProfileImage: TImage;
+    NewProfileLabel: TLabel;
+    PaddingLabel: TLabel;
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormDestroy(Sender: TObject);
     procedure RealignPanels;
     function CreateNewProfile(name: string): TProfilePanel;
     procedure NewProfileItemClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure LoadProfiles;
     procedure CreateDefaultProfiles;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ProfilePopupMenuPopup(Sender: TObject);
     procedure SelectionChanged(Sender: TObject);
+    procedure DeleteClicked(Sender: TObject);
     procedure DeleteProfileItemClick(Sender: TObject);
     function ProfileNameTaken(name: string): boolean;
+    procedure NewProfileImageClick(Sender: TObject);
+    procedure NewProfilePanelClick(Sender: TObject);
+    procedure NewProfileLabelClick(Sender: TObject);
+    procedure NewProfilePanelMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+  private
+    FOldWndProc: TWndMethod;
+    FMouseInPanel: Boolean;
+    procedure PanelWndProc(var Message: TMessage);
   public
     ProfilePanels: TList;
   end;
 
 var
   ProfileForm: TProfileForm;
-  SelectCallback: TNotifyEvent;
+  SelectCallback, DeleteCallback: TNotifyEvent;
   MouseOverProfile: TProfilePanel;
 
 implementation
@@ -45,19 +60,43 @@ implementation
 {$R *.dfm}
 
 procedure TProfileForm.DeleteProfileItemClick(Sender: TObject);
+var
+  bApproved: boolean;
+  aProfile: TProfile;
 begin
-  if not Assigned(MouseOverProfile) then exit;
+  // get user verification
+  aProfile := MouseOverProfile.GetProfile;
+  bApproved := MessageDlg('Are you sure you want to delete '+
+    aProfile.name + '?', mtConfirmation, mbOKCancel, 0) = mrOk;
+
+  if not (bApproved and Assigned(MouseOverProfile)) then exit;
   ProfilePanels.Delete(ProfilePanels.IndexOf(MouseOverProfile));
+  aProfile.Delete;
   MouseOverProfile.Free;
   RealignPanels;
 end;
 
 procedure TProfileForm.RealignPanels;
 var
-  i: Integer;
+  i, vpos: Integer;
+  p: TProfilePanel;
 begin
-  for i := 0 to Pred(ProfilePanels.Count) do
-    TProfilePanel(ProfilePanels[i]).SetTop(100 * i);
+  // just an alias
+  vpos := ScrollBox.VertScrollBar.ScrollPos;
+
+  // realign NewProfilePanel
+  NewProfilePanel.Top := 100 * ProfilePanels.Count - vpos;
+  NewProfilePanel.Width := ScrollBox.ClientWidth;
+
+  // realign general profile panels
+  for i := Pred(ProfilePanels.Count) downto 0 do begin
+    p := TProfilePanel(ProfilePanels[i]);
+    p.SetTop(100 * i - vpos);
+    p.SetWidth(ScrollBox.ClientWidth);
+  end;
+
+  // realign padding label
+  PaddingLabel.Top := 100 * (ProfilePanels.Count + 1) - PaddingLabel.Height;
 end;
 
 procedure TProfileForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -93,7 +132,17 @@ begin
   ProgramPath := ExtractFilePath(ParamStr(0));
   ProfilePanels := TList.Create;
   SelectCallback := SelectionChanged;
+  DeleteCallback := DeleteClicked;
   LoadProfiles;
+  if ProfilePanels.Count = 0 then
+    CreateDefaultProfiles;
+  FOldWndProc := NewProfilePanel.WindowProc;
+  NewProfilePanel.WindowProc := PanelWndProc;
+end;
+
+procedure TProfileForm.FormDestroy(Sender: TObject);
+begin
+  NewProfilePanel.WindowProc:= FOldWndProc;
 end;
 
 procedure TProfileForm.LoadProfiles;
@@ -103,17 +152,11 @@ var
   p: TProfilePanel;
 begin
   path := ProgramPath + 'profiles\';
-  if not DirectoryExists(path) then begin
-    //ShowMessage(path+ 'doesn''t exist, creating default profiles...');
-    CreateDefaultProfiles;
+  if not DirectoryExists(path) then
     exit;
-  end;
 
-  if FindFirst(path + '*', faAnyFile or faDirectory, info) <> 0 then begin
-    //ShowMessage('No '+path+ '* folders found, creating default profiles...');
-    CreateDefaultProfiles;
+  if FindFirst(path + '*', faAnyFile or faDirectory, info) <> 0 then
     exit;
-  end;
   // add found profiles
   repeat
     if IsDotFile(info.Name) then
@@ -151,9 +194,10 @@ end;
 function TProfileForm.CreateNewProfile(name: string): TProfilePanel;
 begin
   Result := TProfilePanel.ICreate(ScrollBox, GameIcons, GeneralIcons, name);
-  Result.SetTop(100 * ProfilePanels.Count);
-  Result.SetCallback(SelectCallback);
+  Result.SetSelectCallback(SelectCallback);
+  Result.SetDeleteCallback(DeleteCallback);
   ProfilePanels.Add(Result);
+  RealignPanels;
 end;
 
 procedure TProfileForm.NewProfileItemClick(Sender: TObject);
@@ -170,6 +214,21 @@ begin
   // create a new profile
   name := name + IntToStr(i);
   CreateNewProfile(name);
+end;
+
+procedure TProfileForm.NewProfileImageClick(Sender: TObject);
+begin
+  NewProfileItemClick(nil);
+end;
+
+procedure TProfileForm.NewProfileLabelClick(Sender: TObject);
+begin
+  NewProfileItemClick(nil);
+end;
+
+procedure TProfileForm.NewProfilePanelClick(Sender: TObject);
+begin
+  NewProfileItemClick(nil);
 end;
 
 function TProfileForm.ProfileNameTaken(name: string): boolean;
@@ -218,6 +277,36 @@ begin
 
   // enable ok button if profile panel is selected
   btnOk.Enabled := TProfilePanel(Sender).Selected;
+end;
+
+procedure TProfileForm.DeleteClicked(Sender: TObject);
+begin
+  MouseOverProfile := TProfilePanel(Sender);
+  DeleteProfileItemClick(nil);
+end;
+
+procedure TProfileForm.NewProfilePanelMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+var
+  mEvnt: TTrackMouseEvent;
+begin
+  if not FMouseInPanel then begin
+    mEvnt.cbSize := SizeOf(mEvnt);
+    mEvnt.dwFlags := TME_LEAVE;
+    mEvnt.hwndTrack := NewProfilePanel.Handle;
+    TrackMouseEvent(mEvnt);
+    NewProfilePanel.Color:= $f0ece4;
+    FMouseInPanel:= True;
+  end;
+end;
+
+procedure TProfileForm.PanelWndProc(var Message: TMessage);
+begin
+  if Message.Msg = WM_MOUSELEAVE then begin
+    NewProfilePanel.Color:= clBtnFace;
+    FMouseInPanel:= False;
+  end;
+  FOldWndProc(Message);
 end;
 
 end.
