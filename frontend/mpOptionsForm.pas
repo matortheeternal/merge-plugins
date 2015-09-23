@@ -362,9 +362,9 @@ end;
 procedure TOptionsForm.btnRegisterClick(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
-    lblStatus.Caption := 'Server unavailable';
-    lblStatus.Font.Color := clRed;
-    lblStatus.Hint := 'Sorry, the server is unavailable, try again later.';
+    lblStatusValue.Caption := 'Server unavailable';
+    lblStatusValue.Font.Color := clRed;
+    lblStatusValue.Hint := 'Sorry, the server is unavailable, try again later.';
     btnRegister.Enabled := false;
     exit;
   end;
@@ -374,29 +374,29 @@ begin
       settings.registered := true;
       settings.username := edUsername.Text;
       SaveSettings;
-      lblStatus.Caption := 'Registered';
-      lblStatus.Font.Color := clGreen;
-      lblStatus.Hint := '';
+      lblStatusValue.Caption := 'Registered';
+      lblStatusValue.Font.Color := clGreen;
+      lblStatusValue.Hint := '';
       edUsername.Enabled := false;
       btnRegister.Enabled := false;
     end
     else begin
-      lblStatus.Caption := 'Failed to register';
-      lblStatus.Font.Color := clRed;
-      lblStatus.Hint := 'Oops.  Something went wrong.  o_o';
+      lblStatusValue.Caption := 'Failed to register';
+      lblStatusValue.Font.Color := clRed;
+      lblStatusValue.Hint := 'Oops.  Something went wrong.  o_o';
     end;
   end
   else begin
     if UsernameAvailable(edUsername.Text) then begin
-      lblStatus.Caption := 'Username available!';
-      lblStatus.Font.Color := clBlue;
-      lblStatus.Hint := 'Click register to claim it.';
+      lblStatusValue.Caption := 'Username available!';
+      lblStatusValue.Font.Color := clBlue;
+      lblStatusValue.Hint := 'Click register to claim it.';
       btnRegister.Caption := 'Register';
     end
     else begin
-      lblStatus.Caption := 'Username unavailable, sorry';
-      lblStatus.Font.Color := clRed;
-      lblStatus.Hint := 'Someone beat ya to it, try another.';
+      lblStatusValue.Caption := 'Username unavailable, sorry';
+      lblStatusValue.Font.Color := clRed;
+      lblStatusValue.Hint := 'Someone beat ya to it, try another.';
     end;
   end;
 end;
@@ -408,9 +408,9 @@ begin
     CheckAuthorization;
     if bAuthorized then begin
       btnReset.Enabled := false;
-      lblStatus.Caption := 'Registered';
-      lblStatus.Font.Color := clGreen;
-      lblStatus.Hint := '';
+      lblStatusValue.Caption := 'Registered';
+      lblStatusValue.Font.Color := clGreen;
+      lblStatusValue.Hint := '';
     end;
   end;
 end;
@@ -456,30 +456,30 @@ end;
 procedure TOptionsForm.edUsernameChange(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
-    lblStatus.Caption := 'Server unavailable';
-    lblStatus.Font.Color := clRed;
-    lblStatus.Hint := 'Sorry, the server is unavailable, try again later.';
+    lblStatusValue.Caption := 'Server unavailable';
+    lblStatusValue.Font.Color := clRed;
+    lblStatusValue.Hint := 'Sorry, the server is unavailable, try again later.';
     btnRegister.Enabled := false;
     exit;
   end;
 
   btnRegister.Caption := 'Check';
   if Length(edUsername.Text) < 4 then begin
-    lblStatus.Caption := 'Invalid username';
-    lblStatus.Font.Color := clRed;
-    lblStatus.Hint := 'Username length must be at least 4 characters.';
+    lblStatusValue.Caption := 'Invalid username';
+    lblStatusValue.Font.Color := clRed;
+    lblStatusValue.Hint := 'Username length must be at least 4 characters.';
     btnRegister.Enabled := false;
   end
   else if Length(edUsername.Text) > 24 then begin
-    lblStatus.Caption := 'Invalid username';
-    lblStatus.Font.Color := clRed;
-    lblStatus.Hint := 'Username length cannot exceed 24 characters.';
+    lblStatusValue.Caption := 'Invalid username';
+    lblStatusValue.Font.Color := clRed;
+    lblStatusValue.Hint := 'Username length cannot exceed 24 characters.';
     btnRegister.Enabled := false;
   end
   else begin
-    lblStatus.Caption := 'Valid, is it available?';
-    lblStatus.Font.Color := clBlack;
-    lblStatus.Hint := 'Click the check button to check if '#13+
+    lblStatusValue.Caption := 'Valid, is it available?';
+    lblStatusValue.Font.Color := clBlack;
+    lblStatusValue.Hint := 'Click the check button to check if '#13+
       'the username is available';
     btnRegister.Enabled := true;
   end;
@@ -566,17 +566,17 @@ begin
     if TCPClient.Connected then begin
       if not bAuthorized then begin
         btnReset.Enabled := true;
-        lblStatus.Caption := 'Authorization failed!';
-        lblStatus.Font.Color := clRed;
-        lblStatus.Hint := 'Click reset to reset your authentication key.'#13+
+        lblStatusValue.Caption := 'Authorization failed!';
+        lblStatusValue.Font.Color := clRed;
+        lblStatusValue.Hint := 'Click reset to reset your authentication key.'#13+
           'NOTE: This will fail if your IP has changed since you last logged in.'#13+
           'If you can''t recover your username you can either make a new one or '#13+
           'contact support.';
       end
       else begin
-        lblStatus.Caption := 'Registered.';
-        lblStatus.Font.Color := clGreen;
-        lblStatus.Hint := '';
+        lblStatusValue.Caption := 'Registered.';
+        lblStatusValue.Font.Color := clGreen;
+        lblStatusValue.Hint := '';
         bAuthorized := true;
       end;
     end;
