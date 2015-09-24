@@ -401,17 +401,18 @@ begin
       continue;
     oldFileFormID := RemoveFileIndex(oldFormID);
 
-    // exit if we can't find a remapped formID for the source script
+    // see if formID directly remapped, or only FormIndex changed
     index := merge.map.IndexOfName(oldFileFormID);
-    if (index = -1) then begin
-      if settings.debugScriptFragments then
-        Tracker.Write(Format('    FormID [%s] was not renumbered in merge %s', [oldFileFormID, merge.name]));
+    if (index = -1) then
+      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6)
+    else
+      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(oldFileFormID, 3, 6);
+    // continue if formID didn't get changed
+    if newFileFormID = oldFormID then
       continue;
-    end;
 
     // remap formID in file name and file contents
     Inc(total);
-    newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
     if settings.debugScriptFragments then
       Tracker.Write(Format('    Remapping [%s] to [%s] on %s', [oldFormID, newFileFormID, srcFile]));
     srcFile := StringReplace(srcFile, oldFormID, newFileFormID, []);
@@ -596,6 +597,7 @@ var
   rec, subgroup, container: IwbContainer;
   element, fragments: IwbElement;
   i, j, index: Integer;
+  bIndexChanged: boolean;
   fn, nfn, oldFormID, oldFileFormID, newFileFormID, infoFragmentsPath: string;
 begin
   f := merge.plugin._File;
@@ -605,6 +607,9 @@ begin
       Tracker.Write('      '+plugin.filename+' has no DIAL record ground, skipping.');
     exit;
   end;
+  // check if the file formID index is different on the merged plugin
+  // compared to the source plugin we're handling
+  bIndexChanged := mergeFormIndex <> plugin.GetFormIndex;
 
   // find all DIAL records
   infoFragmentsPath := Format(fragmentsPathTemplate, ['Info', 'Info']);
@@ -629,13 +634,16 @@ begin
         continue;
       oldFileFormID := RemoveFileIndex(oldFormID);
       index := GetMapIndex(merge, plugin.filename, oldFileFormID);
-      if (index = -1) then begin
+      if (index = -1) and (not bIndexChanged) then begin
         if settings.debugScriptFragments then
           Tracker.Write(Format('        Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
         continue;
       end
       else begin
-      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
+        if not bIndexChanged then
+          newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6)
+        else
+          newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(oldFileFormID, 3, 6);
         if settings.debugScriptFragments then
           Tracker.Write(Format('        Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
         if not CopySource(fn, srcPath, pscPath) then
@@ -658,6 +666,7 @@ var
   rec, container: IwbContainer;
   fragments: IwbElement;
   i, index: Integer;
+  bIndexChanged: boolean;
   fn, nfn, oldFormID, oldFileFormID, newFileFormID, questFragmentsPath: string;
 begin
   f := merge.plugin._File;
@@ -666,7 +675,10 @@ begin
     if settings.debugScriptFragments then
       Tracker.Write('      '+plugin.filename+' has no QUST record ground, skipping.');
     exit;
-  end;
+  end;    
+  // check if the file formID index is different on the merged plugin
+  // compared to the source plugin we're handling
+  bIndexChanged := mergeFormIndex <> plugin.GetFormIndex;
 
   // find all QUST records
   questFragmentsPath := Format(fragmentsPathTemplate, ['Quest', 'Quest']);
@@ -686,13 +698,16 @@ begin
       continue;
     oldFileFormID := RemoveFileIndex(oldFormID);
     index := GetMapIndex(merge, plugin.filename, oldFileFormID);
-    if (index = -1) then begin
+    if (index = -1) and (not bIndexChanged) then begin
       if settings.debugScriptFragments then
         Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
       continue;
     end
     else begin
-      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
+      if not bIndexChanged then
+        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6)
+      else
+        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(oldFileFormID, 3, 6);
       if settings.debugScriptFragments then
         Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
       if not CopySource(fn, srcPath, pscPath) then
@@ -714,6 +729,7 @@ var
   rec, container: IwbContainer;
   fragments: IwbElement;
   i, index: Integer;
+  bIndexChanged: boolean;
   fn, nfn, oldFormID, oldFileFormID, newFileFormID, sceneFragmentsPath: string;
 begin
   f := merge.plugin._File;
@@ -723,6 +739,9 @@ begin
       Tracker.Write('      '+plugin.filename+' has no SCEN record ground, skipping.');
     exit;
   end;
+  // check if the file formID index is different on the merged plugin
+  // compared to the source plugin we're handling
+  bIndexChanged := mergeFormIndex <> plugin.GetFormIndex;
 
   // find all SCEN records
   sceneFragmentsPath := Format(fragmentsPathTemplate, ['Scene', 'Scene']);
@@ -742,13 +761,16 @@ begin
       continue;
     oldFileFormID := RemoveFileIndex(oldFormID);
     index := GetMapIndex(merge, plugin.filename, oldFileFormID);
-    if (index = -1) then begin
+    if (index = -1) and (not bIndexChanged) then begin
       if settings.debugScriptFragments then
         Tracker.Write(Format('      Skipping [%s], FormID not renumbered in merge', [oldFileFormID]));
       continue;
     end
     else begin
-      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
+      if not bIndexChanged then
+        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6)
+      else
+        newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(oldFileFormID, 3, 6);
       if settings.debugScriptFragments then
         Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
       if not CopySource(fn, srcPath, pscPath) then

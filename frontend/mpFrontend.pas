@@ -138,6 +138,7 @@ type
     function GetFlagsString: string;
     function GetFlagsDescription: string;
     procedure GetDataPath;
+    function GetFormIndex: Integer;
     procedure FindErrors;
     function HasBeenCheckedForErrors: boolean;
     function HasErrors: boolean;
@@ -2825,6 +2826,19 @@ begin
     modName := GetModContainingFile(ActiveMods, filename);
     if modName <> '' then
       dataPath := settings.MOModsPath + modName + '\';
+  end;
+end;
+
+function TPlugin.GetFormIndex: Integer;
+var
+  Container, MasterFiles: IwbContainer;
+begin
+  Result := 0;
+  Container := self._File as IwbContainer;
+  Container := Container.Elements[0] as IwbContainer;
+  if Container.ElementExists['Master Files'] then begin
+    MasterFiles := Container.ElementByPath['Master Files'] as IwbContainer;
+    Result := MasterFiles.ElementCount;
   end;
 end;
 
