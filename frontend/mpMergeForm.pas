@@ -1865,11 +1865,11 @@ begin
     bReportsSent := SendReports(ReportForm.reportsList);
     if not bReportsSent then begin
       Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, 'user\reports\');
+      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\');
     end
     else begin
       Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, 'user\reports\submitted\Submitted-');
+      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\submitted\');
     end;
   end;
 
