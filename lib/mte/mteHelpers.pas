@@ -571,8 +571,10 @@ begin
       continue;
 
     // skip if ignored
-    if isDirectory and ContainsMatch(dIgnore, info.Name) then
-      continue
+    if isDirectory then begin
+      if ContainsMatch(dIgnore, info.Name) then
+        continue;
+    end
     else if ContainsMatch(fIgnore, info.Name) then
       continue;
 
