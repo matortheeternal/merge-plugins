@@ -8,7 +8,7 @@ uses
   // mte units
   mteHelpers,
   // mp units
-  mpFrontend;
+  mpChangeLogForm, mpFrontend;
 
 type
   TOptionsForm = class(TForm)
@@ -432,7 +432,7 @@ end;
 procedure TOptionsForm.btnUpdateProgramClick(Sender: TObject);
 begin
   if TCPClient.Connected then begin
-    if DownloadProgram then begin
+    if ChangeLogPrompt(self) and DownloadProgram then begin
       bInstallUpdate := true;
       btnOKClick(nil);
       Close;

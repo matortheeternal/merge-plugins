@@ -81,9 +81,7 @@ begin
     bLoaderDone := false;
     LastStatusTime := 0;
     Status := TmpStatus.Create;
-
-    // INITIALIZE CLIENT
-    InitializeClient;
+    LoadChangelog;
 
     // INITIALIZE TES5EDIT API
     wbDisplayLoadOrderFormID := True;
@@ -109,6 +107,7 @@ begin
       ModOrganizerInit;
 
     // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
+    InitializeClient;
     if settings.updateDictionary or settings.updateProgram then try
       Tracker.Write('Checking for updates');
       ConnectToServer;

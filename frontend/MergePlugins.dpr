@@ -29,6 +29,7 @@ uses
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpReportForm in 'mpReportForm.pas' {Form1},
+  mpChangeLogForm in 'mpChangeLogForm.pas' {ChangeLogForm},
   mpThreads in 'mpThreads.pas';
 
 {$R *.res}
@@ -76,5 +77,6 @@ begin
   Application.CreateForm(TOptionsForm, OptionsForm);
   Application.CreateForm(TSplashForm, SplashForm);
   Application.CreateForm(TReportForm, ReportForm);
+  Application.CreateForm(TChangeLogForm, ChangeLogForm);
   Application.Run;
 end.

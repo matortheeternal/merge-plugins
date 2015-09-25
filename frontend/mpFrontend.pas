@@ -308,6 +308,7 @@ type
   procedure SaveSettings(var s: TSettings; path: string); overload;
   procedure LoadStatistics;
   procedure SaveStatistics;
+  procedure LoadChangelog;
   procedure LoadDictionary;
   procedure SaveMerges;
   procedure LoadMerges;
@@ -343,6 +344,7 @@ type
   function GetStatus: boolean;
   function VersionCompare(v1, v2: string): boolean;
   procedure CompareStatuses;
+  function UpdateChangeLog: boolean;
   function UpdateDictionary: boolean;
   function UpdateProgram: boolean;
   function DownloadProgram: boolean;
@@ -426,7 +428,7 @@ const
 var
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
   LabelFilters, GroupFilters, pluginsToCheck, mergesToBuild: TList;
-  timeCosts: TStringList;
+  timeCosts, changelog: TStringList;
   settings: TSettings;
   CurrentProfile: TProfile;
   statistics, sessionStatistics: TStatistics;
@@ -1573,6 +1575,20 @@ begin
   TRttiIni.Load('statistics.ini', statistics);
 end;
 
+procedure LoadChangelog;
+begin
+  // don't attempt to load changelog if it doesn't exist
+  if not FileExists('changelog.txt') then begin
+    Logger.Write('GENERAL', 'Changelog', 'No changelog found');
+    exit;
+  end;
+
+  // load changelog
+  if not Assigned(changelog) then
+    changelog := TStringList.Create;
+  changelog.LoadFromFile('changelog.txt');
+end;
+
 procedure LoadDictionary;
 var
   i: Integer;
@@ -2377,6 +2393,59 @@ begin
       if bDictionaryUpdate then
         Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
           status.fo3Hash+' != '+RemoteStatus.fo3hash);
+    end;
+  end;
+end;
+
+function UpdateChangeLog: boolean;
+var
+  msg: TmpMessage;
+  clRequest, filename: string;
+  stream: TFileStream;
+  sl: TStringList;
+begin
+  Result := false;
+  if not TCPClient.Connected then
+    exit;
+  Logger.Write('CLIENT', 'Update', 'Getting changelog');
+  Tracker.Write('Getting changelog');
+
+  // get changelog lines request
+  if Assigned(changelog) then
+    clRequest := 'changelog'+IntToStr(changelog.Count)
+  else
+    clRequest := 'changelog';
+
+  // attempt to request dictionary
+  // throws exception if server is unavailable
+  try
+    // send request to server
+    msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, clRequest);
+    SendClientMessage(msg);
+
+    // get response
+    filename := clRequest + '.txt';
+    stream := TFileStream.Create(filename, fmCreate + fmShareDenyNone);
+    TCPClient.IOHandler.LargeStream := True;
+    TCPClient.IOHandler.ReadStream(stream, -1, False);
+
+    // load dictionary from response
+    Logger.Write('CLIENT', 'Update', 'Changelog recieved.  (Size: '+FormatByteSize(stream.Size)+')');
+    stream.Free;
+
+    // append request changelog to current changelog
+    sl := TStringList.Create;
+    sl.LoadFromFile(filename);
+    changelog.Add(sl.Text);
+    changelog.SaveToFile('changelog.txt');
+
+    // clean up
+    sl.Free;
+    DeleteFile(filename);
+    Result := true;
+  except
+    on x : Exception do begin
+      Logger.Write('ERROR', 'Client', 'Exception getting changelog '+x.Message);
     end;
   end;
 end;

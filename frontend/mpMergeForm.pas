@@ -15,7 +15,7 @@ uses
   mteHelpers, mteTracker, mteLogger, mteProgressForm,
   // mp units
   mpFrontend, mpThreads, mpMerge, mpDictionaryForm, mpOptionsForm,
-  mpSplashForm, mpEditForm, mpReportForm,
+  mpSplashForm, mpEditForm, mpReportForm, mpChangeLogForm,
   // tes5edit units
   wbBSA, wbHelpers, wbInterface, wbImplementation;
 
@@ -2097,10 +2097,10 @@ procedure TMergeForm.UpdateButtonClick(Sender: TObject);
 begin
   // if not connected to server, don't try to update anything
   if not TCPClient.Connected then
-    exit;
+    exit;                                               
 
   // update program
-  if bProgramUpdate and DownloadProgram then begin
+  if bProgramUpdate and ChangeLogPrompt(self) and DownloadProgram then begin
     bInstallUpdate := UpdateProgram;
     if bInstallUpdate then
       Close;
