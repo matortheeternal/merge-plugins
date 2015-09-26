@@ -13,3 +13,8 @@ Version 2.0.1.6
 Version 2.0.1.30
   - Updated xEdit definitions for FNV and TES5
   - Added changelog support
+
+Version 2.0.1.33
+  - Reports now properly limited to 255 characters.
+  - Fixes access violation on startup if no changelog present
+  - Reports now have a label indicating character limitations.
