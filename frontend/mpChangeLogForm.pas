@@ -5,6 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls,
+  // mte units
+  mteHelpers,
   // mp units
   mpFrontend;
 
@@ -28,7 +30,7 @@ type
   function ChangeLogPrompt(AOwner: TComponent): boolean;
 
 const
-  spacing = 6;
+  spacing = 5;
 
 var
   ChangeLogForm: TChangeLogForm;
@@ -75,10 +77,8 @@ begin
   lbl.WordWrap := true;
   lbl.Top := top;
   lbl.Left := 20;
+  lbl.Width := ScrollBox.ClientWidth - 36;
   lbl.Caption := Trim(line);
-  lbl.Font.Style := [];
-  lbl.AutoSize := false;
-  lbl.Width := ScrollBox.ClientWidth - 16;
 
   // increment top for next label
   Inc(top, lbl.Height + spacing);
@@ -87,29 +87,28 @@ end;
 procedure TChangeLogForm.DisplayChangelog;
 var
   i, top, start: Integer;
-  bFoundCurrentVersion: boolean;
-  line, CurrentVersion: string;
+  line, lineVersion: string;
 begin
   // find start line
   start := 0;
-  bFoundCurrentVersion := false;
-  CurrentVersion := 'Version ' + status.programVersion;
   for i := 0 to Pred(changelog.Count) do begin
     line := changelog[i];
-    // identify start of changelog for version after current version
-    if bFoundCurrentVersion and IsVersionLine(line) then begin
+    if not IsVersionLine(line) then
+      continue;
+
+    // identify start of changelog as first version newer than current version
+    lineVersion := Copy(line, 9, Length(line));
+    if VersionCompare(status.programVersion, lineVersion) then begin
       start := i;
       break;
     end;
-    // look for current version
-    if Pos(CurrentVersion, line) > 0 then
-      bFoundCurrentVersion := true;
   end;
 
   // loop through the changelog, creating labels in scrollbox
   // as necessary to render text
   top := 8;
   for i := start to Pred(changelog.Count) do begin
+    line := changelog[i];
     if IsVersionLine(line) then
       CreateVersionLabel(line, top)
     else
@@ -122,11 +121,21 @@ var
   clForm: TChangeLogForm;
 begin
   Result := false;
-  if UpdateChangeLog then begin
-    clForm := TChangeLogForm.Create(AOwner);
-    Result := clForm.ShowModal = mrOK;
-    clForm.Free;
-  end;
+  if FileExists('changelog.txt') then begin
+    if Now - GetLastModified('changelog.txt') > 1.0 then
+      UpdateChangeLog;
+  end
+  else
+     UpdateChangeLog;
+
+  // if we don't have a changelog, exit returning false
+  if not FileExists('changelog.txt') then
+    exit;
+
+  // create change log form
+  clForm := TChangeLogForm.Create(AOwner);
+  Result := clForm.ShowModal = mrOK;
+  clForm.Free;
 end;
 
 end.

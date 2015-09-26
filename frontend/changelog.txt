@@ -1,0 +1,15 @@
+Version 2.0.1.0
+  - Public beta release.
+ 
+Version 2.0.1.2
+  - Fixed bug with settings being saved incorrectly on program exit, replacing a profile's settings with another profile's settings
+  - Fixed the Options Window displaying username status incorrectly
+ 
+Version 2.0.1.6
+  - Fixed a bug where certian script fragments would be skipped with renumber conflicting when they still needed to be changed due to the a change in number of masters
+  - Corrected "Report on merge" trying to save reports to the wrong directory
+  - Fixed issue with normal copying of general assets skipping certain directories, and certain files being missing from merge file lists.
+ 
+Version 2.0.1.30
+  - Updated xEdit definitions for FNV and TES5
+  - Added changelog support

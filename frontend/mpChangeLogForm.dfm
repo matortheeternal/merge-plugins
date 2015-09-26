@@ -2,9 +2,13 @@ object ChangeLogForm: TChangeLogForm
   Left = 0
   Top = 0
   Caption = 'Update Available'
-  ClientHeight = 395
+  ClientHeight = 342
   ClientWidth = 366
   Color = clBtnFace
+  Constraints.MaxHeight = 1000
+  Constraints.MaxWidth = 382
+  Constraints.MinHeight = 300
+  Constraints.MinWidth = 382
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -13,9 +17,6 @@ object ChangeLogForm: TChangeLogForm
   OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
-  DesignSize = (
-    366
-    395)
   PixelsPerInch = 96
   TextHeight = 13
   object LabelPrompt: TLabel
@@ -30,27 +31,35 @@ object ChangeLogForm: TChangeLogForm
     Left = 8
     Top = 27
     Width = 350
-    Height = 328
+    Height = 276
     HorzScrollBar.Visible = False
+    Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
+    ExplicitHeight = 328
   end
   object ButtonInstall: TButton
     Left = 202
-    Top = 362
+    Top = 309
     Width = 75
     Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
     Caption = 'Install'
     ModalResult = 1
     TabOrder = 1
+    ExplicitTop = 361
   end
   object ButtonSkip: TButton
     Left = 283
-    Top = 362
+    Top = 309
     Width = 75
     Height = 25
+    Align = alCustom
+    Anchors = [akRight, akBottom]
     Caption = 'Skip'
     ModalResult = 2
     TabOrder = 2
+    ExplicitTop = 361
   end
 end

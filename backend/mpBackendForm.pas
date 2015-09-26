@@ -1146,12 +1146,10 @@ procedure TBackendForm.HandleMessage(msg: TmpMessage; size: integer;
   AContext: TIdContext);
 var
   report: TReport;
-  note, ip, WhereClause, SetClause, filename: string;
+  note, ip, WhereClause, SetClause: string;
   user: TUser;
   stream: TMemoryStream;
   bAuthorized: boolean;
-  sl: TStringList;
-  i, startLine: Integer;
   userStatistics: TUserStatistics;
 begin
   // get ip, authorization
@@ -1268,37 +1266,22 @@ begin
         else
           LogMessage('ERROR', 'Server', 'User requested '+msg.data);
       end
-      else if (Pos(msg.data, 'changelog') > 0) then begin
-        if FileExists('changelog0.txt') then begin
-          filename := ChangeFileExt(msg.data, '.txt');
-          // make changelog file for user if it doesn't exist yet
-          if not FileExists(filename) then begin
-            // load base changelog file
-            sl := TStringList.Create;
-            sl.LoadFromFile('changelog0.txt');
-            startLine := StrToInt(Copy(msg.data, 10, Length(msg.data)));
-            // handle startLine >= sl.Count
-            if startLine >= sl.Count then
-              sl.SaveToFile(filename)
-            else begin
-              // delete lines before startLine
-              for i := Pred(startLine) downto 0 do
-                sl.Delete(i);
-              // save to new file
-              sl.SaveToFile(filename);
-            end;
-            sl.Free;
-          end;
+      else if msg.data = 'Changelog' then begin
+        if FileExists('changelog.txt') then begin
           stream := TMemoryStream.Create;
-          stream.LoadFromFile(filename);
+          stream.LoadFromFile('changelog.txt');
           AContext.Connection.IOHandler.LargeStream := True;
           AContext.Connection.IOHandler.Write(stream, 0, true);
           Inc(sessionBandwidth, stream.Size);
           Inc(user.download, stream.Size);
-          LogMessage('SERVER', 'Response', 'Sent '+filename);
+          LogMessage('SERVER', 'Response', 'Sent changelog');
           stream.Free;
-        end;
-      end;
+        end
+        else
+          Logger.Write('ERROR', 'Server', 'Changelog missing');
+      end
+      else
+        Logger.Write('ERROR', 'Server', 'Unknown request '+msg.data);
     end;
 
     MSG_REPORT: begin
