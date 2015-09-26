@@ -91,6 +91,8 @@ var
 begin
   // find start line
   start := 0;
+  if not Assigned(changelog) then
+    exit;
   for i := 0 to Pred(changelog.Count) do begin
     line := changelog[i];
     if not IsVersionLine(line) then

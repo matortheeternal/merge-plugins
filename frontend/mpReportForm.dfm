@@ -45,6 +45,16 @@ object ReportForm: TReportForm
       Align = alCustom
       Caption = 'Notes'
     end
+    object lblCharacters: TLabel
+      Left = 272
+      Top = 44
+      Width = 32
+      Height = 13
+      Align = alCustom
+      Alignment = taRightJustify
+      Anchors = [akTop, akRight]
+      Caption = '255'
+    end
     object cbRating: TComboBox
       Left = 136
       Top = 17

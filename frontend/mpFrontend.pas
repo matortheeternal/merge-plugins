@@ -2567,6 +2567,10 @@ begin
     // send all reports in @lst
     for i := 0 to Pred(lst.Count) do begin
       report := TReport(lst[i]);
+      if Length(report.notes) > 255 then begin
+        Logger.Write('CLIENT', 'Report', 'Skipping '+report.filename+', notes too long.');
+        continue;
+      end;
       reportJson := TRttiJson.ToJson(report);
       Logger.Write('CLIENT', 'Report', 'Sending '+report.filename);
 

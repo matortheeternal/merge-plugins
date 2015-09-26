@@ -27,6 +27,7 @@ type
     lblViewDetails: TLabel;
     lblExRatingValue: TLabel;
     lblExReportsvalue: TLabel;
+    lblCharacters: TLabel;
     procedure DisplayCurrentReport;
     procedure btnNextClick(Sender: TObject);
     procedure btnPrevClick(Sender: TObject);
@@ -130,7 +131,7 @@ begin
   // activate rating hint
   cbRatingChange(nil);
 
-  // update whether or not the next button is enabled
+  // update character count and next button state
   meNotesChange(meNotes);
 end;
 
@@ -234,12 +235,33 @@ begin
 end;
 
 procedure TReportForm.meNotesChange(Sender: TObject);
+var
+  len: Integer;
+  bTooShort, bTooLong: boolean;
 begin
-  btnNext.Enabled := Length(Trim(meNotes.Lines.Text)) > 15;
-  if not btnNext.Enabled then
-    meNotes.Hint := 'You need to enter notes for this report.'
-  else
+  len := Length(Trim(meNotes.Lines.Text));
+  bTooShort := (len < 16);
+  bTooLong := (len > 255);
+
+  // disable next button if too long or too short
+  btnNext.Enabled :=  not (bTooShort or bTooLong);
+
+  // change characters label
+  lblCharacters.Caption := IntToStr(len);
+
+  // handle memo hint and label coloring
+  if bTooShort then begin
+    meNotes.Hint := 'Notes too short!  Enter moar!';
+    lblCharacters.Font.Color := clRed;
+  end
+  else if bTooLong then begin
+    meNotes.Hint := 'Notes too long, cut back dawg!';
+    lblCharacters.Font.Color := clRed;
+  end
+  else begin
     meNotes.Hint := '';
+    lblCharacters.Font.Color := clGreen;
+  end;
 end;
 
 end.

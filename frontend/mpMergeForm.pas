@@ -359,6 +359,11 @@ begin
 
   // SHOW LOADER HINT
   StatusPanelMessage.Caption := 'Background loader in progress.';
+
+  // ENABLE TIMERS
+  RefreshTimer.Enabled := true;
+  Heartbeat.Enabled := true;
+  ReconnectTimer.Enabled := true;
 end;
 
 procedure TMergeForm.LoaderDone;

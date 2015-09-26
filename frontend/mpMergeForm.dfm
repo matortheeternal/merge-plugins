@@ -183,10 +183,6 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -236,10 +232,6 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -758,7 +750,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010700F8011C0220002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700F801200220002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000000000000000000000000000E2E2
@@ -1906,7 +1898,7 @@ object MergeForm: TMergeForm
     Left = 1000
     Top = 8
     Bitmap = {
-      494C01010B001800140210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B001800180210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       000000000000000000000000000000000000000000000000000000000000D9D9
       D9408E8E8EC0696969FF696969FF8E8E8EC0D9D9D94000000000000000000000
@@ -2315,7 +2307,7 @@ object MergeForm: TMergeForm
     Left = 936
     Top = 8
     Bitmap = {
-      494C010101001400380140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010014003C0140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100002000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -3379,17 +3371,20 @@ object MergeForm: TMergeForm
       000000000000}
   end
   object ReconnectTimer: TTimer
-    Interval = 10000
+    Enabled = False
+    Interval = 15000
     OnTimer = OnTimer
     Left = 784
     Top = 8
   end
   object Heartbeat: TTimer
+    Enabled = False
     OnTimer = OnHeartbeatTimer
     Left = 712
     Top = 8
   end
   object RefreshTimer: TTimer
+    Enabled = False
     Interval = 3000
     OnTimer = OnRepaintTimer
     Left = 648
