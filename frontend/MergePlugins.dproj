@@ -95,6 +95,7 @@
 			</DCCReference>
 			<DCCReference Include="mpFrontend.pas"/>
 			<DCCReference Include="mpMerge.pas"/>
+			<DCCReference Include="mpThreads.pas"/>
 			<DCCReference Include="mpDictionaryForm.pas">
 				<Form>DictionaryForm</Form>
 			</DCCReference>
@@ -112,9 +113,6 @@
 			</DCCReference>
 			<DCCReference Include="mpChangeLogForm.pas">
 				<Form>ChangeLogForm</Form>
-			</DCCReference>
-			<DCCReference Include="mpThreads.pas">
-				<Form>$R *.res</Form>
 			</DCCReference>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
 			<BuildConfiguration Include="Debug">
@@ -149,7 +147,7 @@
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">1</VersionInfo>
-						<VersionInfo Name="Build">33</VersionInfo>
+						<VersionInfo Name="Build">39</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -161,7 +159,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.0.1.33</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.0.1.39</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

@@ -12,6 +12,7 @@ uses
   AbZBrows, AbUnZper, AbArcTyp, AbMeter, AbBrowse, AbBase,
   // mte components
   CRC32, mteLogger, mteTracker, mteHelpers, RttiIni, RttiJson,
+  RttiTranslation,
   // xedit components
   wbHelpers, wbInterface, wbImplementation,
   wbDefinitionsFNV, wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4,
@@ -299,6 +300,7 @@ type
   procedure SaveLog(var Log: TList);
   function MessageEnabled(msg: TLogMessage): boolean;
   { Loading and saving methods }
+  procedure LoadLanguage;
   procedure SaveProfile(var p: TProfile);
   procedure LoadRegistrationData(var s: TSettings);
   procedure LoadSettings; overload;
@@ -357,6 +359,7 @@ const
   ProgramTesters = 'bla08, hishy, Kesta';
   ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
   xEditVersion = '3.1.1';
+  bTranslationDump = false;
 
   // MSG IDs
   MSG_UNKNOWN = 0;
@@ -428,7 +431,7 @@ const
 var
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
   LabelFilters, GroupFilters, pluginsToCheck, mergesToBuild: TList;
-  timeCosts, changelog: TStringList;
+  timeCosts, changelog, language: TStringList;
   settings: TSettings;
   CurrentProfile: TProfile;
   statistics, sessionStatistics: TStatistics;
@@ -1422,6 +1425,7 @@ end;
   Set of methods for loading and saving data.
 
   List of methods:
+  - LoadLanguage
   - SaveProfile
   - SaveRegistrationData
   - LoadRegistrationData
@@ -1440,6 +1444,15 @@ end;
   - LoadReport
 }
 {******************************************************************************}
+
+procedure LoadLanguage;
+var
+  filename: string;
+begin
+  filename := Format('lang\%s.lang', [settings.language]);
+  language := TStringList.Create;
+  language.LoadFromFile(filename);
+end;
 
 procedure SaveProfile(var p: TProfile);
 var
@@ -1577,6 +1590,10 @@ end;
 
 procedure LoadChangelog;
 begin
+  // load changelog
+  if not Assigned(changelog) then
+    changelog := TStringList.Create;
+
   // don't attempt to load changelog if it doesn't exist
   if not FileExists('changelog.txt') then begin
     Logger.Write('GENERAL', 'Changelog', 'No changelog found');
@@ -1584,8 +1601,6 @@ begin
   end;
 
   // load changelog
-  if not Assigned(changelog) then
-    changelog := TStringList.Create;
   changelog.LoadFromFile('changelog.txt');
 end;
 
@@ -2071,7 +2086,7 @@ begin
   TCPClient := TidTCPClient.Create(nil);
   TCPClient.Host := settings.serverHost;
   TCPClient.Port := settings.serverPort;
-  TCPClient.ReadTimeout := 5000;
+  TCPClient.ReadTimeout := 3000;
   TCPClient.ConnectTimeout := 1000;
   ConnectionAttempts := 0;
 end;
@@ -2518,7 +2533,7 @@ begin
     exit;
   filename := 'MergePlugins.zip';
   if FileExists(filename) then begin
-    MessageDlg('You already have a pending program update!', mtInformation, [mbOk], 0);
+    MessageDlg(language.Values['mpOpt_PendingUpdate'], mtInformation, [mbOk], 0);
     Result := true;
     exit;
   end;

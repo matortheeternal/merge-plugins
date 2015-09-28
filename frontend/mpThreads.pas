@@ -83,18 +83,6 @@ begin
     Status := TmpStatus.Create;
     LoadChangelog;
 
-    // INITIALIZE TES5EDIT API
-    wbDisplayLoadOrderFormID := True;
-    wbSortSubRecords := True;
-    wbDisplayShorterNames := True;
-    wbHideUnused := True;
-    wbFlagsAsArray := True;
-    wbRequireLoadOrder := True;
-    wbLanguage := 'English';
-    wbEditAllowed := True;
-    handler := wbCreateContainerHandler;
-    handler._AddRef;
-
     // SET GAME VARS
     SetGame(CurrentProfile.gameMode);
     wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
@@ -103,8 +91,21 @@ begin
 
     // INITIALIZE SETTINGS FOR GAME
     LoadSettings;
+    LoadLanguage;
     if settings.usingMO then
       ModOrganizerInit;
+
+    // INITIALIZE TES5EDIT API
+    wbDisplayLoadOrderFormID := True;
+    wbSortSubRecords := True;
+    wbDisplayShorterNames := True;
+    wbHideUnused := True;
+    wbFlagsAsArray := True;
+    wbRequireLoadOrder := True;
+    wbLanguage := settings.language;
+    wbEditAllowed := True;
+    handler := wbCreateContainerHandler;
+    handler._AddRef;
 
     // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
     InitializeClient;

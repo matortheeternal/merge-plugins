@@ -36,7 +36,6 @@ object ChangeLogForm: TChangeLogForm
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    ExplicitHeight = 328
   end
   object ButtonInstall: TButton
     Left = 202
@@ -48,7 +47,6 @@ object ChangeLogForm: TChangeLogForm
     Caption = 'Install'
     ModalResult = 1
     TabOrder = 1
-    ExplicitTop = 361
   end
   object ButtonSkip: TButton
     Left = 283
@@ -60,6 +58,5 @@ object ChangeLogForm: TChangeLogForm
     Caption = 'Skip'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 361
   end
 end

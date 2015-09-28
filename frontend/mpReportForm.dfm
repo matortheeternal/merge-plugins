@@ -14,6 +14,7 @@ object ReportForm: TReportForm
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   OnShow = FormShow
   DesignSize = (
     328
@@ -46,9 +47,9 @@ object ReportForm: TReportForm
       Caption = 'Notes'
     end
     object lblCharacters: TLabel
-      Left = 272
+      Left = 286
       Top = 44
-      Width = 32
+      Width = 18
       Height = 13
       Align = alCustom
       Alignment = taRightJustify
@@ -97,7 +98,7 @@ object ReportForm: TReportForm
       OnChange = meNotesChange
     end
   end
-  object pnlTitle: TPanel
+  object pnlInfo: TPanel
     Left = 8
     Top = 8
     Width = 312
@@ -118,7 +119,7 @@ object ReportForm: TReportForm
       Align = alCustom
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
-      Caption = '{Filename}'
+      Caption = '%s'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
@@ -133,7 +134,7 @@ object ReportForm: TReportForm
       Width = 100
       Height = 12
       AutoSize = False
-      Caption = 'HASH: 00000000'
+      Caption = 'HASH: %s'
       Color = clWhite
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -151,7 +152,7 @@ object ReportForm: TReportForm
       Alignment = taCenter
       Anchors = [akTop]
       AutoSize = False
-      Caption = 'RECORDS: 0'
+      Caption = 'RECORDS: %d'
       Color = clWhite
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -170,7 +171,7 @@ object ReportForm: TReportForm
       Alignment = taRightJustify
       Anchors = [akTop, akRight]
       AutoSize = False
-      Caption = 'FLAGS: NAGVIF'
+      Caption = 'FLAGS: %s'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9

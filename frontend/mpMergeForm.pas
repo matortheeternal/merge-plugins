@@ -12,7 +12,7 @@ uses
   // third party libraries
   superobject, W7Taskbar,
   // mte components
-  mteHelpers, mteTracker, mteLogger, mteProgressForm,
+  mteHelpers, mteTracker, mteLogger, mteProgressForm, RttiTranslation,
   // mp units
   mpFrontend, mpThreads, mpMerge, mpDictionaryForm, mpOptionsForm,
   mpSplashForm, mpEditForm, mpReportForm, mpChangeLogForm,
@@ -21,83 +21,88 @@ uses
 
 type
   TMergeForm = class(TForm)
-    // GENERIC
-    XPManifest: TXPManifest;
-    IconList: TImageList;
-    FlagList: TImageList;
-    DoubleIconList: TImageList;
-    // QUICKBAR
-    QuickBar: TPanel;
-    NewButton: TSpeedButton;
-    BuildButton: TSpeedButton;
-    ReportButton: TSpeedButton;
-    DictionaryButton: TSpeedButton;
-    OptionsButton: TSpeedButton;
-    UpdateButton: TSpeedButton;
-    HelpButton: TSpeedButton;
-    // MAIN PANEL
-    MainPanel: TPanel;
-    Splitter: TSplitter;
-    DetailsPanel: TPanel;
-    // PAGE CONTROL - MERGES/PLUGINS/LOG
-    PageControl: TPageControl;
-    PluginsTabSheet: TTabSheet;
-    MergesTabSheet: TTabSheet;
-    LogTabSheet: TTabSheet;
-    PluginsListView: TListView;
-    MergeListView: TListView;
-    // PLUGINS POPUP MENU
-    PluginsPopupMenu: TPopupMenu;
-    AddToMerge: TMenuItem;
-    RemoveFromMerge: TMenuItem;
-    ReportOnPlugin: TMenuItem;
-    CreateNewMergeItem: TMenuItem;
-    DeleteMergeItem: TMenuItem;
-    BuildMergeItem: TMenuItem;
-    NewMergeItem: TMenuItem;
-    // MERGES POPUP MENU
-    MergesPopupMenu: TPopupMenu;
-    CheckforErrorsItem: TMenuItem;
-    ForceRebuildItem: TMenuItem;
-    ReportOnMergeItem: TMenuItem;
-    OpenInExplorerItem: TMenuItem;
-    IgnoreRebuildItem: TMenuItem;
-    EditMergeItem: TMenuItem;
-    CheckPluginsForErrorsItem: TMenuItem;
-    OpenPluginLocationItem: TMenuItem;
-    // DETAIL EDITOR
-    DetailsLabel: TLabel;
-    DetailsEditor: TValueListEditor;
-    CleanMergeItem: TMenuItem;
-    ReconnectTimer: TTimer;
-    Heartbeat: TTimer;
-    RefreshTimer: TTimer;
-    LogListView: TListView;
-    LogPopupMenu: TPopupMenu;
-    FilterGroupItem: TMenuItem;
-    CopyToClipboardItem: TMenuItem;
-    SaveAndClearItem: TMenuItem;
-    ToggleAutoScrollItem: TMenuItem;
-    StatusPanel: TPanel;
-    StatusPanelMessage: TPanel;
-    StatusPanelBlocking: TPanel;
-    StatusPanelProgram: TPanel;
-    StatusPanelDictionary: TPanel;
-    StatusPanelConnection: TPanel;
-    StatusPanelMerges: TPanel;
-    StatusPanelLanguage: TPanel;
-    StatusPanelVersion: TPanel;
-    ImageBlocked: TImage;
-    ImageDisconnected: TImage;
-    ImageBuild: TImage;
-    ImageDictionaryUpdate: TImage;
-    ImageProgramUpdate: TImage;
-    ImageConnected: TImage;
-    FilterLabelItem: TMenuItem;
-    DetailsPopupMenu: TPopupMenu;
-    DetailsCopyToClipboardItem: TMenuItem;
-    IgnoreErrorsItem: TMenuItem;
-    DoNotMergeItem: TMenuItem;
+    [FormPrefix('mpMain')]
+      XPManifest: TXPManifest;
+      IconList: TImageList;
+      FlagList: TImageList;
+      DoubleIconList: TImageList;
+      ReconnectTimer: TTimer;
+      Heartbeat: TTimer;
+      RefreshTimer: TTimer;
+      [FormSection('QuickBar')]
+        QuickBar: TPanel;
+        NewButton: TSpeedButton;
+        BuildButton: TSpeedButton;
+        ReportButton: TSpeedButton;
+        DictionaryButton: TSpeedButton;
+        OptionsButton: TSpeedButton;
+        UpdateButton: TSpeedButton;
+        HelpButton: TSpeedButton;
+      [FormSection('Main Panel')]
+        MainPanel: TPanel;
+        Splitter: TSplitter;
+        PageControl: TPageControl;
+        DetailsPanel: TPanel;
+        [FormSection('Details Panel')]
+          DetailsLabel: TLabel;
+          DetailsEditor: TValueListEditor;
+          DetailsPopupMenu: TPopupMenu;
+          DetailsCopyToClipboardItem: TMenuItem;
+        [FormSection('Plugins Tab')]
+          PluginsTabSheet: TTabSheet;
+          PluginsListView: TListView;
+          [FormSection('Plugins Popup Menu')]
+            PluginsPopupMenu: TPopupMenu;
+            AddToMerge: TMenuItem;
+            RemoveFromMerge: TMenuItem;
+            ReportOnPlugin: TMenuItem;
+            CreateNewMergeItem: TMenuItem;
+            DeleteMergeItem: TMenuItem;
+            BuildMergeItem: TMenuItem;
+            NewMergeItem: TMenuItem;
+            IgnoreErrorsItem: TMenuItem;
+            DoNotMergeItem: TMenuItem;
+        [FormSection('Merges Tab')]
+          MergesTabSheet: TTabSheet;
+          MergeListView: TListView;
+          [FormSection('Merges Popup Menu')]
+            MergesPopupMenu: TPopupMenu;
+            CheckforErrorsItem: TMenuItem;
+            ForceRebuildItem: TMenuItem;
+            ReportOnMergeItem: TMenuItem;
+            CleanMergeItem: TMenuItem;
+            OpenInExplorerItem: TMenuItem;
+            IgnoreRebuildItem: TMenuItem;
+            EditMergeItem: TMenuItem;
+            CheckPluginsForErrorsItem: TMenuItem;
+            OpenPluginLocationItem: TMenuItem;
+        [FormSection('Log Tab')]
+          LogTabSheet: TTabSheet;
+          LogListView: TListView;
+          [FormSection('Log Popup Menu')]
+            LogPopupMenu: TPopupMenu;
+            FilterGroupItem: TMenuItem;
+            FilterLabelItem: TMenuItem;
+            CopyToClipboardItem: TMenuItem;
+            SaveAndClearItem: TMenuItem;
+            ToggleAutoScrollItem: TMenuItem;
+      [FormSection('Status Bar')]
+        StatusPanel: TPanel;
+        StatusPanelMessage: TPanel;
+        StatusPanelBlocking: TPanel;
+        StatusPanelProgram: TPanel;
+        StatusPanelDictionary: TPanel;
+        StatusPanelConnection: TPanel;
+        StatusPanelMerges: TPanel;
+        StatusPanelLanguage: TPanel;
+        StatusPanelVersion: TPanel;
+        ImageBlocked: TImage;
+        ImageDisconnected: TImage;
+        ImageBuild: TImage;
+        ImageDictionaryUpdate: TImage;
+        ImageProgramUpdate: TImage;
+        ImageConnected: TImage;
+        BackgroundLoaderHint: TBalloonHint;
 
     // MERGE FORM EVENTS
     procedure UpdateLog;
@@ -293,6 +298,13 @@ begin
     splash.Free;
   end;
 
+  // do translation dump?
+  if bTranslationDump then
+    TRttiTranslation.Save('lang\english.lang', self);
+
+  // load language
+  TRttiTranslation.Load(language, self);
+
   // finalize
   bCreated := true;
 end;
@@ -304,6 +316,8 @@ end;
 
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
+var
+  R: TRect;
 begin
   // HANDLE AUTO-UPDATE
   if bInstallUpdate then begin
@@ -358,7 +372,7 @@ begin
   CorrectListViewWidth(PluginsListView);
 
   // SHOW LOADER HINT
-  StatusPanelMessage.Caption := 'Background loader in progress.';
+  StatusPanelMessage.Caption := language.Values['mpMain_LoaderInProgress'];
 
   // ENABLE TIMERS
   RefreshTimer.Enabled := true;
@@ -369,7 +383,7 @@ end;
 procedure TMergeForm.LoaderDone;
 begin
   SetTaskbarProgressState(tbpsNone);
-  StatusPanelMessage.Caption := 'Background loader finished.';
+  StatusPanelMessage.Caption := language.Values['mpMain_LoaderFinished'];
   xEditLogGroup := 'GENERAL';
   xEditLogLabel := 'xEdit';
   UpdateMerges;
@@ -387,7 +401,7 @@ begin
     pForm := TProgressForm.Create(Self);
     pForm.LogPath := LogPath;
     pForm.PopupParent := Self;
-    pForm.Caption := 'Closing';
+    pForm.Caption := language.Values['mpProg_Closing'];
     pForm.MaxProgress(PluginsList.Count + MergesList.Count + 2);
     pForm.Show;
 
@@ -585,29 +599,29 @@ procedure TMergeForm.UpdateApplicationDetails;
 begin
   // prepare list view for application information
   DetailsEditor.Strings.Clear;
-  DetailsLabel.Caption := 'Application Details';
+  DetailsLabel.Caption := language.Values['mpMain_AppDetails'];
 
   // add details items
-  AddDetailsItem('Application', 'Merge Plugins');
-  AddDetailsItem('Author', 'matortheeternal');
-  AddDetailsItem('Version', ProgramVersion);
-  AddDetailsItem('Date built', DateTimeToStr(GetLastModified(ParamStr(0))));
+  AddDetailsItem(language.Values['mpMain_Application'], 'Merge Plugins');
+  AddDetailsItem(language.Values['mpMain_Author'], 'matortheeternal');
+  AddDetailsItem(language.Values['mpMain_Version'], ProgramVersion);
+  AddDetailsItem(language.Values['mpMain_DateBuilt'], DateTimeToStr(GetLastModified(ParamStr(0))));
   AddDetailsItem(' ', ' ');
-  AddDetailsItem('Game mode', wbGameName);
-  AddDetailsItem('Language', settings.language);
+  AddDetailsItem(language.Values['mpMain_GameMode'], wbGameName);
+  AddDetailsItem(language.Values['mpMain_Language'], settings.language);
   AddDetailsItem(' ', ' ');
-  AddDetailsItem('Times run', IntToStr(statistics.timesRun + sessionStatistics.timesRun));
-  AddDetailsItem('Merges built', IntToStr(statistics.mergesBuilt + sessionStatistics.mergesBuilt));
-  AddDetailsItem('Plugins checked for errors', IntToStr(statistics.pluginsChecked + sessionStatistics.pluginsChecked));
-  AddDetailsItem('Plugins merged', IntToStr(statistics.pluginsMerged + sessionStatistics.pluginsMerged));
-  AddDetailsItem('Reports submitted', IntToStr(statistics.reportsSubmitted + sessionStatistics.reportsSubmitted));
+  AddDetailsItem(language.Values['mpMain_TimesRun'], IntToStr(statistics.timesRun + sessionStatistics.timesRun));
+  AddDetailsItem(language.Values['mpMain_MergesBuilt'], IntToStr(statistics.mergesBuilt + sessionStatistics.mergesBuilt));
+  AddDetailsItem(language.Values['mpMain_PluginsChecked'], IntToStr(statistics.pluginsChecked + sessionStatistics.pluginsChecked));
+  AddDetailsItem(language.Values['mpMain_PluginsMerged'], IntToStr(statistics.pluginsMerged + sessionStatistics.pluginsMerged));
+  AddDetailsItem(language.Values['mpMain_ReportsSubmitted'], IntToStr(statistics.reportsSubmitted + sessionStatistics.reportsSubmitted));
   AddDetailsItem(' ', ' ');
-  AddDetailsItem('Website', 'http://www.nexusmods.com/skyrim/mods/37981');
-  AddDetailsItem('API Credits', 'superobject, TurboPower Abbrevia, xEdit');
-  AddDetailsItem('xEdit Version', xEditVersion);
-  AddDetailsItem('xEdit Credits', 'zilav, hlp, Sharlikran, ElminsterAU');
-  AddDetailsItem('Testers', Wordwrap(ProgramTesters, 70));
-  AddDetailsItem('Translators', Wordwrap(ProgramTranslators, 70));
+  AddDetailsItem(language.Values['mpMain_Website'], 'http://www.nexusmods.com/skyrim/mods/37981');
+  AddDetailsItem(language.Values['mpMain_ApiCredits'], 'superobject, TurboPower Abbrevia, xEdit');
+  AddDetailsItem(language.Values['mpMain_xEditVersion'], xEditVersion);
+  AddDetailsItem(language.Values['mpMain_xEditCredits'], 'zilav, hlp, Sharlikran, ElminsterAU');
+  AddDetailsItem(language.Values['mpMain_Testers'], Wordwrap(ProgramTesters, 70));
+  AddDetailsItem(language.Values['mpMain_Translators'], Wordwrap(ProgramTranslators, 70));
 end;
 
 procedure TMergeForm.DetailsCopyToClipboardItemClick(Sender: TObject);
@@ -695,7 +709,7 @@ begin
 
   // prepare list view for plugin information
   DetailsEditor.Strings.Clear;
-  DetailsLabel.Caption := 'Plugin Details';
+  DetailsLabel.Caption := language.Values['mpMain_PluginDetails'];
 
   // get plugin information
   index := PluginsListView.ItemIndex;
@@ -705,19 +719,19 @@ begin
   // add details items
   sl := TStringList.Create;
   sl.Text := plugin.GetFlagsDescription;
-  AddDetailsItem('Filename', plugin.filename);
-  AddDetailsItem('Hash', plugin.hash);
-  AddDetailsItem('File size', FormatByteSize(plugin.fileSize));
-  AddDetailsItem('Date modified', plugin.dateModified);
-  AddDetailsItem('Merge rating', plugin.entry.rating);
-  AddDetailsList('Flags', sl);
-  AddDetailsItem('Number of records', plugin.numRecords);
-  AddDetailsItem('Number of overrides', plugin.numOverrides);
-  AddDetailsItem('Author', plugin.author);
-  AddDetailsList('Description', plugin.description);
-  AddDetailsList('Masters', plugin.masters);
-  AddDetailsList('Errors', plugin.errors);
-  AddDetailsList('Reports', plugin.reports);
+  AddDetailsItem(language.Values['mpMain_Filename'], plugin.filename);
+  AddDetailsItem(language.Values['mpMain_Hash'], plugin.hash);
+  AddDetailsItem(language.Values['mpMain_FileSize'], FormatByteSize(plugin.fileSize));
+  AddDetailsItem(language.Values['mpMain_DateModified'], plugin.dateModified);
+  AddDetailsItem(language.Values['mpMain_MergeRating'], plugin.entry.rating);
+  AddDetailsList(language.Values['mpMain_Flags'], sl);
+  AddDetailsItem(language.Values['mpMain_NumRecords'], plugin.numRecords);
+  AddDetailsItem(language.Values['mpMain_NumOverrides'], plugin.numOverrides);
+  AddDetailsItem(language.Values['mpMain_Author'], plugin.author);
+  AddDetailsList(language.Values['mpMain_Description'], plugin.description);
+  AddDetailsList(language.Values['mpMain_Masters'], plugin.masters);
+  AddDetailsList(language.Values['mpMain_Errors'], plugin.errors);
+  AddDetailsList(language.Values['mpMain_Reports'], plugin.reports);
 
   // free
   sl.Free;
@@ -827,7 +841,7 @@ begin
     // fixes drawing bug
     R.Right := R.Left + ListView_GetColumnWidth(ListView.Handle, ListView.Columns[i + 1].Index);
     x := R.Left;
-    if ListView.Columns[i + 1].Caption = 'Flags' then
+    if ListView.Columns[i + 1].Tag = 300 then
       DrawPluginFlags(ListView.Canvas, R, x, y, Item.SubItems[i])
     else
       ListView.Canvas.TextRect(R, x, y, Item.SubItems[i]);
@@ -860,7 +874,7 @@ begin
   if lvHitInfo.iSubItem = 2 then begin
     hint := plugin.GetFlagsDescription;
     if hint <> '' then
-      hint := plugin.filename + ' Flags'#13#10 + hint;
+      hint := Format(language.Values['mpMain_PluginFlags'], [plugin.filename, hint]);
   end;
   if (hint <> LastHint) then begin
     LastHint := hint;
@@ -919,13 +933,13 @@ begin
 
   // toggle menu item captions
   if bAllDoNotMerge then
-    PluginsPopupMenu.Items[5].Caption := 'Allow merging'
+    PluginsPopupMenu.Items[5].Caption := language.Values['mpMain_AllowMerging']
   else
-    PluginsPopupMenu.Items[5].Caption := 'Disallow merging';
+    PluginsPopupMenu.Items[5].Caption := language.Values['mpMain_DisallowMerging'];
   if bAllIgnoreErrors then
-    PluginsPopupMenu.Items[4].Caption := 'Unignore errors'
+    PluginsPopupMenu.Items[4].Caption := language.Values['mpMain_UnignoreErrors']
   else
-    PluginsPopupMenu.Items[4].Caption := 'Ignore errors';
+    PluginsPopupMenu.Items[4].Caption := language.Values['mpMain_IgnoreErrors'];
 
 
   // disable/enable menu items
@@ -950,7 +964,7 @@ begin
 
   // add <New Merge> option to Plugins popup menu
   MenuItem := TMenuItem.Create(AddToMergeItem);
-  MenuItem.Caption := '<New Merge>';
+  MenuItem.Caption := language.Values['mpMain_NewMerge'];
   MenuItem.OnClick := AddToNewMergeClick;
   AddToMergeItem.Add(MenuItem);
 
@@ -1010,7 +1024,7 @@ begin
   pForm := TProgressForm.Create(Self);
   pForm.LogPath := LogPath;
   pForm.PopupParent := Self;
-  pForm.Caption := 'Checking for errors';
+  pForm.Caption := language.Values['mpProg_Checking'];
   pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
   pForm.Show;
 
@@ -1199,31 +1213,31 @@ begin
 
   // prepare list view for merge information
   DetailsEditor.Strings.Clear;
-  DetailsLabel.Caption := 'Merge Details';
+  DetailsLabel.Caption := language.Values['mpMain_MergeDetails'];
 
   // get merge information
   merge := MergesList[MergeListView.ItemIndex];
-  AddDetailsItem('Status', StatusArray[Ord(merge.status)].desc, false);
-  AddDetailsItem('Merge name', merge.name, true);
-  AddDetailsItem('Filename', merge.filename, true);
-  AddDetailsItem('Plugin count', IntToStr(merge.plugins.Count));
-  AddDetailsItem('Date built', DateBuiltString(merge.dateBuilt));
-  AddDetailsList('Plugins', merge.plugins);
+  AddDetailsItem(language.Values['mpMain_Status'], StatusArray[Ord(merge.status)].desc, false);
+  AddDetailsItem(language.Values['mpMain_MergeName'], merge.name, true);
+  AddDetailsItem(language.Values['mpMain_Filename'], merge.filename, true);
+  AddDetailsItem(language.Values['mpMain_PluginCount'], IntToStr(merge.plugins.Count));
+  AddDetailsItem(language.Values['mpMain_DateBuilt'], DateBuiltString(merge.dateBuilt));
+  AddDetailsList(language.Values['mpMain_Plugins'], merge.plugins);
   AddDetailsItem(' ', ' ');
-  AddDetailsItem('Merge method', merge.method, false);
-  AddDetailsItem('Renumbering', merge.renumbering, false);
+  AddDetailsItem(language.Values['mpMain_MergeMethod'], merge.method, false);
+  AddDetailsItem(language.Values['mpMain_Renumbering'], merge.renumbering, false);
   if merge.files.Count < 250 then begin
     sl := TStringList.Create;
     sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
-    AddDetailsList('Files', sl);
+    AddDetailsList(language.Values['mpMain_Files'], sl);
     sl.Free;
   end
   else
-    AddDetailsItem('Files', 'Too many files to display.');
+    AddDetailsItem(language.Values['mpMain_Files'], language.Values['mpMain_TooManyFiles']);
   if merge.fails.Count < 250 then
-    AddDetailsList('Fails', merge.fails)
+    AddDetailsList(language.Values['mpMain_Fails'], merge.fails)
   else
-    AddDetailsItem('Fails', 'Too many fails to display.');
+    AddDetailsItem(language.Values['mpMain_Fails'], language.Values['mpMain_TooManyFails']);
 end;
 
 procedure TMergeForm.UpdateMerges;
@@ -1252,13 +1266,13 @@ begin
   // enable build button if there are merges to build
   BuildButton.Enabled := bMergesToBuild and bLoaderDone;
   if not bLoaderDone then
-    BuildButton.Hint := 'Background Loader not done!'
+    BuildButton.Hint := language.Values['mpMain_LoaderNotDone']
   else if not bMergesToBuild then
-    BuildButton.Hint := 'No merges to build!'
+    BuildButton.Hint := language.Values['mpMain_NoMerges']
   else if bMergesToCheck then
-    BuildButton.Hint := 'Check merges for errors'
+    BuildButton.Hint := language.Values['mpMain_CheckMerges']
   else
-    BuildButton.Hint := 'Build all merges';
+    BuildButton.Hint := language.Values['mpMain_BuildAll'];
 end;
 
 function TMergeForm.NewMerge: TMerge;
@@ -1422,7 +1436,7 @@ end;
 
 function EnableStr(var b: boolean): string;
 begin
-  Result := IfThen(not b, 'Enable', 'Disable');
+  Result := IfThen(not b, language.Values['mpMain_Enable'], language.Values['mpMain_Disable']);
 end;
 
 procedure TMergeForm.LogPopupMenuPopup(Sender: TObject);
@@ -1446,7 +1460,7 @@ begin
   for i := 0 to Pred(LabelFilters.Count) do begin
     filter := TFilter(LabelFilters[i]);
     item := TMenuItem.Create(FilterLabelItem);
-    item.Caption := EnableStr(filter.enabled) + ' ' + filter.group + ', ' + filter.&label;
+    item.Caption := Format('%s %s, %s', [EnableStr(filter.enabled), filter.group, filter.&label]);
     item.OnClick := ToggleLabelFilter;
     FilterLabelItem.Add(item);
   end;
@@ -1455,7 +1469,7 @@ begin
   CopyToClipboardItem.Enabled := Assigned(LogListView.Selected);
 
   // rename toggle auto scroll item based on whether or not auto scroll is enabled
-  LogPopupMenu.Items[3].Caption := EnableStr(bAutoScroll) + ' auto scroll';
+  LogPopupMenu.Items[3].Caption := Format('%s %s', [EnableStr(bAutoScroll), language.Values['mpMain_AutoScroll']]);
 end;
 
 // toggles a group filter for the LogListView
@@ -1584,22 +1598,22 @@ begin
   // handle build/rebuild menu item
   if (mergesSelected = 1) then begin
     if bNeverBuilt then
-      MergesPopupMenu.Items[5].Caption := 'Build merge'
+      MergesPopupMenu.Items[5].Caption := language.Values['mpMain_BuildMerge']
     else if bHasBuildStatus then
-      MergesPopupMenu.Items[5].Caption := 'Rebuild merge'
+      MergesPopupMenu.Items[5].Caption := language.Values['mpMain_RebuildMerge']
     else begin
       MergesPopupMenu.Items[5].Enabled := false;
-      MergesPopupMenu.Items[5].Caption := 'Rebuild merge';
+      MergesPopupMenu.Items[5].Caption := language.Values['mpMain_RebuildMerge'];
     end;
   end
   else if (mergesSelected > 1) then begin
     if bNeverBuilt then
-      MergesPopupMenu.Items[5].Caption := 'Build merges'
+      MergesPopupMenu.Items[5].Caption := language.Values['mpMain_BuildMerges']
     else if bHasBuildStatus then
-      MergesPopupMenu.Items[5].Caption := 'Rebuild merges'
+      MergesPopupMenu.Items[5].Caption := language.Values['mpMain_RebuildMerges']
     else begin
       MergesPopupMenu.Items[5].Enabled := false;
-      MergesPopupMenu.Items[5].Caption := 'Rebuild merges';
+      MergesPopupMenu.Items[5].Caption := language.Values['mpMain_RebuildMerges'];
     end;
   end;
 end;
@@ -1681,7 +1695,7 @@ begin
   pForm := TProgressForm.Create(Self);
   pForm.LogPath := LogPath;
   pForm.PopupParent := Self;
-  pForm.Caption := 'Checking for errors';
+  pForm.Caption := language.Values['mpProg_Checking'];
   pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
   pForm.Show;
 
@@ -1754,8 +1768,8 @@ begin
 
   // show multi-merge prompt if multiple merges selected
   if mergesToDelete.Count > 0 then
-    bApproved := MessageDlg('Are you sure you want to delete these merges?'+
-      mergeNames, mtConfirmation, mbOKCancel, 0) = mrOk;
+    bApproved := MessageDlg(language.Values['mpMain_DeleteMerges'] + mergeNames, mtConfirmation,
+      mbOKCancel, 0) = mrOk;
 
   // exit if user didn't approve deletion
   if not bApproved then
@@ -1824,7 +1838,7 @@ begin
   pForm := TProgressForm.Create(Self);
   pForm.LogPath := LogPath;
   pForm.PopupParent := Self;
-  pForm.Caption := 'Merging';
+  pForm.Caption := language.Values['mpProg_Merging'];
   pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
   pForm.Show;
 
@@ -2035,7 +2049,7 @@ begin
   pForm := TProgressForm.Create(Self);
   pForm.LogPath := LogPath;
   pForm.PopupParent := Self;
-  pForm.Caption := 'Merging';
+  pForm.Caption := language.Values['mpProg_Merging'];
   pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
   pForm.Show;
 

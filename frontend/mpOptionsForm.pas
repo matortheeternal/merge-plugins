@@ -6,111 +6,120 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls,
   // mte units
-  mteHelpers,
+  mteHelpers, RttiTranslation,
   // mp units
   mpChangeLogForm, mpFrontend;
 
 type
   TOptionsForm = class(TForm)
-    SettingsPageControl: TPageControl;
-    GeneralTabSheet: TTabSheet;
-    MergingTabSheet: TTabSheet;
-    lblLanguage: TLabel;
-    cbLanguage: TComboBox;
-    gbStyle: TGroupBox;
-    kbSimpleDictionary: TCheckBox;
-    kbSimplePlugins: TCheckBox;
-    btnCancel: TButton;
-    btnOK: TButton;
-    IconList: TImageList;
-    gbAssetCopying: TGroupBox;
-    lblMergeDestination: TLabel;
-    edMergeDirectory: TEdit;
-    btnBrowseAssetDirectory: TSpeedButton;
-    kbFaceGen: TCheckBox;
-    kbVoiceAssets: TCheckBox;
-    kbTranslations: TCheckBox;
-    kbFragments: TCheckBox;
-    kbExtractBSAs: TCheckBox;
-    kbBuildBSA: TCheckBox;
-    gbUpdating: TGroupBox;
-    kbUpdateDictionary: TCheckBox;
-    kbUpdateProgram: TCheckBox;
-    gbReports: TGroupBox;
-    lblUsername: TLabel;
-    edUsername: TEdit;
-    kbBatCopy: TCheckBox;
-    AdvancedTabSheet: TTabSheet;
-    kbINIs: TCheckBox;
-    btnRegister: TButton;
-    lblStatusValue: TLabel;
-    btnReset: TButton;
-    btnUpdateDictionary: TButton;
-    btnUpdateProgram: TButton;
-    lblDictionaryStatus: TLabel;
-    lblProgramStatus: TLabel;
-    gbPrivacy: TGroupBox;
-    kbNoStatistics: TCheckBox;
-    kbNoPersistentConnection: TCheckBox;
-    gbLogging: TGroupBox;
-    lblClientColor: TLabel;
-    lblGeneralColor: TLabel;
-    lblLoadColor: TLabel;
-    lblMergeColor: TLabel;
-    lblPluginColor: TLabel;
-    lblErrorColor: TLabel;
-    cbClientColor: TColorBox;
-    cbGeneralColor: TColorBox;
-    cbLoadColor: TColorBox;
-    cbMergeColor: TColorBox;
-    cbPluginColor: TColorBox;
-    cbErrorColor: TColorBox;
-    IntegrationsTabSheet: TTabSheet;
-    gbModOrganizer: TGroupBox;
-    lblModOrganizerPath: TLabel;
-    btnBrowseMO: TSpeedButton;
-    kbUsingMO: TCheckBox;
-    edModOrganizerPath: TEdit;
-    gbDebug: TGroupBox;
-    kbDebugRenumbering: TCheckBox;
-    kbDebugMergeStatus: TCheckBox;
-    kbDebugAssetCopying: TCheckBox;
-    kbDebugRecordCopying: TCheckBox;
-    kbDebugMasters: TCheckBox;
-    kbDebugBatchCopying: TCheckBox;
-    kbDebugBSAs: TCheckBox;
-    kbDebugScriptFragments: TCheckBox;
-    kbCopyGeneralAssets: TCheckBox;
-    gbPapyrus: TGroupBox;
-    lblDecompilerPath: TLabel;
-    btnBrowseDecompiler: TSpeedButton;
-    edDecompilerPath: TEdit;
-    edCompilerPath: TEdit;
-    lblCompilerPath: TLabel;
-    btnBrowseCompiler: TSpeedButton;
-    edFlagsPath: TEdit;
-    lblFlagsPath: TLabel;
-    btnBrowseFlags: TSpeedButton;
-    gbMergeProfile: TGroupBox;
-    lblCurrentProfile: TLabel;
-    btnChangeMergeProfile: TButton;
-    gbBSAs: TGroupBox;
-    btnBrowseBSAOpt: TSpeedButton;
-    edBsaOptPath: TEdit;
-    lblBSAOptPath: TLabel;
-    lblBSAOptOptions: TLabel;
-    edBsaOptOptions: TEdit;
-    GroupBox1: TGroupBox;
-    btnDetect: TButton;
-    meTemplate: TMemo;
-    lblSample: TLabel;
-    lblSampleValue: TLabel;
-    lblTemplate: TLabel;
-    lblModOrganizerModsPath: TLabel;
-    edModOrganizerModsPath: TEdit;
-    btnBrowseMOMods: TSpeedButton;
-    lblCurrentProfileName: TLabel;
-    lblStatus: TLabel;
+    [FormPrefix('mpOpt')]
+      SettingsPageControl: TPageControl;
+      btnCancel: TButton;
+      btnOK: TButton;
+      IconList: TImageList;
+      [FormSection('General Tab')]
+        GeneralTabSheet: TTabSheet;
+        gbLanguage: TGroupBox;
+        lblLanguage: TLabel;
+        gbStyle: TGroupBox;
+        kbSimpleDictionary: TCheckBox;
+        kbSimplePlugins: TCheckBox;
+        gbReports: TGroupBox;
+        lblUsername: TLabel;
+        edUsername: TEdit;
+        btnRegister: TButton;
+        lblStatus: TLabel;
+        lblStatusValue: TLabel;
+        btnReset: TButton;
+        gbUpdating: TGroupBox;
+        kbUpdateDictionary: TCheckBox;
+        lblDictionaryStatus: TLabel;
+        btnUpdateDictionary: TButton;
+        kbUpdateProgram: TCheckBox;
+        lblProgramStatus: TLabel;
+        btnUpdateProgram: TButton;
+        [FormSection('DontTranslate')]
+          cbLanguage: TComboBox;
+      [FormSection('Merging Tab')]
+        MergingTabSheet: TTabSheet;
+        gbAssetHandling: TGroupBox;
+        lblMergeDestination: TLabel;
+        edMergeDirectory: TEdit;
+        btnBrowseAssetDirectory: TSpeedButton;
+        kbFaceGen: TCheckBox;
+        kbVoiceAssets: TCheckBox;
+        kbTranslations: TCheckBox;
+        kbINIs: TCheckBox;
+        kbFragments: TCheckBox;
+        kbExtractBSAs: TCheckBox;
+        kbBuildBSA: TCheckBox;
+        kbBatCopy: TCheckBox;
+        gbDebug: TGroupBox;
+        kbDebugRenumbering: TCheckBox;
+        kbDebugMergeStatus: TCheckBox;
+        kbDebugAssetCopying: TCheckBox;
+        kbDebugRecordCopying: TCheckBox;
+        kbDebugMasters: TCheckBox;
+        kbDebugBatchCopying: TCheckBox;
+        kbDebugBSAs: TCheckBox;
+        kbDebugScriptFragments: TCheckBox;
+      [FormSection('Advanced Tab')]
+        AdvancedTabSheet: TTabSheet;
+        gbMergeProfile: TGroupBox;
+        lblCurrentProfile: TLabel;
+        btnChangeMergeProfile: TButton;
+        gbPrivacy: TGroupBox;
+        kbNoStatistics: TCheckBox;
+        kbNoPersistentConnection: TCheckBox;
+        gbLogging: TGroupBox;
+        lblClientColor: TLabel;
+        cbClientColor: TColorBox;
+        lblGeneralColor: TLabel;
+        cbGeneralColor: TColorBox;
+        lblLoadColor: TLabel;
+        cbLoadColor: TColorBox;
+        lblMergeColor: TLabel;
+        cbMergeColor: TColorBox;
+        lblPluginColor: TLabel;
+        cbPluginColor: TColorBox;
+        lblErrorColor: TLabel;
+        cbErrorColor: TColorBox;
+        lblTemplate: TLabel;
+        meTemplate: TMemo;
+        lblSample: TLabel;
+        [FormSection('DontTranslate')]
+          lblCurrentProfileName: TLabel;
+          lblSampleValue: TLabel;
+      [FormSection('Integrations Tab')]
+        IntegrationsTabSheet: TTabSheet;
+        btnDetect: TButton;
+        gbModOrganizer: TGroupBox;
+        kbUsingMO: TCheckBox;
+        kbCopyGeneralAssets: TCheckBox;
+        lblModOrganizerPath: TLabel;
+        edModOrganizerPath: TEdit;
+        lblModOrganizerModsPath: TLabel;
+        edModOrganizerModsPath: TEdit;
+        gbPapyrus: TGroupBox;
+        lblDecompilerPath: TLabel;
+        edDecompilerPath: TEdit;
+        lblCompilerPath: TLabel;
+        edCompilerPath: TEdit;
+        lblFlagsPath: TLabel;
+        edFlagsPath: TEdit;
+        gbBSAs: TGroupBox;
+        lblBSAOptPath: TLabel;
+        edBsaOptPath: TEdit;
+        lblBSAOptOptions: TLabel;
+        edBsaOptOptions: TEdit;
+        [FormSection('DontTranslate')]
+          btnBrowseMO: TSpeedButton;
+          btnBrowseMOMods: TSpeedButton;
+          btnBrowseDecompiler: TSpeedButton;
+          btnBrowseCompiler: TSpeedButton;
+          btnBrowseFlags: TSpeedButton;
+          btnBrowseBSAOpt: TSpeedButton;
+
     procedure FormCreate(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
@@ -156,23 +165,23 @@ end;
 
 procedure TOptionsForm.btnBrowseBSAOptClick(Sender: TObject);
 begin
-  BrowseForFile(edBsaOptPath, 'Executables|*.exe', ProgramPath);
+  BrowseForFile(edBsaOptPath, language.Values['mpOpt_ExeFilter'], ProgramPath);
   edBsaOptPathExit(nil);
 end;
 
 procedure TOptionsForm.btnBrowseCompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edCompilerPath, 'Executables|*.exe', DataPath);
+  BrowseForFile(edCompilerPath, language.Values['mpOpt_ExeFilter'], DataPath);
 end;
 
 procedure TOptionsForm.btnBrowseDecompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edDecompilerPath, 'Executables|*.exe', ProgramPath);
+  BrowseForFile(edDecompilerPath, language.Values['mpOpt_ExeFilter'], ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseFlagsClick(Sender: TObject);
 begin
-  BrowseForFile(edFlagsPath, 'Flags files|*.flg', DataPath + 'scripts\source\');
+  BrowseForFile(edFlagsPath, language.Values['mpOpt_FlagsFilter'], DataPath + 'scripts\source\');
 end;
 
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
@@ -290,8 +299,7 @@ begin
     end;
   end
   else begin
-    MessageDlg('Couldn''t automatically detect Mod Organizer''s file path.  '+
-      'Please enter it manually.', mtConfirmation, [mbOk], 0);
+    MessageDlg(language.Values['mpOpt_ModOrganizerNotFound'], mtConfirmation, [mbOk], 0);
     edModOrganizerPath.Text := '';
   end;
 end;
@@ -362,41 +370,41 @@ end;
 procedure TOptionsForm.btnRegisterClick(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
-    lblStatusValue.Caption := 'Server unavailable';
+    lblStatusValue.Caption := language.Values['mpOpt_ServerUnavailable'];
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := 'Sorry, the server is unavailable, try again later.';
+    lblStatusValue.Hint := language.Values['mpOpt_ServerUnavailable'];
     btnRegister.Enabled := false;
     exit;
   end;
 
-  if (btnRegister.Caption = 'Register') then begin
+  if (btnRegister.Caption = language.Values['mpOpt_Register']) then begin
     if RegisterUser(edUsername.Text) then begin
       settings.registered := true;
       settings.username := edUsername.Text;
       SaveSettings;
-      lblStatusValue.Caption := 'Registered';
+      lblStatusValue.Caption := language.Values['mpOpt_Registered'];
       lblStatusValue.Font.Color := clGreen;
       lblStatusValue.Hint := '';
       edUsername.Enabled := false;
       btnRegister.Enabled := false;
     end
     else begin
-      lblStatusValue.Caption := 'Failed to register';
+      lblStatusValue.Caption := language.Values['mpOpt_FailedToRegister'];
       lblStatusValue.Font.Color := clRed;
-      lblStatusValue.Hint := 'Oops.  Something went wrong.  o_o';
+      lblStatusValue.Hint := language.Values['mpOpt_FailedToRegister'];
     end;
   end
   else begin
     if UsernameAvailable(edUsername.Text) then begin
-      lblStatusValue.Caption := 'Username available!';
+      lblStatusValue.Caption := language.Values['mpOpt_UsernameAvailable'];
       lblStatusValue.Font.Color := clBlue;
-      lblStatusValue.Hint := 'Click register to claim it.';
-      btnRegister.Caption := 'Register';
+      lblStatusValue.Hint := language.Values['mpOpt_UsernameAvailable'];
+      btnRegister.Caption := language.Values['mpOpt_Register'];
     end
     else begin
-      lblStatusValue.Caption := 'Username unavailable, sorry';
+      lblStatusValue.Caption := language.Values['mpOpt_UsernameUnavailable'];
       lblStatusValue.Font.Color := clRed;
-      lblStatusValue.Hint := 'Someone beat ya to it, try another.';
+      lblStatusValue.Hint := language.Values['mpOpt_UsernameUnavailable'];
     end;
   end;
 end;
@@ -408,7 +416,7 @@ begin
     CheckAuthorization;
     if bAuthorized then begin
       btnReset.Enabled := false;
-      lblStatusValue.Caption := 'Registered';
+      lblStatusValue.Caption := language.Values['mpOpt_Registered'];
       lblStatusValue.Font.Color := clGreen;
       lblStatusValue.Hint := '';
     end;
@@ -423,7 +431,7 @@ begin
       CompareStatuses;
       UpdatePluginData;
       btnUpdateDictionary.Enabled := false;
-      lblDictionaryStatus.Caption := 'Up to date';
+      lblDictionaryStatus.Caption := language.Values['mpOpt_UpToDate'];
       lblDictionaryStatus.Font.Color := clGreen;
     end;
   end;
@@ -456,37 +464,43 @@ end;
 procedure TOptionsForm.edUsernameChange(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
-    lblStatusValue.Caption := 'Server unavailable';
+    lblStatusValue.Caption := language.Values['mpOpt_ServerUnavailable'];
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := 'Sorry, the server is unavailable, try again later.';
+    lblStatusValue.Hint := language.Values['mpOpt_ServerUnavailable'];
     btnRegister.Enabled := false;
     exit;
   end;
 
-  btnRegister.Caption := 'Check';
+  btnRegister.Caption := language.Values['mpOpt_Check'];
   if Length(edUsername.Text) < 4 then begin
-    lblStatusValue.Caption := 'Invalid username';
+    lblStatusValue.Caption := language.Values['mpOpt_InvalidUsername'];
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := 'Username length must be at least 4 characters.';
+    lblStatusValue.Hint := language.Values['mpOpt_UsernameTooShort'];
     btnRegister.Enabled := false;
   end
   else if Length(edUsername.Text) > 24 then begin
-    lblStatusValue.Caption := 'Invalid username';
+    lblStatusValue.Caption := language.Values['mpOpt_InvalidUsername'];
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := 'Username length cannot exceed 24 characters.';
+    lblStatusValue.Hint := language.Values['mpOpt_UsernameTooLong'];
     btnRegister.Enabled := false;
   end
   else begin
-    lblStatusValue.Caption := 'Valid, is it available?';
+    lblStatusValue.Caption := language.Values['mpOpt_ValidUsername'];
     lblStatusValue.Font.Color := clBlack;
-    lblStatusValue.Hint := 'Click the check button to check if '#13+
-      'the username is available';
+    lblStatusValue.Hint := language.Values['mpOpt_ValidUsername'];
     btnRegister.Enabled := true;
   end;
 end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);
 begin
+  // do translation dump?
+  if bTranslationDump then
+    TRttiTranslation.Save('lang\english.lang', self);
+
+  // load translation
+  TRttiTranslation.Load(language, self);
+
   // get status update if we can
   if GetStatus then
     CompareStatuses;
@@ -566,15 +580,12 @@ begin
     if TCPClient.Connected then begin
       if not bAuthorized then begin
         btnReset.Enabled := true;
-        lblStatusValue.Caption := 'Authorization failed!';
+        lblStatusValue.Caption := language.Values['mpOpt_AuthFailed'];
         lblStatusValue.Font.Color := clRed;
-        lblStatusValue.Hint := 'Click reset to reset your authentication key.'#13+
-          'NOTE: This will fail if your IP has changed since you last logged in.'#13+
-          'If you can''t recover your username you can either make a new one or '#13+
-          'contact support.';
+        lblStatusValue.Hint := language.Values['mpOpt_AuthFailed'];
       end
       else begin
-        lblStatusValue.Caption := 'Registered.';
+        lblStatusValue.Caption := language.Values['mpOpt_Registered'];
         lblStatusValue.Font.Color := clGreen;
         lblStatusValue.Hint := '';
         bAuthorized := true;
@@ -585,16 +596,16 @@ begin
   // dictionary update
   if bDictionaryUpdate then begin
     btnUpdateDictionary.Enabled := bDictionaryUpdate;
-    lblDictionaryStatus.Caption := 'Update available!';
+    lblDictionaryStatus.Caption := language.Values['mpOpt_UpdateAvailable'];
     lblDictionaryStatus.Font.Color := $000080FF;
   end;
 
   // program update
   if bProgramUpdate then begin
     btnUpdateProgram.Enabled := bProgramUpdate;
-    lblProgramStatus.Caption := 'Update available!';
-    lblProgramStatus.Hint := 'Current Version: '+status.programVersion+
-      #13#10'New Version: '+RemoteStatus.programVersion;
+    lblProgramStatus.Caption := language.Values['mpOpt_UpdateAvailable'];
+    lblProgramStatus.Hint := Format(language.Values['mpOpt_VersionCompare'],
+      [status.programVersion, RemoteStatus.programVersion]);
     lblProgramStatus.Font.Color := $000080FF;
   end;
 

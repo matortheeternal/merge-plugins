@@ -6,16 +6,18 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls,
   // mte units
-  mteHelpers,
+  mteHelpers, RttiTranslation,
   // mp units
   mpFrontend;
 
 type
   TChangeLogForm = class(TForm)
-    ScrollBox: TScrollBox;
-    LabelPrompt: TLabel;
-    ButtonInstall: TButton;
-    ButtonSkip: TButton;
+    [FormPrefix('mpCha')]
+      ScrollBox: TScrollBox;
+      LabelPrompt: TLabel;
+      ButtonInstall: TButton;
+      ButtonSkip: TButton;
+
     procedure FormCreate(Sender: TObject);
     procedure CreateVersionLabel(line: string; var top: Integer);
     procedure CreateLabel(line: string; var top: Integer);
@@ -41,6 +43,14 @@ implementation
 
 procedure TChangeLogForm.FormCreate(Sender: TObject);
 begin
+  // do a translation dump?
+  if bTranslationDump then
+    TRttiTranslation.Save('lang\english.lang', self);
+
+  // load translation
+  TRttiTranslation.Load(language, self);
+
+  // display changelog
   DisplayChangelog;
 end;
 

@@ -5,22 +5,27 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
-  mpFrontend, mteLogger;
+  // mte units
+  mteLogger, RttiTranslation,
+  // mp units
+  mpFrontend;
 
 type
   TEditForm = class(TForm)
-    lblName: TLabel;
-    lblFilename: TLabel;
-    edName: TEdit;
-    edFilename: TEdit;
-    lblMethod: TLabel;
-    lblRenumbering: TLabel;
-    cbMethod: TComboBox;
-    cbRenumbering: TComboBox;
-    btnOk: TButton;
-    btnCancel: TButton;
-    PageControl1: TPageControl;
-    TabSheet1: TTabSheet;
+    [FormPrefix('mpEdit')]
+      lblName: TLabel;
+      edName: TEdit;
+      lblFilename: TLabel;
+      edFilename: TEdit;
+      lblMethod: TLabel;
+      cbMethod: TComboBox;
+      lblRenumbering: TLabel;
+      cbRenumbering: TComboBox;
+      btnOk: TButton;
+      btnCancel: TButton;
+      PageControl: TPageControl;
+      TabSheet: TTabSheet;
+
     function NameValid: boolean;
     function FilenameValid: boolean;
     procedure FormShow(Sender: TObject);
@@ -30,6 +35,7 @@ type
     procedure edNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure edFilenameKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -148,6 +154,16 @@ begin
     btnOkClick(nil);
     ModalResult := mrOk;
   end;
+end;
+
+procedure TEditForm.FormCreate(Sender: TObject);
+begin
+  // do a translation dump?
+  if bTranslationDump then
+    TRttiTranslation.Save('lang\english.lang', self);
+
+  // load translation
+  TRttiTranslation.Load(language, self);
 end;
 
 procedure TEditForm.FormShow(Sender: TObject);

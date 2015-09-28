@@ -24,13 +24,13 @@ uses
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
   mpFrontend in 'mpFrontend.pas',
   mpMerge in 'mpMerge.pas',
+  mpThreads in 'mpThreads.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpReportForm in 'mpReportForm.pas' {Form1},
-  mpChangeLogForm in 'mpChangeLogForm.pas' {ChangeLogForm},
-  mpThreads in 'mpThreads.pas';
+  mpChangeLogForm in 'mpChangeLogForm.pas' {ChangeLogForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

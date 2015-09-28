@@ -5,29 +5,37 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls,
+  // mte units
+  RttiTranslation,
+  // mp units
   mpFrontend, mpDictionaryForm;
 
 type
   TReportForm = class(TForm)
-    lblHash: TLabel;
-    lblRecords: TLabel;
-    lblFilename: TLabel;
-    gbYourReport: TGroupBox;
-    pnlTitle: TPanel;
-    lblRating: TLabel;
-    cbRating: TComboBox;
-    lblNotes: TLabel;
-    meNotes: TMemo;
-    btnNext: TButton;
-    btnPrev: TButton;
-    lblFlags: TLabel;
-    gbUserReports: TGroupBox;
-    lblExRating: TLabel;
-    lblExReports: TLabel;
-    lblViewDetails: TLabel;
-    lblExRatingValue: TLabel;
-    lblExReportsvalue: TLabel;
-    lblCharacters: TLabel;
+    [FormPrefix('mpRep')]
+      btnNext: TButton;
+      btnPrev: TButton;
+      [FormSection('Info panel')]
+        pnlInfo: TPanel;
+        lblFilename: TLabel;
+        lblFlags: TLabel;
+        lblHash: TLabel;
+        lblRecords: TLabel;
+      [FormSection('User reports')]
+        gbUserReports: TGroupBox;
+        lblExRating: TLabel;
+        lblExReports: TLabel;
+        lblViewDetails: TLabel;
+        lblExRatingValue: TLabel;
+        lblExReportsvalue: TLabel;
+      [FormSection('Your report')]
+        gbYourReport: TGroupBox;
+        lblRating: TLabel;
+        cbRating: TComboBox;
+        lblNotes: TLabel;
+        lblCharacters: TLabel;
+        meNotes: TMemo;
+
     procedure DisplayCurrentReport;
     procedure btnNextClick(Sender: TObject);
     procedure btnPrevClick(Sender: TObject);
@@ -37,6 +45,7 @@ type
     procedure lblViewDetailsMouseEnter(Sender: TObject);
     procedure lblViewDetailsMouseLeave(Sender: TObject);
     procedure cbRatingChange(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -106,9 +115,9 @@ begin
   // set pnlTitle labels to entry details
   report := reportsList[currentPlugin];
   lblFilename.Caption := StringReplace(report.filename, '&', '&&', [rfReplaceAll]);
-  lblHash.Caption := 'HASH: '+report.hash;
-  lblRecords.Caption := 'RECORDS: '+IntToStr(report.recordCount);
-  lblFlags.Caption := 'FLAGS: '+plugin.GetFlagsString;
+  lblHash.Caption := Format(language.Values['mpRep_Hash'], [report.hash]);
+  lblRecords.Caption := Format(language.Values['mpRep_Records'], [IntToStr(report.recordCount)]);
+  lblFlags.Caption := Format(language.Values['mpRep_Flags'], [plugin.GetFlagsString]);
   lblFlags.Hint := plugin.GetFlagsDescription;
 
   // load existing entry details
@@ -155,7 +164,7 @@ begin
   Inc(currentPlugin);
   btnPrev.Enabled := true;
   if currentPlugin = Pred(pluginsToReport.Count) then
-    btnNext.Caption := 'Done';
+    btnNext.Caption := language.Values['mpRep_Done'];
 
   // display entry
   DisplayCurrentReport;
@@ -173,7 +182,7 @@ begin
   // go to previous plugin
   Dec(currentPlugin);
   btnPrev.Enabled := currentPlugin > 0;
-  btnNext.Caption := 'Next';
+  btnNext.Caption := language.Values['mpRep_Next'];
 
   // display entry
   DisplayCurrentReport;
@@ -183,6 +192,16 @@ procedure TReportForm.cbRatingChange(Sender: TObject);
 begin
   // set hint to current rating hint
   cbRating.Hint := RatingHints[cbRating.ItemIndex];
+end;
+
+procedure TReportForm.FormCreate(Sender: TObject);
+begin
+  // do a translation dump?
+  if bTranslationDump then
+    TRttiTranslation.Save('lang\english.lang', self);
+
+  // load translation
+  TRttiTranslation.Load(language, self);
 end;
 
 procedure TReportForm.FormShow(Sender: TObject);
@@ -196,7 +215,7 @@ begin
     Close;
   case pluginsToReport.Count of
     0: Close;
-    1: btnNext.Caption := 'Done';
+    1: btnNext.Caption := language.Values['mpRep_Done'];
   end;
 
   // display entry
@@ -251,11 +270,11 @@ begin
 
   // handle memo hint and label coloring
   if bTooShort then begin
-    meNotes.Hint := 'Notes too short!  Enter moar!';
+    meNotes.Hint := language.Values['mpRep_NotesTooShort'];
     lblCharacters.Font.Color := clRed;
   end
   else if bTooLong then begin
-    meNotes.Hint := 'Notes too long, cut back dawg!';
+    meNotes.Hint := language.Values['mpRep_NotesTooLong'];
     lblCharacters.Font.Color := clRed;
   end
   else begin

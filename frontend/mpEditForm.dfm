@@ -17,27 +17,24 @@ object EditForm: TEditForm
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   OnShow = FormShow
   DesignSize = (
     334
     222)
   PixelsPerInch = 96
   TextHeight = 13
-  object PageControl1: TPageControl
+  object PageControl: TPageControl
     Left = 8
     Top = 8
     Width = 318
     Height = 175
-    ActivePage = TabSheet1
+    ActivePage = TabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    object TabSheet1: TTabSheet
+    object TabSheet: TTabSheet
       Caption = 'Edit Merge'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblName: TLabel
         Left = 13
         Top = 13

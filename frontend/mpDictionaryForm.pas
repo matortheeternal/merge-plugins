@@ -6,37 +6,43 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, Grids, ValEdit, CommCtrl,
   // mte units
-  mteHelpers, mteLogger,
+  mteHelpers, mteLogger, RttiTranslation,
   // mp units
   mpFrontend;
 
 type
   TDictionaryForm = class(TForm)
-    lvEntries: TListView;
-    meNotes: TMemo;
-    Splitter: TSplitter;
-    pnlEntries: TPanel;
-    pnlDetails: TPanel;
-    pnlDictionaryInfo: TPanel;
-    vl: TValueListEditor;
-    pnlReportNotes: TPanel;
-    lblDictionary: TLabel;
-    lblNotes: TLabel;
-    gbFiltering: TGroupBox;
-    lblFilename: TLabel;
-    edFilename: TEdit;
-    lblRecords: TLabel;
-    cbVersion: TComboBox;
-    edRating: TEdit;
-    lblVersion: TLabel;
-    cbReports: TComboBox;
-    edRecords: TEdit;
-    lblRating: TLabel;
-    cbRecords: TComboBox;
-    edVersion: TEdit;
-    edReports: TEdit;
-    cbRating: TComboBox;
-    lblReports: TLabel;
+    [FormPrefix('mpDict')]
+      Splitter: TSplitter;
+      [FormSection('Entries')]
+        pnlEntries: TPanel;
+        gbFiltering: TGroupBox;
+        lblFilename: TLabel;
+        edFilename: TEdit;
+        lblRecords: TLabel;
+        edRecords: TEdit;
+        lblVersion: TLabel;
+        edVersion: TEdit;
+        lblReports: TLabel;
+        edReports: TEdit;
+        lblRating: TLabel;
+        edRating: TEdit;
+        lvEntries: TListView;
+        [FormSection('DontTranslate')]
+          cbRecords: TComboBox;
+          cbVersion: TComboBox;
+          cbReports: TComboBox;
+          cbRating: TComboBox;
+      [FormSection('Details')]
+        pnlDetails: TPanel;
+        pnlDictionaryInfo: TPanel;
+        lblDictionary: TLabel;
+        vl: TValueListEditor;
+      [FormSection('Notes')]
+        pnlReportNotes: TPanel;
+        lblNotes: TLabel;
+        meNotes: TMemo;
+
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure lvEntriesChange(Sender: TObject; Item: TListItem;
@@ -109,6 +115,13 @@ end;
 
 procedure TDictionaryForm.FormCreate(Sender: TObject);
 begin
+  // do a translation dump?
+  if bTranslationDump then
+    TRttiTranslation.Save('lang\english.lang', self);
+
+  // load translation
+  TRttiTranslation.Load(language, self);
+
   // initialize list view, dictionary list
   tempDictionary := TList.Create;
   columnToSort := -1;
@@ -146,13 +159,13 @@ begin
   vl.Strings.Clear;
 
   // initialize dictionary details
-  vl.InsertRow('Filename', dictionaryFilename, true);
-  vl.InsertRow('File size', FormatByteSize(GetFileSize(dictionaryFilename)), true);
-  vl.InsertRow('Date modified', DateTimeToStr(GetLastModified(dictionaryFilename)), true);
-  vl.InsertRow('Number of entries', IntToStr(dictionary.Count), true);
-  vl.InsertRow('Number of reports', IntToStr(ReportCount(dictionary)), true);
-  vl.InsertRow('Entries displayed', IntToStr(tempDictionary.Count), true);
-  vl.InsertRow('Blacklist size', IntToStr(blacklist.Count), true);
+  vl.InsertRow(language.Values['mpDct_Filename'], dictionaryFilename, true);
+  vl.InsertRow(language.Values['mpDct_FileSize'], FormatByteSize(GetFileSize(dictionaryFilename)), true);
+  vl.InsertRow(language.Values['mpDct_DateModified'], DateTimeToStr(GetLastModified(dictionaryFilename)), true);
+  vl.InsertRow(language.Values['mpDct_NumEntries'], IntToStr(dictionary.Count), true);
+  vl.InsertRow(language.Values['mpDct_NumReports'], IntToStr(ReportCount(dictionary)), true);
+  vl.InsertRow(language.Values['mpDct_EntriesDisplayed'], IntToStr(tempDictionary.Count), true);
+  vl.InsertRow(language.Values['mpDct_BlacklistSize'], IntToStr(blacklist.Count), true);
 end;
 
 // update meNotes when user changes entry
