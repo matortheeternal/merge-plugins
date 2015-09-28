@@ -7,6 +7,8 @@ uses
   Classes, ComCtrls, CommCtrl, DateUtils, shlObj, IOUtils;
 
   { General functions }
+  function TitleCase(sText: String): String;
+  function SentenceCase(sText: string): string;
   function csvText(s: string): string;
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
@@ -58,6 +60,48 @@ implementation
   - IntegerListSum
 }
 {*****************************************************************************}
+
+{ Capitalizes the first letter of each word }
+function TitleCase(sText: String): String;
+const
+  cDelimiters = [#9, #10, #13, ' ', ',', '.', ':', ';', '"',
+                 '\', '/', '(', ')', '[', ']', '{', '}'];
+var
+  iLoop: Integer;
+begin
+  Result := sText;
+  if (Result <> '') then begin
+    Result := LowerCase(Result);
+
+    Result[1] := UpCase(Result[1]);
+    for iLoop := 2 to Length(Result) do
+      if (Result[iLoop - 1] in cDelimiters) then
+        Result[iLoop] := UpCase(Result[iLoop]);
+  end;
+end;
+
+{ Capitalizes first character of each sentence }
+function SentenceCase(sText: string): string;
+const
+  cTerminators = ['!', '.', '?'];
+var
+  iLoop: Integer;
+  bTerminated: boolean;
+begin
+  Result := sText;
+  if (Result <> '') then begin
+    Result := LowerCase(Result);
+
+    Result[1] := UpCase(Result[1]);
+    bTerminated := false;
+    for iLoop := 2 to Length(Result) do begin
+      if (Result[iLoop - 1] in cTerminators) then
+        bTerminated := true;
+      if bTerminated and (Result[iLoop] <> ' ') then
+        Result[iLoop] := UpCase(Result[iLoop]);
+    end;
+  end;
+end;
 
 { Replaces newlines with a comma and space }
 function csvText(s: string): string;

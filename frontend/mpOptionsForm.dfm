@@ -280,25 +280,13 @@ object OptionsForm: TOptionsForm
           Align = alCustom
           Style = csDropDownList
           Anchors = [akTop, akRight]
-          ItemIndex = 0
           TabOrder = 0
-          Text = 'English'
-          Items.Strings = (
-            'English'
-            'French'
-            'Portugese'
-            'Spanish'
-            'Chinese')
         end
       end
     end
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetHandling: TGroupBox
         Left = 6
         Top = 6
@@ -482,10 +470,6 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbPrivacy: TGroupBox
         Left = 6
         Top = 72
@@ -744,10 +728,6 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6

@@ -121,6 +121,7 @@ type
           btnBrowseBSAOpt: TSpeedButton;
 
     procedure FormCreate(Sender: TObject);
+    procedure LoadLanguageOptions;
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
     procedure btnBrowseMOClick(Sender: TObject);
@@ -492,7 +493,26 @@ begin
   end;
 end;
 
+procedure TOptionsForm.LoadLanguageOptions;
+var
+  info: TSearchRec;
+  sLang: string;
+begin
+  cbLanguage.Items.Add('English');
+  cbLanguage.ItemIndex := 0;
+  if not DirectoryExists('lang') then
+    exit;
+  if FindFirst('lang\*.lang', faAnyFile, info) <> 0 then
+    exit;
+  repeat
+    sLang := TitleCase(ChangeFileExt(info.Name, ''));
+    if sLang <> 'English' then
+      cbLanguage.Items.Add(sLang);
+  until FindNext(info) <> 0;
+end;
+
 procedure TOptionsForm.FormCreate(Sender: TObject);
+var index: Integer;
 begin
   // do translation dump?
   if bTranslationDump then
@@ -514,7 +534,10 @@ begin
   slSampleLogMessage.Values['Text'] := 'This is a test message.';
 
   // General > Language
-  cbLanguage.Text := settings.language;
+  LoadLanguageOptions;
+  index := cbLanguage.Items.IndexOf(settings.language);
+  if index > -1 then
+    cbLanguage.ItemIndex := index;
   // General > reports
   edUsername.Text := settings.username;
   // General > Style
