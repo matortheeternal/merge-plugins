@@ -119,6 +119,8 @@ type
           btnBrowseCompiler: TSpeedButton;
           btnBrowseFlags: TSpeedButton;
           btnBrowseBSAOpt: TSpeedButton;
+    kbSelfRef: TCheckBox;
+    kbSEQ: TCheckBox;
 
     procedure FormCreate(Sender: TObject);
     procedure LoadLanguageOptions;
@@ -166,23 +168,23 @@ end;
 
 procedure TOptionsForm.btnBrowseBSAOptClick(Sender: TObject);
 begin
-  BrowseForFile(edBsaOptPath, language.Values['mpOpt_ExeFilter'], ProgramPath);
+  BrowseForFile(edBsaOptPath, GetString('mpOpt_ExeFilter'), ProgramPath);
   edBsaOptPathExit(nil);
 end;
 
 procedure TOptionsForm.btnBrowseCompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edCompilerPath, language.Values['mpOpt_ExeFilter'], DataPath);
+  BrowseForFile(edCompilerPath, GetString('mpOpt_ExeFilter'), DataPath);
 end;
 
 procedure TOptionsForm.btnBrowseDecompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edDecompilerPath, language.Values['mpOpt_ExeFilter'], ProgramPath);
+  BrowseForFile(edDecompilerPath, GetString('mpOpt_ExeFilter'), ProgramPath);
 end;
 
 procedure TOptionsForm.btnBrowseFlagsClick(Sender: TObject);
 begin
-  BrowseForFile(edFlagsPath, language.Values['mpOpt_FlagsFilter'], DataPath + 'scripts\source\');
+  BrowseForFile(edFlagsPath, GetString('mpOpt_FlagsFilter'), DataPath + 'scripts\source\');
 end;
 
 procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
@@ -300,7 +302,7 @@ begin
     end;
   end
   else begin
-    MessageDlg(language.Values['mpOpt_ModOrganizerNotFound'], mtConfirmation, [mbOk], 0);
+    MessageDlg(GetString('mpOpt_ModOrganizerNotFound'), mtConfirmation, [mbOk], 0);
     edModOrganizerPath.Text := '';
   end;
 end;
@@ -329,7 +331,9 @@ begin
   settings.handleVoiceAssets := kbVoiceAssets.Checked;
   settings.handleMCMTranslations := kbTranslations.Checked;
   settings.handleINIs := kbINIs.Checked;
+  settings.handleSEQ := kbSEQ.Checked;
   settings.handleScriptFragments := kbFragments.Checked;
+  settings.handleSelfReference := kbSelfRef.Checked;
   settings.extractBSAs := kbExtractBSAs.Checked;
   settings.buildMergedBSA := kbBuildBSA.Checked;
   settings.batCopy := kbBatCopy.Checked;
@@ -371,41 +375,41 @@ end;
 procedure TOptionsForm.btnRegisterClick(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
-    lblStatusValue.Caption := language.Values['mpOpt_ServerUnavailable'];
+    lblStatusValue.Caption := GetString('mpOpt_ServerUnavailable');
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := language.Values['mpOpt_ServerUnavailable'];
+    lblStatusValue.Hint := GetString('mpOpt_ServerUnavailable');
     btnRegister.Enabled := false;
     exit;
   end;
 
-  if (btnRegister.Caption = language.Values['mpOpt_Register']) then begin
+  if (btnRegister.Caption = GetString('mpOpt_Register')) then begin
     if RegisterUser(edUsername.Text) then begin
       settings.registered := true;
       settings.username := edUsername.Text;
       SaveSettings;
-      lblStatusValue.Caption := language.Values['mpOpt_Registered'];
+      lblStatusValue.Caption := GetString('mpOpt_Registered');
       lblStatusValue.Font.Color := clGreen;
       lblStatusValue.Hint := '';
       edUsername.Enabled := false;
       btnRegister.Enabled := false;
     end
     else begin
-      lblStatusValue.Caption := language.Values['mpOpt_FailedToRegister'];
+      lblStatusValue.Caption := GetString('mpOpt_FailedToRegister');
       lblStatusValue.Font.Color := clRed;
-      lblStatusValue.Hint := language.Values['mpOpt_FailedToRegister'];
+      lblStatusValue.Hint := GetString('mpOpt_FailedToRegister');
     end;
   end
   else begin
     if UsernameAvailable(edUsername.Text) then begin
-      lblStatusValue.Caption := language.Values['mpOpt_UsernameAvailable'];
+      lblStatusValue.Caption := GetString('mpOpt_UsernameAvailable');
       lblStatusValue.Font.Color := clBlue;
-      lblStatusValue.Hint := language.Values['mpOpt_UsernameAvailable'];
-      btnRegister.Caption := language.Values['mpOpt_Register'];
+      lblStatusValue.Hint := GetString('mpOpt_UsernameAvailable');
+      btnRegister.Caption := GetString('mpOpt_Register');
     end
     else begin
-      lblStatusValue.Caption := language.Values['mpOpt_UsernameUnavailable'];
+      lblStatusValue.Caption := GetString('mpOpt_UsernameUnavailable');
       lblStatusValue.Font.Color := clRed;
-      lblStatusValue.Hint := language.Values['mpOpt_UsernameUnavailable'];
+      lblStatusValue.Hint := GetString('mpOpt_UsernameUnavailable');
     end;
   end;
 end;
@@ -417,7 +421,7 @@ begin
     CheckAuthorization;
     if bAuthorized then begin
       btnReset.Enabled := false;
-      lblStatusValue.Caption := language.Values['mpOpt_Registered'];
+      lblStatusValue.Caption := GetString('mpOpt_Registered');
       lblStatusValue.Font.Color := clGreen;
       lblStatusValue.Hint := '';
     end;
@@ -432,7 +436,7 @@ begin
       CompareStatuses;
       UpdatePluginData;
       btnUpdateDictionary.Enabled := false;
-      lblDictionaryStatus.Caption := language.Values['mpOpt_UpToDate'];
+      lblDictionaryStatus.Caption := GetString('mpOpt_UpToDate');
       lblDictionaryStatus.Font.Color := clGreen;
     end;
   end;
@@ -465,30 +469,30 @@ end;
 procedure TOptionsForm.edUsernameChange(Sender: TObject);
 begin
   if not TCPClient.Connected then begin
-    lblStatusValue.Caption := language.Values['mpOpt_ServerUnavailable'];
+    lblStatusValue.Caption := GetString('mpOpt_ServerUnavailable');
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := language.Values['mpOpt_ServerUnavailable'];
+    lblStatusValue.Hint := GetString('mpOpt_ServerUnavailable');
     btnRegister.Enabled := false;
     exit;
   end;
 
-  btnRegister.Caption := language.Values['mpOpt_Check'];
+  btnRegister.Caption := GetString('mpOpt_Check');
   if Length(edUsername.Text) < 4 then begin
-    lblStatusValue.Caption := language.Values['mpOpt_InvalidUsername'];
+    lblStatusValue.Caption := GetString('mpOpt_InvalidUsername');
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := language.Values['mpOpt_UsernameTooShort'];
+    lblStatusValue.Hint := GetString('mpOpt_UsernameTooShort');
     btnRegister.Enabled := false;
   end
   else if Length(edUsername.Text) > 24 then begin
-    lblStatusValue.Caption := language.Values['mpOpt_InvalidUsername'];
+    lblStatusValue.Caption := GetString('mpOpt_InvalidUsername');
     lblStatusValue.Font.Color := clRed;
-    lblStatusValue.Hint := language.Values['mpOpt_UsernameTooLong'];
+    lblStatusValue.Hint := GetString('mpOpt_UsernameTooLong');
     btnRegister.Enabled := false;
   end
   else begin
-    lblStatusValue.Caption := language.Values['mpOpt_ValidUsername'];
+    lblStatusValue.Caption := GetString('mpOpt_ValidUsername');
     lblStatusValue.Font.Color := clBlack;
-    lblStatusValue.Hint := language.Values['mpOpt_ValidUsername'];
+    lblStatusValue.Hint := GetString('mpOpt_ValidUsername');
     btnRegister.Enabled := true;
   end;
 end;
@@ -553,7 +557,9 @@ begin
   kbVoiceAssets.Checked := settings.handleVoiceAssets;
   kbTranslations.Checked := settings.handleMCMTranslations;
   kbINIs.Checked := settings.handleINIs;
+  kbSEQ.Checked := settings.handleSEQ;
   kbFragments.Checked := settings.handleScriptFragments;
+  kbSelfRef.Checked := settings.handleSelfReference;
   kbExtractBSAs.Checked := settings.extractBSAs;
   kbBuildBSA.Checked := settings.buildMergedBSA;
   kbBatCopy.Checked := settings.batCopy;
@@ -603,12 +609,12 @@ begin
     if TCPClient.Connected then begin
       if not bAuthorized then begin
         btnReset.Enabled := true;
-        lblStatusValue.Caption := language.Values['mpOpt_AuthFailed'];
+        lblStatusValue.Caption := GetString('mpOpt_AuthFailed');
         lblStatusValue.Font.Color := clRed;
-        lblStatusValue.Hint := language.Values['mpOpt_AuthFailed'];
+        lblStatusValue.Hint := GetString('mpOpt_AuthFailed');
       end
       else begin
-        lblStatusValue.Caption := language.Values['mpOpt_Registered'];
+        lblStatusValue.Caption := GetString('mpOpt_Registered');
         lblStatusValue.Font.Color := clGreen;
         lblStatusValue.Hint := '';
         bAuthorized := true;
@@ -619,15 +625,15 @@ begin
   // dictionary update
   if bDictionaryUpdate then begin
     btnUpdateDictionary.Enabled := bDictionaryUpdate;
-    lblDictionaryStatus.Caption := language.Values['mpOpt_UpdateAvailable'];
+    lblDictionaryStatus.Caption := GetString('mpOpt_UpdateAvailable');
     lblDictionaryStatus.Font.Color := $000080FF;
   end;
 
   // program update
   if bProgramUpdate then begin
     btnUpdateProgram.Enabled := bProgramUpdate;
-    lblProgramStatus.Caption := language.Values['mpOpt_UpdateAvailable'];
-    lblProgramStatus.Hint := Format(language.Values['mpOpt_VersionCompare'],
+    lblProgramStatus.Caption := GetString('mpOpt_UpdateAvailable');
+    lblProgramStatus.Hint := Format(GetString('mpOpt_VersionCompare'),
       [status.programVersion, RemoteStatus.programVersion]);
     lblProgramStatus.Font.Color := $000080FF;
   end;

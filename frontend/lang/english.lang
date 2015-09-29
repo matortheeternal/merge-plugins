@@ -19,7 +19,7 @@ mpMain_DetailsCopyToClipboardItem_Caption=Copy to clipboard
 { ## Plugins Tab ## }
 mpMain_PluginsTabSheet_Caption=Plugins
 { #### DYNAMIC #### }
-mpMain_PluginFlags='%s Flags#13#10%s'
+mpMain_PluginFlags=%s Flags#13#10%s
 mpMain_PluginDetails=Plugin Details
 mpMain_Filename=Filename
 mpMain_Hash=Hash
@@ -198,7 +198,9 @@ mpOpt_kbFaceGen_Caption=Handle FaceGenData
 mpOpt_kbVoiceAssets_Caption=Handle voice assets
 mpOpt_kbTranslations_Caption=Handle MCM translations
 mpOpt_kbINIs_Caption=Handle INI files
+mpOpt_kbSEQ_Caption=Handle SEQ files
 mpOpt_kbFragments_Caption=Handle script fragments
+mpOpt_kbSelfRef_Caption=Handle self references
 mpOpt_kbExtractBSAs_Caption=Extract BSAs
 mpOpt_kbBuildBSA_Caption=Build merged BSA
 mpOpt_kbBatCopy_Caption=Batch copy assets

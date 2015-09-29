@@ -103,7 +103,7 @@ type
   end;
   TPluginFlagID = (IS_BLACKLISTED, HAS_ERRORS, ERRORS_IGNORED, NO_ERRORS,
     HAS_BSA, HAS_FACEDATA, HAS_VOICEDATA, HAS_TRANSLATION, HAS_INI,
-    HAS_FRAGMENTS, DISALLOW_MERGING );
+    HAS_FRAGMENTS, DISALLOW_MERGING, REFERENCES_SELF );
   TPluginFlags = set of TPluginFlagID;
   TPluginFlag = Record
     id: TPluginFlagID;
@@ -210,7 +210,9 @@ type
     handleVoiceAssets: boolean;
     handleMCMTranslations: boolean;
     handleINIs: boolean;
+    handleSEQ: boolean;
     handleScriptFragments: boolean;
+    handleSelfReference: boolean;
     extractBSAs: boolean;
     buildMergedBSA: boolean;
     batCopy: boolean;
@@ -278,6 +280,7 @@ type
   function FaceDataExists(filename: string): boolean;
   function VoiceDataExists(filename: string): boolean;
   function FragmentsExist(f: IwbFile): boolean;
+  function ReferencesSelf(f: IwbFile): boolean;
   procedure ExtractBSA(ContainerName, folder, destination: string); overload;
   procedure ExtractBSA(ContainerName, destination: string; var ignore: TStringList); overload;
   function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
@@ -301,6 +304,7 @@ type
   function MessageEnabled(msg: TLogMessage): boolean;
   { Loading and saving methods }
   procedure LoadLanguage;
+  function GetString(name: string): string;
   procedure SaveProfile(var p: TProfile);
   procedure LoadRegistrationData(var s: TSettings);
   procedure LoadSettings; overload;
@@ -372,7 +376,7 @@ const
   MSG_REPORT = 7;
 
   // PLUGIN FLAGS
-  FlagsArray: array[0..10] of TPluginFlag = (
+  FlagsArray: array[0..11] of TPluginFlag = (
     ( id: IS_BLACKLISTED; char: 'X'; desc: 'Is blacklisted'; ),
     ( id: HAS_ERRORS; char: 'E'; desc: 'Has errors'; ),
     ( id: ERRORS_IGNORED; char: 'R'; desc: 'Errors ignored'; ),
@@ -383,7 +387,8 @@ const
     ( id: HAS_TRANSLATION; char: 'T'; desc: 'Has MCM Translations'; ),
     ( id: HAS_INI; char: 'I'; desc: 'Has an INI file'; ),
     ( id: HAS_FRAGMENTS; char: 'F'; desc: 'Has Script fragments'; ),
-    ( id: DISALLOW_MERGING; char: 'D'; desc: 'Disallow merging'; )
+    ( id: DISALLOW_MERGING; char: 'D'; desc: 'Disallow merging'; ),
+    ( id: REFERENCES_SELF; char: 'S'; desc: 'Scripts reference self'; )
   );
 
   // MERGE STATUSES
@@ -588,7 +593,7 @@ end;
   - GetMasters
   - AddMasters
   - BSAExists
-  - MCMExists
+  - TranslationExists
   - FaceDataExists
   - VoiceDataExists
   - FragmentsExist
@@ -906,6 +911,36 @@ function FragmentsExist(f: IwbFile): boolean;
 begin
   Result := TopicInfoFragmentsExist(f) or QuestFragmentsExist(f)
     or SceneFragmentsExist(f);
+end;
+
+{ References self }
+function ReferencesSelf(f: IwbFile): boolean;
+var
+  i: Integer;
+  filename, source: string;
+  scripts: IwbGroupRecord;
+  container: IwbContainerElementRef;
+  rec: IwbMainRecord;
+begin
+  // exit if has no script records in file
+  Result := false;
+  if not f.HasGroup('SCPT') then
+    exit;
+
+  // get scripts, and check them all for self-reference
+  filename := f.FileName;
+  scripts := f.GroupBySignature['SCPT'];
+  if not Supports(scripts, IwbContainerElementRef, container) then
+    exit;
+  for i := 0 to Pred(container.ElementCount) do begin
+    if not Supports(container.Elements[i], IwbMainRecord, rec) then
+      continue;
+    source := rec.ElementEditValues['SCTX - Script Source'];
+    if Pos(filename, source) > 0 then begin
+      Result := true;
+      break;
+    end;
+  end;
 end;
 
 { Extracts assets from @folder in the BSA @filename to @destination }
@@ -1451,7 +1486,18 @@ var
 begin
   filename := Format('lang\%s.lang', [settings.language]);
   language := TStringList.Create;
-  language.LoadFromFile(filename);
+  if not FileExists(filename) then
+    raise Exception.Create('Language file '+filename+' not found!')
+  else
+    language.LoadFromFile(filename);
+end;
+
+function GetString(name: string): string;
+begin
+  if language.Values[name] <> '' then
+    Result := StringReplace(language.Values[name], '#13#10', #13#10, [rfReplaceAll])
+  else
+    Result := name;
 end;
 
 procedure SaveProfile(var p: TProfile);
@@ -2533,7 +2579,7 @@ begin
     exit;
   filename := 'MergePlugins.zip';
   if FileExists(filename) then begin
-    MessageDlg(language.Values['mpOpt_PendingUpdate'], mtInformation, [mbOk], 0);
+    MessageDlg(GetString('mpOpt_PendingUpdate'), mtInformation, [mbOk], 0);
     Result := true;
     exit;
   end;
@@ -2798,6 +2844,8 @@ begin
     flags := flags + [HAS_FRAGMENTS];
   if bDisallowMerging then
     flags := flags + [DISALLOW_MERGING];
+  if ReferencesSelf(_File) then
+    flags := flags + [REFERENCES_SELF];
 end;
 
 { Returns a string representing the flags in a plugin }
@@ -3309,7 +3357,9 @@ begin
   handleVoiceAssets := true;
   handleMCMTranslations := true;
   handleINIs := true;
+  handleSEQ := true;
   handleScriptFragments := false;
+  handleSelfReference := false;
   extractBSAs := false;
   buildMergedBSA := false;
   batCopy := true;

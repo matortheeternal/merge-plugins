@@ -291,7 +291,7 @@ object OptionsForm: TOptionsForm
         Left = 6
         Top = 6
         Width = 548
-        Height = 164
+        Height = 179
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -319,7 +319,7 @@ object OptionsForm: TOptionsForm
           Width = 117
           Height = 17
           Margins.Top = 6
-          Caption = 'Handle FaceGenData'
+          Caption = 'Handle FaceGen files'
           TabOrder = 0
         end
         object edMergeDirectory: TEdit
@@ -334,7 +334,7 @@ object OptionsForm: TOptionsForm
           Top = 77
           Width = 117
           Height = 17
-          Caption = 'Handle voice assets'
+          Caption = 'Handle voice files'
           TabOrder = 2
         end
         object kbTranslations: TCheckBox
@@ -348,8 +348,8 @@ object OptionsForm: TOptionsForm
           TabOrder = 3
         end
         object kbBuildBSA: TCheckBox
-          Left = 272
-          Top = 100
+          Left = 274
+          Top = 123
           Width = 101
           Height = 17
           Caption = 'Build merged BSA'
@@ -357,7 +357,7 @@ object OptionsForm: TOptionsForm
           OnMouseUp = kbBuildBSAMouseUp
         end
         object kbFragments: TCheckBox
-          Left = 272
+          Left = 274
           Top = 54
           Width = 136
           Height = 17
@@ -365,8 +365,8 @@ object OptionsForm: TOptionsForm
           TabOrder = 5
         end
         object kbExtractBSAs: TCheckBox
-          Left = 272
-          Top = 77
+          Left = 274
+          Top = 100
           Width = 79
           Height = 17
           Caption = 'Extract BSAs'
@@ -374,8 +374,8 @@ object OptionsForm: TOptionsForm
           OnMouseUp = kbExtractBSAsMouseUp
         end
         object kbBatCopy: TCheckBox
-          Left = 272
-          Top = 123
+          Left = 274
+          Top = 146
           Width = 117
           Height = 17
           Caption = 'Batch copy assets'
@@ -389,10 +389,26 @@ object OptionsForm: TOptionsForm
           Caption = 'Handle INI files'
           TabOrder = 8
         end
+        object kbSelfRef: TCheckBox
+          Left = 274
+          Top = 77
+          Width = 131
+          Height = 17
+          Caption = 'Handle self references'
+          TabOrder = 9
+        end
+        object kbSEQ: TCheckBox
+          Left = 12
+          Top = 146
+          Width = 97
+          Height = 17
+          Caption = 'Handle SEQ files'
+          TabOrder = 10
+        end
       end
       object gbDebug: TGroupBox
         Left = 6
-        Top = 182
+        Top = 197
         Width = 548
         Height = 115
         Margins.Left = 6
@@ -985,7 +1001,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800000110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800040110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

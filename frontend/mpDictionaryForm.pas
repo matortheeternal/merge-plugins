@@ -159,13 +159,13 @@ begin
   vl.Strings.Clear;
 
   // initialize dictionary details
-  vl.InsertRow(language.Values['mpDct_Filename'], dictionaryFilename, true);
-  vl.InsertRow(language.Values['mpDct_FileSize'], FormatByteSize(GetFileSize(dictionaryFilename)), true);
-  vl.InsertRow(language.Values['mpDct_DateModified'], DateTimeToStr(GetLastModified(dictionaryFilename)), true);
-  vl.InsertRow(language.Values['mpDct_NumEntries'], IntToStr(dictionary.Count), true);
-  vl.InsertRow(language.Values['mpDct_NumReports'], IntToStr(ReportCount(dictionary)), true);
-  vl.InsertRow(language.Values['mpDct_EntriesDisplayed'], IntToStr(tempDictionary.Count), true);
-  vl.InsertRow(language.Values['mpDct_BlacklistSize'], IntToStr(blacklist.Count), true);
+  vl.InsertRow(GetString('mpDct_Filename'), dictionaryFilename, true);
+  vl.InsertRow(GetString('mpDct_FileSize'), FormatByteSize(GetFileSize(dictionaryFilename)), true);
+  vl.InsertRow(GetString('mpDct_DateModified'), DateTimeToStr(GetLastModified(dictionaryFilename)), true);
+  vl.InsertRow(GetString('mpDct_NumEntries'), IntToStr(dictionary.Count), true);
+  vl.InsertRow(GetString('mpDct_NumReports'), IntToStr(ReportCount(dictionary)), true);
+  vl.InsertRow(GetString('mpDct_EntriesDisplayed'), IntToStr(tempDictionary.Count), true);
+  vl.InsertRow(GetString('mpDct_BlacklistSize'), IntToStr(blacklist.Count), true);
 end;
 
 // update meNotes when user changes entry

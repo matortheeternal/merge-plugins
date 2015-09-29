@@ -115,9 +115,9 @@ begin
   // set pnlTitle labels to entry details
   report := reportsList[currentPlugin];
   lblFilename.Caption := StringReplace(report.filename, '&', '&&', [rfReplaceAll]);
-  lblHash.Caption := Format(language.Values['mpRep_Hash'], [report.hash]);
-  lblRecords.Caption := Format(language.Values['mpRep_Records'], [IntToStr(report.recordCount)]);
-  lblFlags.Caption := Format(language.Values['mpRep_Flags'], [plugin.GetFlagsString]);
+  lblHash.Caption := Format(GetString('mpRep_Hash'), [report.hash]);
+  lblRecords.Caption := Format(GetString('mpRep_Records'), [IntToStr(report.recordCount)]);
+  lblFlags.Caption := Format(GetString('mpRep_Flags'), [plugin.GetFlagsString]);
   lblFlags.Hint := plugin.GetFlagsDescription;
 
   // load existing entry details
@@ -164,7 +164,7 @@ begin
   Inc(currentPlugin);
   btnPrev.Enabled := true;
   if currentPlugin = Pred(pluginsToReport.Count) then
-    btnNext.Caption := language.Values['mpRep_Done'];
+    btnNext.Caption := GetString('mpRep_Done');
 
   // display entry
   DisplayCurrentReport;
@@ -182,7 +182,7 @@ begin
   // go to previous plugin
   Dec(currentPlugin);
   btnPrev.Enabled := currentPlugin > 0;
-  btnNext.Caption := language.Values['mpRep_Next'];
+  btnNext.Caption := GetString('mpRep_Next');
 
   // display entry
   DisplayCurrentReport;
@@ -215,7 +215,7 @@ begin
     Close;
   case pluginsToReport.Count of
     0: Close;
-    1: btnNext.Caption := language.Values['mpRep_Done'];
+    1: btnNext.Caption := GetString('mpRep_Done');
   end;
 
   // display entry
@@ -270,11 +270,11 @@ begin
 
   // handle memo hint and label coloring
   if bTooShort then begin
-    meNotes.Hint := language.Values['mpRep_NotesTooShort'];
+    meNotes.Hint := GetString('mpRep_NotesTooShort');
     lblCharacters.Font.Color := clRed;
   end
   else if bTooLong then begin
-    meNotes.Hint := language.Values['mpRep_NotesTooLong'];
+    meNotes.Hint := GetString('mpRep_NotesTooLong');
     lblCharacters.Font.Color := clRed;
   end
   else begin

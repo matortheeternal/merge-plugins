@@ -914,6 +914,9 @@ var
   index: integer;
 begin
   if Tracker.Cancel then exit;
+  Tracker.Write('    Handling FaceGen files');
+
+  // prepare paths
   srcPath := srcPath + plugin.filename + '\';
   dstPath := dstPath + merge.filename + '\';
   ForceDirectories(dstPath);
@@ -953,6 +956,9 @@ var
   index: integer;
 begin
   if Tracker.Cancel then exit;
+  Tracker.Write('    Handling voice files');
+
+  // prepare paths
   srcPath := srcPath + plugin.filename + '\';
   dstPath := dstPath + merge.filename + '\';
   // if no folders in srcPath, exit
@@ -981,11 +987,11 @@ begin
         dstFile := StringReplace(srcFile, oldForm, newForm, []);
       end
       else if settings.debugAssetCopying then
-        Tracker.Write(Format('    Skipping asset %s, [%s] not renumbered', [srcFile, oldForm]));
+        Tracker.Write(Format('      Skipping asset %s, [%s] not renumbered', [srcFile, oldForm]));
 
       // copy file
       if settings.debugAssetCopying then
-        Tracker.Write('    Copying asset "'+srcFile+'" to "'+dstFile+'"');
+        Tracker.Write('      Copying asset "'+srcFile+'" to "'+dstFile+'"');
       srcFile := srcPath + folder.Name + '\' + srcFile;
       dstFile := dstPath + folder.Name + '\' + dstFile;
       if settings.batCopy then AddCopyOperation(srcFile, dstFile)
@@ -1005,13 +1011,16 @@ var
   sl: TStringList;
 begin
   if Tracker.Cancel then exit;
+  Tracker.Write('    Handling MCM translation files');
+
+  // find translation files
   fn := Lowercase(ChangeFileExt(plugin.filename, ''));
   if FindFirst(srcPath+'*.txt', faAnyFile, info) <> 0 then
     exit;
   repeat
     if (Pos(fn, Lowercase(info.Name)) <> 1) then
       continue;
-    Tracker.Write('    Copying MCM translation "'+info.Name+'"');
+    Tracker.Write('      Copying MCM translation "'+info.Name+'"');
     language := StringReplace(Lowercase(info.Name), fn, '', [rfReplaceAll]);
     index := languages.IndexOf(language);
     if index > -1 then begin
@@ -1085,6 +1094,36 @@ begin
   CopyTopicInfoFragments(plugin, merge, srcPath);
 end;
 
+procedure HandleSelfReference(var plugin: TPlugin; var merge: TMerge);
+var
+  i: Integer;
+  filename, source: string;
+  scripts: IwbGroupRecord;
+  container: IwbContainerElementRef;
+  rec: IwbMainRecord;
+begin
+  Tracker.Write('    Handling script references to self');
+  // exit if has no script records in file
+  if not merge.plugin._File.HasGroup('SCPT') then
+    exit;
+
+  // get scripts, and replace any self-references in all of them
+  filename := plugin._File.FileName;
+  scripts := merge.plugin._File.GroupBySignature['SCPT'];
+  if not Supports(scripts, IwbContainerElementRef, container) then
+    exit;
+  for i := 0 to Pred(container.ElementCount) do begin
+    if not Supports(container.Elements[i], IwbMainRecord, rec) then
+      continue;
+    source := rec.ElementEditValues['SCTX - Script Source'];
+    if Pos(filename, source) > 0 then begin
+      Tracker.Write('      Correcting reference on '+rec.Name);
+      rec.ElementEditValues['SCTX - Script Source'] :=
+        StringReplace(source, filename, merge.filename, [rfReplaceAll]);
+    end;
+  end;
+end;
+
 procedure CopyGeneralAssets(var plugin: TPlugin; var merge: TMerge);
 var
   srcPath, dstPath: string;
@@ -1138,7 +1177,7 @@ begin
   batchCopy.Add('copy /Y "'+src+'" "'+dst+'"');
 end;
 
-procedure CopyAssets(var plugin: TPlugin; var merge: TMerge);
+procedure HandleAssets(var plugin: TPlugin; var merge: TMerge);
 var
   bsaFilename: string;
 begin
@@ -1212,6 +1251,13 @@ begin
     CopyScriptFragments(plugin, merge, plugin.dataPath + scriptsPath, merge.dataPath + scriptsPath);
     if plugin.dataPath <> DataPath then
       CopyGeneralScripts(plugin.dataPath + scriptsPath);
+  end;
+
+  // handleSelfReference
+  if Tracker.Cancel then exit;
+  if settings.handleSelfReference and (REFERENCES_SELF in plugin.flags) then begin
+    //Tracker.Write('    Handling self references in '+plugin.filename);
+    HandleSelfReference(plugin, merge);
   end;
 
   // copyGeneralAssets
@@ -1499,16 +1545,16 @@ begin
     end;
   end;
 
-  // copy assets
+  // handle assets
   if not Tracker.Cancel then begin
     Tracker.Write(' ');
-    Tracker.Write('Copying assets');
+    Tracker.Write('Handling assets');
     languages := TStringList.Create;
     MergeIni := TStringList.Create;
     for i := Pred(pluginsToMerge.Count) downto 0 do begin
       plugin := pluginsToMerge[i];
-      Tracker.Write('  Copying assets for '+plugin.filename);
-      CopyAssets(plugin, merge);
+      Tracker.Write('  Handling assets for '+plugin.filename);
+      HandleAssets(plugin, merge);
     end;
     // save combined assets
     SaveTranslations(merge);
@@ -1580,7 +1626,7 @@ begin
   end;
 
   // create SEQ file
-  if not Tracker.Cancel then
+  if (not Tracker.Cancel) and settings.handleSEQ then
     CreateSEQFile(merge);
 
   // set description
