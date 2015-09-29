@@ -800,8 +800,17 @@ var
   oldLoadID, newLoadID, oldID, newID: string;
 begin
   try
+    // detect conflicting navmeshes
+    if (aRecord.Signature = 'NAVI') or (aRecord.Signature = 'NAVM') then
+      if (aRecord.WinningOverride._File.FileName = merge.filename)
+      and (merge.navConflicts.IndexOf(aRecord.Name) = -1) then
+        merge.navConflicts.Add(aRecord.Name);
+
+    // copy record
     aFile := merge.plugin._File;
     mElement := wbCopyElementToFile(aRecord, aFile, asNew, True, '', '', '');
+
+    // handle asNew remapping data
     if asNew and Supports(mElement, IwbMainRecord, mRecord) then begin
       oldLoadID := IntToHex(aRecord.LoadOrderFormID, 8);
       newLoadID := IntToHex(mRecord.LoadOrderFormID, 8);
@@ -919,10 +928,10 @@ begin
   // prepare paths
   srcPath := srcPath + plugin.filename + '\';
   dstPath := dstPath + merge.filename + '\';
-  ForceDirectories(dstPath);
   // if no files in source path, exit
   if FindFirst(srcPath + '*', faAnyFile, info) <> 0 then
     exit;
+  ForceDirectories(dstPath);
   // search srcPath for asset files
   repeat
     if IsDotFile(info.Name) then
@@ -1117,6 +1126,7 @@ begin
       continue;
     source := rec.ElementEditValues['SCTX - Script Source'];
     if Pos(filename, source) > 0 then begin
+      merge.geckScripts.Add(rec.Name);
       Tracker.Write('      Correcting reference on '+rec.Name);
       rec.ElementEditValues['SCTX - Script Source'] :=
         StringReplace(source, filename, merge.filename, [rfReplaceAll]);
@@ -1257,7 +1267,8 @@ begin
   if Tracker.Cancel then exit;
   if settings.handleSelfReference and (REFERENCES_SELF in plugin.flags) then begin
     //Tracker.Write('    Handling self references in '+plugin.filename);
-    HandleSelfReference(plugin, merge);
+    if wbGameMode in [gmFNV,gmFO3] then
+      HandleSelfReference(plugin, merge);
   end;
 
   // copyGeneralAssets

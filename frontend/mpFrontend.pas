@@ -132,6 +132,7 @@ type
     bIgnoreErrors: boolean;
     bDisallowMerging: boolean;
     constructor Create; virtual;
+    destructor Destroy; override;
     procedure GetData;
     procedure UpdateData;
     procedure GetHash;
@@ -165,7 +166,10 @@ type
     lmap: TStringList;
     files: TStringList;
     fails: TStringList;
+    geckScripts: TStringList;
+    navConflicts: TStringList;
     constructor Create; virtual;
+    destructor Destroy; override;
     function Dump: ISuperObject;
     procedure LoadDump(obj: ISuperObject);
     function GetTimeCost: integer;
@@ -2814,6 +2818,15 @@ begin
   reports := TStringList.Create;
 end;
 
+destructor TPlugin.Destroy;
+begin
+  description.Free;
+  masters.Free;
+  errors.Free;
+  reports.Free;
+  inherited;
+end;
+
 { Gets the flag values for a TPlugin }
 procedure TPlugin.GetFlags;
 begin
@@ -2965,8 +2978,8 @@ procedure TPlugin.FindErrors;
 begin
   // clear errors, then check
   errors.Clear;
-  CheckForErrors(2, _File as IwbElement, errors);
-  //CheckForErrorsLinear(_File as IwbElement, _File.Records[_File.RecordCount - 1], errors);
+  //CheckForErrors(2, _File as IwbElement, errors);
+  CheckForErrorsLinear(_File as IwbElement, _File.Records[_File.RecordCount - 1], errors);
 
   if Tracker.Cancel then
     exit;
@@ -3047,9 +3060,25 @@ begin
   map := TStringList.Create;
   lmap := TStringList.Create;
   files := TStringList.Create;
+  geckScripts := TStringList.Create;
+  navConflicts := TStringList.Create;
   method := 'Overrides';
   renumbering := 'Conflicting';
   fails := TStringList.Create;
+end;
+
+destructor TMerge.Destroy;
+begin
+  plugins.Free;
+  hashes.Free;
+  masters.Free;
+  map.Free;
+  lmap.Free;
+  files.Free;
+  geckScripts.Free;
+  navConflicts.Free;
+  fails.Free;
+  inherited;
 end;
 
 { Produces a dump of the merge. }

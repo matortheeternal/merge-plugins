@@ -18,6 +18,7 @@ type
     Valid: boolean;
     constructor ICreate(AOwner: TComponent; GameIcons: TImageList;
       GeneralIcons: TImageList; name: string);
+    destructor Destroy; override;
     procedure ToggleSelect(Sender: TObject);
     procedure Deselect;
     procedure Select;
@@ -204,6 +205,20 @@ begin
   // call initial events
   GameChanged(nil);
   PathChanged(nil);
+end;
+
+destructor TProfilePanel.Destroy;
+begin
+  GameImage.Free;
+  lblName.Free;
+  lblGame.Free;
+  lblPath.Free;
+  edName.Free;
+  cbGame.Free;
+  edPath.Free;
+  btnDelete.Free;
+  btnBrowse.Free;
+  inherited;
 end;
 
 { EVENT HANDLING }

@@ -560,6 +560,7 @@ begin
   kbSEQ.Checked := settings.handleSEQ;
   kbFragments.Checked := settings.handleScriptFragments;
   kbSelfRef.Checked := settings.handleSelfReference;
+  kbSelfRef.Enabled := (GameMode.appName = 'FNV') or (GameMode.appName = 'FO3');
   kbExtractBSAs.Checked := settings.extractBSAs;
   kbBuildBSA.Checked := settings.buildMergedBSA;
   kbBatCopy.Checked := settings.batCopy;
@@ -677,6 +678,7 @@ begin
   btnBrowseMO.Enabled := b;
   btnBrowseMOMods.Enabled := b;
   kbCopyGeneralAssets.Enabled := b;
+  kbCopyGeneralAssets.Checked := b;
 end;
 
 procedure TOptionsForm.meTemplateChange(Sender: TObject);
