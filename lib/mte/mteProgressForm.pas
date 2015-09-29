@@ -87,6 +87,7 @@ begin
   lastHeight := 380;
   SetTaskbarProgressState(tbpsNormal);
   bDetailsVisible := true;
+  DetailsMemo.ReadOnly := true;
   Tracker.OnMaxEvent := MaxProgress;
   Tracker.OnProgressEvent := UpdateProgress;
   Tracker.OnLogEvent := Write;
