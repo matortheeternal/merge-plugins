@@ -316,8 +316,6 @@ end;
 
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
-var
-  R: TRect;
 begin
   // HANDLE AUTO-UPDATE
   if bInstallUpdate then begin

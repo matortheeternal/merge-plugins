@@ -923,7 +923,6 @@ var
   index: integer;
 begin
   if Tracker.Cancel then exit;
-  Tracker.Write('    Handling FaceGen files');
 
   // prepare paths
   srcPath := srcPath + plugin.filename + '\';
@@ -965,7 +964,6 @@ var
   index: integer;
 begin
   if Tracker.Cancel then exit;
-  Tracker.Write('    Handling voice files');
 
   // prepare paths
   srcPath := srcPath + plugin.filename + '\';
@@ -1020,7 +1018,6 @@ var
   sl: TStringList;
 begin
   if Tracker.Cancel then exit;
-  Tracker.Write('    Handling MCM translation files');
 
   // find translation files
   fn := Lowercase(ChangeFileExt(plugin.filename, ''));
@@ -1111,7 +1108,6 @@ var
   container: IwbContainerElementRef;
   rec: IwbMainRecord;
 begin
-  Tracker.Write('    Handling script references to self');
   // exit if has no script records in file
   if not merge.plugin._File.HasGroup('SCPT') then
     exit;
@@ -1198,6 +1194,7 @@ begin
 
   // handleFaceGenData
   if settings.handleFaceGenData and (HAS_FACEDATA in plugin.flags) then begin
+    Tracker.Write('    Handling FaceGen files');
     // if BSA exists, extract FaceGenData from it to temp path and copy
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
@@ -1219,6 +1216,7 @@ begin
   // handleVoiceAssets
   if Tracker.Cancel then exit;
   if settings.handleVoiceAssets and (HAS_VOICEDATA in plugin.flags) then begin
+    Tracker.Write('    Handling voice files');
     // if BSA exists, extract voice assets from it to temp path and copy
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
@@ -1231,6 +1229,7 @@ begin
 
   // handleMCMTranslations
   if settings.handleMCMTranslations and (HAS_TRANSLATION in plugin.flags) then begin
+    Tracker.Write('    Handling MCM translation files');
     // if BSA exists, extract MCM translations from it to temp path and copy
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
@@ -1249,8 +1248,8 @@ begin
   // handleScriptFragments
   if Tracker.Cancel then exit;
   if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then begin
+    Tracker.Write('    Handling script fragments');
     // if BSA exists, extract scripts from it to temp path and copy
-    //Tracker.Write('    Copying script fragments for '+plugin.filename);
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+scriptsPath);
@@ -1266,7 +1265,7 @@ begin
   // handleSelfReference
   if Tracker.Cancel then exit;
   if settings.handleSelfReference and (REFERENCES_SELF in plugin.flags) then begin
-    //Tracker.Write('    Handling self references in '+plugin.filename);
+    Tracker.Write('    Handling script references to self');
     if wbGameMode in [gmFNV,gmFO3] then
       HandleSelfReference(plugin, merge);
   end;

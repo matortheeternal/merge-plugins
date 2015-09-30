@@ -134,6 +134,7 @@ procedure TProgressForm.Write(const s: string);
 begin
   if Pos(' ', s) <> 1 then
     ProgressLabel.Caption := s;
+  DetailsMemo.SelLength := 0;
   DetailsMemo.Lines.Add(s);
 end;
 

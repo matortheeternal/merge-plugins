@@ -291,5 +291,5 @@ mpCha_ButtonSkip_Caption=Skip
 mpProg_Closing=Closing
 mpProg_Checking=Checking for errors
 mpProg_Merging=Merging
-mpProg_GeckScripts=The source code of certain scripts was modified, so you will need #13#10to recompile them in the GECK:#13#10#13#10%s
-mpProg_NavConflicts=There were some NavMesh conflicts.  You'll need to rebuild these #13#10navmeshes in the CK:#13#10#13#10%s
+mpProg_GeckScripts=The source code of certain scripts was modified, so you will #13#10need to recompile them in the GECK:#13#10#13#10%s
+mpProg_NavConflicts=There were some NavMesh conflicts.  You'll need to rebuild #13#10these navmeshes in the CK:#13#10#13#10%s
