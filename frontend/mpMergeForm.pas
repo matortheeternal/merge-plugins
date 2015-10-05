@@ -406,6 +406,7 @@ begin
   UpdateLog;
   UpdateMerges;
   UpdatePluginsPopupMenu;
+  UpdateStatusPanel;
   UpdateQuickBar;
 
   // ATTEMPT TO CONNECT TO SERVER

@@ -327,6 +327,7 @@ type
   procedure SaveStatistics;
   procedure LoadChangelog;
   procedure LoadDictionary;
+  procedure RenameSavedPlugins;
   procedure SaveMerges;
   procedure LoadMerges;
   procedure AssignMergesToPlugins;
@@ -1803,6 +1804,28 @@ begin
   sl.Free;
 end;
 
+procedure RenameSavedPlugins;
+var
+  i: Integer;
+  plugin: TPlugin;
+  oldFileName, newFileName, bakFileName: string;
+begin
+  wbFileForceClosed;
+  for i := Pred(PluginsList.Count) downto 0 do begin
+    plugin := TPlugin(PluginsList[i]);
+    plugin._File._Release;
+    oldFileName := plugin.dataPath + plugin.filename;
+    newFileName := oldFileName + '.save';
+    if FileExists(newFileName) then begin
+      bakFileName := oldFileName + '.bak';
+      if FileExists(bakFileName) then
+        DeleteFile(bakFileName);
+      RenameFile(oldFileName, bakFileName);
+      RenameFile(newFileName, oldFileName);
+    end;
+  end;
+end;
+
 procedure SaveMerges;
 var
   i: Integer;
@@ -3127,7 +3150,7 @@ end;
 { Fixes errors in a plugin }
 procedure TPlugin.ResolveErrors;
 var
-  mr, LoadOrder: Integer;
+  mr: Integer;
   FileStream: TFileStream;
   prompt, newFileName: string;
   tempErrors: TStringList;
@@ -3160,14 +3183,6 @@ begin
     try
       Tracker.Write('Saving: ' + newFileName);
       _File.WriteToStream(FileStream, False);
-      Tracker.Write('Reloading plugin');
-      LoadOrder := PluginsList.IndexOf(self);
-      _File._Release;
-      RenameFile(filename, filename + '.bak');
-      RenameFile(newFileName, filename);
-      _File := wbFile(DataPath + filename, LoadOrder);
-      _File._AddRef;
-      _File.BuildRef;
       Tracker.Write(' ');
     finally
       FileStream.Free;
