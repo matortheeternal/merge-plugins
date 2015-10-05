@@ -32,3 +32,8 @@ Version 2.0.2.0
   - Added self reference plugin flag for Fallout
   - Handles self-referencing GECK scripts (should make merging Fallout plugins with MCMs work)
   - Alerts the user about GECK scripts that need to be recompiled after merging
+  
+Version 2.0.2.1
+  - Fixed issue with language files not being unpacked when updating
+  - Added a fallback for users who won't have lang\english.lang, which directs them to GitHub to download it
+  - No longer throwing an exception when a language file fails to load
