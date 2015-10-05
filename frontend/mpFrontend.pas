@@ -4,6 +4,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, IniFiles, Dialogs, Registry, Graphics, ShlObj,
+  ShellAPI,
   // indy components
   IdTCPClient, IdStack, IdGlobal,
   // superobject json library
@@ -1607,13 +1608,22 @@ end;
 {******************************************************************************}
 
 procedure LoadLanguage;
+const
+  langFile = 'http://raw.githubusercontent.com/matortheeternal/merge-plugins/master/frontend/lang/english.lang';
+  directions = 'Your english.lang file is missing.  Please download it from GitHub.  ' +
+    'After you click OK, a webpage with the file will be opened.  Right-click the ' +
+    'page and choose "Save page as", then save it as english.lang in the "lang\" ' +
+    'folder where you have MergePlugins.exe installed.';
 var
   filename: string;
 begin
   filename := Format('lang\%s.lang', [settings.language]);
   language := TStringList.Create;
-  if not FileExists(filename) then
-    raise Exception.Create('Language file '+filename+' not found!')
+  if not FileExists(filename) then begin
+    MessageDlg(directions, mtConfirmation, [mbOk], 0);
+    ForceDirectories(ProgramPath + 'lang\');
+    ShellExecute(0, 'open', PChar(langFile), '', '', SW_SHOWNORMAL);
+  end
   else
     language.LoadFromFile(filename);
 end;
@@ -2711,7 +2721,9 @@ begin
       // Set base (default) directory for all archive operations
       BaseDirectory := ProgramPath;
       // Extract all files from the archive to current directory
-      ExtractFiles('*.*');
+      ExtractFiles('*.exe');
+      BaseDirectory := ProgramPath + 'lang\';
+      ExtractFiles('lang\*.lang');
       Result := true;
     end;
   except

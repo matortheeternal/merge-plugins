@@ -33,6 +33,7 @@ object ChangeLogForm: TChangeLogForm
     Width = 350
     Height = 276
     HorzScrollBar.Visible = False
+    VertScrollBar.Tracking = True
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0

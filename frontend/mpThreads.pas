@@ -394,12 +394,12 @@ begin
   TCPClient.Disconnect;
 
   // force terminate the loader
-  if not wbLoaderDone then begin
+  {if not wbLoaderDone then begin
     bForceTerminate := true;
     Tracker.Write('Waiting for Background Loader to terminate...');
     while not bLoaderDone do
       Sleep(100);
-  end;
+  end;}
 
   // save ESPs only if it's safe to do so
   if not bDontSave then begin
