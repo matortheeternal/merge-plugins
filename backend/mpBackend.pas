@@ -35,6 +35,7 @@ type
     timesRun: integer;
     mergesBuilt: integer;
     pluginsChecked: integer;
+    pluginsFixed: integer;
     pluginsMerged: integer;
     reportsSubmitted: integer;
   end;
@@ -51,6 +52,7 @@ type
     timesRun: integer;
     mergesBuilt: integer;
     pluginsChecked: integer;
+    pluginsFixed: integer;
     pluginsMerged: integer;
     reportsSubmitted: integer;
     constructor Create(ip: string); Overload;
@@ -1523,8 +1525,9 @@ begin
       Zipper := TAbZipper.Create(nil);
       Zipper.AutoSave := true;
       Zipper.FileName := 'MergePlugins.zip';
-      Zipper.StoreOptions := [soStripDrive, soStripPath, soRemoveDots, soReplace];
+      Zipper.StoreOptions := [soStripDrive, soRemoveDots, soReplace];
       Zipper.AddFiles('MergePlugins.exe', 0);
+      Zipper.AddFiles('lang\*.lang', 0);
       ProgramVersion := NewVersion;
       Logger.Write('INIT', 'Status', 'Client Version: '+ProgramVersion);
       Zipper.Free;

@@ -647,8 +647,10 @@ begin
         if settings.debugScriptFragments then
           Tracker.Write(Format('        Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
         if not CopySource(fn, srcPath, pscPath) then
-          if not CopyScript(fn, srcPath, pexPath) then
+          if not CopyScript(fn, srcPath, pexPath) then begin
             Tracker.Write('        Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+            continue;
+          end;
         nfn := StringReplace(fn, oldFormID, newFileFormID, []);
         ChangeFragmentFileName(rec, 'Info', fn, nfn);
       end;
@@ -711,8 +713,10 @@ begin
       if settings.debugScriptFragments then
         Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
       if not CopySource(fn, srcPath, pscPath) then
-        if not CopyScript(fn, srcPath, pexPath) then
+        if not CopyScript(fn, srcPath, pexPath) then begin
           Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+          continue;
+        end;
       nfn := StringReplace(fn, oldFormID, newFileFormID, []);
       ChangeFragmentFileName(rec, 'Quest', fn, nfn);
     end;
@@ -774,8 +778,10 @@ begin
       if settings.debugScriptFragments then
         Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
       if not CopySource(fn, srcPath, pscPath) then
-        if not CopyScript(fn, srcPath, pexPath) then
+        if not CopyScript(fn, srcPath, pexPath) then begin
           Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+          continue;
+        end;
       nfn := StringReplace(fn, oldFormID, newFileFormID, []);
       ChangeFragmentFileName(rec, 'Scene', fn, nfn);
     end;

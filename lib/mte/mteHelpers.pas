@@ -47,6 +47,10 @@ uses
   function FileVersion(const FileName: string): String;
   procedure DeleteDirectory(const path: string);
 
+const
+  wndBorderSide = 8;
+  wndBorderTop = 30;
+
 implementation
 
 {******************************************************************************}
@@ -179,27 +183,6 @@ begin
 end;
 
 {
-  AppendIfMissing:
-  Appends substr to the end of str if it's not already there.
-
-  Example usage:
-  s := 'This is a sample string.';
-  Logger.Write(AppendIfMissing(s, 'string.')); //'This is a sample string.'
-  Logger.Write(AppendIfMissing(s, '  Hello.')); //'This is a sample string.  Hello.'
-}
-function AppendIfMissing(str, substr: string): string;
-var
-  strEnd: string;
-begin
-  Result := str;
-  if Length(str) > Length(substr) then begin
-    strEnd :=  Copy(str, Length(str) - Length(substr) + 1, Length(substr));
-    if not SameText(strEnd, substr) then
-      Result := str + substr;
-  end;
-end;
-
-{
   StrEndsWith:
   Checks to see if a string ends with an entered substring.
 
@@ -219,6 +202,22 @@ begin
   if n1 < n2 then exit;
 
   Result := (Copy(s1, n1 - n2 + 1, n2) = s2);
+end;
+
+{
+  AppendIfMissing:
+  Appends substr to the end of str if it's not already there.
+
+  Example usage:
+  s := 'This is a sample string.';
+  Logger.Write(AppendIfMissing(s, 'string.')); //'This is a sample string.'
+  Logger.Write(AppendIfMissing(s, '  Hello.')); //'This is a sample string.  Hello.'
+}
+function AppendIfMissing(str, substr: string): string;
+begin
+  Result := str;
+  if not StrEndsWith(str, substr) then
+    Result := str + substr;
 end;
 
 {

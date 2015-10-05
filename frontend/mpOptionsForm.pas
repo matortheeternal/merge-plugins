@@ -256,7 +256,7 @@ var
   i: integer;
   modOrganizerPath, paths: string;
   pathList: TStringList;
-  rec: TSearchRec;
+  info: TSearchRec;
 begin
   // search for installations in GamePath
   if (modOrganizerPath = '') then
@@ -280,14 +280,14 @@ begin
       paths := Copy(paths, Pos(';', paths) + 1, Length(paths));
     end;
     for i := 0 to pathList.Count - 1 do begin
-      if FindFirst(pathList[i] + '\*', faDirectory, rec) = 0 then begin
+      if FindFirst(pathList[i] + '\*', faDirectory, info) = 0 then begin
         repeat
-          modOrganizerPath := FileSearch('ModOrganizer.exe', pathList[i] + '\' + rec.Name);
+          modOrganizerPath := FileSearch('ModOrganizer.exe', pathList[i] + '\' + info.Name);
           if (modOrganizerPath <> '') then
             break;
-        until FindNext(rec) <> 0;
-
-        FindClose(rec);
+        until FindNext(info) <> 0;
+        FindClose(info);
+        // break if we found it
         if (modOrganizerPath <> '') then break;
       end;
     end;
@@ -513,6 +513,7 @@ begin
     if sLang <> 'English' then
       cbLanguage.Items.Add(sLang);
   until FindNext(info) <> 0;
+  FindClose(info);
 end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);

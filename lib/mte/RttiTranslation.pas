@@ -210,7 +210,7 @@ var
 begin
   // load value from stringlist
   name := Format('%s_%s_%s', [section, field.Name, subfield]);
-  Result := sl.Values[name];
+  Result := StringReplace(sl.Values[name], '#13#10', #13#10, [rfReplaceAll]);
 end;
 
 class procedure TRttiTranslation.WriteValue(section: string; value: string; var sl: TStringList;

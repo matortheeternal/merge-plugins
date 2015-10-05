@@ -142,6 +142,7 @@ type
     procedure GetDataPath;
     function GetFormIndex: Integer;
     procedure FindErrors;
+    procedure ResolveErrors;
     function HasBeenCheckedForErrors: boolean;
     function HasErrors: boolean;
     function CanBeMerged: boolean;
@@ -249,6 +250,7 @@ type
     timesRun: integer;
     mergesBuilt: integer;
     pluginsChecked: integer;
+    pluginsFixed: integer;
     pluginsMerged: integer;
     reportsSubmitted: integer;
     constructor Create; virtual;
@@ -287,12 +289,17 @@ type
   function ReferencesSelf(f: IwbFile): boolean;
   procedure ExtractBSA(ContainerName, folder, destination: string); overload;
   procedure ExtractBSA(ContainerName, destination: string; var ignore: TStringList); overload;
-  function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
-  function CheckForErrors(const aIndent: Integer; const aElement: IwbElement; var errors: TStringList): Boolean;
+  function RemoveSelfOrContainer(const aElement: IwbElement): boolean;
+  procedure UndeleteAndDisable(const aRecord: IwbMainRecord);
+  function FixErrors(const aElement: IwbElement; lastRecord: IwbMainRecord;
+    var errors: TStringList): IwbMainRecord;
+  function CheckForErrors(const aElement: IwbElement; lastRecord: IwbMainRecord;
+    var errors: TStringList): IwbMainRecord;
   procedure CreateSEQFile(merge: TMerge);
   { Load order functions }
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
+  procedure RemoveMergedPlugins(var sl: TStringList);
   procedure AddMissingFiles(var sl: TStringList);
   procedure GetPluginDates(var sl: TStringList);
   function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
@@ -322,6 +329,7 @@ type
   procedure LoadDictionary;
   procedure SaveMerges;
   procedure LoadMerges;
+  procedure AssignMergesToPlugins;
   procedure SavePluginInfo;
   procedure LoadPluginInfo;
   procedure SaveReports(var lst: TList; path: string);
@@ -439,7 +447,7 @@ const
 
 var
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
-  LabelFilters, GroupFilters, pluginsToCheck, mergesToBuild: TList;
+  LabelFilters, GroupFilters, pluginsToHandle, mergesToBuild: TList;
   timeCosts, changelog, language: TStringList;
   settings: TSettings;
   CurrentProfile: TProfile;
@@ -729,17 +737,18 @@ end;
 { Returns true if a file exists at @path matching @filename }
 function MatchingFileExists(path: string; filename: string): boolean;
 var
-  rec: TSearchRec;
+  info: TSearchRec;
 begin
   Result := false;
   filename := Lowercase(filename);
-  if FindFirst(path, faAnyFile, rec) = 0 then begin
+  if FindFirst(path, faAnyFile, info) = 0 then begin
     repeat
-      if Pos(filename, Lowercase(rec.Name)) > 0 then begin
+      if Pos(filename, Lowercase(info.Name)) > 0 then begin
         Result := true;
         exit;
       end;
-    until FindNext(rec) <> 0;
+    until FindNext(info) <> 0;
+    FindClose(info);
   end;
 end;
 
@@ -989,70 +998,167 @@ begin
   end;
 end;
 
-{ Recursively traverse a container looking for errors }
-function CheckForErrorsLinear(const aElement: IwbElement;
-  LastRecord: IwbMainRecord; var errors: TStringList): IwbMainRecord;
+function RemoveSelfOrContainer(const aElement: IwbElement): Boolean;
+var
+  cElement: IwbElement;
+begin
+  Result := false;
+  if aElement.IsRemoveable then begin
+    aElement.Remove;
+    Result := true;
+  end
+  else begin
+    if not Assigned(aElement.Container) then begin
+      Tracker.Write('    Element has no container!');
+      exit;
+    end;
+    // if element isn't removable, try removing its container
+    if Supports(aElement.Container, IwbMainRecord) then begin
+      Tracker.Write('    Reached main record, cannot remove element');
+      exit;
+    end;
+    Tracker.Write('    Failed to remove '+aElement.Path+', removing container');
+    if Supports(aElement.Container, IwbElement, cElement) then
+      Result := RemoveSelfOrContainer(cElement);
+  end;
+end;
+
+procedure UndeleteAndDisable(const aRecord: IwbMainRecord);
+var
+  xesp: IwbElement;
+  sig: string;
+  container: IwbContainerElementRef;
+begin
+  sig := aRecord.Signature;
+
+  // undeletee
+  aRecord.IsDeleted := true;
+  aRecord.IsDeleted := false;
+
+  // set persistence flag depending on game
+  if (wbGameMode in [gmFO3,gmFNV,gmTES5])
+  and ((sig = 'ACHR') or (sig = 'ACRE')) then
+    aRecord.IsPersistent := true
+  else if wbGameMode = gmTES4 then
+    aRecord.IsPersistent := false;
+
+    // place it below the ground
+  if not aRecord.IsPersistent then
+    aRecord.ElementNativeValues['DATA\Position\Z'] := -30000;
+
+  // remove elements
+  aRecord.RemoveElement('Enable Parent');
+  aRecord.RemoveElement('XTEL');
+
+  // add enabled opposite of player (true - silent)
+  xesp := aRecord.Add('XESP', True);
+  if Assigned(xesp) and Supports(xesp, IwbContainerElementRef, container) then begin
+    container.ElementNativeValues['Reference'] := $14; // Player ref
+    container.ElementNativeValues['Flags'] := 1;  // opposite of parent flag
+  end;
+
+  // set to disable
+  aRecord.IsInitiallyDisabled := true;
+end;
+
+
+function FixErrors(const aElement: IwbElement; lastRecord: IwbMainRecord;
+  var errors: TStringList): IwbMainRecord;
+const
+  cUDR = 'Record marked as deleted but contains:';
+  cUnresolved = '< Error: Could not be resolved >';
+  cNULL = 'Found a NULL reference, expected:';
 var
   Error: string;
   Container: IwbContainerElementRef;
   i: Integer;
 begin
-  if Tracker.Cancel then exit;
+  if Tracker.Cancel then
+    exit;
+
+  // update progress based on number of main records processed
   if Supports(aElement, IwbMainRecord) then
     Tracker.UpdateProgress(1);
 
   Error := aElement.Check;
   if Error <> '' then begin
     Result := aElement.ContainingMainRecord;
-    // first error in this record - show record's name
-    if Assigned(Result) and (Result <> LastRecord) then begin
-      Tracker.Write(Result.Name);
-      errors.Add(Result.Name);
+    // fix record marked as deleted errors (UDRs)
+    if Pos(cUDR, Error) = 1 then begin
+      if Assigned(Result) then begin
+        Tracker.Write('  Fixing UDR: '+Result.Name);
+        UndeleteAndDisable(Result);
+      end;
+    end
+    else begin
+      // fix unresolved FormID errors by NULLing them out
+      if Pos(cUnresolved, Error) > 0 then begin
+        Tracker.Write('  Fixing Unresolved FormID: '+aElement.Path);
+        aElement.NativeValue := 0;
+        // we may end up with an invalid NULL reference, so we Check again
+        Error := aElement.Check;
+        if Error = '' then exit;
+      end;
+
+      // fix invalid NULL references by removal
+      if Pos(cNULL, Error) = 1 then begin
+        Tracker.Write('  Removing NULL reference: '+aElement.Path);
+        if RemoveSelfOrContainer(aElement) then exit;
+      end;
+
+      // unhandled error
+      Tracker.Write(Format('  Unhandled error: %s -> %s', [aElement.Path, error]));
+      if Assigned(Result) and (lastRecord <> Result) then begin
+        lastRecord := Result;
+        errors.Add(Result.Name);
+      end;
+      errors.Add('  '+aElement.Path + ' -> ' + Error);
     end;
-    Tracker.Write('    ' + aElement.Path + ' -> ' + Error);
-    errors.Add('    ' + aElement.Path + ' -> ' + Error);
-  end else
-    // passing through last record with error
-    Result := LastRecord;
-  if Supports(aElement, IwbContainerElementRef, Container) then
-    for i := 0 to Pred(Container.ElementCount) do
-      Result := CheckForErrorsLinear(Container.Elements[i], Result, errors);
+  end;
+
+  // done if element doesn't have children
+  if not Supports(aElement, IwbContainerElementRef, Container) then
+    exit;
+
+  // recurse through children elements
+  for i := Pred(Container.ElementCount) downto 0 do begin
+    Result := FixErrors(Container.Elements[i], Result, errors);
+    // break if container got deleted
+    if not Assigned(Container) then break;
+  end;
 end;
 
-function CheckForErrors(const aIndent: Integer; const aElement: IwbElement;
-  var errors: TStringList): Boolean;
+function CheckForErrors(const aElement: IwbElement; lastRecord: IwbMainRecord;
+  var errors: TStringList): IwbMainRecord;
 var
   Error, msg: string;
   Container: IwbContainerElementRef;
   i: Integer;
 begin
-  if Tracker.Cancel then begin
-    Result := false;
+  if Tracker.Cancel then
     exit;
-  end;
 
+  // update progress based on number of main records processed
   if Supports(aElement, IwbMainRecord) then
     Tracker.UpdateProgress(1);
 
   Error := aElement.Check;
-  Result := Error <> '';
-  if Result then begin
-    Error := aElement.Check;
-    msg := StringOfChar(' ', aIndent * 2) + aElement.Name + ' -> ' + Error;
-    Tracker.Write(msg);
+  // log errors
+  if Error <> '' then begin
+    Result := aElement.ContainingMainRecord;
+    if Assigned(Result) and (Result <> LastRecord) then begin
+      Tracker.Write('  '+Result.Name);
+      errors.Add(Result.Name);
+    end;
+    msg := '  '+aElement.Path + ' -> ' + Error;
+    Tracker.Write('  '+msg);
     errors.Add(msg);
   end;
 
   // recursion
   if Supports(aElement, IwbContainerElementRef, Container) then
     for i := Pred(Container.ElementCount) downto 0 do
-      Result := CheckForErrors(aIndent + 1, Container.Elements[i], errors) or Result;
-
-  if Result and (Error = '') then begin
-    msg := StringOfChar(' ', aIndent * 2) + 'Above errors were found in: ' + aElement.Name;
-    Tracker.Write(msg);
-    errors.Add(msg);
-  end;
+      Result := CheckForErrors(Container.Elements[i], Result, errors);
 end;
 
 { Creates a SEQ (sequence) file for the input plugin.  Important for quests that
@@ -1149,6 +1255,16 @@ var
 begin
   for i := Pred(sl.Count) downto 0 do
     if not FileExists(wbDataPath + sl.Strings[i]) then
+      sl.Delete(i);
+end;
+
+{ Remove merged plugins from stringlist }
+procedure RemoveMergedPlugins(var sl: TStringList);
+var
+  i: integer;
+begin
+  for i := Pred(sl.Count) downto 0 do
+    if Assigned(MergeByFilename(MergesList, sl[i])) then
       sl.Delete(i);
 end;
 
@@ -1620,6 +1736,7 @@ begin
   Inc(statistics.timesRun, sessionStatistics.timesRun);
   Inc(statistics.mergesBuilt, sessionStatistics.mergesBuilt);
   Inc(statistics.pluginsChecked, sessionStatistics.pluginsChecked);
+  Inc(statistics.pluginsFixed, sessionStatistics.pluginsFixed);
   Inc(statistics.pluginsMerged, sessionStatistics.pluginsMerged);
   Inc(statistics.reportsSubmitted, sessionStatistics.reportsSubmitted);
   // zero out session statistics
@@ -1720,10 +1837,8 @@ const
   debug = false;
 var
   merge: TMerge;
-  plugin: TPlugin;
   obj, mergeItem: ISuperObject;
   sl: TStringList;
-  i: Integer;
   filename: string;
 begin
   // don't load file if it doesn't exist
@@ -1740,16 +1855,27 @@ begin
     merge := TMerge.Create;
     merge.LoadDump(mergeItem);
     MergesList.Add(merge);
-    for i := 0 to Pred(merge.plugins.Count) do begin
-      plugin := PluginByFilename(merge.plugins[i]);
-      if Assigned(plugin) then
-        plugin.merge := merge.name;
-    end;
   end;
 
   // finalize
   obj := nil;
   sl.Free;
+end;
+
+procedure AssignMergesToPlugins;
+var
+  i, j: Integer;
+  merge: TMerge;
+  plugin: TPlugin;
+begin
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := TMerge(MergesList[i]);
+    for j := 0 to Pred(merge.plugins.Count) do begin
+      plugin := PluginByFilename(merge.plugins[j]);
+      if Assigned(plugin) then
+        plugin.merge := merge.name;
+    end;
+  end;
 end;
 
 function IndexOfDump(a: TSuperArray; plugin: TPlugin): Integer;
@@ -2136,7 +2262,7 @@ begin
   TCPClient := TidTCPClient.Create(nil);
   TCPClient.Host := settings.serverHost;
   TCPClient.Port := settings.serverPort;
-  TCPClient.ReadTimeout := 3000;
+  TCPClient.ReadTimeout := 4000;
   TCPClient.ConnectTimeout := 1000;
   ConnectionAttempts := 0;
 end;
@@ -2692,6 +2818,7 @@ begin
         Logger.Write('ERROR', 'General', Format('Unable to load report at %s%s: %s', [path, info.Name, x.Message]));
     end;
   until FindNext(info) <> 0;
+  FindClose(info);
 
   // send reports if any were found
   if lst.Count > 0 then
@@ -2824,6 +2951,7 @@ begin
   masters.Free;
   errors.Free;
   reports.Free;
+  _File._Release;
   inherited;
 end;
 
@@ -2913,12 +3041,12 @@ begin
 
   // get description
   s := Container.GetElementEditValue('SNAM - Description');
-  description.Text := Wordwrap(s, 70);
+  description.Text := Wordwrap(s, 80);
 
   // get reports
   entry := GetEntry(filename, numRecords, ProgramVersion);
   s := Trim(StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]));
-  reports.Text := Wordwrap(s, 70);
+  reports.Text := Wordwrap(s, 80);
 
   // get file attributes
   fileSize := GetFileSize(wbDataPath + filename);
@@ -2936,7 +3064,7 @@ begin
   // get reports
   entry := GetEntry(filename, numRecords, ProgramVersion);
   s := Trim(StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]));
-  reports.Text := Wordwrap(s, 70);
+  reports.Text := Wordwrap(s, 80);
 
   // update blacklisted flag if it was blacklisted
   if IsBlacklisted(filename) then
@@ -2975,20 +3103,76 @@ end;
 
 { Checks for errors in a plugin }
 procedure TPlugin.FindErrors;
+var
+  tempErrors: TStringList;
 begin
-  // clear errors, then check
-  errors.Clear;
-  //CheckForErrors(2, _File as IwbElement, errors);
-  CheckForErrorsLinear(_File as IwbElement, _File.Records[_File.RecordCount - 1], errors);
+  tempErrors := TStringList.Create;
+  CheckForErrors(_File as IwbElement, nil, tempErrors);
 
+  // exit if user cancelled
   if Tracker.Cancel then
     exit;
+
+  // transfer errors
+  errors.Text := tempErrors.Text;
+  tempErrors.Free;
   if (errors.Count = 0) then
     errors.Add('None.');
 
   // update flags, statistics
   GetFlags;
   Inc(sessionStatistics.pluginsChecked);
+end;
+
+{ Fixes errors in a plugin }
+procedure TPlugin.ResolveErrors;
+var
+  mr, LoadOrder: Integer;
+  FileStream: TFileStream;
+  prompt, newFileName: string;
+  tempErrors: TStringList;
+begin
+  tempErrors := TStringList.Create;
+  FixErrors(_File as IwbElement, nil, tempErrors);
+
+  // exit if user cancelled
+  if Tracker.Cancel then
+    exit;
+
+  // transfer errors to plugin
+  errors.Text := tempErrors.Text;
+  tempErrors.Free;
+  if (errors.Count = 0) then
+    errors.Add('None.');
+
+  // update hash, flags
+  GetHash;
+  GetFlags;
+  Inc(sessionStatistics.pluginsFixed);
+
+  // save plugin if user is OK with that
+  prompt := Format(GetString('mpProg_SavePlugin'), [filename]);
+  mr := MessageDlg(prompt, mtConfirmation, [mbYes,mbNo], 0, mbYes);
+  if mr = 6 then begin
+    Tracker.Write(' ');
+    newFileName := DataPath + filename + '.save';
+    FileStream := TFileStream.Create(newFileName, fmCreate);
+    try
+      Tracker.Write('Saving: ' + newFileName);
+      _File.WriteToStream(FileStream, False);
+      Tracker.Write('Reloading plugin');
+      LoadOrder := PluginsList.IndexOf(self);
+      _File._Release;
+      RenameFile(filename, filename + '.bak');
+      RenameFile(newFileName, filename);
+      _File := wbFile(DataPath + filename, LoadOrder);
+      _File._AddRef;
+      _File.BuildRef;
+      Tracker.Write(' ');
+    finally
+      FileStream.Free;
+    end;
+  end;
 end;
 
 function TPlugin.HasBeenCheckedForErrors: boolean;
@@ -3078,6 +3262,7 @@ begin
   geckScripts.Free;
   navConflicts.Free;
   fails.Free;
+  plugin.Free;
   inherited;
 end;
 
@@ -3174,7 +3359,7 @@ begin
   Result := false;
   // true if number of hashes not equal to number of plugins
   if plugins.Count <> hashes.Count then begin
-    Logger.Write('MERGE', 'Status', 'Plugin count changed on ' + name);
+    Logger.Write('MERGE', 'Status', name + ' -> Plugin count changed');
     Result := true;
     exit;
   end;
@@ -3183,8 +3368,7 @@ begin
     plugin := PluginByFilename(plugins[i]);
     if Assigned(plugin) then begin
       if plugin.hash <> hashes[i] then begin
-        Logger.Write('MERGE', 'Status', plugin.filename + ' has hash ' + plugin.hash + ', '+
-          name + ' has '+hashes[i]);
+        Logger.Write('MERGE', 'Status', name + ' -> '+plugin.filename + ' hash changed.');
         Result := true;
       end;
     end;
@@ -3202,33 +3386,33 @@ var
   i: Integer;
   plugin: TPlugin;
 begin
-  Logger.Write('MERGE', 'Status', 'Getting status for '+name);
+  Logger.Write('MERGE', 'Status', name + ' -> Getting status');
   status := msUnknown;
 
   // don't merge if no plugins to merge
   if (plugins.Count < 1) then begin
-    Logger.Write('MERGE', 'Status', 'No plugins to merge');
+    Logger.Write('MERGE', 'Status', name + ' -> No plugins to merge');
     status := msNoPlugins;
     exit;
   end;
 
   // don't merge if mod destination directory is blank
   if (settings.mergeDirectory = '') then begin
-    Logger.Write('MERGE', 'Status', 'Merge directory blank');
+    Logger.Write('MERGE', 'Status', name + ' -> Merge directory blank');
     status := msDirInvalid;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.MOPath = '') then begin
-    Logger.Write('MERGE', 'Status', 'Mod Organizer Directory blank');
+    Logger.Write('MERGE', 'Status', name + ' -> Mod Organizer Directory blank');
     status := msDirInvalid;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
   if settings.usingMO and not DirectoryExists(settings.MOPath) then begin
-     Logger.Write('MERGE', 'Status', 'Mod Organizer Directory invalid');
+     Logger.Write('MERGE', 'Status', name + ' -> Mod Organizer Directory invalid');
      status := msDirInvalid;
      exit;
   end;
@@ -3239,38 +3423,30 @@ begin
 
     // see if plugin is loaded
     if not Assigned(plugin) then begin
-      Logger.Write('MERGE', 'Status', 'Plugin '+plugins[i]+' is missing');
-      status := msUnloaded;
-      exit;
+      Logger.Write('MERGE', 'Status', name + ' -> Plugin '+plugins[i]+' is missing');
+      if status = msUnknown then status := msUnloaded;
+      continue;
     end;
 
     if (not plugin.HasBeenCheckedForErrors) then begin
-      Logger.Write('MERGE', 'Status', plugin.filename+' needs to be checked for errors.');
-      status := msCheckErrors;
+      Logger.Write('MERGE', 'Status', name + ' -> '+plugin.filename+' needs to be checked for errors.');
+      if status = msUnknown then status := msCheckErrors;
     end
-    else if (not plugin.HasErrors) then begin
-      Logger.Write('MERGE', 'Status', 'No errors in '+plugin.filename);
-    end
-    else if plugin.bIgnoreErrors then begin
-      Logger.Write('MERGE', 'Status', 'Errors ignored in '+plugin.filename);
-    end
-    else begin
-      Logger.Write('MERGE', 'Status', plugin.filename+' has errors');
-      status := msErrors;
-      exit;
-    end
+    else if plugin.HasErrors and not plugin.bIgnoreErrors then begin
+      Logger.Write('MERGE', 'Status', name + ' -> '+plugin.filename+' has errors');
+      if status = msUnknown then status := msErrors;
+    end;
   end;
 
   dataPath := settings.mergeDirectory + name + '\';
-  if (not PluginsModified) and FilesExist then begin
-    Logger.Write('MERGE', 'Status', 'Up to date.');
+  if (not PluginsModified) and FilesExist and (status = msUnknown) then begin
+    Logger.Write('MERGE', 'Status', name + ' -> Up to date');
     status := msUpToDate;
-    exit;
   end;
 
   // status green, ready to go
   if status = msUnknown then begin
-    Logger.Write('MERGE', 'Status', 'Ready to be merged.');
+    Logger.Write('MERGE', 'Status', name + ' -> Ready to be merged');
     if dateBuilt = 0 then
       status := msBuildReady
     else

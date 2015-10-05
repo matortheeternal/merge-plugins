@@ -19,11 +19,19 @@ type
   protected
     procedure Execute; override;
   end;
+  TConnectThread = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
   TLoaderThread = class(TThread)
   protected
     procedure Execute; override;
   end;
   TErrorCheckThread = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
+  TErrorFixThread = class(TThread)
   protected
     procedure Execute; override;
   end;
@@ -37,8 +45,8 @@ type
   end;
 
 var
-  InitCallback, LoaderCallback, ErrorCheckCallback, MergeCallback,
-  SaveCallback, UpdateCallback: TCallback;
+  InitCallback, LoaderCallback, ErrorCheckCallback, ErrorFixCallback,
+  MergeCallback, SaveCallback, UpdateCallback, ConnectCallback: TCallback;
 
 implementation
 
@@ -58,7 +66,15 @@ implementation
 }
 {******************************************************************************}
 
-{ TInitThread}
+{ TConnectThread }
+procedure TConnectThread.Execute;
+begin
+  ConnectToServer;
+  if Assigned(ConnectCallback) then
+    Synchronize(nil, ConnectCallback);
+end;
+
+{ TInitThread }
 procedure TInitThread.Execute;
 var
   wbPluginsFileName: string;
@@ -124,7 +140,6 @@ begin
         Logger.Write('CLIENT', 'Update', 'Failed to get automatic update '+x.Message);
     end;
 
-
     // INITIALIZE DICTIONARY
     dictionaryFilename := wbAppName+'Dictionary.txt';
     Logger.Write('GENERAL', 'Dictionary', 'Using '+dictionaryFilename);
@@ -133,6 +148,10 @@ begin
     // INITIALIZE TES5EDIT DEFINITIONS
     Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
     LoadDefinitions;
+
+    // LOAD MERGES
+    Tracker.Write('Loading merges');
+    LoadMerges;
 
     // PREPARE TO LOAD PLUGINS
     if settings.usingMO then
@@ -144,6 +163,7 @@ begin
     sl.LoadFromFile(wbPluginsFileName);
     RemoveCommentsAndEmpty(sl);
     RemoveMissingFiles(sl);
+    RemoveMergedPlugins(sl);
     // if GameMode is not Skyrim sort by date modified
     // else add Update.esm and Skyrim.esm to load order
     if wbGameMode <> gmTES5 then begin
@@ -191,9 +211,9 @@ begin
       end;
     end;
 
-    // LOAD MERGES, PLUGIN ERRORS
-    Tracker.Write('Loading Merges, Plugin Errors');
-    LoadMerges;
+    // LOAD PLUGIN INFORMATION
+    Tracker.Write('Loading plugin information');
+    AssignMergesToPlugins;
     LoadPluginInfo;
 
     // CLEAN UP
@@ -208,7 +228,7 @@ begin
   end;
 
   if Assigned(InitCallback) then
-    InitCallback;
+    Synchronize(nil, InitCallback);
 end;
 
 { TLoaderThread }
@@ -249,7 +269,7 @@ begin
   bLoaderDone := true;
   LoaderProgress('finished');
   if Assigned(LoaderCallback) then
-    LoaderCallback;
+    Synchronize(nil, LoaderCallback);
 end;
 
 { TErrorCheckThread }
@@ -259,9 +279,9 @@ var
   plugin: TPlugin;
 begin
   // check merges for errors
-  for i := 0 to Pred(pluginsToCheck.Count) do begin
+  for i := 0 to Pred(pluginsToHandle.Count) do begin
     if Tracker.Cancel then break;
-    plugin := TPlugin(pluginsToCheck[i]);
+    plugin := TPlugin(pluginsToHandle[i]);
     // check plugins for errors
     Tracker.Write('Checking for errors in '+plugin.filename);
     plugin.FindErrors;
@@ -275,6 +295,31 @@ begin
   Tracker.Cancel := false;
   if Assigned(ErrorCheckCallback) then
     Synchronize(nil, ErrorCheckCallback);
+end;
+
+{ TErrorFixThread }
+procedure TErrorFixThread.Execute;
+var
+  i: integer;
+  plugin: TPlugin;
+begin
+  // check merges for errors
+  for i := 0 to Pred(pluginsToHandle.Count) do begin
+    if Tracker.Cancel then break;
+    plugin := TPlugin(pluginsToHandle[i]);
+    // check plugins for errors
+    Tracker.Write('Fixing errors in '+plugin.filename);
+    plugin.ResolveErrors;
+    Tracker.SetProgress(IntegerListSum(timeCosts, i));
+    if Tracker.Cancel then Tracker.Write('Fix errors canceled.');
+  end;
+  // inform user thread is done if it wasn't cancelled
+  if not Tracker.Cancel then
+    Tracker.Write('All done!');
+
+  Tracker.Cancel := false;
+  if Assigned(ErrorFixCallback) then
+    Synchronize(nil, ErrorFixCallback);
 end;
 
 { TMergeThread }

@@ -53,8 +53,8 @@ implementation
 procedure TEditForm.btnOkClick(Sender: TObject);
 begin
   if Assigned(merge) then begin
-    merge.name := edName.Text;
-    merge.filename := edFilename.Text;
+    merge.name := Trim(edName.Text);
+    merge.filename := Trim(edFilename.Text);
     merge.method := cbMethod.Text;
     merge.renumbering := cbRenumbering.Text;
   end;
