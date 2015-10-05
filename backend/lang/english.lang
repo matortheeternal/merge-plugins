@@ -1,17 +1,25 @@
-{ TMergeForm }
+﻿{ TMergeForm }
 { ## QuickBar ## }
-mpMain_NewButton_Hint=Create new merge
-mpMain_BuildButton_Hint=Build all merges
-mpMain_ReportButton_Hint=Submit reports
-mpMain_DictionaryButton_Hint=View dictionary
-mpMain_OptionsButton_Hint=Merge options
-mpMain_UpdateButton_Hint=Update
-mpMain_HelpButton_Hint=Help
+mpMain_NewButton_Hint=Create new merge|Make a new merge.
+mpMain_FindErrorsButton_Hint=Find errors|
+mpMain_BuildButton_Hint=Build merges|
+mpMain_ReportButton_Hint=Submit reports|Submit reports on all plugins in merges you've #13#10built successfully.#13#10
+mpMain_DictionaryButton_Hint=View dictionary|Open the dictionary viewer to see all reports #13#10submitted by other users.#13#10
+mpMain_OptionsButton_Hint=Options|Change the options that control how the #13#10program runs.#13#10
+mpMain_UpdateButton_Hint=Update|
+mpMain_HelpButton_Hint=Help|Sorry, this isn't working yet.
 { #### DYNAMIC #### }
-mpMain_LoaderNotDone=Background loader not done
-mpMain_NoMerges=No merges to build
-mpMain_CheckMerges=Check merges for errors
-mpMain_BuildAll=Build all merges
+mpMain_NoPluginsToCheck=There aren't any plugins to check for errors.
+mpMain_FindErrors_Loader=You can't check plugins for errors until the #13#10background loader is done.#13#10
+mpMain_CheckAllPlugins=Checks all plugins that are loaded and not #13#10blacklisted for errors.#13#10
+mpMain_NoMerges=There aren't any merges to build or rebuild.
+mpMain_BuildMerges_Loader=You can't build merges until the background #13#10loader is done.#13#10
+mpMain_CheckMerges=You need to check the plugins you plan on merging #13#10for errors before you can build the merges.#13#10
+mpMain_BuildAllMerges=Builds all merges that are ready to be built or #13#10rebuilt.#13#10
+mpMain_UpdateBoth=Program and dictionary update available.
+mpMain_UpdateProgram=Program update available.
+mpMain_UpdateDictionary=Dictionary update available.
+mpMain_NoUpdates=No updates available.
 { ## Main Panel ## }
 { ## Details Panel ## }
 mpMain_DetailsLabel_Caption=Details
@@ -35,10 +43,10 @@ mpMain_Masters=Masters
 mpMain_Errors=Errors
 mpMain_Reports=Reports
 { ## Plugins Popup Menu ## }
-mpMain_AddToMerge_Caption=Add to merge
+mpMain_AddToMergeItem_Caption=Add to merge
 mpMain_NewMergeItem_Caption=<New Merge>
-mpMain_RemoveFromMerge_Caption=Remove from merge
-mpMain_ReportOnPlugin_Caption=Report on plugin
+mpMain_RemoveFromMergeItem_Caption=Remove from merge
+mpMain_ReportOnPluginItem_Caption=Report on plugin
 mpMain_CheckforErrorsItem_Caption=Check for errors
 mpMain_FixErrorsItem_Caption=Fix errors
 mpMain_IgnoreErrorsItem_Caption=Ignore errors
@@ -65,15 +73,15 @@ mpMain_TooManyFails=Too many fails to display.
 mpMain_DeleteMerges=Are you sure you want to delete these merges?
 { ## Merges Popup Menu ## }
 mpMain_CreateNewMergeItem_Caption=Create new merge
+mpMain_EditMergeItem_Caption=Edit merge
 mpMain_DeleteMergeItem_Caption=Delete merge
 mpMain_BuildMergeItem_Caption=Build merge
-mpMain_ForceRebuildItem_Caption=Force rebuild status
-mpMain_ReportOnMergeItem_Caption=Report on merge
-mpMain_CleanMergeItem_Caption=Clean merge
+mpMain_ToggleRebuildItem=Toggle rebuild status
 mpMain_OpenInExplorerItem_Caption=Open in explorer
-mpMain_IgnoreRebuildItem_Caption=Ignore rebuild status
-mpMain_EditMergeItem_Caption=Edit merge
-mpMain_CheckPluginsForErrorsItem_Caption=Check plugins for errors
+mpMain_RemovePluginsItem_Caption=Remove plugins
+mpMain_CheckPluginsItem_Caption=Check plugins for errors
+mpMain_ReportOnPluginsItem_Caption=Report on plugins
+mpMain_FixPluginsItem_Caption=Fix errors in plugins
 { #### DYNAMIC #### }
 mpMain_BuildMerge=Build merge
 mpMain_RebuildMerge=Rebuild merge
@@ -112,7 +120,7 @@ mpMain_Disable=Disable
 mpMain_AutoScroll=auto scroll
 { ## Status Bar ## }
 { #### DYNAMIC #### }
-mpMain_LoaderLimitations=You won't be able to check for errors #13#10or build merges until the loader is done
+mpMain_LoaderLimitations=You won't be able to check for errors #13#10or build merges until the loader is done.#13#10
 mpMain_LoaderInProgress=Background loader in progress
 mpMain_LoaderFinished=Background loader finished
  
@@ -170,6 +178,7 @@ mpOpt_kbUpdateProgram_Caption=Update program automatically
 mpOpt_lblProgramStatus_Caption=Up to date
 mpOpt_btnUpdateProgram_Caption=Update program
 { #### DYNAMIC #### }
+mpOpt_Check=Check
 mpOpt_PendingUpdate=You already have a pending program update!
 mpOpt_ServerUnavailable=Server unavailable
 mpOpt_Register=Register

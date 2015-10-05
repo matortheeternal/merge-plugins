@@ -135,7 +135,7 @@ type
     procedure OnHeartbeatTimer(Sender: TObject);
     procedure OnRepaintTimer(Sender: TObject);
     procedure ShowAuthorizationMessage;
-    procedure UpdateStatusPanel;
+    procedure UpdateStatusBar;
     procedure UpdateListViews;
     // DETAILS EDITOR EVENTS
     function AddDetailsItem(name, value: string; editable: boolean = false):
@@ -406,7 +406,7 @@ begin
   UpdateLog;
   UpdateMerges;
   UpdatePluginsPopupMenu;
-  UpdateStatusPanel;
+  UpdateStatusBar;
   UpdateQuickBar;
 
   // ATTEMPT TO CONNECT TO SERVER
@@ -545,7 +545,7 @@ end;
 
 procedure TMergeForm.OnRepaintTimer(Sender: TObject);
 begin
-  if not bClosing then UpdateStatusPanel;
+  if not bClosing then UpdateStatusBar;
 end;
 
 procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
@@ -574,7 +574,7 @@ begin
   end;
 end;
 
-procedure TMergeForm.UpdateStatusPanel;
+procedure TMergeForm.UpdateStatusBar;
 begin
   ImageBlocked.Visible := not bLoaderDone;
   ImageConnected.Visible := TCPClient.Connected;
@@ -2375,9 +2375,11 @@ begin
     TRttiTranslation.Load(language, self);
   end;
 
-  // update
+  // update gui
   UpdateMerges;
   UpdateListViews;
+  UpdateQuickBar;
+  UpdateStatusBar;
 
   // if user selected to change game mode, close application
   if bChangeMergeProfile then
