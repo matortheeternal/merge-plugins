@@ -18,3 +18,17 @@ Version 2.0.1.33
   - Reports now properly limited to 255 characters.
   - Fixes access violation on startup if no changelog present
   - Reports now have a label indicating character limitations.
+
+Version 2.0.2.0
+  - Added ability to fix (most) errors in plugins
+  - Added translation support
+  - Added find errors quickbar button
+  - Added hints to quickbar buttons
+  - Merge names and filenames will now be trimmed when saved to merges
+  - Fixed issue with script fragments in BSAs not being copied
+  - Plugins popup menu and merges popup menu adjusted (items moved to new submenus)
+  - Added reset errors option to clear the errors found in a plugin
+  - Now alerts the user if a merge had conflicting Navmeshes
+  - Added self reference plugin flag for Fallout
+  - Handles self-referencing GECK scripts (should make merging Fallout plugins with MCMs work)
+  - Alerts the user about GECK scripts that need to be recompiled after merging

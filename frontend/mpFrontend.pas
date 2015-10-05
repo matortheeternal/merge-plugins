@@ -1030,36 +1030,41 @@ var
   sig: string;
   container: IwbContainerElementRef;
 begin
-  sig := aRecord.Signature;
+  try
+    sig := aRecord.Signature;
 
-  // undeletee
-  aRecord.IsDeleted := true;
-  aRecord.IsDeleted := false;
+    // undelete
+    aRecord.IsDeleted := true;
+    aRecord.IsDeleted := false;
 
-  // set persistence flag depending on game
-  if (wbGameMode in [gmFO3,gmFNV,gmTES5])
-  and ((sig = 'ACHR') or (sig = 'ACRE')) then
-    aRecord.IsPersistent := true
-  else if wbGameMode = gmTES4 then
-    aRecord.IsPersistent := false;
+    // set persistence flag depending on game
+    if (wbGameMode in [gmFO3,gmFNV,gmTES5])
+    and ((sig = 'ACHR') or (sig = 'ACRE')) then
+      aRecord.IsPersistent := true
+    else if wbGameMode = gmTES4 then
+      aRecord.IsPersistent := false;
 
-    // place it below the ground
-  if not aRecord.IsPersistent then
-    aRecord.ElementNativeValues['DATA\Position\Z'] := -30000;
+      // place it below the ground
+    if not aRecord.IsPersistent then
+      aRecord.ElementNativeValues['DATA\Position\Z'] := -30000;
 
-  // remove elements
-  aRecord.RemoveElement('Enable Parent');
-  aRecord.RemoveElement('XTEL');
+    // remove elements
+    aRecord.RemoveElement('Enable Parent');
+    aRecord.RemoveElement('XTEL');
 
-  // add enabled opposite of player (true - silent)
-  xesp := aRecord.Add('XESP', True);
-  if Assigned(xesp) and Supports(xesp, IwbContainerElementRef, container) then begin
-    container.ElementNativeValues['Reference'] := $14; // Player ref
-    container.ElementNativeValues['Flags'] := 1;  // opposite of parent flag
+    // add enabled opposite of player (true - silent)
+    xesp := aRecord.Add('XESP', True);
+    if Assigned(xesp) and Supports(xesp, IwbContainerElementRef, container) then begin
+      container.ElementNativeValues['Reference'] := $14; // Player ref
+      container.ElementNativeValues['Flags'] := 1;  // opposite of parent flag
+    end;
+
+    // set to disable
+    aRecord.IsInitiallyDisabled := true;
+  except
+    on x: Exception do
+      Tracker.Write('    Exception: '+x.Message);
   end;
-
-  // set to disable
-  aRecord.IsInitiallyDisabled := true;
 end;
 
 
