@@ -202,6 +202,7 @@ type
     [IniSection('Advanced')]
     serverHost: string;
     serverPort: integer;
+    dontSendStatistics: boolean;
     generalMessageColor: Int64;
     clientMessageColor: Int64;
     loadMessageColor: Int64;

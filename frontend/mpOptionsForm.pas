@@ -51,6 +51,8 @@ type
         kbTranslations: TCheckBox;
         kbINIs: TCheckBox;
         kbFragments: TCheckBox;
+        kbSelfRef: TCheckBox;
+        kbSEQ: TCheckBox;
         kbExtractBSAs: TCheckBox;
         kbBuildBSA: TCheckBox;
         kbBatCopy: TCheckBox;
@@ -68,9 +70,10 @@ type
         gbMergeProfile: TGroupBox;
         lblCurrentProfile: TLabel;
         btnChangeMergeProfile: TButton;
-        gbPrivacy: TGroupBox;
+        gbBackend: TGroupBox;
+        lblHost: TLabel;
+        lblPort: TLabel;
         kbNoStatistics: TCheckBox;
-        kbNoPersistentConnection: TCheckBox;
         gbLogging: TGroupBox;
         lblClientColor: TLabel;
         cbClientColor: TColorBox;
@@ -90,6 +93,8 @@ type
         [FormSection('DontTranslate')]
           lblCurrentProfileName: TLabel;
           lblSampleValue: TLabel;
+          edHost: TEdit;
+          edPort: TEdit;
       [FormSection('Integrations Tab')]
         IntegrationsTabSheet: TTabSheet;
         btnDetect: TButton;
@@ -119,8 +124,6 @@ type
           btnBrowseCompiler: TSpeedButton;
           btnBrowseFlags: TSpeedButton;
           btnBrowseBSAOpt: TSpeedButton;
-    kbSelfRef: TCheckBox;
-    kbSEQ: TCheckBox;
 
     procedure FormCreate(Sender: TObject);
     procedure LoadLanguageOptions;
@@ -347,6 +350,10 @@ begin
   settings.debugBSAs := kbDebugBSAs.Checked;
   settings.debugScriptFragments := kbDebugScriptFragments.Checked;
 
+  // Advanced > Backend
+  settings.serverHost := edHost.Text;
+  settings.serverPort := StrToInt(edPort.Text);
+  settings.dontSendStatistics := kbNoStatistics.Checked;
   // Advanced > Logging
   settings.clientMessageColor := cbClientColor.Selected ;
   settings.generalMessageColor := cbGeneralColor.Selected;
@@ -575,6 +582,11 @@ begin
   kbDebugBSAs.Checked := settings.debugBSAs;
   kbDebugScriptFragments.Checked := settings.debugScriptFragments;
 
+
+  // Advanced > Backend
+  edHost.Text := settings.serverHost;
+  edPort.Text := IntToStr(settings.serverPort);
+  kbNoStatistics.Checked := settings.dontSendStatistics;
   // Advanced > Profile
   lblCurrentProfileName.Caption := settings.profile;
   // Advanced > Logging

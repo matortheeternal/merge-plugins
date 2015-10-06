@@ -390,16 +390,9 @@ end;
 procedure TSaveThread.Execute;
 begin
   // send statistics, then disconnect from the server
-  SendStatistics;
+  if not settings.dontSendStatistics then
+    SendStatistics;
   TCPClient.Disconnect;
-
-  // force terminate the loader
-  {if not wbLoaderDone then begin
-    bForceTerminate := true;
-    Tracker.Write('Waiting for Background Loader to terminate...');
-    while not bLoaderDone do
-      Sleep(100);
-  end;}
 
   // save ESPs only if it's safe to do so
   if not bDontSave then begin

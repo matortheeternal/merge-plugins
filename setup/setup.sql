@@ -11,6 +11,7 @@ upload BIGINT,
 timesRun INT,
 mergesBuilt INT,
 pluginsChecked INT,
+pluginsFixed INT,
 pluginsMerged INT,
 reportsSubmitted INT
 );

@@ -287,10 +287,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetHandling: TGroupBox
         Left = 6
         Top = 6
@@ -490,7 +486,7 @@ object OptionsForm: TOptionsForm
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      object gbPrivacy: TGroupBox
+      object gbBackend: TGroupBox
         Left = 6
         Top = 72
         Width = 548
@@ -499,23 +495,46 @@ object OptionsForm: TOptionsForm
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
-        Caption = 'Privacy'
+        Caption = 'Backend'
         TabOrder = 0
-        object kbNoStatistics: TCheckBox
+        object lblHost: TLabel
           Left = 12
           Top = 20
+          Width = 56
+          Height = 13
+          Caption = 'Server host'
+        end
+        object lblPort: TLabel
+          Left = 274
+          Top = 20
+          Width = 55
+          Height = 13
+          Caption = 'Server port'
+        end
+        object kbNoStatistics: TCheckBox
+          Left = 12
+          Top = 44
           Width = 149
           Height = 17
           Caption = 'Don'#39't send usage statistics'
           TabOrder = 0
         end
-        object kbNoPersistentConnection: TCheckBox
-          Left = 12
-          Top = 43
-          Width = 223
-          Height = 17
-          Caption = 'Only connect to the server when required'
+        object edHost: TEdit
+          Left = 88
+          Top = 17
+          Width = 145
+          Height = 21
           TabOrder = 1
+          Text = 'mergeplugins.us.to'
+        end
+        object edPort: TEdit
+          Left = 392
+          Top = 17
+          Width = 145
+          Height = 21
+          NumbersOnly = True
+          TabOrder = 2
+          Text = '960'
         end
       end
       object gbLogging: TGroupBox
@@ -748,10 +767,6 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModOrganizer: TGroupBox
         Left = 6
         Top = 6
@@ -1009,7 +1024,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800140110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800180110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
