@@ -1621,10 +1621,16 @@ var
 begin
   filename := Format('lang\%s.lang', [settings.language]);
   language := TStringList.Create;
-  if not FileExists(filename) then begin
-    MessageDlg(directions, mtConfirmation, [mbOk], 0);
-    ForceDirectories(ProgramPath + 'lang\');
-    ShellExecute(0, 'open', PChar(langFile), '', '', SW_SHOWNORMAL);
+  if (not FileExists(filename)) then begin
+    if settings.language <> 'english' then begin
+      settings.language := 'english';
+      LoadLanguage;
+    end
+    else begin
+      MessageDlg(directions, mtConfirmation, [mbOk], 0);
+      ForceDirectories(ProgramPath + 'lang\');
+      ShellExecute(0, 'open', PChar(langFile), '', '', SW_SHOWNORMAL);
+    end;
   end
   else
     language.LoadFromFile(filename);
@@ -1830,15 +1836,20 @@ begin
   wbFileForceClosed;
   for i := Pred(PluginsList.Count) downto 0 do begin
     plugin := TPlugin(PluginsList[i]);
-    plugin._File._Release;
-    oldFileName := plugin.dataPath + plugin.filename;
-    newFileName := oldFileName + '.save';
-    if FileExists(newFileName) then begin
-      bakFileName := oldFileName + '.bak';
-      if FileExists(bakFileName) then
-        DeleteFile(bakFileName);
-      RenameFile(oldFileName, bakFileName);
-      RenameFile(newFileName, oldFileName);
+    try
+      plugin._File._Release;
+      oldFileName := plugin.dataPath + plugin.filename;
+      newFileName := oldFileName + '.save';
+      if FileExists(newFileName) then begin
+        bakFileName := oldFileName + '.bak';
+        if FileExists(bakFileName) then
+          DeleteFile(bakFileName);
+        RenameFile(oldFileName, bakFileName);
+        RenameFile(newFileName, oldFileName);
+      end;
+    except
+      on x: Exception do
+        Tracker.Write('Failed to rename ' + plugin.filename + '.save');
     end;
   end;
 end;

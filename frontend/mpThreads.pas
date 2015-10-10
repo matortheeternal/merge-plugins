@@ -416,10 +416,10 @@ begin
     SavePluginInfo;
     Tracker.SetProgress(PluginsList.Count + 1);
     Tracker.Write(' ');
-    // rename saved plugins
-    RenameSavedPlugins;
     // save merges
     SaveMerges;
+    // rename saved plugins
+    if bLoaderDone then RenameSavedPlugins;
   end;
 
   // save statistics and settings
