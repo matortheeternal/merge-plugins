@@ -1727,7 +1727,7 @@ begin
   // done merging
   time := (Now - time) * 86400;
   merge.dateBuilt := Now;
-  merge.status := msUpToDate;
+  merge.status := msBuilt;
   Tracker.Write('Done merging '+merge.name+' ('+FormatFloat('0.###', time) + 's)');
 end;
 

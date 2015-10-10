@@ -96,7 +96,7 @@ type
   // PLUGINS AND MERGES
   TMergeStatusID = ( msUnknown, msNoPlugins, msDirInvalid, msUnloaded,
     msErrors, msFailed, msCheckErrors, msUpToDate, msUpToDateForced,
-    msBuildReady, msRebuildReady, msRebuildReadyForced );
+    msBuildReady, msRebuildReady, msRebuildReadyForced, msBuilt );
   TMergeStatus = Record
     id: TMergeStatusID;
     color: integer;
@@ -407,7 +407,7 @@ const
   );
 
   // MERGE STATUSES
-  StatusArray: array[0..11] of TMergeStatus = (
+  StatusArray: array[0..12] of TMergeStatus = (
     ( id: msUnknown; color: $808080; desc: 'Unknown'; ),
     ( id: msNoPlugins; color: $0000FF; desc: 'No plugins to merge'; ),
     ( id: msDirInvalid; color: $0000FF; desc: 'Directories invalid'; ),
@@ -419,7 +419,8 @@ const
     ( id: msUpToDateForced; color: $900000; desc: 'Up to date [Forced]'; ),
     ( id: msBuildReady; color: $009000; desc: 'Ready to be built'; ),
     ( id: msRebuildReady; color: $009000; desc: 'Ready to be rebuilt'; ),
-    ( id: msRebuildReadyForced; color: $009000; desc: 'Ready to be rebuilt [Forced]'; )
+    ( id: msRebuildReadyForced; color: $009000; desc: 'Ready to be rebuilt [Forced]'; ),
+    ( id: msBuilt; color: $000000; desc: 'Built'; )
   );
   // STATUS TYPES
   ErrorStatuses = [msUnknown, msNoPlugins, msDirInvalid, msUnloaded, msErrors];
@@ -3419,6 +3420,8 @@ var
   i: Integer;
   plugin: TPlugin;
 begin
+  if status = msBuilt then
+    exit;
   Logger.Write('MERGE', 'Status', name + ' -> Getting status');
   status := msUnknown;
 

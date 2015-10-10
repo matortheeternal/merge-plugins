@@ -125,6 +125,7 @@ type
     procedure ActivateWindow;
     procedure InitDone;
     procedure FormShow(Sender: TObject);
+    procedure LoaderStatus(s: string);
     procedure LoaderDone;
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure SaveDone;
@@ -312,6 +313,7 @@ begin
   xEditLogGroup := 'LOAD';
   xEditLogLabel := 'Plugins';
   wbProgressCallback := ProgressMessage;
+  StatusCallback := LoaderStatus;
 
   // CREATE SPLASH
   splash := TSplashForm.Create(nil);
@@ -442,10 +444,14 @@ begin
   ReconnectTimer.Enabled := true;
 end;
 
+procedure TMergeform.LoaderStatus(s: string);
+begin
+  StatusPanelMessage.Caption := s;
+end;
+
 procedure TMergeForm.LoaderDone;
 begin
   SetTaskbarProgressState(tbpsNone);
-  StatusPanelMessage.Caption := GetString('mpMain_LoaderFinished');
   xEditLogGroup := 'GENERAL';
   xEditLogLabel := 'xEdit';
   FlashWindow(Application.Handle, True);
@@ -515,10 +521,11 @@ begin
   if Assigned(pluginsToHandle) then pluginsToHandle.Free;
   if Assigned(mergesToBuild) then mergesToBuild.Free;
 
-  // update
+  // update merges and gui
   UpdateListViews;
   UpdateMerges;
   UpdateQuickbar;
+  UpdatePluginsPopupMenu;
 end;
 
 procedure TMergeForm.AutoUpdate;
@@ -1042,6 +1049,8 @@ begin
   // add merges to plugins popup menu
   for i := 0 to Pred(MergesList.Count) do begin
     merge := TMerge(MergesList[i]);
+    if merge.status = msBuilt then
+      continue;
     MenuItem := TMenuItem.Create(AddToMergeItem);
     MenuItem.Caption := merge.name;
     MenuItem.OnClick := AddToMergeClick;
@@ -2117,6 +2126,7 @@ begin
   // update
   UpdateMerges;
   UpdateListViews;
+  UpdateQuickBar;
 end;
 
 procedure TMergeForm.ImageDisconnectedClick(Sender: TObject);

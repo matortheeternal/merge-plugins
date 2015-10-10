@@ -267,8 +267,13 @@ mpRep_btnNext_Caption=Next
 mpRep_btnPrev_Caption=Previous
 { #### DYNAMIC #### }
 mpRep_Done=Done
+mpRep_cbRating_Hint0=Only recommend a plugin be blacklisted if you're certain there#13#10are no circumstances in which it will ever be mergeable.  This is#13#10for plugins that absolutely cannot be merged.  Please explain why#13#10you feel the plugin should be blacklisted in the notes section.
+mpRep_cbRating_Hint1=Failure to merge means merging the plugin fails completely.  E.g.#13#10the merged plugin causes CTDs, major stability problems, or merging#13#10fails to create a plugin at all.
+mpRep_cbRating_Hint2=Dysfunctional means the merge doesn''t work ingame, with major aspects#13#10of the plugins that were merged not working or being entirely missing.
+mpRep_cbRating_Hint3=Partially functional means the majority of the plugin content works#13#10but some of it doesn''t.  This would be if the plugin achieves its#13#10goals but has bugs that were created in merging.
+mpRep_cbRating_Hint4=Tweaking required means you got the plugin to work perfectly in a#13#10merge, but had to tweak some things to get it to work.  E.g. errors#13#10fixed or modification of asset files.
+mpRep_cbRating_Hint5=Perfect means all aspects of the plugin work perfectly right away#13#10and you didn''t have to do any tweaking.  Nothing missing, nothing#13#10broken.
 { ## Info panel ## }
-mpRep_lblFilename_Caption=%s
 mpRep_lblFlags_Caption=FLAGS: %s
 mpRep_lblHash_Caption=HASH: %s
 mpRep_lblRecords_Caption=RECORDS: %d
@@ -302,8 +307,11 @@ mpCha_ButtonSkip_Caption=Skip
 { #### DYNAMIC #### }
 mpProg_Closing=Closing
 mpProg_Checking=Checking for errors
+mpProg_DoneChecking=Done checking for errors
 mpProg_Merging=Building merges
+mpProg_DoneBuilding=Done building merges
 mpProg_Fixing=Fixing errors
+mpProg_DoneFixing=Done fixing errors
 mpProg_SavePlugin=Save plugin %s?
 mpProg_GeckScripts=The source code of certain scripts was modified, so you will #13#10need to recompile them in the GECK:#13#10#13#10%s
 mpProg_NavConflicts=There were some NavMesh conflicts.  You'll need to rebuild #13#10these navmeshes in the CK:#13#10#13#10%s

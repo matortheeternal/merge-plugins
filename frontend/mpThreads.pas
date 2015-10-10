@@ -15,6 +15,7 @@ uses
 type
   // THREADS AND CALLBACKS
   TCallback = procedure of object;
+  TStatusCallback = procedure(s: string) of object;
   TInitThread = class(TThread)
   protected
     procedure Execute; override;
@@ -47,6 +48,7 @@ type
 var
   InitCallback, LoaderCallback, ErrorCheckCallback, ErrorFixCallback,
   MergeCallback, SaveCallback, UpdateCallback, ConnectCallback: TCallback;
+  StatusCallback: TStatusCallback;
 
 implementation
 
@@ -246,8 +248,12 @@ var
   f: IwbFile;
   plugin: TPlugin;
 begin
+  StatusCallback(Format('%s (%d/%d)',
+    [GetString('mpMain_LoaderInProgress'), 1, PluginsList.Count]));
   try
     for i := 0 to Pred(PluginsList.Count) do begin
+      StatusCallback(Format('%s (%d/%d)',
+        [GetString('mpMain_LoaderInProgress'), i + 1, PluginsList.Count]));
       plugin := TPlugin(PluginsList[i]);
       f := plugin._File;
       if SameText(plugin.filename, wbGameName + '.esm') then
@@ -268,6 +274,7 @@ begin
   end;
   bLoaderDone := true;
   LoaderProgress('finished');
+  StatusCallback(GetString('mpMain_LoaderFinished'));
   if Assigned(LoaderCallback) then
     Synchronize(nil, LoaderCallback);
 end;
@@ -282,6 +289,8 @@ begin
   for i := 0 to Pred(pluginsToHandle.Count) do begin
     if Tracker.Cancel then break;
     plugin := TPlugin(pluginsToHandle[i]);
+    StatusCallback(Format('%s "%s" (%d/%d)',
+      [GetString('mpProg_Checking'), plugin.filename, i + 1, pluginsToHandle.Count]));
     // check plugins for errors
     Tracker.Write('Checking for errors in '+plugin.filename);
     plugin.FindErrors;
@@ -293,6 +302,7 @@ begin
     Tracker.Write('All done!');
 
   Tracker.Cancel := false;
+  StatusCallback(GetString('mpProg_DoneChecking'));
   if Assigned(ErrorCheckCallback) then
     Synchronize(nil, ErrorCheckCallback);
 end;
@@ -307,6 +317,8 @@ begin
   for i := 0 to Pred(pluginsToHandle.Count) do begin
     if Tracker.Cancel then break;
     plugin := TPlugin(pluginsToHandle[i]);
+    StatusCallback(Format('%s "%s" (%d/%d)',
+      [GetString('mpProg_Fixing'), plugin.filename, i + 1, pluginsToHandle.Count]));
     // check plugins for errors
     Tracker.Write('Fixing errors in '+plugin.filename);
     plugin.ResolveErrors;
@@ -318,6 +330,7 @@ begin
     Tracker.Write('All done!');
 
   Tracker.Cancel := false;
+  StatusCallback(GetString('mpProg_DoneFixing'));
   if Assigned(ErrorFixCallback) then
     Synchronize(nil, ErrorFixCallback);
 end;
@@ -333,6 +346,8 @@ begin
   for i := 0 to Pred(mergesToBuild.Count) do begin
     if Tracker.Cancel then break;
     merge := TMerge(mergesToBuild[i]);
+    StatusCallback(Format('%s "%s" (%d/%d)',
+      [GetString('mpProg_Merging'), merge.name, i + 1, mergesToBuild.Count]));
     try
       if (merge.status in RebuildStatuses) then
         RebuildMerge(merge)
@@ -381,6 +396,7 @@ begin
     Tracker.Write('All done!');
 
   // clean up, fire callback
+  StatusCallback(GetString('mpProg_DoneBuilding'));
   Tracker.Cancel := false;
   if Assigned(MergeCallback) then
     Synchronize(nil, MergeCallback);

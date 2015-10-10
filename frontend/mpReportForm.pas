@@ -55,28 +55,6 @@ type
     AppName: string;
   end;
 
-const
-  RatingHints: array[0..5] of string = (
-    'Only recommend a plugin be blacklisted if you''re certain there'#13+
-    'are no circumstances in which it will ever be mergeable.  This is'#13+
-    'for plugins that absolutely cannot be merged.  Please explain why'#13+
-    'you feel the plugin should be blacklisted in the notes section.',
-    'Failure to merge means merging the plugin fails completely.  E.g.'#13+
-    'the merged plugin causes CTDs, major stability problems, or merging'#13+
-    'fails to create a plugin at all.',
-    'Dysfunctional means the merge doesn''t work ingame, with major aspects'#13+
-    'of the plugins that were merged not working or being entirely missing.',
-    'Partially functional means the majority of the plugin content works'#13+
-    'but some of it doesn''t.  This would be if the plugin achieves its'#13+
-    'goals but has bugs that were created in merging.',
-    'Tweaking required means you got the plugin to work perfectly in a'#13+
-    'merge, but had to tweak some things to get it to work.  E.g. errors'#13+
-    'fixed or modification of asset files.',
-    'Perfect means all aspects of the plugin work perfectly right away'#13+
-    'and you didn''t have to do any tweaking.  Nothing missing, nothing'#13+
-    'broken.'
-  );
-
 var
   ReportForm: TReportForm;
   currentPlugin: integer;
@@ -115,9 +93,9 @@ begin
   // set pnlTitle labels to entry details
   report := reportsList[currentPlugin];
   lblFilename.Caption := StringReplace(report.filename, '&', '&&', [rfReplaceAll]);
-  lblHash.Caption := Format(GetString('mpRep_Hash'), [report.hash]);
-  lblRecords.Caption := Format(GetString('mpRep_Records'), [IntToStr(report.recordCount)]);
-  lblFlags.Caption := Format(GetString('mpRep_Flags'), [plugin.GetFlagsString]);
+  lblHash.Caption := Format(lblHash.Caption, [report.hash]);
+  lblRecords.Caption := Format(lblRecords.Caption, [report.recordCount]);
+  lblFlags.Caption := Format(lblFlags.Caption, [plugin.GetFlagsString]);
   lblFlags.Hint := plugin.GetFlagsDescription;
 
   // load existing entry details
@@ -191,7 +169,7 @@ end;
 procedure TReportForm.cbRatingChange(Sender: TObject);
 begin
   // set hint to current rating hint
-  cbRating.Hint := RatingHints[cbRating.ItemIndex];
+  cbRating.Hint := GetString('mpRep_cbRating_Hint'+IntToStr(cbRating.ItemIndex));
 end;
 
 procedure TReportForm.FormCreate(Sender: TObject);
