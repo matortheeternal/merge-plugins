@@ -62,3 +62,4 @@ __history/
 *.zip
 backend/logs/*.txt
 loc/
+test/

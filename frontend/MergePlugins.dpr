@@ -30,7 +30,8 @@ uses
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpReportForm in 'mpReportForm.pas' {Form1},
-  mpChangeLogForm in 'mpChangeLogForm.pas' {ChangeLogForm};
+  mpChangeLogForm in 'mpChangeLogForm.pas' {ChangeLogForm},
+  mpResolveForm in 'mpResolveForm.pas' {ResolveForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -78,5 +79,6 @@ begin
   Application.CreateForm(TSplashForm, SplashForm);
   Application.CreateForm(TReportForm, ReportForm);
   Application.CreateForm(TChangeLogForm, ChangeLogForm);
+  Application.CreateForm(TResolveForm, ResolveForm);
   Application.Run;
 end.

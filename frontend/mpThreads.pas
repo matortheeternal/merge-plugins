@@ -195,8 +195,9 @@ begin
         PluginsList.Add(Pointer(plugin));
       except
         on x: Exception do begin
-          Logger.Write('ERROR', 'Load', 'Exception loading '+sl[i]+', '+x.Message);
-          bDontSave := true;
+          Logger.Write('ERROR', 'Load', 'Exception loading '+sl[i]);
+          Logger.Write('ERROR', 'Load', x.Message);
+          bInitException := true;
         end;
       end;
 
@@ -206,8 +207,8 @@ begin
         aFile._AddRef;
       except
         on x: Exception do begin
-          Logger.Write('ERROR', 'Load', 'Exception loading '+wbGameName+wbHardcodedDat+
-           ', please download and install this dat file!');
+          Logger.Write('ERROR', 'Load', 'Exception loading '+wbGameName+wbHardcodedDat);
+          Logger.Write('ERROR', 'Load', 'Please download and install this dat file!');
           raise x;
         end;
       end;
@@ -224,7 +225,7 @@ begin
     on x: Exception do begin
       if Assigned(sl) then
         sl.Free;
-      bDontSave := true;
+      bInitException := true;
       Logger.Write('ERROR', 'Load', x.Message);
     end;
   end;
@@ -269,7 +270,7 @@ begin
     on E: Exception do begin
       LoaderProgress('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
       wbLoaderError := true;
-      bDontSave := true;
+      bInitException := true;
     end;
   end;
   bLoaderDone := true;
@@ -411,7 +412,7 @@ begin
   TCPClient.Disconnect;
 
   // save ESPs only if it's safe to do so
-  if not bDontSave then begin
+  if not bInitException then begin
     // Save plugin errors
     SavePluginInfo;
     Tracker.SetProgress(PluginsList.Count + 1);

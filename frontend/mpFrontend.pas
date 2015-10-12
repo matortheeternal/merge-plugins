@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, IniFiles, Dialogs, Registry, Graphics, ShlObj,
-  ShellAPI,
+  Forms, ShellAPI,
   // indy components
   IdTCPClient, IdStack, IdGlobal,
   // superobject json library
@@ -12,8 +12,8 @@ uses
   // abbrevia components
   AbZBrows, AbUnZper, AbArcTyp, AbMeter, AbBrowse, AbBase,
   // mte components
-  CRC32, mteLogger, mteTracker, mteHelpers, RttiIni, RttiJson,
-  RttiTranslation,
+  CRC32, mteLogger, mteTracker, mteHelpers, mteProgressForm,
+  RttiIni, RttiJson, RttiTranslation,
   // xedit components
   wbHelpers, wbInterface, wbImplementation,
   wbDefinitionsFNV, wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4,
@@ -95,8 +95,9 @@ type
   end;
   // PLUGINS AND MERGES
   TMergeStatusID = ( msUnknown, msNoPlugins, msDirInvalid, msUnloaded,
-    msErrors, msFailed, msCheckErrors, msUpToDate, msUpToDateForced,
-    msBuildReady, msRebuildReady, msRebuildReadyForced, msBuilt );
+    msErrors, msFailed, msNotContiguous, msBreaksDependencies, msCheckErrors,
+    msUpToDate, msUpToDateForced, msBuildReady, msRebuildReady,
+    msRebuildReadyForced, msBuilt );
   TMergeStatus = Record
     id: TMergeStatusID;
     color: integer;
@@ -128,6 +129,7 @@ type
     entry: TEntry;
     description: TStringList;
     masters: TStringList;
+    requiredBy: TStringList;
     errors: TStringList;
     reports: TStringList;
     bIgnoreErrors: boolean;
@@ -156,18 +158,20 @@ type
     name: string;
     filename: string;
     dateBuilt: TDateTime;
-    plugins: TStringList;
-    hashes: TStringList;
-    masters: TStringList;
-    status: TMergeStatusID;
+    bIgnoreNonContiguous: boolean;
     method: string;
     renumbering: string;
     dataPath: string;
+    status: TMergeStatusID;
     plugin: TPlugin;
+    plugins: TStringList;
+    hashes: TStringList;
+    masters: TStringList;
     map: TStringList;
     lmap: TStringList;
     files: TStringList;
     fails: TStringList;
+    ignoredDependencies: TStringList;
     geckScripts: TStringList;
     navConflicts: TStringList;
     constructor Create; virtual;
@@ -179,7 +183,8 @@ type
     procedure GetStatus;
     procedure GetLoadOrders;
     procedure SortPlugins;
-    procedure Remove(plugin: TPlugin);
+    procedure Remove(plugin: TPlugin); overload;
+    procedure Remove(pluginFilename: string); overload;
     function PluginsModified: boolean;
     function FilesExist: boolean;
     function GetStatusColor: integer;
@@ -280,6 +285,7 @@ type
   function LocalFormID(aRecord: IwbMainRecord): integer;
   function LoadOrderPrefix(aRecord: IwbMainRecord): integer;
   function CountOverrides(aFile: IwbFile): integer;
+  procedure AddRequiredBy(filename: string; var masters: TStringList);
   procedure GetMasters(aFile: IwbFile; var sl: TStringList);
   procedure AddMasters(aFile: IwbFile; var sl: TStringList);
   function BSAExists(filename: string): boolean;
@@ -340,6 +346,7 @@ type
   procedure LoadReport(const filename: string; var report: TReport); overload;
   { Helper methods }
   procedure DeleteTempPath;
+  procedure ShowProgressForm(parent: TForm; pForm: TProgressForm; s: string);
   function GetRatingColor(rating: real): integer;
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
@@ -376,7 +383,7 @@ type
 const
   // IMPORTANT CONSTANTS
   ProgramTesters = 'bla08, hishy, Kesta';
-  ProgramTranslators = 'dhxxqk2010, Oaristys, Ganda, Martinezer, EHPDJFrANKy';
+  ProgramTranslators = 'GabenOurSavior, dhxxqk2010, Oaristys';
   xEditVersion = '3.1.1';
   bTranslationDump = false;
 
@@ -407,13 +414,15 @@ const
   );
 
   // MERGE STATUSES
-  StatusArray: array[0..12] of TMergeStatus = (
+  StatusArray: array[0..14] of TMergeStatus = (
     ( id: msUnknown; color: $808080; desc: 'Unknown'; ),
     ( id: msNoPlugins; color: $0000FF; desc: 'No plugins to merge'; ),
     ( id: msDirInvalid; color: $0000FF; desc: 'Directories invalid'; ),
     ( id: msUnloaded; color: $0000FF; desc: 'Plugins not loaded'; ),
     ( id: msErrors; color: $0000FF; desc: 'Errors in plugins'; ),
     ( id: msFailed; color: $0000FF; desc: 'Merge failed'; ),
+    ( id: msNotContiguous; color: $0080ed; desc: 'Plugins not contiguous'; ),
+    ( id: msBreaksDependencies; color: $0080ed; desc: 'Merge breaks dependencies'; ),
     ( id: msCheckErrors; color: $0080ed; desc: 'Check for errors required'; ),
     ( id: msUpToDate; color: $900000; desc: 'Up to date'; ),
     ( id: msUpToDateForced; color: $900000; desc: 'Up to date [Forced]'; ),
@@ -428,6 +437,8 @@ const
   BuildStatuses = [msBuildReady, msRebuildReady, msRebuildReadyForced];
   RebuildStatuses = [msRebuildReady, msRebuildReadyForced];
   ForcedStatuses = [msUpToDateForced, msRebuildReadyForced];
+  ResolveStatuses = [msNoPlugins, msDirInvalid, msUnloaded, msErrors,
+    msNotContiguous, msBreaksDependencies, msCheckErrors];
 
   // DELAYS
   StatusDelay = 2.0 / (60.0 * 24.0); // 2 minutes
@@ -458,7 +469,7 @@ var
   statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
-  bDontSave, bChangeMergeProfile, bForceTerminate, bLoaderDone, bAuthorized,
+  bInitException, bChangeMergeProfile, bForceTerminate, bLoaderDone, bAuthorized,
   bProgramUpdate, bDictionaryUpdate, bInstallUpdate, bConnecting,
   bUpdateMergeStatus, bAllowClose: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveModProfile,
@@ -679,6 +690,21 @@ begin
     aRecord := aFile.GetRecord(i);
     if IsOverride(aRecord) then
       Inc(Result);
+  end;
+end;
+
+{ Populates required by field of @masters that are required by plugin
+  @filename }
+procedure AddRequiredBy(filename: string; var masters: TStringList);
+var
+  i: Integer;
+  plugin: TPlugin;
+begin
+  for i := 0 to Pred(masters.Count) do begin
+    plugin := PluginByFilename(masters[i]);
+    if not Assigned(plugin) then
+      continue;
+    plugin.requiredBy.Add(filename);
   end;
 end;
 
@@ -1904,8 +1930,15 @@ begin
   // loop through merges
   for mergeItem in obj['merges'] do begin
     merge := TMerge.Create;
-    merge.LoadDump(mergeItem);
-    MergesList.Add(merge);
+    try
+      merge.LoadDump(mergeItem);
+      MergesList.Add(merge);
+    except
+      on x: Exception do begin
+        Logger.Write('LOAD', 'Merge', 'Failed to load merge '+merge.name);
+        Logger.Write('LOAD', 'Merge', x.Message);
+      end;
+    end;
   end;
 
   // finalize
@@ -2088,6 +2121,17 @@ end;
 procedure DeleteTempPath;
 begin
   DeleteDirectory(TempPath);
+end;
+
+procedure ShowProgressForm(parent: TForm; pForm: TProgressForm; s: string);
+begin
+  parent.Enabled := false;
+  pForm := TProgressForm.Create(parent);
+  pForm.LogPath := LogPath;
+  pForm.PopupParent := parent;
+  pForm.Caption := s;
+  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
+  pForm.Show;
 end;
 
 function GetRatingColor(rating: real): integer;
@@ -2734,9 +2778,8 @@ begin
       // Set base (default) directory for all archive operations
       BaseDirectory := ProgramPath;
       // Extract all files from the archive to current directory
-      ExtractFiles('*.exe');
-      BaseDirectory := ProgramPath + 'lang\';
-      ExtractFiles('lang\*.lang');
+      ExtractOptions := [eoCreateDirs, eoRestorePath];
+      ExtractFiles('*.*');
       Result := true;
     end;
   except
@@ -2994,6 +3037,7 @@ begin
   merge := ' ';
   description := TStringList.Create;
   masters := TStringList.Create;
+  requiredBy := TStringList.Create;
   errors := TStringList.Create;
   reports := TStringList.Create;
 end;
@@ -3002,6 +3046,7 @@ destructor TPlugin.Destroy;
 begin
   description.Free;
   masters.Free;
+  requiredBy.Free;
   errors.Free;
   reports.Free;
   _File._Release;
@@ -3086,6 +3131,7 @@ begin
 
   // get masters, flags
   GetMasters(_File, masters);
+  AddRequiredBy(filename, masters);
   GetFlags;
 
   // get hash, datapath
@@ -3291,6 +3337,7 @@ begin
   files := TStringList.Create;
   geckScripts := TStringList.Create;
   navConflicts := TStringList.Create;
+  ignoredDependencies := TStringList.Create;
   method := 'Overrides';
   renumbering := 'Conflicting';
   fails := TStringList.Create;
@@ -3307,6 +3354,7 @@ begin
   geckScripts.Free;
   navConflicts.Free;
   fails.Free;
+  ignoredDependencies.Free;
   plugin.Free;
   inherited;
 end;
@@ -3319,10 +3367,13 @@ var
 begin
   obj := SO;
 
-  // name, filename, datebuilt
+  // normal attributes
   obj.S['name'] := name;
   obj.S['filename'] := filename;
   obj.S['dateBuilt'] := DateTimeToStr(dateBuilt);
+  obj.S['method'] := method;
+  obj.S['renumbering'] := renumbering;
+  obj.B['bIgnoreNonContiguous'] := bIgnoreNonContiguous;
 
   // plugins, pluginSizes, pluginDates, masters
   obj.O['plugins'] := SA([]);
@@ -3335,17 +3386,16 @@ begin
   for i := 0 to Pred(masters.Count) do
     obj.A['masters'].S[i] := masters[i];
 
-  // method, renumbering
-  obj.S['method'] := method;
-  obj.S['renumbering'] := renumbering;
-
-  // files, log
+  // files, log, ignored dependencies
   obj.O['files'] := SA([]);
   for i := 0 to Pred(files.Count) do
     obj.A['files'].S[i] := files[i];
   obj.O['fails'] := SA([]);
   for i := 0 to Pred(fails.Count) do
     obj.A['fails'].S[i] := fails[i];
+  obj.O['ignoredDependencies'] := SA([]);
+  for i := 0 to Pred(ignoredDependencies.Count) do
+    obj.A['ignoredDependencies'].S[i] := ignoredDependencies[i];
 
   Result := obj;
 end;
@@ -3360,6 +3410,11 @@ begin
   filename := obj.AsObject.S['filename'];
   method := obj.AsObject.S['method'];
   renumbering := obj.AsObject.S['renumbering'];
+  try
+    bIgnoreNonContiguous := obj.AsObject.B['bIgnoreNonContiguous'];
+  except on Exception do
+    // nothing
+  end;
 
   // try loading dateBuilt and parsing to DateTime
   try
@@ -3379,6 +3434,12 @@ begin
     files.Add(item.AsString);
   for item in obj['fails'] do
     fails.Add(item.AsString);
+  try
+    for item in obj['ignoredDependencies'] do
+      ignoredDependencies.Add(item.AsString);
+  except on Exception do
+    // nothing
+  end;
 end;
 
 function TMerge.GetTimeCost: integer;
@@ -3428,8 +3489,9 @@ end;
 
 procedure TMerge.GetStatus;
 var
-  i: Integer;
+  i, j, lastLoadOrder, currentLoadOrder: Integer;
   plugin: TPlugin;
+  bBrokeDependencies: boolean;
 begin
   if status = msBuilt then
     exit;
@@ -3465,6 +3527,7 @@ begin
   end;
 
   // loop through plugins
+  lastLoadOrder := 0;
   for i := 0 to Pred(plugins.Count) do begin
     plugin := PluginByFilename(plugins[i]);
 
@@ -3475,6 +3538,29 @@ begin
       continue;
     end;
 
+    // check if plugins are contiguous
+    currentLoadOrder := plugin._File.LoadOrder;
+    if (i <> 0) and (not bIgnoreNonContiguous)
+    and (currentLoadOrder - lastLoadOrder <> 1) then begin
+      Logger.Write('MERGE', 'Status', name + ' -> Plugin '+plugins[i]+' is not contiguous');
+      if status = msUnknown then status := msNotContiguous;
+    end;
+    lastLoadOrder := currentLoadOrder;
+
+    // check if plugins break dependencies
+    bBrokeDependencies := false;
+    for j := 0 to Pred(plugin.requiredBy.Count) do begin
+      if (plugins.IndexOf(plugin.requiredBy[j]) = -1)
+      and (ignoredDependencies.IndexOf(plugin.requiredBy[j]) = -1) then begin
+        if not bBrokeDependencies then
+          Logger.Write('MERGE', 'Status', name + ' -> Plugin '+plugins[i]+' breaks dependencies with');
+        bBrokeDependencies := true;
+        Logger.Write('MERGE', 'Status', '  ' + plugin.requiredBy[j]);
+        if status = msUnknown then status := msBreaksDependencies;
+      end;
+    end;
+
+    // check if plugin has been checked for errors, and is error-free
     if (not plugin.HasBeenCheckedForErrors) then begin
       Logger.Write('MERGE', 'Status', name + ' -> '+plugin.filename+' needs to be checked for errors.');
       if status = msUnknown then status := msCheckErrors;
@@ -3538,9 +3624,26 @@ begin
 end;
 
 procedure TMerge.Remove(plugin: TPlugin);
+var
+  index: Integer;
 begin
-  plugin.merge := ' ';
-  plugins.Delete(plugins.IndexOf(plugin.filename));
+  // clear plugin's merge property, if it's the name of this merge
+  if plugin.merge = name then
+    plugin.merge := ' ';
+  // remove plugin from merge, if present
+  index := plugins.IndexOf(plugin.filename);
+  if index > -1 then
+    plugins.Delete(index);
+end;
+
+procedure TMerge.Remove(pluginFilename: string);
+var
+  index: Integer;
+begin
+  index := plugins.IndexOf(pluginFilename);
+  // remove plugin from merge, if present
+  if index > -1 then
+    plugins.Delete(index);
 end;
 
 { TFilter }

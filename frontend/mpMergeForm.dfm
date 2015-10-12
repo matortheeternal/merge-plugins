@@ -217,10 +217,6 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -270,10 +266,6 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -853,9 +845,9 @@ object MergeForm: TMergeForm
     end
     object PluginsItem: TMenuItem
       Caption = 'Plugins'
-      object RemovePluginsItem: TMenuItem
-        Caption = 'Remove plugins'
-        OnClick = RemovePluginsItemClick
+      object ResolveIssuesItem: TMenuItem
+        Caption = 'Resolve issues'
+        OnClick = ResolveIssuesItemClick
       end
       object CheckPluginsItem: TMenuItem
         Caption = 'Check plugins for errors'
@@ -887,7 +879,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010C001800640210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C001800680210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1428,7 +1420,7 @@ object MergeForm: TMergeForm
     Left = 1008
     Top = 8
     Bitmap = {
-      494C010108001400C40140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108001400C80140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100006000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

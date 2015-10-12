@@ -15,7 +15,7 @@ uses
   mteHelpers, mteTracker, mteLogger, mteProgressForm, RttiTranslation,
   // mp units
   mpFrontend, mpThreads, mpMerge, mpDictionaryForm, mpOptionsForm,
-  mpSplashForm, mpEditForm, mpReportForm, mpChangeLogForm,
+  mpSplashForm, mpEditForm, mpReportForm, mpChangeLogForm, mpResolveForm,
   // tes5edit units
   wbBSA, wbHelpers, wbInterface, wbImplementation;
 
@@ -86,7 +86,7 @@ type
             OpenInExplorerItem: TMenuItem;
             [FormSection('Plugins Submenu')]
               PluginsItem: TMenuItem;
-              RemovePluginsItem: TMenuItem;
+              ResolveIssuesItem: TMenuItem;
               CheckPluginsItem: TMenuItem;
               FixPluginsItem: TMenuItem;
               ReportOnPluginsItem: TMenuItem;
@@ -165,6 +165,8 @@ type
     procedure AddToNewMergeClick(Sender: TObject);
     procedure AddToMergeClick(Sender: TObject);
     procedure CheckForErrorsClick(Sender: TObject);
+    procedure IgnoreErrorsItemClick(Sender: TObject);
+    procedure DoNotMergeItemClick(Sender: TObject);
     procedure RemoveFromMergeItemClick(Sender: TObject);
     procedure OpenPluginLocationItemClick(Sender: TObject);
     procedure ReportOnPluginItemClick(Sender: TObject);
@@ -185,6 +187,7 @@ type
     procedure BuildMergeItemClick(Sender: TObject);
     procedure CheckPluginsItemClick(Sender: TObject);
     procedure RemovePluginsItemClick(Sender: TObject);
+    procedure ResolveIssuesItemClick(Sender: TObject);
     procedure DeleteMergeItemClick(Sender: TObject);
     procedure ReportOnPluginsItemClick(Sender: TObject);
     procedure OpenInExplorerItemClick(Sender: TObject);
@@ -206,6 +209,7 @@ type
     procedure UpdateQuickbar;
     procedure CreateMergeButtonClick(Sender: TObject);
     procedure BuildButtonClick(Sender: TObject);
+    procedure FindErrorsButtonClick(Sender: TObject);
     procedure ReportButtonClick(Sender: TObject);
     procedure DictionaryButtonClick(Sender: TObject);
     procedure OptionsButtonClick(Sender: TObject);
@@ -213,10 +217,7 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure ToggleAutoScrollItemClick(Sender: TObject);
     procedure DetailsCopyToClipboardItemClick(Sender: TObject);
-    procedure IgnoreErrorsItemClick(Sender: TObject);
-    procedure DoNotMergeItemClick(Sender: TObject);
     procedure ImageDisconnectedClick(Sender: TObject);
-    procedure FindErrorsButtonClick(Sender: TObject);
   protected
     procedure WMWindowPosChanged(var AMessage:TMessage); message WM_WINDOWPOSCHANGED;
     procedure WMActivateApp(var AMessage: TMessage); message WM_ACTIVATEAPP;
@@ -236,6 +237,7 @@ var
   LastURLTime, LastHintTime: double;
   bMergesToBuild, bMergesToCheck, bAutoScroll, bCreated, bClosing: boolean;
   pForm: TProgressForm;
+  rForm: TResolveForm;
 
 implementation
 
@@ -380,6 +382,20 @@ begin
     Close;
   end;
 
+  // DISABLE GUI IF INITIALIZATION EXCEPTION
+  if bInitException then begin
+    StatusPanelMessage.Caption := 'The application failed to initialize';
+    Logger.Write('ERROR', 'Load', 'There was an exception initializing the application');
+    Logger.Write('ERROR', 'Load', 'Review your log messages to resolve the issue');
+    Logger.Write('ERROR', 'Load', 'You can also change the program''s settings, if necessary');
+    PluginsTabSheet.Enabled := false;
+    PluginsTabSheet.TabVisible := false;
+    MergesTabSheet.Enabled := false;
+    MergesTabSheet.TabVisible := false;
+    PageControl.ActivePage := LogTabSheet;
+    PageControlChange(PageControl);
+  end;
+
   // QUICKBAR
   NewButton.Flat := true;
   FindErrorsButton.Flat := true;
@@ -411,37 +427,39 @@ begin
   UpdateStatusBar;
   UpdateQuickBar;
 
-  // ATTEMPT TO CONNECT TO SERVER
-  ConnectCallback := ConnectDone;
-  if (not bConnecting) and (not TCPClient.Connected) then
-    TConnectThread.Create;
+  if not bInitException then begin
+    // ATTEMPT TO CONNECT TO SERVER
+    ConnectCallback := ConnectDone;
+    if (not bConnecting) and (not TCPClient.Connected) then
+      TConnectThread.Create;
 
-  // START BACKGROUND LOADER
-  LoaderCallback := LoaderDone;
-  SetTaskbarProgressState(tbpsIndeterminate);
-  TLoaderThread.Create;
+    // START BACKGROUND LOADER
+    LoaderCallback := LoaderDone;
+    SetTaskbarProgressState(tbpsIndeterminate);
+    TLoaderThread.Create;
 
-  // CORRECT LIST VIEW WIDTHS
-  CorrectListViewWidth(MergeListView);
-  CorrectListViewWidth(PluginsListView);
+    // CORRECT LIST VIEW WIDTHS
+    CorrectListViewWidth(MergeListView);
+    CorrectListViewWidth(PluginsListView);
+
+    // SHOW LOADER HINT
+    StatusPanelMessage.Caption := GetString('mpMain_LoaderInProgress');
+    bhLoader.Title := GetString('mpMain_LoaderInProgress');
+    bhLoader.Description := GetString('mpMain_LoaderLimitations');
+    pt.X := 8 + wndBorderSide;
+    pt.Y := 4 + wndBorderTop;
+    pt := ImageBlocked.ClientToScreen(pt);
+    bhLoader.ShowHint(pt);
+    LastHintTime := Now;
+
+    // ENABLE TIMERS
+    RefreshTimer.Enabled := true;
+    Heartbeat.Enabled := true;
+    ReconnectTimer.Enabled := true;
+  end;
 
   // ACTIVATE WINDOW
   ActivateWindow;
-
-  // SHOW LOADER HINT
-  StatusPanelMessage.Caption := GetString('mpMain_LoaderInProgress');
-  bhLoader.Title := GetString('mpMain_LoaderInProgress');
-  bhLoader.Description := GetString('mpMain_LoaderLimitations');
-  pt.X := 8 + wndBorderSide;
-  pt.Y := 4 + wndBorderTop;
-  pt := ImageBlocked.ClientToScreen(pt);
-  bhLoader.ShowHint(pt);
-  LastHintTime := Now;
-
-  // ENABLE TIMERS
-  RefreshTimer.Enabled := true;
-  Heartbeat.Enabled := true;
-  ReconnectTimer.Enabled := true;
 end;
 
 procedure TMergeform.LoaderStatus(s: string);
@@ -583,7 +601,7 @@ end;
 
 procedure TMergeForm.UpdateStatusBar;
 begin
-  ImageBlocked.Visible := not bLoaderDone;
+  ImageBlocked.Visible := not (bLoaderDone or bInitException);
   ImageConnected.Visible := TCPClient.Connected;
   ImageDisconnected.Visible := not TCPClient.Connected;
   ImageBuild.Visible := bLoaderDone and bMergesToBuild;
@@ -593,15 +611,15 @@ end;
 
 procedure TMergeForm.UpdateListViews;
 begin
-  if PageControl.ActivePageIndex = 0 then begin
+  if PageControl.ActivePage = PluginsTabSheet then begin
     UpdatePluginDetails;
     PluginsListView.Repaint;
   end;
-  if PageControl.ActivePageIndex = 1 then begin
+  if PageControl.ActivePage = MergesTabSheet then begin
     UpdateMergeDetails;
     MergeListView.Repaint;
   end;
-  if PageControl.ActivePageIndex = 2 then
+  if PageControl.ActivePage = LogTabSheet then
     LogListView.Repaint;
 end;
 
@@ -1099,14 +1117,8 @@ begin
     pluginsToHandle.Add(plugin);
   end;
 
-  // prepare progress form
-  self.Enabled := false;
-  pForm := TProgressForm.Create(Self);
-  pForm.LogPath := LogPath;
-  pForm.PopupParent := Self;
-  pForm.Caption := GetString('mpProg_Checking');
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  // show progress form
+  ShowProgressForm(self, pForm, GetString('mpProg_Checking'));
 
   // start error check thread
   ErrorCheckCallback := ProgressDone;
@@ -1137,14 +1149,8 @@ begin
     pluginsToHandle.Add(plugin);
   end;
 
-  // prepare progress form
-  self.Enabled := false;
-  pForm := TProgressForm.Create(Self);
-  pForm.LogPath := LogPath;
-  pForm.PopupParent := Self;
-  pForm.Caption := GetString('mpProg_Fixing');
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  // show progress form
+  ShowProgressForm(self, pForm, GetString('mpProg_Fixing'));
 
   // start error check thread
   ErrorFixCallback := ProgressDone;
@@ -1725,7 +1731,7 @@ begin
   ToggleRebuildItem.Enabled := bHasSelection and (bHasUpToDateStatus or bHasBuildStatus);
   OpenInExplorerItem.Enabled := bHasSelection;
   // plugins submenu
-  RemovePluginsItem.Enabled := bHasSelection;
+  ResolveIssuesItem.Enabled := bHasSelection;
   CheckPluginsItem.Enabled := bHasSelection and bHasCheckStatus and bLoaderDone;
   FixPluginsItem.Enabled := bHasSelection and bHasPluginErrors and bLoaderDone;
   ReportOnPluginsItem.Enabled := bHasSelection and bHasUpToDateStatus;
@@ -1822,14 +1828,8 @@ begin
     exit;
   end;
 
-  // Show progress form
-  self.Enabled := false;
-  pForm := TProgressForm.Create(Self);
-  pForm.LogPath := LogPath;
-  pForm.PopupParent := Self;
-  pForm.Caption := GetString('mpProg_Fixing');
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  // show progress form
+  ShowProgressForm(self, pForm, GetString('mpProg_Fixing'));
 
   // start error checking thread
   ErrorFixCallback := ProgressDone;
@@ -1873,17 +1873,41 @@ begin
   end;
 
   // Show progress form
-  self.Enabled := false;
-  pForm := TProgressForm.Create(Self);
-  pForm.LogPath := LogPath;
-  pForm.PopupParent := Self;
-  pForm.Caption := GetString('mpProg_Checking');
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  ShowProgressForm(self, pForm, GetString('mpProg_Checking'));
 
   // start error checking thread
   ErrorCheckCallback := ProgressDone;
   TErrorCheckThread.Create;
+end;
+
+procedure TMergeForm.ResolveIssuesItemClick(Sender: TObject);
+var
+  i: Integer;
+  merge: TMerge;
+begin
+  // create resolve form
+  self.Enabled := false;
+  for i := 0 to Pred(MergeListView.Items.Count) do begin
+    if not MergeListView.Items[i].Selected then
+      continue;
+    merge := TMerge(MergesList[i]);
+    if not (merge.status in ResolveStatuses) then
+      continue;
+
+    // create resolve form
+    rForm := TResolveForm.Create(self);
+    rForm.merge := merge;
+    rForm.ShowModal;
+    rForm.Free;
+  end;
+
+  // update merges and gui
+  self.Enabled := true;
+  UpdateMerges;
+  UpdateQuickbar;
+  UpdateStatusBar;
+  UpdatePluginsPopupMenu;
+  UpdateListViews;
 end;
 
 { Remove unloaded plugins and plugins with errors }
@@ -2173,6 +2197,19 @@ var
   plugin: TPlugin;
   sTitle: string;
 begin
+  // DISABLE ALL BUTTONS IF INITIALIZATION EXCEPTION
+  if bInitException then begin
+    NewButton.Enabled := false;
+    FindErrorsButton.Enabled := false;
+    BuildButton.Enabled := false;
+    ReportButton.Enabled := false;
+    DictionaryButton.Enabled := false;
+    OptionsButton.Enabled := true;
+    UpdateButton.Enabled := false;
+    HelpButton.Enabled := false;
+    exit;
+  end;
+
   // FIND ERRORS BUTTON
   bUncheckedPlugins := false;
   for i := 0 to Pred(PluginsList.Count) do begin
@@ -2274,13 +2311,7 @@ begin
   end;
 
   // make and show progress form
-  self.Enabled := false;
-  pForm := TProgressForm.Create(Self);
-  pForm.LogPath := LogPath;
-  pForm.PopupParent := Self;
-  pForm.Caption := GetString('mpProg_Checking');
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  ShowProgressForm(self, pForm, GetString('mpProg_Checking'));
 
   // start error check thread
   ErrorCheckCallback := ProgressDone;

@@ -1,12 +1,12 @@
 ﻿{ TMergeForm }
 { ## QuickBar ## }
-mpMain_NewButton_Hint=Create new merge|Make a new merge.
-mpMain_FindErrorsButton_Hint=Find errors|
-mpMain_BuildButton_Hint=Build merges|
-mpMain_ReportButton_Hint=Submit reports|Submit reports on all plugins in merges you've #13#10built successfully.#13#10
-mpMain_DictionaryButton_Hint=View dictionary|Open the dictionary viewer to see all reports #13#10submitted by other users.#13#10
-mpMain_OptionsButton_Hint=Options|Change the options that control how the #13#10program runs.#13#10
-mpMain_UpdateButton_Hint=Update|
+mpMain_NewButton_Hint=Create new merge|Make a new empty merge.
+mpMain_FindErrorsButton_Hint=Find errors|Check all plugins that are loaded and not blacklisted for errors.
+mpMain_BuildButton_Hint=Build merges|Build all merges that are ready to be built or rebuilt.
+mpMain_ReportButton_Hint=Submit reports|Submit reports on all plugins in merges you've built successfully.
+mpMain_DictionaryButton_Hint=View dictionary|Open the dictionary viewer to see all reports submitted by other users.
+mpMain_OptionsButton_Hint=Options|Change the options that control how the plugin runs.
+mpMain_UpdateButton_Hint=Update|No updates available!
 mpMain_HelpButton_Hint=Help|Sorry, this isn't working yet.
 { #### DYNAMIC #### }
 mpMain_NoPluginsToCheck=There aren't any plugins to check for errors.
@@ -47,11 +47,14 @@ mpMain_AddToMergeItem_Caption=Add to merge
 mpMain_NewMergeItem_Caption=<New Merge>
 mpMain_RemoveFromMergeItem_Caption=Remove from merge
 mpMain_ReportOnPluginItem_Caption=Report on plugin
-mpMain_CheckforErrorsItem_Caption=Check for errors
-mpMain_FixErrorsItem_Caption=Fix errors
-mpMain_IgnoreErrorsItem_Caption=Ignore errors
 mpMain_DoNotMergeItem_Caption=Disallow merging
 mpMain_OpenPluginLocationItem_Caption=Open plugin location
+{ ## Errors Submenu ## }
+mpMain_ErrorsItem_Caption=Errors
+mpMain_CheckForErrorsItem_Caption=Check for errors
+mpMain_FixErrorsItem_Caption=Fix errors
+mpMain_IgnoreErrorsItem_Caption=Ignore errors
+mpMain_ResetErrorsItem_Caption=Reset errors
 { #### DYNAMIC #### }
 mpMain_UnignoreErrors=Unignore errors
 mpMain_AllowMerging=Allow merging
@@ -76,10 +79,12 @@ mpMain_CreateNewMergeItem_Caption=Create new merge
 mpMain_EditMergeItem_Caption=Edit merge
 mpMain_DeleteMergeItem_Caption=Delete merge
 mpMain_BuildMergeItem_Caption=Build merge
-mpMain_ToggleRebuildItem=Toggle rebuild status
 mpMain_OpenInExplorerItem_Caption=Open in explorer
-mpMain_RemovePluginsItem_Caption=Remove plugins
+mpMain_ToggleRebuildItem_Caption=Toggle rebuild status
+{ ## Plugins Submenu ## }
+mpMain_PluginsItem_Caption=Plugins
 mpMain_CheckPluginsItem_Caption=Check plugins for errors
+mpMain_ResolveIssuesItem_Caption=Resolve issues
 mpMain_ReportOnPluginsItem_Caption=Report on plugins
 mpMain_FixPluginsItem_Caption=Fix errors in plugins
 { #### DYNAMIC #### }
@@ -114,6 +119,7 @@ mpMain_FilterGroupItem_Caption=Filter group
 mpMain_FilterLabelItem_Caption=Filter label
 mpMain_CopyToClipboardItem_Caption=Copy to clipboard
 mpMain_SaveAndClearItem_Caption=Save and clear
+mpMain_ToggleAutoScrollItem_Caption=Disable auto scroll
 { #### DYNAMIC #### }
 mpMain_Enable=Enable
 mpMain_Disable=Disable
@@ -205,8 +211,8 @@ mpOpt_AuthFailed=Click reset to reset your authentication key.#13#10NOTE: This w
 mpOpt_MergingTabSheet_Caption=Merging
 mpOpt_gbAssetHandling_Caption=Asset handling
 mpOpt_lblMergeDestination_Caption=Merge destination directory
-mpOpt_kbFaceGen_Caption=Handle FaceGenData
-mpOpt_kbVoiceAssets_Caption=Handle voice assets
+mpOpt_kbFaceGen_Caption=Handle FaceGen files
+mpOpt_kbVoiceAssets_Caption=Handle voice files
 mpOpt_kbTranslations_Caption=Handle MCM translations
 mpOpt_kbINIs_Caption=Handle INI files
 mpOpt_kbSEQ_Caption=Handle SEQ files
@@ -315,3 +321,44 @@ mpProg_DoneFixing=Done fixing errors
 mpProg_SavePlugin=Save plugin %s?
 mpProg_GeckScripts=The source code of certain scripts was modified, so you will #13#10need to recompile them in the GECK:#13#10#13#10%s
 mpProg_NavConflicts=There were some NavMesh conflicts.  You'll need to rebuild #13#10these navmeshes in the CK:#13#10#13#10%s
+
+{ TResolveForm }
+mpRes_btnOK_Caption=OK
+{ ## Broken Dependencies Tab ## }
+mpRes_tsBrokenDependencies_Caption=Broken dependencies
+mpRes_lblBrokenDependencies_Caption=Your merge breaks the dependencies of other plugins in your load order.  You can either remove the problematic plugins from the merge or add dependent plugins to the merge.
+{ ## Broken Dependencies Popup Menu ## }
+mpRes_IgnoreDependencyItem_Caption=Ignore dependency
+mpRes_RemoveBreakingPluginItem_Caption=Remove plugin from merge
+mpRes_AddDependencyItem_Caption=Add dependency to merge
+{ ## Non-contiguous Plugins Tab ## }
+mpRes_tsNonContiguous_Caption=Non-contiguous plugins
+mpRes_lblNonContiguous_Caption=Your merge has non-contiguous plugins in it.  It is highly recommended to only merge plugins that are contiguous to avoid issues in the resulting merged plugin.  You will have to adjust your load order and restart Merge Plugins to resolve this.
+mpRes_btnIgnoreContiguous_Caption=Ignore
+{ ## Plugin Errors Tab ## }
+mpRes_tsPluginErrors_Caption=Plugin errors
+mpRes_lblPluginErrors_Caption=You need to check all plugins in your merge for errors before you can build the merge.  Plugins with errors may not merge properly - some content may be lost!  You can have merge plugins attempt to fix errors in plugins, or remove plugins with errors from your merge.  Ignore errors in plugins at your own risk!
+{ ## Plugin Errors Popup Menu ## }
+mpRes_IgnoreErrorsItem_Caption=Ignore errors
+mpRes_RemoveErrorsPluginItem_Caption=Remove plugin from merge
+mpRes_CheckPluginItem_Caption=Check plugin for errors
+mpRes_FixErrorsItem_Caption=Fix errors in plugin
+{ ## Other Issues Tab ## }
+mpRes_tsOtherIssues_Caption=Other issues
+mpRes_lblOtherIssues_Caption=Your merge has other issues that make it so you cannot build it.  Perhaps there are plugins in this merge that aren't loaded, or your directories are invalid, or your merge has no plugins in it.
+{ ## Other Issues Popup Menu ## }
+mpRes_RemoveUnloadedPluginItem_Caption=Remove plugin
+{ #### DYNAMIC #### }
+mpRes_IssuesResolved=All issues resolved!
+mpRes_NoPlugins=No plugins
+mpRes_NoPlugins_Merge=Merge has no plugins
+mpRes_DirBlank_Merge=Merge directory is blank
+mpRes_DirBlank_MO=Mod Organizer directory is blank
+mpRes_DirInvalid=Directory invalid
+mpRes_DirInvalid_MO=Mod Organizer directory is invalid
+mpRes_UnloadedPlugin=Unloaded plugin
+mpRes_NeedsErrorCheck=Needs error check
+mpRes_HasErrors=Has errors
+mpRes_DoNotMerge=Couldn't add plugin %s to merge %s, it has the "Do not merge" flag.
+mpRes_Blacklisted=Couldn't add plugin %s to merge %s, it's blacklisted.
+mpRes_InMerge=Couldn't add plugin %s to merge %s, it's already in a merge.
