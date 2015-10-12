@@ -3764,7 +3764,7 @@ var
 begin
   path := ProgramPath + 'profiles\' + name;
   if DirectoryExists(path) then
-    DeleteDirectory(path);
+    RecycleDirectory(path);
 end;
 
 procedure TProfile.Rename(name: string);

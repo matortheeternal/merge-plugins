@@ -1044,7 +1044,7 @@ begin
   CheckForErrorsItem.Enabled := bLoaderDone and bAllNeedErrorCheck and not bBlacklisted;
   FixErrorsItem.Enabled := bLoaderDone and bHasErrors and not bBlacklisted;
   IgnoreErrorsItem.Enabled := bHasErrors and not bBlacklisted;
-  ResetErrorsItem.Enabled := not bBlacklisted;
+  ResetErrorsItem.Enabled := bHasErrors and not bBlacklisted;
   ReportOnPluginItem.Enabled := not bBlacklisted;
 end;
 
@@ -1067,8 +1067,6 @@ begin
   // add merges to plugins popup menu
   for i := 0 to Pred(MergesList.Count) do begin
     merge := TMerge(MergesList[i]);
-    if merge.status = msBuilt then
-      continue;
     MenuItem := TMenuItem.Create(AddToMergeItem);
     MenuItem.Caption := merge.name;
     MenuItem.OnClick := AddToMergeClick;
@@ -1082,7 +1080,7 @@ var
   merge: TMerge;
 begin
   MenuItem := TMenuItem(Sender);
-  merge := TMerge(MergesList[MenuItem.MenuIndex - 1]);
+  merge := MergeByName(MergesList, MenuItem.Caption);
   AddPluginsToMerge(merge);
 end;
 
@@ -1694,7 +1692,7 @@ end;
 
 procedure TMergeForm.MergesPopupMenuPopup(Sender: TObject);
 var
-  bNeverBuilt, bHasBuildStatus, bHasUpToDateStatus,
+  bNeverBuilt, bHasBuildStatus, bHasUpToDateStatus, bHasResolveStatus,
   bHasCheckStatus, bHasErrorStatus, bHasSelection, bHasPluginErrors: boolean;
   merge: TMerge;
   i, mergesSelected: Integer;
@@ -1706,6 +1704,7 @@ begin
   bHasCheckStatus := false;
   bHasErrorStatus := false;
   bHasPluginErrors := false;
+  bHasResolveStatus := false;
   mergesSelected := 0;
 
   // loop through list view to find selection
@@ -1721,17 +1720,19 @@ begin
     bHasCheckStatus := bHasCheckStatus or (merge.status = msCheckErrors);
     bHasPluginErrors := bHasPluginErrors or (merge.status = msErrors);
     bHasErrorStatus := bHasErrorStatus or (merge.status in ErrorStatuses);
+    bHasResolveStatus := bHasResolveStatus or (merge.status in ResolveStatuses);
   end;
 
   bHasSelection := (mergesSelected > 0);
   // change enabled state of MergesPopupMenu items based on booleans
   EditMergeItem.Enabled := bHasSelection;
   DeleteMergeItem.Enabled := bHasSelection;
-  BuildMergeItem.Enabled := bHasSelection and (not bHasCheckStatus) and bLoaderDone;
-  ToggleRebuildItem.Enabled := bHasSelection and (bHasUpToDateStatus or bHasBuildStatus);
+  BuildMergeItem.Enabled := bHasSelection and bHasBuildStatus and bLoaderDone;
+  ToggleRebuildItem.Enabled := bHasSelection and not bNeverBuilt and
+    (bHasUpToDateStatus or bHasBuildStatus);
   OpenInExplorerItem.Enabled := bHasSelection;
   // plugins submenu
-  ResolveIssuesItem.Enabled := bHasSelection;
+  ResolveIssuesItem.Enabled := bHasSelection and bHasResolveStatus;
   CheckPluginsItem.Enabled := bHasSelection and bHasCheckStatus and bLoaderDone;
   FixPluginsItem.Enabled := bHasSelection and bHasPluginErrors and bLoaderDone;
   ReportOnPluginsItem.Enabled := bHasSelection and bHasUpToDateStatus;

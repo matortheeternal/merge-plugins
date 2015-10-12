@@ -29,6 +29,7 @@ uses
   function ApplyTemplate(const template: string; var map: TStringList): string;
   { Windows API functions }
   function FileNameValid(filename: string): boolean;
+  procedure RecycleDirectory(const DirName: string);
   procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
   procedure BrowseForFile(var ed: TEdit; filter, initDir: string);
   procedure BrowseForFolder(var ed: TEdit; initDir: string);
@@ -364,6 +365,17 @@ function FileNameValid(filename: string): boolean;
 begin
   Result := (Length(Trim(filename)) > 0) and
     TPath.HasValidFileNameChars(filename, false);
+end;
+
+procedure RecycleDirectory(const DirName: string);
+var
+  FileOp: TSHFileOpStruct;
+begin
+  FillChar(FileOp, SizeOf(FileOp), 0);
+  FileOp.wFunc := FO_DELETE;
+  FileOp.pFrom := PChar(DirName); //deletes to recycle bin
+  FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
+  SHFileOperation(FileOp);
 end;
 
 { Create a new synchronous or asynchronous process }

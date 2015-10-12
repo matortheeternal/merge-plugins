@@ -59,6 +59,7 @@ type
     procedure IgnoreErrorsItemClick(Sender: TObject);
     procedure btnIgnoreContiguousClick(Sender: TObject);
     procedure RemoveUnloadedPluginItemClick(Sender: TObject);
+    procedure PluginErrorsPopupMenuPopup(Sender: TObject);
   private
     { Private declarations }
   public
@@ -313,6 +314,12 @@ begin
     ResolvePageControl.ActivePage := tsBrokenDependencies;
 end;
 
+procedure TResolveForm.PluginErrorsPopupMenuPopup(Sender: TObject);
+begin
+  CheckPluginItem.Enabled := bLoaderDone;
+  FixErrorsItem.Enabled := bLoaderDone;
+end;
+
 procedure TResolveForm.ProgressDone;
 begin
   xEditLogGroup := 'GENERAL';
@@ -352,6 +359,8 @@ var
   ListItem: TListItem;
   plugin: TPlugin;
 begin
+  if not bLoaderDone then
+    exit;
   // create lists
   pluginsToHandle := TList.Create;
   timeCosts := TStringList.Create;
@@ -382,6 +391,8 @@ var
   ListItem: TListItem;
   plugin: TPlugin;
 begin
+  if not bLoaderDone then
+    exit;
   // create lists
   pluginsToHandle := TList.Create;
   timeCosts := TStringList.Create;

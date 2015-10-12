@@ -30,7 +30,6 @@ object ResolveForm: TResolveForm
     TabWidth = 140
     object tsBrokenDependencies: TTabSheet
       Caption = 'Broken dependencies'
-      ExplicitWidth = 489
       object lblBrokenDependencies: TLabel
         Left = 3
         Top = 13
@@ -75,7 +74,6 @@ object ResolveForm: TResolveForm
     object tsNonContiguous: TTabSheet
       Caption = 'Non-contiguous plugins'
       ImageIndex = 1
-      ExplicitWidth = 489
       object lblNonContiguous: TLabel
         Left = 3
         Top = 13
@@ -103,7 +101,6 @@ object ResolveForm: TResolveForm
         Caption = 'Ignore'
         TabOrder = 0
         OnClick = btnIgnoreContiguousClick
-        ExplicitLeft = 448
       end
       object lvNonContiguous: TListView
         Left = 3
@@ -134,7 +131,6 @@ object ResolveForm: TResolveForm
     object tsPluginErrors: TTabSheet
       Caption = 'Plugin errors'
       ImageIndex = 2
-      ExplicitWidth = 489
       object lblPluginErrors: TLabel
         Left = 3
         Top = 13
@@ -181,9 +177,6 @@ object ResolveForm: TResolveForm
     object tsOtherIssues: TTabSheet
       Caption = 'Other issues'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 28
-      ExplicitWidth = 556
       object lblOtherIssues: TLabel
         Left = 3
         Top = 13
@@ -253,6 +246,7 @@ object ResolveForm: TResolveForm
     end
   end
   object PluginErrorsPopupMenu: TPopupMenu
+    OnPopup = PluginErrorsPopupMenuPopup
     Left = 72
     Top = 176
     object CheckPluginItem: TMenuItem

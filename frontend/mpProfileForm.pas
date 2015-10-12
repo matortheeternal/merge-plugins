@@ -111,7 +111,12 @@ begin
   for i := 0 to Pred(ProfilePanels.Count) do begin
     p := TProfilePanel(ProfilePanels[i]);
     aProfile := p.GetProfile;
-    SaveProfile(aProfile);
+    try
+      SaveProfile(aProfile);
+    except
+      on Exception do
+        // nothing to do
+    end;
   end;
 
   // set profile if user clicked OK
