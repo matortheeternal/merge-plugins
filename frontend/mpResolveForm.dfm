@@ -230,6 +230,7 @@ object ResolveForm: TResolveForm
     TabOrder = 1
   end
   object DependenciesPopupMenu: TPopupMenu
+    OnPopup = DependenciesPopupMenuPopup
     Left = 72
     Top = 120
     object RemoveBreakingPluginItem: TMenuItem
@@ -267,6 +268,7 @@ object ResolveForm: TResolveForm
     end
   end
   object OtherIssuesPopupMenu: TPopupMenu
+    OnPopup = OtherIssuesPopupMenuPopup
     Left = 72
     Top = 240
     object RemoveUnloadedPluginItem: TMenuItem

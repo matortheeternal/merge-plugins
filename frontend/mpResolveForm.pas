@@ -60,6 +60,8 @@ type
     procedure btnIgnoreContiguousClick(Sender: TObject);
     procedure RemoveUnloadedPluginItemClick(Sender: TObject);
     procedure PluginErrorsPopupMenuPopup(Sender: TObject);
+    procedure OtherIssuesPopupMenuPopup(Sender: TObject);
+    procedure DependenciesPopupMenuPopup(Sender: TObject);
   private
     { Private declarations }
   public
@@ -129,7 +131,7 @@ begin
   end;
 
   // loop through plugins
-  lastLoadOrder := 0;
+  lastLoadOrder := -1;
   for i := 0 to Pred(merge.plugins.Count) do begin
     plugin := PluginByFilename(merge.plugins[i]);
 
@@ -145,7 +147,7 @@ begin
 
     // check if plugins are contiguous
     currentLoadOrder := plugin._File.LoadOrder;
-    if (i <> 0) and (not merge.bIgnoreNonContiguous)
+    if (lastLoadOrder > -1) and (not merge.bIgnoreNonContiguous)
     and (currentLoadOrder - lastLoadOrder <> 1) then
       bNonContiguous := true;
     lastLoadOrder := currentLoadOrder;
@@ -233,6 +235,28 @@ begin
     EvaluateMergeIssues;
 end;
 
+procedure TResolveForm.DependenciesPopupMenuPopup(Sender: TObject);
+var
+  i: Integer;
+  ListItem: TListItem;
+  bHasSelection: boolean;
+begin
+  // initialize booleans
+  bHasSelection := false;
+
+  for i := 0 to Pred(lvBrokenDependencies.Items.Count) do begin
+    ListItem := lvBrokenDependencies.Items[i];
+    if not ListItem.Selected then
+      continue;
+    bHasSelection := true;
+  end;
+
+  // toggle menu items
+  IgnoreDependencyItem.Enabled := bHasSelection;
+  RemoveBreakingPluginItem.Enabled := bHasSelection;
+  AddDependencyItem.Enabled := bHasSelection;
+end;
+
 procedure TResolveForm.RemoveBreakingPluginItemClick(Sender: TObject);
 var
   i: Integer;
@@ -315,9 +339,32 @@ begin
 end;
 
 procedure TResolveForm.PluginErrorsPopupMenuPopup(Sender: TObject);
+var
+  i: Integer;
+  ListItem: TListItem;
+  plugin: TPlugin;
+  bAllNeedErrorCheck, bAllPluginsHaveErrors, bHasSelection: boolean;
 begin
-  CheckPluginItem.Enabled := bLoaderDone;
-  FixErrorsItem.Enabled := bLoaderDone;
+  // initialze
+  bAllNeedErrorCheck := true;
+  bAllPluginsHaveErrors := true;
+  bHasSelection:= false;
+
+  for i := 0 to Pred(lvPluginErrors.Items.Count) do begin
+    ListItem := lvPluginErrors.Items[i];
+    if not ListItem.Selected then
+      continue;
+    // process booleans for plugin
+    bHasSelection := true;
+    plugin := PluginByFilename(ListItem.SubItems[0]);
+    bAllNeedErrorCheck := bAllNeedErrorCheck and (not plugin.HasBeenCheckedForErrors);
+    bAllPluginsHaveErrors := bAllPluginsHaveErrors and (plugin.HasErrors);
+  end;
+
+  // toggle menu items
+  CheckPluginItem.Enabled := bLoaderDone and bHasSelection and bAllNeedErrorCheck;
+  FixErrorsItem.Enabled := bLoaderDone and bHasSelection and bAllPluginsHaveErrors;
+  IgnoreErrorsItem.Enabled := bLoaderDone and bHasSelection and bAllPluginsHaveErrors;
 end;
 
 procedure TResolveForm.ProgressDone;
@@ -459,6 +506,30 @@ begin
     ResolvePageControl.ActivePage := tsPluginErrors;
 end;
 
+procedure TResolveForm.OtherIssuesPopupMenuPopup(Sender: TObject);
+var
+  i: Integer;
+  ListItem: TListItem;
+  bAllPluginsUnloaded, bHasSelection: boolean;
+begin
+  // initialize booleans
+  bAllPluginsUnloaded:= true;
+  bHasSelection := false;
+
+  for i := 0 to Pred(lvOtherIssues.Items.Count) do begin
+    ListItem := lvOtherIssues.Items[i];
+    if not ListItem.Selected then
+      continue;
+    // process booleans for plugin
+    bHasSelection := true;
+    bAllPluginsUnloaded := bAllPluginsUnloaded and
+      (ListItem.Caption = GetString('mpRes_UnloadedPlugin'));
+  end;
+
+  // toggle menu items
+  RemoveUnloadedPluginItem.Enabled := bHasSelection and bAllPluginsUnloaded;
+end;
+
 procedure TResolveForm.RemoveUnloadedPluginItemClick(Sender: TObject);
 var
   i: Integer;
@@ -468,8 +539,9 @@ begin
     ListItem := lvOtherIssues.Items[i];
     if not ListItem.Selected then
       continue;
-    // remove plugin
-    merge.Remove(ListItem.SubItems[0]);
+    // remove plugin if is an unloaded plugin issue
+    if ListItem.Caption = GetString('mpRes_UnloadedPlugin') then
+      merge.Remove(ListItem.SubItems[0]);
   end;
 
   // re-evalute issues

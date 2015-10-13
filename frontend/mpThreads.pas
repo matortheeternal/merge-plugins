@@ -296,7 +296,10 @@ begin
     Tracker.Write('Checking for errors in '+plugin.filename);
     plugin.FindErrors;
     Tracker.SetProgress(IntegerListSum(timeCosts, i));
-    if Tracker.Cancel then Tracker.Write('Check for errors canceled.');
+    if Tracker.Cancel then begin
+      Tracker.Write('Check for errors canceled.');
+      Tracker.SetProgress(IntegerListSum(timeCosts, Pred(pluginsToHandle.Count)));
+    end;
   end;
   // inform user thread is done if it wasn't cancelled
   if not Tracker.Cancel then

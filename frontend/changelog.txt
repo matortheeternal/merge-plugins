@@ -38,7 +38,7 @@ Version 2.0.2.1
   - Added a fallback for users who won't have lang\english.lang, which directs them to GitHub to download it
   - No longer throwing an exception when a language file fails to load
 
-Version 2.0.2.29
+Version 2.0.2.36
   - Profile form vertical scroll bar now has tracking
   - Now updating quickbar and statusbar when language is changed
   - Added options for server host and server port
@@ -51,3 +51,4 @@ Version 2.0.2.29
   - Created a new form for resolving issues with a merge
   - Now handles initialization exceptions better, so you'll know when the program has borked up
   - Program updates will now properly extract ALL files from the program zip archive to relative directories
+  - Profiles now get sent to the recycle bin instead of deleted permanently

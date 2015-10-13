@@ -346,7 +346,7 @@ type
   procedure LoadReport(const filename: string; var report: TReport); overload;
   { Helper methods }
   procedure DeleteTempPath;
-  procedure ShowProgressForm(parent: TForm; pForm: TProgressForm; s: string);
+  procedure ShowProgressForm(parent: TForm; var pf: TProgressForm; s: string);
   function GetRatingColor(rating: real): integer;
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
@@ -2123,15 +2123,15 @@ begin
   DeleteDirectory(TempPath);
 end;
 
-procedure ShowProgressForm(parent: TForm; pForm: TProgressForm; s: string);
+procedure ShowProgressForm(parent: TForm; var pf: TProgressForm; s: string);
 begin
   parent.Enabled := false;
-  pForm := TProgressForm.Create(parent);
-  pForm.LogPath := LogPath;
-  pForm.PopupParent := parent;
-  pForm.Caption := s;
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  pf := TProgressForm.Create(parent);
+  pf.LogPath := LogPath;
+  pf.PopupParent := parent;
+  pf.Caption := s;
+  pf.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
+  pf.Show;
 end;
 
 function GetRatingColor(rating: real): integer;
@@ -3527,7 +3527,7 @@ begin
   end;
 
   // loop through plugins
-  lastLoadOrder := 0;
+  lastLoadOrder := -1;
   for i := 0 to Pred(plugins.Count) do begin
     plugin := PluginByFilename(plugins[i]);
 
@@ -3540,7 +3540,7 @@ begin
 
     // check if plugins are contiguous
     currentLoadOrder := plugin._File.LoadOrder;
-    if (i <> 0) and (not bIgnoreNonContiguous)
+    if (lastLoadOrder > -1) and (not bIgnoreNonContiguous)
     and (currentLoadOrder - lastLoadOrder <> 1) then begin
       Logger.Write('MERGE', 'Status', name + ' -> Plugin '+plugins[i]+' is not contiguous');
       if status = msUnknown then status := msNotContiguous;

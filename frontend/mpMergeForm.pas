@@ -859,6 +859,8 @@ begin
   // update and repaint
   UpdateMerges;
   UpdateListViews;
+  UpdateQuickbar;
+  UpdateStatusBar;
 end;
 
 procedure TMergeForm.PluginsListViewChange(Sender: TObject; Item: TListItem;
@@ -1080,7 +1082,7 @@ var
   merge: TMerge;
 begin
   MenuItem := TMenuItem(Sender);
-  merge := MergeByName(MergesList, MenuItem.Caption);
+  merge := MergesList[AddToMergeItem.IndexOf(MenuItem) - 1];
   AddPluginsToMerge(merge);
 end;
 
@@ -1184,7 +1186,9 @@ begin
 
   // update
   UpdateMerges;
-  UpdateListViews
+  UpdateListViews;
+  UpdateQuickbar;
+  UpdateStatusBar;
 end;
 
 procedure TMergeForm.ReportOnPluginItemClick(Sender: TObject);
@@ -2006,7 +2010,9 @@ begin
 
   // update merges
   UpdatePluginsPopupMenu;
-  MergeListView.Repaint;
+  UpdateListViews;
+  UpdateQuickbar;
+  UpdateStatusBar;
 end;
 
 procedure TMergeForm.BuildMergeItemClick(Sender: TObject);

@@ -1,12 +1,12 @@
 ﻿{ TMergeForm }
 { ## QuickBar ## }
 mpMain_NewButton_Hint=Create new merge|Make a new empty merge.
-mpMain_FindErrorsButton_Hint=Find errors|Check all plugins that are loaded and not blacklisted for errors.
-mpMain_BuildButton_Hint=Build merges|Build all merges that are ready to be built or rebuilt.
+mpMain_FindErrorsButton_Hint=Find errors|
+mpMain_BuildButton_Hint=Build merges|
 mpMain_ReportButton_Hint=Submit reports|Submit reports on all plugins in merges you've built successfully.
 mpMain_DictionaryButton_Hint=View dictionary|Open the dictionary viewer to see all reports submitted by other users.
 mpMain_OptionsButton_Hint=Options|Change the options that control how the plugin runs.
-mpMain_UpdateButton_Hint=Update|No updates available!
+mpMain_UpdateButton_Hint=Update|
 mpMain_HelpButton_Hint=Help|Sorry, this isn't working yet.
 { #### DYNAMIC #### }
 mpMain_NoPluginsToCheck=There aren't any plugins to check for errors.
