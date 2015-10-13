@@ -123,7 +123,9 @@ type
     procedure ToggleGroupFilter(Sender: TObject);
     procedure ToggleLabelFilter(Sender: TObject);
     procedure CopyToClipboardItemClick(Sender: TObject);
+    procedure SaveAndClearLog;
     procedure SaveAndClearItemClick(Sender: TObject);
+    procedure ToggleAutoScrollItemClick(Sender: TObject);
     // QUICKBAR BUTTON EVENTS
     procedure ApproveButtonClick(Sender: TObject);
     procedure RebuildButtonClick(Sender: TObject);
@@ -140,7 +142,6 @@ type
     procedure HandleMessage(msg: TmpMessage; size: integer; AContext: TIdContext);
     procedure WriteMessage(msg: TmpMessage; ip: string);
     procedure TCPServerExecute(AContext: TIdContext);
-    procedure ToggleAutoScrollItemClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -284,6 +285,7 @@ begin
   TaskHandler.AddTask(TTask.Create('Refresh Blacklist', 1.0 * days, TTaskProcedures.RefreshBlacklist));
   TaskHandler.AddTask(TTask.Create('Rebuild Dictionaries', 1.0 * days, TTaskProcedures.RebuildDictionaries));
   TaskHandler.AddTask(TTask.Create('Refresh GUI', 3.0 * seconds, RefreshGUI));
+  TaskHandler.AddTask(TTask.Create('Save and Clear Log', 10.0 * minutes, SaveAndClearLog));
 end;
 
 procedure TBackendForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1061,6 +1063,12 @@ end;
 procedure TBackendForm.ToggleAutoScrollItemClick(Sender: TObject);
 begin
   bAutoScroll := not bAutoScroll;
+end;
+
+procedure TBackendForm.SaveAndClearLog;
+begin
+  if BaseLog.Count > 2000 then
+    SaveAndClearItemClick(nil);
 end;
 
 procedure TBackendForm.SaveAndClearItemClick(Sender: TObject);

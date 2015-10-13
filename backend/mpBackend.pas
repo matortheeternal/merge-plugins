@@ -1528,6 +1528,7 @@ begin
       Zipper.StoreOptions := [soStripDrive, soRemoveDots, soReplace];
       Zipper.AddFiles('MergePlugins.exe', 0);
       Zipper.AddFiles('lang\*.lang', 0);
+      Zipper.AddFiles('doc\*.*', 0);
       ProgramVersion := NewVersion;
       Logger.Write('INIT', 'Status', 'Client Version: '+ProgramVersion);
       Zipper.Free;

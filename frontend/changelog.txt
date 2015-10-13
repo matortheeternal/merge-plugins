@@ -38,7 +38,7 @@ Version 2.0.2.1
   - Added a fallback for users who won't have lang\english.lang, which directs them to GitHub to download it
   - No longer throwing an exception when a language file fails to load
 
-Version 2.0.2.36
+Version 2.0.2.37
   - Profile form vertical scroll bar now has tracking
   - Now updating quickbar and statusbar when language is changed
   - Added options for server host and server port
