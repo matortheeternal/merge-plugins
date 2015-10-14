@@ -1,11 +1,11 @@
 ﻿{ TMergeForm }
 { ## QuickBar ## }
-mpMain_NewButton_Hint=Create new merge|Make a new empty merge.
+mpMain_NewButton_Hint=Create new merge|Make a new merge.
 mpMain_FindErrorsButton_Hint=Find errors|
 mpMain_BuildButton_Hint=Build merges|
-mpMain_ReportButton_Hint=Submit reports|Submit reports on all plugins in merges you've built successfully.
-mpMain_DictionaryButton_Hint=View dictionary|Open the dictionary viewer to see all reports submitted by other users.
-mpMain_OptionsButton_Hint=Options|Change the options that control how the plugin runs.
+mpMain_ReportButton_Hint=Submit reports|Submit reports on all plugins in merges you've #13#10built successfully.#13#10
+mpMain_DictionaryButton_Hint=View dictionary|Open the dictionary viewer to see all reports #13#10submitted by other users.#13#10
+mpMain_OptionsButton_Hint=Options|Change the options that control how the #13#10program runs.#13#10
 mpMain_UpdateButton_Hint=Update|
 mpMain_HelpButton_Hint=Help|Sorry, this isn't working yet.
 { #### DYNAMIC #### }
@@ -55,6 +55,8 @@ mpMain_CheckForErrorsItem_Caption=Check for errors
 mpMain_FixErrorsItem_Caption=Fix errors
 mpMain_IgnoreErrorsItem_Caption=Ignore errors
 mpMain_ResetErrorsItem_Caption=Reset errors
+mpMain_DoNotMergeItem_Caption=Disallow merging
+mpMain_OpenPluginLocationItem_Caption=Open plugin location
 { #### DYNAMIC #### }
 mpMain_UnignoreErrors=Unignore errors
 mpMain_AllowMerging=Allow merging
@@ -79,6 +81,7 @@ mpMain_CreateNewMergeItem_Caption=Create new merge
 mpMain_EditMergeItem_Caption=Edit merge
 mpMain_DeleteMergeItem_Caption=Delete merge
 mpMain_BuildMergeItem_Caption=Build merge
+mpMain_ToggleRebuildItem=Toggle rebuild status
 mpMain_OpenInExplorerItem_Caption=Open in explorer
 mpMain_ToggleRebuildItem_Caption=Toggle rebuild status
 { ## Plugins Submenu ## }
@@ -114,12 +117,13 @@ mpMain_xEditVersion=xEdit Version
 mpMain_xEditCredits=xEdit Credits
 mpMain_Testers=Testers
 mpMain_Translators=Translators
+mpMain_LoadException=Exception Loading Plugins
+mpMain_PluginsNotLoaded=Due to an exception, not all of your plugins #13#10have been loaded.  You can still use the program. #13#10See the log tab for more info.#13#10
 { ## Log Popup Menu ## }
 mpMain_FilterGroupItem_Caption=Filter group
 mpMain_FilterLabelItem_Caption=Filter label
 mpMain_CopyToClipboardItem_Caption=Copy to clipboard
 mpMain_SaveAndClearItem_Caption=Save and clear
-mpMain_ToggleAutoScrollItem_Caption=Disable auto scroll
 { #### DYNAMIC #### }
 mpMain_Enable=Enable
 mpMain_Disable=Disable
