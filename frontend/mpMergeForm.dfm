@@ -1,6 +1,6 @@
 object MergeForm: TMergeForm
-  Left = 310
-  Top = 125
+  Left = 0
+  Top = 0
   Caption = 'Merge Plugins'
   ClientHeight = 682
   ClientWidth = 1264
@@ -217,10 +217,6 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergeListView: TListView
           Left = 3
           Top = 3
@@ -270,10 +266,6 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -887,7 +879,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010C0018006C0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C001800740210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1428,7 +1420,7 @@ object MergeForm: TMergeForm
     Left = 1008
     Top = 8
     Bitmap = {
-      494C010108001400CC0140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108001400D40140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100006000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -4603,24 +4595,10 @@ object MergeForm: TMergeForm
       FFFFFFFFFFFFFFFFF00003FFF00003FF00000000000000000000000000000000
       000000000000}
   end
-  object ReconnectTimer: TTimer
+  object TaskTimer: TTimer
     Enabled = False
-    Interval = 15000
-    OnTimer = OnTimer
-    Left = 944
-    Top = 8
-  end
-  object Heartbeat: TTimer
-    Enabled = False
-    OnTimer = OnHeartbeatTimer
-    Left = 872
-    Top = 8
-  end
-  object RefreshTimer: TTimer
-    Enabled = False
-    Interval = 3000
-    OnTimer = OnRepaintTimer
-    Left = 808
+    OnTimer = OnTaskTimer
+    Left = 952
     Top = 8
   end
   object LogPopupMenu: TPopupMenu
@@ -4703,5 +4681,10 @@ object MergeForm: TMergeForm
     Style = bhsStandard
     Left = 1224
     Top = 24
+  end
+  object bhLoadException: TBalloonHint
+    HideAfter = 12000
+    Left = 112
+    Top = 64
   end
 end

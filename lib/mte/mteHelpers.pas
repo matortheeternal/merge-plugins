@@ -52,6 +52,12 @@ const
   wndBorderSide = 8;
   wndBorderTop = 30;
 
+  // TIME TRACKING
+  days = 1.0;
+  hours = 1.0 / 24.0;
+  minutes = hours / 60.0;
+  seconds = minutes / 60.0;
+
 implementation
 
 {******************************************************************************}

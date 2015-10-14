@@ -1,11 +1,11 @@
-unit mpTaskHandler;
+unit mteTaskHandler;
 
 interface
 
 uses
   Classes, SysUtils,
   // mte components
-  mpBackend, mteLogger, mteHelpers;
+  mteLogger, mteHelpers;
 
 type
   TProcedure = procedure of object;
@@ -23,6 +23,7 @@ type
   TTaskHandler = class(TObject)
   public
     TaskList: TList;
+    procedure RemoveTask(taskName: string);
     procedure AddTask(task: TTask);
     procedure ExecTasks;
     constructor Create; Overload;
@@ -35,13 +36,30 @@ begin
   TaskList.Add(task);
 end;
 
+procedure TTaskHandler.RemoveTask(taskName: string);
+var
+  i: Integer;
+  task: TTask;
+begin
+  if not Assigned(TaskList) then
+    exit;
+
+  for i := Pred(TaskList.Count) downto 0 do begin
+    task := TTask(TaskList[i]);
+    if task.name = taskName then begin
+      TaskList.Delete(i);
+      break;
+    end;
+  end;
+end;
+
 procedure TTaskHandler.ExecTasks;
 var
   i: Integer;
   task: TTask;
 begin
   // loop through task list, executing tasks that are ready to be executed
-  for i := 0 to Pred(TaskList.Count) do begin
+  for i := Pred(TaskList.Count) downto 0 do begin
     task := TTask(TaskList[i]);
     if (Now - task.lastExecuted >= task.rate) then begin
       if (task.rate > 60.0 * seconds) then

@@ -12,7 +12,8 @@ uses
   // third party libraries
   superobject, W7Taskbar,
   // mte components
-  mteHelpers, mteTracker, mteLogger, mteProgressForm, RttiTranslation,
+  mteHelpers, mteTracker, mteLogger, mteProgressForm, mteTaskHandler,
+  RttiTranslation,
   // mp units
   mpFrontend, mpThreads, mpMerge, mpDictionaryForm, mpOptionsForm,
   mpSplashForm, mpEditForm, mpReportForm, mpChangeLogForm, mpResolveForm,
@@ -25,9 +26,7 @@ type
       XPManifest: TXPManifest;
       FlagList: TImageList;
     IconList: TImageList;
-      ReconnectTimer: TTimer;
-      Heartbeat: TTimer;
-      RefreshTimer: TTimer;
+      TaskTimer: TTimer;
       [FormSection('QuickBar')]
         QuickBar: TPanel;
         NewButton: TSpeedButton;
@@ -117,12 +116,12 @@ type
         ImageProgramUpdate: TImage;
         ImageConnected: TImage;
         bhLoader: TBalloonHint;
+        bhLoadException: TBalloonHint;
 
     // MERGE FORM EVENTS
     procedure UpdateLog;
     procedure LogMessage(const group, &label, text: string);
     procedure FormCreate(Sender: TObject);
-    procedure ActivateWindow;
     procedure InitDone;
     procedure FormShow(Sender: TObject);
     procedure LoaderStatus(s: string);
@@ -132,9 +131,14 @@ type
     procedure ConnectDone;
     procedure ProgressDone;
     procedure AutoUpdate;
-    procedure OnTimer(Sender: TObject);
-    procedure OnHeartbeatTimer(Sender: TObject);
-    procedure OnRepaintTimer(Sender: TObject);
+    function ShouldDisplay(bh: TBalloonHint): boolean;
+    procedure DisableHints;
+    procedure HideHints;
+    procedure DisplayHints;
+    procedure Reconnect;
+    procedure Heartbeat;
+    procedure RefreshGUI;
+    procedure OnTaskTimer(Sender: TObject);
     procedure ShowAuthorizationMessage;
     procedure UpdateStatusBar;
     procedure UpdateListViews;
@@ -219,7 +223,8 @@ type
     procedure DetailsCopyToClipboardItemClick(Sender: TObject);
     procedure ImageDisconnectedClick(Sender: TObject);
   protected
-    procedure WMWindowPosChanged(var AMessage:TMessage); message WM_WINDOWPOSCHANGED;
+    procedure WMSize(var AMessage: TMessage); message WM_SIZE;
+    procedure WMMove(var AMessage: TMessage); message WM_MOVE;
     procedure WMActivateApp(var AMessage: TMessage); message WM_ACTIVATEAPP;
   private
     { Private declarations }
@@ -228,16 +233,17 @@ type
   end;
 
 const
-  HintDelay = (1.0 / 86400.0);
+  MessageDelay = (0.1 / 86400.0);
 
 var
   splash: TSplashForm;
   MergeForm: TMergeForm;
   LastHint: string;
-  LastURLTime, LastHintTime: double;
+  LastURLTime, LastMessageTime, FormDisplayTime: double;
   bMergesToBuild, bMergesToCheck, bAutoScroll, bCreated, bClosing: boolean;
   pForm: TProgressForm;
   rForm: TResolveForm;
+  TaskHandler: TTaskHandler;
 
 implementation
 
@@ -339,17 +345,40 @@ begin
   bCreated := true;
 end;
 
-procedure TMergeForm.WMActivateApp(var AMessage: TMessage);
+procedure TMergeForm.WMSize(var AMessage: TMessage);
 begin
-  if bCreated and (Now - LastHintTime > HintDelay) then
-    bhLoader.HideHint;
+  if not bCreated then
+    exit;
+  if Now - LastMessageTime < MessageDelay then
+    exit;
+  LastMessageTime := Now;
+  if (AMessage.WParam <> SIZE_MINIMIZED) then
+    DisplayHints;
   inherited;
 end;
 
-procedure TMergeForm.WMWindowPosChanged(var AMessage: TMessage);
+procedure TMergeForm.WMMove(var AMessage: TMessage);
 begin
-  if bCreated and (Now - LastHintTime > HintDelay) then
-    bhLoader.HideHint;
+  if not bCreated then
+    exit;
+  if Now - LastMessageTime < MessageDelay then
+    exit;
+  LastMessageTime := Now;
+  DisplayHints;
+  inherited;
+end;
+
+procedure TMergeForm.WMActivateApp(var AMessage: TMessage);
+begin
+  if not bCreated then
+    exit;
+  if Now - LastMessageTime < MessageDelay then
+    exit;
+  LastMessageTime := Now;
+  if AMessage.WParam = 1 then
+    DisplayHints
+  else
+    HideHints;
   inherited;
 end;
 
@@ -358,18 +387,8 @@ begin
   splash.ModalResult := mrOk;
 end;
 
-procedure TMergeForm.ActivateWindow;
-begin
-  Application.Restore; // unminimize window, makes no harm always call it
-  SetWindowPos(self.Handle, HWND_NOTOPMOST, 0,0,0,0, SWP_NOMOVE or SWP_NOSIZE);
-  SetWindowPos(self.Handle, HWND_TOPMOST, 0,0,0,0, SWP_NOMOVE or SWP_NOSIZE);
-  SetWindowPos(self.Handle, HWND_NOTOPMOST, 0,0,0,0, SWP_SHOWWINDOW or SWP_NOMOVE or SWP_NOSIZE);
-end;
-
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
-var
-  pt: TPoint;
 begin
   // HANDLE AUTO-UPDATE
   if bInstallUpdate then begin
@@ -442,24 +461,26 @@ begin
     CorrectListViewWidth(MergeListView);
     CorrectListViewWidth(PluginsListView);
 
-    // SHOW LOADER HINT
+    // LOAD AND DISPLAY HINTS
     StatusPanelMessage.Caption := GetString('mpMain_LoaderInProgress');
     bhLoader.Title := GetString('mpMain_LoaderInProgress');
     bhLoader.Description := GetString('mpMain_LoaderLimitations');
-    pt.X := 8 + wndBorderSide;
-    pt.Y := 4 + wndBorderTop;
-    pt := ImageBlocked.ClientToScreen(pt);
-    bhLoader.ShowHint(pt);
-    LastHintTime := Now;
+    bhLoadException.Title := GetString('mpMain_LoadException');
+    bhLoadException.Description := GetString('mpMain_PluginsNotLoaded');
+    DisplayHints;
 
-    // ENABLE TIMERS
-    RefreshTimer.Enabled := true;
-    Heartbeat.Enabled := true;
-    ReconnectTimer.Enabled := true;
+    // initialize task handler
+    TaskHandler := TTaskHandler.Create;
+    TaskHandler.AddTask(TTask.Create('Disable Hints', 12.0 * seconds, DisableHints));
+    TaskHandler.AddTask(TTask.Create('Reconnect', 15.0 * seconds, Reconnect));
+    TaskHandler.AddTask(TTask.Create('Heartbeat', 0.9 * seconds, Heartbeat));
+    TaskHandler.AddTask(TTask.Create('Refresh GUI', 3.0 * seconds, RefreshGUI));
+    TaskTimer.Enabled := true;
   end;
 
   // ACTIVATE WINDOW
-  ActivateWindow;
+  FormDisplayTime := Now;
+  Application.Restore;
 end;
 
 procedure TMergeform.LoaderStatus(s: string);
@@ -562,18 +583,54 @@ begin
   end;
 end;
 
-procedure TMergeForm.OnTimer(Sender: TObject);
+function TMergeForm.ShouldDisplay(bh: TBalloonHint): boolean;
+begin
+  Result := (Now - FormDisplayTime) * 86400 < (bh.HideAfter / 1000);
+end;
+
+procedure TMergeForm.DisableHints;
+begin
+  HideHints;
+  TaskHandler.RemoveTask('Disable Hints');
+end;
+
+procedure TMergeForm.HideHints;
+begin
+  bhLoader.HideHint;
+  bhLoadException.HideHint;
+end;
+
+procedure TMergeForm.DisplayHints;
+var
+  pt: TPoint;
+begin
+  if bLoadException and ShouldDisplay(bhLoadException) then begin
+    pt.X := 126;
+    pt.Y := 16;
+    pt := MainPanel.ClientToScreen(pt);
+    bhLoadException.ShowHint(pt);
+  end;
+
+  if ShouldDisplay(bhLoader) then begin
+    pt.X := 8;
+    pt.Y := 4;
+    pt := ImageBlocked.ClientToScreen(pt);
+    bhLoader.ShowHint(pt);
+  end;
+end;
+
+procedure TMergeForm.Reconnect;
 begin
   if not (TCPClient.Connected or bConnecting or bClosing) then
     TConnectThread.Create;
 end;
 
-procedure TMergeForm.OnRepaintTimer(Sender: TObject);
+procedure TMergeForm.RefreshGUI;
 begin
   if not bClosing then UpdateStatusBar;
 end;
 
-procedure TMergeForm.OnHeartbeatTimer(Sender: TObject);
+procedure TMergeForm.Heartbeat;
 begin
   try
     if TCPClient.IOHandler.Opened and
@@ -587,6 +644,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TMergeForm.OnTaskTimer(Sender: TObject);
+begin
+  TaskHandler.ExecTasks;
 end;
 
 procedure TMergeForm.ShowAuthorizationMessage;

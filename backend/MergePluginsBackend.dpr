@@ -25,8 +25,7 @@ uses
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpLoginForm in 'mpLoginForm.pas' {LoginForm},
-  mpUserForm in 'mpUserForm.pas' {UserForm},
-  mpTaskHandler in 'mpTaskHandler.pas';
+  mpUserForm in 'mpUserForm.pas' {UserForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

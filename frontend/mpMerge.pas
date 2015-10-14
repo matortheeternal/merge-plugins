@@ -404,9 +404,9 @@ begin
     // see if formID directly remapped, or only FormIndex changed
     index := merge.map.IndexOfName(oldFileFormID);
     if (index = -1) then
-      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6)
+      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(oldFileFormID, 3, 6)
     else
-      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(oldFileFormID, 3, 6);
+      newFileFormID := IntToHex(mergeFormIndex, 2) + Copy(merge.map.Values[oldFileFormID], 3, 6);
     // continue if formID didn't get changed
     if newFileFormID = oldFormID then
       continue;

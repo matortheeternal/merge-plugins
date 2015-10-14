@@ -469,9 +469,9 @@ var
   statistics, sessionStatistics: TStatistics;
   status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
-  bInitException, bChangeMergeProfile, bForceTerminate, bLoaderDone, bAuthorized,
-  bProgramUpdate, bDictionaryUpdate, bInstallUpdate, bConnecting,
-  bUpdateMergeStatus, bAllowClose: boolean;
+  bInitException, bLoadException, bChangeMergeProfile, bForceTerminate,
+  bLoaderDone, bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
+  bConnecting, bUpdateMergeStatus, bAllowClose: boolean;
   TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveModProfile,
   ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath,
   ProfilePath: string;

@@ -11,9 +11,9 @@ uses
   IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer,
   IdGlobal, IdSync,
   // mte components
-  W7Taskbar, RttiJson, mteLogger, mteTracker, mteHelpers,
+  W7Taskbar, RttiJson, mteLogger, mteTracker, mteHelpers, mteTaskHandler,
   // mp units
-  mpBackend, mpDictionaryForm, mpOptionsForm, mpEditForm, mpTaskHandler;
+  mpBackend, mpDictionaryForm, mpOptionsForm, mpEditForm;
 
 type
   TBackendForm = class(TForm)

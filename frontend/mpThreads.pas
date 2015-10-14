@@ -197,7 +197,7 @@ begin
         on x: Exception do begin
           Logger.Write('ERROR', 'Load', 'Exception loading '+sl[i]);
           Logger.Write('ERROR', 'Load', x.Message);
-          bInitException := true;
+          bLoadException := true;
         end;
       end;
 
