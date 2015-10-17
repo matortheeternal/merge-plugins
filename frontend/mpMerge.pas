@@ -604,7 +604,7 @@ begin
   // exit if no DIAL records in file
   if not f.HasGroup('DIAL') then begin
     if settings.debugScriptFragments then
-      Tracker.Write('      '+plugin.filename+' has no DIAL record ground, skipping.');
+      Tracker.Write('      '+plugin.filename+' has no DIAL record group, skipping.');
     exit;
   end;
   // check if the file formID index is different on the merged plugin
@@ -675,7 +675,7 @@ begin
   // exit if no QUST records in file
   if not f.HasGroup('QUST') then begin
     if settings.debugScriptFragments then
-      Tracker.Write('      '+plugin.filename+' has no QUST record ground, skipping.');
+      Tracker.Write('      '+plugin.filename+' has no QUST record group, skipping.');
     exit;
   end;    
   // check if the file formID index is different on the merged plugin
@@ -740,7 +740,7 @@ begin
   // exit if no SCEN records in file
   if not f.HasGroup('SCEN') then begin
     if settings.debugScriptFragments then
-      Tracker.Write('      '+plugin.filename+' has no SCEN record ground, skipping.');
+      Tracker.Write('      '+plugin.filename+' has no SCEN record group, skipping.');
     exit;
   end;
   // check if the file formID index is different on the merged plugin
