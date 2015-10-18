@@ -28,6 +28,10 @@ mpMain_DetailsLabel_Caption=Details
 mpMain_DetailsCopyToClipboardItem_Caption=Copy to clipboard
 { ## Plugins Tab ## }
 mpMain_PluginsTabSheet_Caption=Plugins
+mpMain_PluginsListView_Column0=Index
+mpMain_PluginsListView_Column1=Filename
+mpMain_PluginsListView_Column2=Flags
+mpMain_PluginsListView_Column3=Merge
 { #### DYNAMIC #### }
 mpMain_PluginFlags=%s Flags#13#10%s
 mpMain_PluginDetails=Plugin Details
@@ -64,6 +68,11 @@ mpMain_UnignoreErrors=Unignore errors
 mpMain_AllowMerging=Allow merging
 { ## Merges Tab ## }
 mpMain_MergesTabSheet_Caption=Merges
+mpMain_MergesListView_Column0=Index
+mpMain_MergesListView_Column1=Name
+mpMain_MergesListView_Column2=Filename
+mpMain_MergesListView_Column3=Size
+mpMain_MergesListView_Column4=Date built
 { #### DYNAMIC #### }
 mpMain_MergeDetails=Merge Details
 mpMain_Status=Status

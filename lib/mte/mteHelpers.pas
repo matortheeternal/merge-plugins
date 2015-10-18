@@ -28,8 +28,9 @@ uses
   procedure SaveStringToFile(s: string; fn: string);
   function ApplyTemplate(const template: string; var map: TStringList): string;
   { Windows API functions }
+  procedure ForceForeground(hWnd: THandle);
   function FileNameValid(filename: string): boolean;
-  procedure RecycleDirectory(const DirName: string);
+  procedure RecycleDirectory(const path: string);
   procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
   procedure BrowseForFile(var ed: TEdit; filter, initDir: string);
   procedure BrowseForFolder(var ed: TEdit; initDir: string);
@@ -62,13 +63,29 @@ implementation
 
 {******************************************************************************}
 { General functions
-  Set of functions that help with converting data formats and handling strings.
+  Set of functions that help with converting data types and handling strings.
 
   List of functions:
+  - TitleCase
+  - SentenceCase
   - csvText
   - FormatByteSize
   - DateBuiltString
+  - DateTimeToSQL
+  - SQLToDateTime
+  - RateStr
+  - TimeStr
+  - AppendIfMissing
+  - StrEndsWith
+  - RemoveFromEnd
   - IntegerListSum
+  - Wordwrap
+  - ExtractPath
+  - ContainsMatch
+  - IsURL
+  - IsDotFile
+  - SaveStringToFile
+  - ApplyTemplate
 }
 {*****************************************************************************}
 
@@ -359,29 +376,39 @@ end;
   Set of functions that help deal with the Windows File System.
 
   List of functions:
+  - ForceForeground
+  - FileNameValid
+  - RecycleDirectory
+  - ExecNewProcess
+  - BrowseForFile
+  - BrowseForFolder
   - GetCSIDLShellFolder
   - GetFileSize
   - GetLastModified
+  - MultFileSearch
   - RecursiveFileSearch
+  - CopyDirectory
+  - GetFilesList
+  - CopyFiles
+  - CorrectListViewWidth
+  - GetVersionMem
+  - FileVersion
+  - DeleteDirectory
 }
 {******************************************************************************}
+
+{ Forces a hWnd to the foreground }
+procedure ForceForeground(hWnd: THandle);
+begin
+  SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOMOVE);
+  SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOMOVE);
+end;
 
 { Returns true if the input filename is valid }
 function FileNameValid(filename: string): boolean;
 begin
   Result := (Length(Trim(filename)) > 0) and
     TPath.HasValidFileNameChars(filename, false);
-end;
-
-procedure RecycleDirectory(const DirName: string);
-var
-  FileOp: TSHFileOpStruct;
-begin
-  FillChar(FileOp, SizeOf(FileOp), 0);
-  FileOp.wFunc := FO_DELETE;
-  FileOp.pFrom := PChar(DirName); //deletes to recycle bin
-  FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
-  SHFileOperation(FileOp);
 end;
 
 { Create a new synchronous or asynchronous process }
@@ -749,6 +776,18 @@ begin
   finally
     FreeMem(PVerInfo, VerInfoSize);
   end;
+end;
+
+{ Sends the directory at @path and all files it contains to the recycle bin }
+procedure RecycleDirectory(const path: string);
+var
+  FileOp: TSHFileOpStruct;
+begin
+  FillChar(FileOp, SizeOf(FileOp), 0);
+  FileOp.wFunc := FO_DELETE;
+  FileOp.pFrom := PChar(path); //deletes to recycle bin
+  FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
+  SHFileOperation(FileOp);
 end;
 
 { Deletes the directory at @path and all files it contains }

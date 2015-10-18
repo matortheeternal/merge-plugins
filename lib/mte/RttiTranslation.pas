@@ -102,6 +102,7 @@ var
   aSpeedButton: TSpeedButton;
   aMenuItem: TMenuItem;
   aComboBox: TComboBox;
+  aListView: TListView;
   i: Integer;
 begin
   FormPrefix := nil;
@@ -196,6 +197,17 @@ begin
             if value <> '' then aComboBox.Items[i] := value;
           end;
         end;
+      end
+      else if FieldName = 'TListView' then begin
+        aListView := TListView(field.GetValue(obj).AsType<TListView>);
+        if Assigned(aListView) then begin
+          if not aListView.ShowColumnHeaders then
+            continue;
+          for i := 0 to Pred(aListView.Columns.Count) do begin
+            value := ReadValue(CurrentPrefix, sl, Field, 'Column'+IntToStr(i));
+            if value <> '' then aListView.Columns[i].Caption := value;
+          end;
+        end;
       end;
     end;
   finally
@@ -243,6 +255,7 @@ var
   aSpeedButton: TSpeedButton;
   aMenuItem: TMenuItem;
   aComboBox: TComboBox;
+  aListView: TListView;
 begin
   FormPrefix := nil;
   ctx := TRttiContext.Create;
@@ -345,6 +358,16 @@ begin
           if Assigned(aComboBox) then
             for i := 0 to Pred(aComboBox.Items.Count) do
               WriteValue(CurrentPrefix, aComboBox.Items[i], sl, field, 'Item'+IntToStr(i));
+        end
+        // Handle TListView
+        else if FieldName = 'TListView' then begin
+          aListView := TListView(field.GetValue(obj).AsType<TListView>);
+          if Assigned(aListView) then begin
+            if not aListView.ShowColumnHeaders then
+              continue;
+            for i := 0 to Pred(aListView.Columns.Count) do
+              WriteValue(CurrentPrefix, aListView.Columns[i].Caption, sl, field, 'Column'+IntToStr(i));
+          end;
         end;
       end;
     finally

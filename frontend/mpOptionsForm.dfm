@@ -24,7 +24,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = IntegrationsTabSheet
+    ActivePage = GeneralTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
@@ -46,7 +46,7 @@ object OptionsForm: TOptionsForm
         object kbSimpleDictionary: TCheckBox
           Left = 12
           Top = 20
-          Width = 133
+          Width = 205
           Height = 17
           Align = alCustom
           Caption = 'Simple dictionary view'
@@ -55,7 +55,7 @@ object OptionsForm: TOptionsForm
         object kbSimplePlugins: TCheckBox
           Left = 12
           Top = 43
-          Width = 133
+          Width = 205
           Height = 17
           Align = alCustom
           Caption = 'Simple plugins list'
@@ -76,7 +76,7 @@ object OptionsForm: TOptionsForm
         Caption = 'Updating'
         TabOrder = 1
         object lblDictionaryStatus: TLabel
-          Left = 274
+          Left = 254
           Top = 23
           Width = 142
           Height = 13
@@ -95,7 +95,7 @@ object OptionsForm: TOptionsForm
           ShowHint = True
         end
         object lblProgramStatus: TLabel
-          Left = 274
+          Left = 254
           Top = 52
           Width = 142
           Height = 13
@@ -116,7 +116,7 @@ object OptionsForm: TOptionsForm
         object kbUpdateDictionary: TCheckBox
           Left = 12
           Top = 22
-          Width = 173
+          Width = 205
           Height = 17
           Align = alCustom
           Caption = 'Update dictionary automatically'
@@ -125,16 +125,16 @@ object OptionsForm: TOptionsForm
         object kbUpdateProgram: TCheckBox
           Left = 12
           Top = 51
-          Width = 173
+          Width = 205
           Height = 17
           Align = alCustom
           Caption = 'Update program automatically'
           TabOrder = 1
         end
         object btnUpdateDictionary: TButton
-          Left = 422
+          Left = 402
           Top = 16
-          Width = 120
+          Width = 140
           Height = 25
           Margins.Right = 6
           Align = alCustom
@@ -145,9 +145,9 @@ object OptionsForm: TOptionsForm
           OnClick = btnUpdateDictionaryClick
         end
         object btnUpdateProgram: TButton
-          Left = 422
+          Left = 402
           Top = 47
-          Width = 120
+          Width = 140
           Height = 25
           Margins.Right = 6
           Align = alCustom
@@ -173,7 +173,7 @@ object OptionsForm: TOptionsForm
         object lblUsername: TLabel
           Left = 12
           Top = 20
-          Width = 48
+          Width = 205
           Height = 13
           Align = alCustom
           Caption = 'Username'
@@ -201,7 +201,7 @@ object OptionsForm: TOptionsForm
         object lblStatus: TLabel
           Left = 12
           Top = 45
-          Width = 91
+          Width = 205
           Height = 13
           Align = alCustom
           Caption = 'Registration status'
@@ -259,7 +259,7 @@ object OptionsForm: TOptionsForm
         object lblLanguage: TLabel
           Left = 12
           Top = 20
-          Width = 78
+          Width = 205
           Height = 13
           Margins.Left = 6
           Margins.Top = 6
@@ -316,7 +316,7 @@ object OptionsForm: TOptionsForm
         object kbFaceGen: TCheckBox
           Left = 12
           Top = 54
-          Width = 117
+          Width = 213
           Height = 17
           Margins.Top = 6
           Caption = 'Handle FaceGen files'
@@ -333,7 +333,7 @@ object OptionsForm: TOptionsForm
         object kbVoiceAssets: TCheckBox
           Left = 12
           Top = 77
-          Width = 117
+          Width = 213
           Height = 17
           Caption = 'Handle voice files'
           TabOrder = 2
@@ -341,7 +341,7 @@ object OptionsForm: TOptionsForm
         object kbTranslations: TCheckBox
           Left = 12
           Top = 100
-          Width = 139
+          Width = 213
           Height = 17
           Caption = 'Handle MCM translations'
           Ctl3D = False
@@ -351,7 +351,7 @@ object OptionsForm: TOptionsForm
         object kbBuildBSA: TCheckBox
           Left = 274
           Top = 123
-          Width = 101
+          Width = 215
           Height = 17
           Caption = 'Build merged BSA'
           TabOrder = 4
@@ -360,7 +360,7 @@ object OptionsForm: TOptionsForm
         object kbFragments: TCheckBox
           Left = 274
           Top = 54
-          Width = 136
+          Width = 215
           Height = 17
           Caption = 'Handle script fragments'
           TabOrder = 5
@@ -368,7 +368,7 @@ object OptionsForm: TOptionsForm
         object kbExtractBSAs: TCheckBox
           Left = 274
           Top = 100
-          Width = 79
+          Width = 215
           Height = 17
           Caption = 'Extract BSAs'
           TabOrder = 6
@@ -377,7 +377,7 @@ object OptionsForm: TOptionsForm
         object kbBatCopy: TCheckBox
           Left = 274
           Top = 146
-          Width = 117
+          Width = 215
           Height = 17
           Caption = 'Batch copy assets'
           TabOrder = 7
@@ -385,7 +385,7 @@ object OptionsForm: TOptionsForm
         object kbINIs: TCheckBox
           Left = 12
           Top = 123
-          Width = 101
+          Width = 213
           Height = 17
           Caption = 'Handle INI files'
           TabOrder = 8
@@ -393,7 +393,7 @@ object OptionsForm: TOptionsForm
         object kbSelfRef: TCheckBox
           Left = 274
           Top = 77
-          Width = 131
+          Width = 215
           Height = 17
           Caption = 'Handle self references'
           TabOrder = 9
@@ -401,7 +401,7 @@ object OptionsForm: TOptionsForm
         object kbSEQ: TCheckBox
           Left = 12
           Top = 146
-          Width = 97
+          Width = 213
           Height = 17
           Caption = 'Handle SEQ files'
           TabOrder = 10
@@ -421,7 +421,7 @@ object OptionsForm: TOptionsForm
         object kbDebugRenumbering: TCheckBox
           Left = 12
           Top = 20
-          Width = 117
+          Width = 213
           Height = 17
           Caption = 'Debug renumbering'
           TabOrder = 0
@@ -429,7 +429,7 @@ object OptionsForm: TOptionsForm
         object kbDebugMergeStatus: TCheckBox
           Left = 12
           Top = 43
-          Width = 117
+          Width = 213
           Height = 17
           Caption = 'Debug merge status'
           TabOrder = 1
@@ -437,7 +437,7 @@ object OptionsForm: TOptionsForm
         object kbDebugAssetCopying: TCheckBox
           Left = 12
           Top = 66
-          Width = 133
+          Width = 213
           Height = 17
           Caption = 'Debug asset copying'
           TabOrder = 2
@@ -445,7 +445,7 @@ object OptionsForm: TOptionsForm
         object kbDebugRecordCopying: TCheckBox
           Left = 12
           Top = 89
-          Width = 133
+          Width = 213
           Height = 17
           Caption = 'Debug record copying'
           TabOrder = 3
@@ -453,7 +453,7 @@ object OptionsForm: TOptionsForm
         object kbDebugMasters: TCheckBox
           Left = 274
           Top = 20
-          Width = 97
+          Width = 215
           Height = 17
           Caption = 'Debug masters'
           TabOrder = 4
@@ -461,7 +461,7 @@ object OptionsForm: TOptionsForm
         object kbDebugBatchCopying: TCheckBox
           Left = 274
           Top = 43
-          Width = 129
+          Width = 215
           Height = 17
           Caption = 'Debug batch copying'
           TabOrder = 5
@@ -469,7 +469,7 @@ object OptionsForm: TOptionsForm
         object kbDebugBSAs: TCheckBox
           Left = 274
           Top = 66
-          Width = 81
+          Width = 215
           Height = 17
           Caption = 'Debug BSAs'
           TabOrder = 6
@@ -477,7 +477,7 @@ object OptionsForm: TOptionsForm
         object kbDebugScriptFragments: TCheckBox
           Left = 274
           Top = 89
-          Width = 137
+          Width = 215
           Height = 17
           Caption = 'Debug script fragments'
           TabOrder = 7
@@ -515,7 +515,7 @@ object OptionsForm: TOptionsForm
         object kbNoStatistics: TCheckBox
           Left = 12
           Top = 44
-          Width = 149
+          Width = 181
           Height = 17
           Caption = 'Don'#39't send usage statistics'
           TabOrder = 0
@@ -818,7 +818,7 @@ object OptionsForm: TOptionsForm
         object kbUsingMO: TCheckBox
           Left = 12
           Top = 20
-          Width = 133
+          Width = 174
           Height = 17
           Caption = 'I'#39'm using Mod Organizer'
           TabOrder = 0
@@ -989,9 +989,9 @@ object OptionsForm: TOptionsForm
         end
       end
       object btnDetect: TButton
-        Left = 414
+        Left = 408
         Top = 330
-        Width = 140
+        Width = 146
         Height = 25
         Margins.Right = 6
         Caption = 'Detect Integrations'
@@ -1027,7 +1027,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C0101010008001C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800200110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

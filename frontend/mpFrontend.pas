@@ -384,7 +384,7 @@ type
 const
   // IMPORTANT CONSTANTS
   ProgramTesters = 'bla08, hishy, Kesta';
-  ProgramTranslators = 'GabenOurSavior, dhxxqk2010, Oaristys';
+  ProgramTranslators = 'GabenOurSavior, fiama, dhxxqk2010, Oaristys';
   xEditVersion = '3.1.1';
   bTranslationDump = false;
 

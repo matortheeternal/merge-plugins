@@ -3,18 +3,18 @@
 mpMain_NewButton_Hint=Neue Fusion|Plane eine neue Fusion.#13#10
 mpMain_FindErrorsButton_Hint=Fehler finden|Überprüft Plugins auf Fehler.#13#10
 mpMain_BuildButton_Hint=Fusionen erstellen|"Baut" die geplanten oder nicht aktuellen Fusionen.#13#10
-mpMain_ReportButton_Hint=Berichte absenden|Sendet alle Berichte über Plugins die du erfolgreich fusioniert hast.#13#10
-mpMain_DictionaryButton_Hint=Verzeichnis ansehen|Öffnet die Verzeichnisansicht um die Berichte anderer Nutzer anzusehen.#13#10
-mpMain_OptionsButton_Hint=Einstellungen|Ändere die Einstellungen, die die Funktionsweise des Programmes kontrollieren.#13#10
+mpMain_ReportButton_Hint=Berichte absenden|Sendet alle Berichte über Plugins die du #13#10erfolgreich fusioniert hast.#13#10
+mpMain_DictionaryButton_Hint=Verzeichnis ansehen|Öffnet die Verzeichnisansicht um die #13#10Berichte anderer Nutzer anzusehen.#13#10
+mpMain_OptionsButton_Hint=Einstellungen|Ändere die Einstellungen, die die Funktionsweise #13#10des Programmes kontrollieren.#13#10
 mpMain_UpdateButton_Hint=Update|Aktualisiert das Programm.#13#10
-mpMain_HelpButton_Hint=Hilfe|Dieser Teil funktioniert momentan noch nicht, Entschuldigung.#13#10
+mpMain_HelpButton_Hint=Hilfe|Dieser Teil funktioniert momentan #13#10noch nicht, Entschuldigung.#13#10
 { #### DYNAMIC #### }
 mpMain_NoPluginsToCheck=#13#10Momentan gibt es keine Plugins die auf Fehler getestet werden müssen.#13#10
 mpMain_FindErrors_Loader=#13#10Du kannst Plugins erst überprüfen, wenn das#13#10Laden im Hintergrund abgeschlossen ist.#13#10
 mpMain_CheckAllPlugins=Überprüft alle Plugins die geladen und nicht#13#10vom Überprüfen ausgeschlossen sind auf Fehler.#13#10
-mpMain_NoMerges=#13#10Es gibt keine Fusionen die erstellt oder aktualisiert werden müssen.#13#10
+mpMain_NoMerges=#13#10Es gibt keine Fusionen die erstellt oder #13#10aktualisiert werden müssen.#13#10
 mpMain_BuildMerges_Loader=#13#10Du kannst Fusionen erst erstellen, wenn das#13#10Laden im Hintergrund abgeschlossen ist.#13#10
-mpMain_CheckMerges=Du musst Plugins, die du fusionieren willst, erst auf Fehler überprüfen lassen.#13#10
+mpMain_CheckMerges=Du musst Plugins, die du fusionieren willst, #13#10erst auf Fehler überprüfen lassen.#13#10
 mpMain_BuildAllMerges=Erstellt alle Fusionen, die bereit dazu sind.#13#10
 mpMain_UpdateBoth=#13#10Programm und Verzeichnis Aktualisierung verfügbar.#13#10
 mpMain_UpdateProgram=#13#10Programm Aktualisierung verfügbar.#13#10
@@ -26,6 +26,10 @@ mpMain_DetailsLabel_Caption=Details
 mpMain_DetailsCopyToClipboardItem_Caption=In die Zwischenablage kopieren
 { ## Plugins Tab ## }
 mpMain_PluginsTabSheet_Caption=Plugins
+mpMain_PluginsListView_Column0=Index
+mpMain_PluginsListView_Column1=Dateiname
+mpMain_PluginsListView_Column2=Kennzeichnungen
+mpMain_PluginsListView_Column3=Fusion
 { #### DYNAMIC #### }
 mpMain_PluginFlags=%s Kennzeichnungen#13#10%s
 mpMain_PluginDetails=Plugin Details
@@ -57,6 +61,11 @@ mpMain_UnignoreErrors=Fehler nicht mehr ignorieren
 mpMain_AllowMerging=Fusionieren erlauben
 { ## Merges Tab ## }
 mpMain_MergesTabSheet_Caption=Fusionen
+mpMain_MergesListView_Column0=Index
+mpMain_MergesListView_Column1=Name
+mpMain_MergesListView_Column2=Dateiname
+mpMain_MergesListView_Column3=Size
+mpMain_MergesListView_Column4=Zuletzt erstellt
 { #### DYNAMIC #### }
 mpMain_MergeDetails=Details
 mpMain_Status=Status
@@ -243,7 +252,7 @@ mpOpt_lblTemplate_Caption=Template
 mpOpt_lblSample_Caption=Sample
 { ## Integrations Tab ## }
 mpOpt_IntegrationsTabSheet_Caption=Programme
-mpOpt_btnDetect_Caption=Erkenne integrierbare Programme
+mpOpt_btnDetect_Caption=Erkenne programme
 mpOpt_gbModOrganizer_Caption=Mod Organizer
 mpOpt_kbUsingMO_Caption=Ich benutze Mod Organizer
 mpOpt_kbCopyGeneralAssets_Caption=Kopiere allgemeine assets
