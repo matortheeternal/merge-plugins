@@ -136,7 +136,8 @@ begin
           value := ReadValue(CurrentPrefix, sl, Field, 'Caption');
           if value <> '' then aCheckBox.Caption := value;
           value := ReadValue(CurrentPrefix, sl, Field, 'Hint');
-          if value <> '' then aCheckBox.Hint := value;
+          aCheckBox.ShowHint := value <> '';
+          if aCheckBox.ShowHint then aCheckBox.Hint := value;
         end;
       end
       else if FieldName = 'TButton' then begin
@@ -145,7 +146,8 @@ begin
           value := ReadValue(CurrentPrefix, sl, Field, 'Caption');
           if value <> '' then aButton.Caption := value;
           value := ReadValue(CurrentPrefix, sl, Field, 'Hint');
-          if value <> '' then aButton.Hint := value;
+          aButton.ShowHint := value <> '';
+          if aButton.ShowHint then aButton.Hint := value;
         end;
       end
       else if FieldName = 'TLabel' then begin
@@ -154,7 +156,8 @@ begin
           value := ReadValue(CurrentPrefix, sl, Field, 'Caption');
           if value <> '' then aLabel.Caption := value;
           value := ReadValue(CurrentPrefix, sl, Field, 'Hint');
-          if value <> '' then aLabel.Hint := value;
+          aLabel.ShowHint := value <> '';
+          if aLabel.ShowHint then aLabel.Hint := value;
         end;
       end
       else if FieldName = 'TTabSheet' then begin
@@ -163,7 +166,8 @@ begin
           value := ReadValue(CurrentPrefix, sl, Field, 'Caption');
           if value <> '' then aTabSheet.Caption := value;
           value := ReadValue(CurrentPrefix, sl, Field, 'Hint');
-          if value <> '' then aTabSheet.Hint := value;
+          aTabSheet.ShowHint := value <> '';
+          if aTabSheet.ShowHint then aTabSheet.Hint := value;
         end;
       end
       else if FieldName = 'TGroupBox' then begin
@@ -172,14 +176,16 @@ begin
           value := ReadValue(CurrentPrefix, sl, Field, 'Caption');
           if value <> '' then aGroupBox.Caption := value;
           value := ReadValue(CurrentPrefix, sl, Field, 'Hint');
-          if value <> '' then aGroupBox.Hint := value;
+          aGroupBox.ShowHint := value <> '';
+          if aGroupBox.ShowHint then aGroupBox.Hint := value;
         end;
       end
       else if FieldName = 'TSpeedButton' then begin
         aSpeedButton := TSpeedButton(field.GetValue(obj).AsType<TSpeedButton>);
         if Assigned(aSpeedButton) then begin
           value := ReadValue(CurrentPrefix, sl, Field, 'Hint');
-          if value <> '' then aSpeedButton.Hint := value;
+          aSpeedButton.ShowHint := value <> '';
+          if aSpeedButton.ShowHint then aSpeedButton.Hint := value;
         end;
       end
       else if FieldName = 'TMenuItem' then begin
