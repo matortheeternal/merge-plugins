@@ -29,6 +29,9 @@ type
     constructor Create; Overload;
   end;
 
+var
+  bLogTasks: boolean;
+
 implementation
 
 procedure TTaskHandler.AddTask(task: TTask);
@@ -62,7 +65,7 @@ begin
   for i := Pred(TaskList.Count) downto 0 do begin
     task := TTask(TaskList[i]);
     if (Now - task.lastExecuted >= task.rate) then begin
-      if (task.rate > 60.0 * seconds) then
+      if bLogTasks and (task.rate > 60.0 * seconds) then
         Logger.Write('TASK', 'Execute', task.name);
       task.Execute;
       task.lastExecuted := Now;
@@ -84,7 +87,8 @@ end;
 
 constructor TTask.Create(name: string; rate: real; FExecute: TProcedure);
 begin
-  Logger.Write('TASK', 'Init', Format('%s, Rate: %s', [name, RateStr(rate)]));
+  if bLogTasks then
+    Logger.Write('TASK', 'Init', Format('%s, Rate: %s', [name, RateStr(rate)]));
   self.name := name;
   self.rate := rate;
   self.FExecute := FExecute;

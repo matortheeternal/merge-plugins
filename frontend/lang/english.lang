@@ -20,6 +20,8 @@ mpMain_UpdateBoth=Program and dictionary update available.
 mpMain_UpdateProgram=Program update available.
 mpMain_UpdateDictionary=Dictionary update available.
 mpMain_NoUpdates=No updates available.
+mpMain_NoMergesToReportOn=Submit reports|No merges to report on.
+mpMain_NoDictionary=View dictionary|No dictionary file available.
 { ## Main Panel ## }
 { ## Details Panel ## }
 mpMain_DetailsLabel_Caption=Details

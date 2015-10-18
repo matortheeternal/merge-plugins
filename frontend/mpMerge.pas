@@ -25,7 +25,7 @@ var
   compileLog, decompileLog: string;
   mergeFormIndex: integer;
   UsedFormIDs: array [0..$FFFFFF] of byte;
-  batchCopy, batchDecompile, batchCompile: TStringList;
+  handledFragments, batchCopy, batchDecompile, batchCompile: TStringList;
 
 {******************************************************************************}
 { Renumbering Methods
@@ -560,6 +560,7 @@ begin
   scriptsPath := Format(scriptsPathTemplate, [rt]);
   fragmentsPath := Format(fragmentsPathTemplate, [rt, rt]);
   innerFragmentsPath := Format(innerFragmentsPathTemplate, [rt, rt, rt]);
+
   // handle scripts
   scripts := rec.ElementByPath[scriptsPath];
   if Assigned(scripts) and Supports(scripts, IwbContainer, container) then begin
@@ -570,11 +571,13 @@ begin
           innerContainer.ElementEditValues['scriptName'] := nfn;
     end;
   end;
+
   // handle script fragments
   scriptFragments := rec.ElementByPath[fragmentsPath];
   if Assigned(scriptFragments) and Supports(scriptFragments, IwbContainer, container) then
     if (container.ElementEditValues['fileName'] = fn) then
       container.ElementEditValues['fileName'] := nfn;
+
   // handle inner fragments
   innerFragments := rec.ElementByPath[innerFragmentsPath];
   if Assigned(innerFragments) and Supports(innerFragments, IwbContainer, container) then begin
@@ -585,6 +588,9 @@ begin
           innerContainer.ElementEditValues['scriptName'] := nfn;
     end;
   end;
+
+  // add to handled fragments list
+  handledFragments.Add(nfn);
 end;
 
 { Traverses the DIAL\INFO group in @plugin for script fragments.  When found,
@@ -627,11 +633,17 @@ begin
       if not Supports(fragments, IwbContainer, container) then
         continue;
       fn := container.ElementValues['fileName'];
-      if settings.debugScriptFragments then
-        Tracker.Write('      Found script fragment '+fn);
+      if Length(fn) < 8 then
+        continue;
+      // skip script fragments we've already handled
+      if handledFragments.IndexOf(fn) > -1 then
+        continue;
       oldFormID := ExtractFormID(fn);
+      // skip script fragment we can't extract a valid formID
       if Length(oldFormID) <> 8 then
         continue;
+      if settings.debugScriptFragments then
+        Tracker.Write('      Found script fragment '+fn);
       oldFileFormID := RemoveFileIndex(oldFormID);
       index := GetMapIndex(merge, plugin.filename, oldFileFormID);
       if (index = -1) and (not bIndexChanged) then begin
@@ -648,7 +660,7 @@ begin
           Tracker.Write(Format('        Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
         if not CopySource(fn, srcPath, pscPath) then
           if not CopyScript(fn, srcPath, pexPath) then begin
-            Tracker.Write('        Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+            Tracker.Write('        Failed to copy '+srcPath+fn);
             continue;
           end;
         nfn := StringReplace(fn, oldFormID, newFileFormID, []);
@@ -693,11 +705,17 @@ begin
     if not Supports(fragments, IwbContainer, container) then
       continue;
     fn := container.ElementValues['fileName'];
-    if settings.debugScriptFragments then
-      Tracker.Write('      Found script fragment '+fn);
+    if Length(fn) < 8 then
+      continue;
+    // skip script fragments we've already handled
+    if handledFragments.IndexOf(fn) > -1 then
+      continue;
     oldFormID := ExtractFormID(fn);
+    // skip script fragment we can't extract a valid formID
     if Length(oldFormID) <> 8 then
       continue;
+    if settings.debugScriptFragments then
+      Tracker.Write('      Found script fragment '+fn);
     oldFileFormID := RemoveFileIndex(oldFormID);
     index := GetMapIndex(merge, plugin.filename, oldFileFormID);
     if (index = -1) and (not bIndexChanged) then begin
@@ -714,7 +732,7 @@ begin
         Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
       if not CopySource(fn, srcPath, pscPath) then
         if not CopyScript(fn, srcPath, pexPath) then begin
-          Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+          Tracker.Write('      Failed to copy '+srcPath+fn);
           continue;
         end;
       nfn := StringReplace(fn, oldFormID, newFileFormID, []);
@@ -758,11 +776,17 @@ begin
     if not Supports(fragments, IwbContainer, container) then
       continue;
     fn := container.ElementValues['fileName'];
-    if settings.debugScriptFragments then
-      Tracker.Write('      Found script fragment '+fn);
+    if Length(fn) < 8 then
+      continue;
+    // skip script fragments we've already handled
+    if handledFragments.IndexOf(fn) > -1 then
+      continue;
     oldFormID := ExtractFormID(fn);
+    // skip script fragment we can't extract a valid formID
     if Length(oldFormID) <> 8 then
       continue;
+    if settings.debugScriptFragments then
+      Tracker.Write('      Found script fragment '+fn);
     oldFileFormID := RemoveFileIndex(oldFormID);
     index := GetMapIndex(merge, plugin.filename, oldFileFormID);
     if (index = -1) and (not bIndexChanged) then begin
@@ -779,7 +803,7 @@ begin
         Tracker.Write(Format('      Script fragment renumbered from [%s] to [%s]', [oldFormID, newFileFormID]));
       if not CopySource(fn, srcPath, pscPath) then
         if not CopyScript(fn, srcPath, pexPath) then begin
-          Tracker.Write('      Failed to copy '+srcPath+ChangeFileExt(fn, '.pex'));
+          Tracker.Write('      Failed to copy '+srcPath+fn);
           continue;
         end;
       nfn := StringReplace(fn, oldFormID, newFileFormID, []);
@@ -1254,6 +1278,7 @@ begin
   // handleScriptFragments
   if Tracker.Cancel then exit;
   if settings.handleScriptFragments and (HAS_FRAGMENTS in plugin.flags) then begin
+    handledFragments := TStringList.Create;
     Tracker.Write('    Handling script fragments');
     // if BSA exists, extract scripts from it to temp path and copy
     if HAS_BSA in plugin.flags then begin
@@ -1266,6 +1291,8 @@ begin
     CopyScriptFragments(plugin, merge, plugin.dataPath + scriptsPath, merge.dataPath + scriptsPath);
     if plugin.dataPath <> DataPath then
       CopyGeneralScripts(plugin.dataPath + scriptsPath);
+    // clean up stringlist
+    handledFragments.Free;
   end;
 
   // handleSelfReference
@@ -1642,11 +1669,15 @@ begin
   end;
 
   // create SEQ file
-  if (not Tracker.Cancel) and settings.handleSEQ then
+  if (not Tracker.Cancel) and settings.handleSEQ then try
     CreateSEQFile(merge);
+  except
+    on x: Exception do
+      Tracker.Write('Failed to create SEQ file, '+x.Message);
+  end;
 
   // set description
-  if not Tracker.Cancel then begin
+  if not Tracker.Cancel then try
     desc := 'Merged Plugin: ';
     for i := 0 to Pred(pluginsToMerge.Count) do begin
       plugin := pluginsToMerge[i];
@@ -1658,12 +1689,13 @@ begin
         desc := desc+#13#10+'  '+merge.plugins[i];
     end;
     (mergeFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'] := desc;
+  except
+    on x: Exception do
+      Tracker.Write('Failed to create description, '+x.Message);
   end;
 
-  // clean masters
-  mergeFile.CleanMasters;
-
   // if overrides method, remove masters to force clamping
+  // else clean masters
   if merge.method = 'Overrides' then begin
     Tracker.Write(' ');
     Tracker.Write('Removing unncessary masters');
@@ -1678,11 +1710,14 @@ begin
         masters.RemoveElement(i);
       end;
     end;
-  end;
+  end
+  else
+    mergeFile.CleanMasters;
 
   // reload plugins to be merged to discard changes
-  if merge.method = 'Overrides' then begin
-    Tracker.Write(' ');
+  if Tracker.Cancel and (merge.method = 'Overrides') then begin
+    merge.status := msCanceled;
+    {Tracker.Write(' ');
     Tracker.Write('Discarding changes to source plugins');
     for i := 0 to Pred(pluginsToMerge.Count) do begin
       plugin := pluginsToMerge[i];
@@ -1692,7 +1727,7 @@ begin
       plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
       plugin._File._AddRef;
       plugin._File.BuildRef;
-    end;
+    end;}
   end;
   if Tracker.Cancel then exit;
 

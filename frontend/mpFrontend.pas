@@ -97,7 +97,7 @@ type
   TMergeStatusID = ( msUnknown, msNoPlugins, msDirInvalid, msUnloaded,
     msErrors, msFailed, msNotContiguous, msBreaksDependencies, msCheckErrors,
     msUpToDate, msUpToDateForced, msBuildReady, msRebuildReady,
-    msRebuildReadyForced, msBuilt );
+    msRebuildReadyForced, msBuilt, msCanceled );
   TMergeStatus = Record
     id: TMergeStatusID;
     color: integer;
@@ -342,7 +342,8 @@ type
   procedure SavePluginInfo;
   procedure LoadPluginInfo;
   procedure SaveReports(var lst: TList; path: string);
-  procedure LoadReport(var report: TReport); overload
+  function ReportExistsFor(var plugin: TPlugin): boolean;
+  procedure LoadReport(var report: TReport); overload;
   procedure LoadReport(const filename: string; var report: TReport); overload;
   { Helper methods }
   procedure DeleteTempPath;
@@ -414,7 +415,7 @@ const
   );
 
   // MERGE STATUSES
-  StatusArray: array[0..14] of TMergeStatus = (
+  StatusArray: array[0..15] of TMergeStatus = (
     ( id: msUnknown; color: $808080; desc: 'Unknown'; ),
     ( id: msNoPlugins; color: $0000FF; desc: 'No plugins to merge'; ),
     ( id: msDirInvalid; color: $0000FF; desc: 'Directories invalid'; ),
@@ -429,7 +430,8 @@ const
     ( id: msBuildReady; color: $009000; desc: 'Ready to be built'; ),
     ( id: msRebuildReady; color: $009000; desc: 'Ready to be rebuilt'; ),
     ( id: msRebuildReadyForced; color: $009000; desc: 'Ready to be rebuilt [Forced]'; ),
-    ( id: msBuilt; color: $000000; desc: 'Built'; )
+    ( id: msBuilt; color: $000000; desc: 'Built'; ),
+    ( id: msCanceled; color: $000000; desc: 'Canceled'; )
   );
   // STATUS TYPES
   ErrorStatuses = [msUnknown, msNoPlugins, msDirInvalid, msUnloaded, msErrors];
@@ -1210,13 +1212,13 @@ var
   p, s: string;
 begin
   _File := merge.plugin._File;
-  Group := _File.GroupBySignature['QUST'];
 
   // don't create SEQ file if no QUST record group
-  if not Assigned(Group) then 
+  if not _File.HasGroup('QUST') then
     exit;
   
-  // loop through child elements  
+  // loop through child elements
+  Group := _File.GroupBySignature['QUST'];
   for n := 0 to Pred(Group.ElementCount) do begin
     if not Supports(Group.Elements[n], IwbMainRecord, MainRecord) then 
       continue;
@@ -1246,11 +1248,10 @@ begin
     Tracker.Write('Created SEQ file: ' + s);
     merge.files.Add(s);
   except
-    on e: Exception do begin
+    on x: Exception do begin
       if Assigned(FileStream) then
         FreeAndNil(FileStream);
-      Tracker.Write('Error: Can''t create SEQ file: ' + s + ', ' + E.Message);
-      Exit;
+      Tracker.Write('Error: Can''t create SEQ file: ' + s + ', ' + x.Message);
     end;
   end;
 end;
@@ -2073,6 +2074,16 @@ begin
     fn := Format('%s-%s.txt', [report.filename, report.hash]);
     report.Save(path + fn);
   end;
+end;
+
+function ReportExistsFor(var plugin: TPlugin): boolean;
+var
+  fn, unsubmittedPath, submittedPath: string;
+begin
+  fn := Format('%s-%s.txt', [plugin.filename, plugin.hash]);
+  unsubmittedPath := 'reports\' + fn;
+  submittedPath := 'reports\submitted\' + fn;
+  Result := FileExists(unsubmittedPath) or FileExists(submittedPath);
 end;
 
 procedure LoadReport(var report: TReport);
@@ -3493,7 +3504,7 @@ var
   plugin: TPlugin;
   bBrokeDependencies: boolean;
 begin
-  if status = msBuilt then
+  if (status = msBuilt) or (status = msCanceled) then
     exit;
   Logger.Write('MERGE', 'Status', name + ' -> Getting status');
   status := msUnknown;

@@ -150,6 +150,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure meTemplateChange(Sender: TObject);
     procedure btnBrowseMOModsClick(Sender: TObject);
+    procedure appendBackslashOnExit(Sender: TObject);
   private
     { Private declarations }
   public
@@ -471,6 +472,16 @@ procedure TOptionsForm.edBsaOptPathExit(Sender: TObject);
 begin
   if FileExists(edBsaOptPath.Text) and (edBsaOptOptions.Text = '') then
     edBsaOptOptions.Text := Format('-game %s -passthrough -compress 9', [GameMode.bsaOptMode]);
+end;
+
+procedure TOptionsForm.appendBackslashOnExit(Sender: TObject);
+var
+  ed: TEdit;
+begin
+  // add trailing backslash if length > 0 and it is missing
+  ed := TEdit(Sender);
+  if Length(ed.Text) > 0 then
+    ed.Text := AppendIfMissing(ed.Text, '\');
 end;
 
 procedure TOptionsForm.edUsernameChange(Sender: TObject);

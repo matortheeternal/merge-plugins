@@ -24,7 +24,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = GeneralTabSheet
+    ActivePage = IntegrationsTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
@@ -328,6 +328,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 1
+          OnExit = appendBackslashOnExit
         end
         object kbVoiceAssets: TCheckBox
           Left = 12
@@ -829,6 +830,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 1
+          OnExit = appendBackslashOnExit
         end
         object kbCopyGeneralAssets: TCheckBox
           Left = 192
@@ -844,6 +846,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 3
+          OnExit = appendBackslashOnExit
         end
       end
       object gbPapyrus: TGroupBox
@@ -1024,7 +1027,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800180110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008001C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

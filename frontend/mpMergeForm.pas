@@ -471,6 +471,7 @@ begin
 
     // initialize task handler
     TaskHandler := TTaskHandler.Create;
+    bLogTasks := false;
     TaskHandler.AddTask(TTask.Create('Disable Hints', 12.0 * seconds, DisableHints));
     TaskHandler.AddTask(TTask.Create('Reconnect', 15.0 * seconds, Reconnect));
     TaskHandler.AddTask(TTask.Create('Heartbeat', 0.9 * seconds, Heartbeat));
@@ -2260,8 +2261,8 @@ end;
 
 procedure TMergeForm.UpdateQuickbar;
 var
-  i: Integer;
-  bUncheckedPlugins: boolean;
+  i, j: Integer;
+  bUncheckedPlugins, bMergesToReportOn: boolean;
   merge: TMerge;
   plugin: TPlugin;
   sTitle: string;
@@ -2325,7 +2326,30 @@ begin
     BuildButton.Hint := sTitle + GetString('mpMain_BuildAllMerges');
 
   // REPORT BUTTON
-  ReportButton.Enabled := TCPClient.Connected; // TODO
+  bMergesToReportOn := false;
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := TMerge(MergesList[i]);
+    if merge.status <> msUpToDate then continue;
+    for j := 0 to Pred(merge.plugins.Count) do begin
+      plugin := PluginByFilename(merge.plugins[j]);
+      if not Assigned(plugin) then
+        continue;
+      if not ReportExistsFor(plugin) then
+        bMergesToReportOn := true;
+    end;
+  end;
+  ReportButton.Enabled := bMergesToReportOn;
+  if not bMergesToReportOn then
+    ReportButton.Hint := GetString('mpMain_NoMergesToReportOn')
+  else
+    ReportButton.Hint := GetString('mpMain_ReportButton_Hint');
+
+  // DICTIONARY BUTTON
+  DictionaryButton.Enabled := dictionary.Count > 0;
+  if not DictionaryButton.Enabled then
+    DictionaryButton.Hint := GetString('mpMain_NoDictionary')
+  else
+    DictionaryButton.Hint := GetString('mpMain_DictionaryButton_Hint');
 
   // UPDATE BUTTON
   UpdateButton.Enabled := bProgramUpdate or bDictionaryUpdate;
@@ -2442,8 +2466,59 @@ end;
 
 { Submit report }
 procedure TMergeForm.ReportButtonClick(Sender: TObject);
+var
+  i, j: Integer;
+  merge: TMerge;
+  pluginsList: TList;
+  plugin: TPlugin;
+  bModalOK, bReportsSent: boolean;
 begin
-  //LogMessage(TButton(Sender).Hint+' clicked!');
+  // initialize variables
+  pluginsList := TList.Create;
+
+  // loop through plugins in merges
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := TMerge(MergesList[i]);
+    // skip merges that aren't up to date - only want user to submit
+    // reports on plugins in merges they've built
+    if merge.status <> msUpToDate then continue;
+    // loop through plugins in merge
+    for j := 0 to Pred(merge.plugins.Count) do begin
+      plugin := PluginByFilename(merge.plugins[j]);
+      // if we can't find the plugin, continue
+      if not Assigned(plugin) then continue;
+      // if the user doesn't have a local report for the plugin
+      // we will add it to the list of plugins for them to report on
+      if not ReportExistsFor(plugin) then
+        pluginsList.Add(plugin);
+    end;
+  end;
+
+  // create report form
+  bModalOK := false;
+  ReportForm := TReportForm.Create(Self);
+  if pluginsList.Count > 0 then begin
+    ReportForm.pluginsToReport := pluginsList;
+    ReportForm.AppName := wbAppName;
+    bModalOK := ReportForm.ShowModal = mrOk;
+  end;
+
+  // Send reports to backend
+  if bModalOK then begin
+    bReportsSent := SendReports(ReportForm.reportsList);
+    if not bReportsSent then begin
+      Logger.Write('MERGE', 'Report', 'Saving reports locally');
+      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\');
+    end
+    else begin
+      Logger.Write('MERGE', 'Report', 'Saving reports locally');
+      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\submitted\');
+    end;
+  end;
+
+  // clean up
+  ReportForm.Free;
+  pluginsList.Free;
 end;
 
 { View the dictionary file }
