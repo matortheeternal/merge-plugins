@@ -862,6 +862,25 @@ object MergeForm: TMergeForm
         OnClick = ReportOnPluginsItemClick
       end
     end
+    object MoveItem: TMenuItem
+      Caption = 'Move'
+      object UpItem: TMenuItem
+        Caption = 'Up'
+        OnClick = UpItemClick
+      end
+      object DownItem: TMenuItem
+        Caption = 'Down'
+        OnClick = DownItemClick
+      end
+      object ToTopItem: TMenuItem
+        Caption = 'To top'
+        OnClick = ToTopItemClick
+      end
+      object ToBottomItem: TMenuItem
+        Caption = 'To bottom'
+        OnClick = ToBottomItemClick
+      end
+    end
     object BuildMergeItem: TMenuItem
       Caption = 'Build merge'
       OnClick = BuildMergeItemClick
@@ -879,7 +898,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010C001800800210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C001800840210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1420,7 +1439,7 @@ object MergeForm: TMergeForm
     Left = 1008
     Top = 8
     Bitmap = {
-      494C010108001400E00140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108001400E40140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100006000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

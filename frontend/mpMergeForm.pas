@@ -74,7 +74,7 @@ type
               ResetErrorsItem: TMenuItem;
         [FormSection('Merges Tab')]
           MergesTabSheet: TTabSheet;
-    MergesListView: TListView;
+          MergesListView: TListView;
           [FormSection('Merges Popup Menu')]
             MergesPopupMenu: TPopupMenu;
             CreateNewMergeItem: TMenuItem;
@@ -89,6 +89,12 @@ type
               CheckPluginsItem: TMenuItem;
               FixPluginsItem: TMenuItem;
               ReportOnPluginsItem: TMenuItem;
+            [FormSection('Move Submenu')]
+              MoveItem: TMenuItem;
+              UpItem: TMenuItem;
+              DownItem: TMenuItem;
+              ToTopItem: TMenuItem;
+              ToBottomItem: TMenuItem;
         [FormSection('Log Tab')]
           LogTabSheet: TTabSheet;
           LogListView: TListView;
@@ -185,6 +191,9 @@ type
     procedure MergesListViewData(Sender: TObject; Item: TListItem);
     procedure MergesListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
+    procedure MergesListViewDblClick(Sender: TObject);
+    procedure MergesListViewKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     // MERGES POPUP MENU EVENTS
     procedure MergesPopupMenuPopup(Sender: TObject);
     procedure EditMergeItemClick(Sender: TObject);
@@ -197,9 +206,10 @@ type
     procedure OpenInExplorerItemClick(Sender: TObject);
     procedure ToggleRebuildItemClick(Sender: TObject);
     procedure FixPluginsItemClick(Sender: TObject);
-    procedure MergesListViewDblClick(Sender: TObject);
-    procedure MergesListViewKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure UpItemClick(Sender: TObject);
+    procedure DownItemClick(Sender: TObject);
+    procedure ToTopItemClick(Sender: TObject);
+    procedure ToBottomItemClick(Sender: TObject);
     // LOG LIST VIEW EVENTS
     procedure LogListViewData(Sender: TObject; Item: TListItem);
     procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem; Rect: TRect; State: TOwnerDrawState);
@@ -1761,7 +1771,8 @@ end;
 procedure TMergeForm.MergesPopupMenuPopup(Sender: TObject);
 var
   bNeverBuilt, bHasBuildStatus, bHasUpToDateStatus, bHasResolveStatus,
-  bHasCheckStatus, bHasErrorStatus, bHasSelection, bHasPluginErrors: boolean;
+  bHasCheckStatus, bHasErrorStatus, bHasSelection, bHasPluginErrors,
+  bIsNotTop, bIsNotBottom: boolean;
   merge: TMerge;
   i, mergesSelected: Integer;
   sBuild, sRebuild: string;
@@ -1773,6 +1784,8 @@ begin
   bHasErrorStatus := false;
   bHasPluginErrors := false;
   bHasResolveStatus := false;
+  bIsNotTop := true;
+  bIsNotBottom := true;
   mergesSelected := 0;
 
   // loop through list view to find selection
@@ -1782,6 +1795,8 @@ begin
     merge := TMerge(MergesList[i]);
     Inc(mergesSelected);
     // update booleans
+    if i = 0 then bIsNotTop := false;
+    if i = Pred(MergesList.Count) then bIsNotBottom := false;
     bNeverBuilt := bNeverBuilt or (merge.dateBuilt = 0);
     bHasBuildStatus := bHasBuildStatus or (merge.status in BuildStatuses);
     bHasUpToDateStatus := bHasUpToDateStatus or (merge.status in UpToDateStatuses);
@@ -1800,10 +1815,17 @@ begin
     (bHasUpToDateStatus or bHasBuildStatus);
   OpenInExplorerItem.Enabled := bHasSelection;
   // plugins submenu
+  PluginsItem.Enabled := bHasSelection;
   ResolveIssuesItem.Enabled := bHasSelection and bHasResolveStatus;
   CheckPluginsItem.Enabled := bHasSelection and bHasCheckStatus and bLoaderDone;
   FixPluginsItem.Enabled := bHasSelection and bHasPluginErrors and bLoaderDone;
   ReportOnPluginsItem.Enabled := bHasSelection and bHasUpToDateStatus;
+  // move submenu
+  MoveItem.Enabled := bHasSelection;
+  UpItem.Enabled := bHasSelection and bIsNotTop;
+  DownItem.Enabled := bHasSelection and bIsNotBottom;
+  ToTopItem.Enabled := bHasSelection and bIsNotTop;
+  ToBottomItem.Enabled := bHasSelection and bIsNotBottom;
 
   // one or multiple merges?
   if (mergesSelected = 1) then begin
@@ -1859,6 +1881,131 @@ begin
   // update merge details and popup menu
   UpdateMergeDetails;
   UpdatePluginsPopupMenu;
+end;
+
+procedure TMergeForm.UpItemClick(Sender: TObject);
+var
+  i, max: Integer;
+begin
+  max := Pred(MergesListView.Items.Count);
+  // if merge at index 0 is selected, exit
+  // we can't move it up!
+  if MergesListView.Items[0].Selected then
+    exit;
+
+  // loop through merges
+  for i := 0 to max do begin
+    if not MergesListView.Items[i].Selected then
+      continue;
+    MergesList.Move(i, i - 1);
+    MergesListView.Items[i].Selected := false;
+    MergesListView.Items[i - 1].Selected := true;
+  end;
+
+  // update gui
+  UpdateListViews;
+end;
+
+procedure TMergeForm.DownItemClick(Sender: TObject);
+var
+  i, max: Integer;
+begin
+  max := Pred(MergesListView.Items.Count);
+  // if merge at max index is selected, exit
+  // we can't move it down!
+  if MergesListView.Items[max].Selected then
+    exit;
+
+  // loop through merges in reverse so we don't move the same merge
+  // multiple times
+  for i := max downto 0 do begin
+    if not MergesListView.Items[i].Selected then
+      continue;
+    MergesList.Move(i, i + 1);
+    MergesListView.Items[i].Selected := false;
+    MergesListView.Items[i + 1].Selected := true;
+  end;
+
+  // update gui
+  UpdateListViews;
+end;
+
+procedure TMergeForm.ToTopItemClick(Sender: TObject);
+var
+  i, max, iIndex: Integer;
+  tempList: TList;
+begin
+  max := Pred(MergesListView.Items.Count);
+  // if merge at index 0 is selected, exit
+  // we can't move it up!
+  if MergesListView.Items[0].Selected then
+    exit;
+
+  // create tempList
+  tempList := TList.Create;
+
+  // loop through merges to build new list
+  iIndex := 0;
+  for i := 0 to max do begin
+    if not MergesListView.Items[i].Selected then begin
+      tempList.Add(MergesList[i]);
+    end
+    else begin
+      tempList.Insert(iIndex, MergesList[i]);
+      Inc(iIndex);
+    end;
+  end;
+
+  // set MergesList to tempList
+  MergesList.Clear;
+  for i := 0 to max do MergesList.Add(tempList[i]);
+  tempList.Free;
+
+  // update selection
+  for i := 0 to max do
+    MergesListView.Items[i].Selected := i < iIndex;
+
+  // update gui
+  UpdateListViews;
+end;
+
+procedure TMergeForm.ToBottomItemClick(Sender: TObject);
+var
+  i, max, iIndex: Integer;
+  tempList: TList;
+begin
+  max := Pred(MergesListView.Items.Count);
+  // if merge at max index is selected, exit
+  // we can't move it down!
+  if MergesListView.Items[max].Selected then
+    exit;
+
+  // create tempList
+  tempList := TList.Create;
+
+  // loop through merges to build new list
+  iIndex := 0;
+  for i := 0 to max do begin
+    if not MergesListView.Items[i].Selected then begin
+      tempList.Insert(iIndex, MergesList[i]);
+      Inc(iIndex);
+    end
+    else begin
+      tempList.Add(MergesList[i]);
+    end;
+  end;
+
+  // set MergesList to tempList
+  MergesList.Clear;
+  for i := 0 to max do MergesList.Add(tempList[i]);
+  tempList.Free;
+
+  // update selection
+  for i := 0 to max do
+    MergesListView.Items[i].Selected := i >= iIndex;
+
+  // update gui
+  UpdateListViews;
 end;
 
 { Fix erorrs in plugins in merge }

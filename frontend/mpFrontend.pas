@@ -371,7 +371,6 @@ type
   function UsernameAvailable(username: string): boolean;
   function RegisterUser(username: string): boolean;
   function GetStatus: boolean;
-  function VersionCompare(v1, v2: string): boolean;
   procedure CompareStatuses;
   function UpdateChangeLog: boolean;
   function UpdateDictionary: boolean;
@@ -2618,42 +2617,6 @@ begin
       Logger.Write('ERROR', 'Client', 'Exception getting status '+x.Message);
     end;
   end;
-end;
-
-function VersionCompare(v1, v2: string): boolean;
-var
-  sl1, sl2: TStringList;
-  i, c1, c2: integer;
-begin
-  Result := false;
-
-  // parse versions with . as delimiter
-  sl1 := TStringList.Create;
-  sl1.LineBreak := '.';
-  sl1.Text := v1;
-  sl2 := TStringList.Create;
-  sl2.LineBreak := '.';
-  sl2.Text := v2;
-
-  // look through each version clause and perform comparisons
-  i := 0;
-  while (i < sl1.Count) and (i < sl2.Count) do begin
-    c1 := StrToInt(sl1[i]);
-    c2 := StrToInt(sl2[i]);
-    if (c1 < c2) then begin
-      Result := true;
-      break;
-    end
-    else if (c1 > c2) then begin
-      Result := false;
-      break;
-    end;
-    Inc(i);
-  end;
-
-  // free ram
-  sl1.Free;
-  sl2.Free;
 end;
 
 procedure CompareStatuses;

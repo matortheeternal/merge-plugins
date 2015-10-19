@@ -101,6 +101,12 @@ mpMain_CheckPluginsItem_Caption=Check plugins for errors
 mpMain_ResolveIssuesItem_Caption=Resolve issues
 mpMain_ReportOnPluginsItem_Caption=Report on plugins
 mpMain_FixPluginsItem_Caption=Fix errors in plugins
+{ ## Move Submenu ## }
+mpMain_MoveItem_Caption=Move
+mpMain_UpItem_Caption=Up
+mpMain_DownItem_Caption=Down
+mpMain_ToTopItem_Caption=To top
+mpMain_ToBottomItem_Caption=To bottom
 { #### DYNAMIC #### }
 mpMain_BuildMerge=Build merge
 mpMain_RebuildMerge=Rebuild merge
