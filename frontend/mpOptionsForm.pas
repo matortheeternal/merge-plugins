@@ -98,13 +98,14 @@ type
       [FormSection('Integrations Tab')]
         IntegrationsTabSheet: TTabSheet;
         btnDetect: TButton;
-        gbModOrganizer: TGroupBox;
+        gbModManager: TGroupBox;
         kbUsingMO: TCheckBox;
+        kbUsingNMM: TCheckBox;
         kbCopyGeneralAssets: TCheckBox;
-        lblModOrganizerPath: TLabel;
-        edModOrganizerPath: TEdit;
-        lblModOrganizerModsPath: TLabel;
-        edModOrganizerModsPath: TEdit;
+        lblModManagerPath: TLabel;
+        edModManagerPath: TEdit;
+        lblModsPath: TLabel;
+        edModsPath: TEdit;
         gbPapyrus: TGroupBox;
         lblDecompilerPath: TLabel;
         edDecompilerPath: TEdit;
@@ -118,8 +119,8 @@ type
         lblBSAOptOptions: TLabel;
         edBsaOptOptions: TEdit;
         [FormSection('DontTranslate')]
-          btnBrowseMO: TSpeedButton;
-          btnBrowseMOMods: TSpeedButton;
+          btnBrowseManager: TSpeedButton;
+          btnBrowseMods: TSpeedButton;
           btnBrowseDecompiler: TSpeedButton;
           btnBrowseCompiler: TSpeedButton;
           btnBrowseFlags: TSpeedButton;
@@ -129,7 +130,8 @@ type
     procedure LoadLanguageOptions;
     procedure btnOKClick(Sender: TObject);
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
-    procedure btnBrowseMOClick(Sender: TObject);
+    procedure btnBrowseManagerClick(Sender: TObject);
+    procedure kbUsingNMMClick(Sender: TObject);
     procedure kbUsingMOClick(Sender: TObject);
     procedure btnChangeMergeProfileClick(Sender: TObject);
     procedure edUsernameChange(Sender: TObject);
@@ -141,6 +143,7 @@ type
     procedure btnBrowseCompilerClick(Sender: TObject);
     procedure btnBrowseFlagsClick(Sender: TObject);
     procedure btnBrowseBSAOptClick(Sender: TObject);
+    procedure searchForNexusModManager;
     procedure searchForModOrganizer;
     procedure btnDetectClick(Sender: TObject);
     procedure edBsaOptPathExit(Sender: TObject);
@@ -149,7 +152,7 @@ type
     procedure kbBuildBSAMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure meTemplateChange(Sender: TObject);
-    procedure btnBrowseMOModsClick(Sender: TObject);
+    procedure btnBrowseModsClick(Sender: TObject);
     procedure appendBackslashOnExit(Sender: TObject);
   private
     { Private declarations }
@@ -191,18 +194,26 @@ begin
   BrowseForFile(edFlagsPath, GetString('mpOpt_FlagsFilter'), DataPath + 'scripts\source\');
 end;
 
-procedure TOptionsForm.btnBrowseMOClick(Sender: TObject);
+procedure TOptionsForm.btnBrowseManagerClick(Sender: TObject);
+var
+  modsPath: string;
 begin
-  BrowseForFolder(edModOrganizerPath, ProgramPath);
-  if DirectoryExists(edModOrganizerPath.Text + 'mods\') then begin
-    edModOrganizerModsPath.Text := edModOrganizerPath.Text + 'mods\';
-    edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+  BrowseForFolder(edModManagerPath, ProgramPath);
+  modsPath := edModManagerPath.Text + 'mods\';
+  if DirectoryExists(modsPath) then begin
+    edModsPath.Text := modsPath;
+    edMergeDirectory.Text := modsPath;
+  end;
+  modsPath := edModManagerPath.Text + gameMode.gameName + '\Mods\VirtualInstall\';
+  if DirectoryExists(modsPath) then begin
+    edModsPath.Text := modsPath;
+    edMergeDirectory.Text := modsPath;
   end;
 end;
 
-procedure TOptionsForm.btnBrowseMOModsClick(Sender: TObject);
+procedure TOptionsForm.btnBrowseModsClick(Sender: TObject);
 begin
-  BrowseForFolder(edModOrganizerModsPath, ProgramPath);
+  BrowseForFolder(edModsPath, ProgramPath);
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
@@ -229,6 +240,9 @@ begin
   if kbUsingMo.Checked then
     searchForModOrganizer;
 
+  if kbUsingNMM.Checked then
+    searchForNexusModManager;
+
   // search for champollion decompiler
   path := MultFileSearch(paths, validDecompilerFilenames, ignore, 2);
   if (path <> '') then
@@ -250,6 +264,30 @@ begin
     edBsaOptPath.Text := path;
     edBsaOptPathExit(nil);
   end;
+end;
+
+procedure TOptionsForm.searchForNexusModManager;
+const
+  sNMMUninstallKey  = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+
+    '6af12c54-643b-4752-87d0-8335503010de_is1\';
+  sNMMRegKey        = '\SOFTWARE\NexusModManager\';
+var
+  keys: TStringList;
+  path: string;
+begin
+  // find program path
+  keys := TStringList.Create;
+  keys.Add(sNMMUninstallKey + 'InstallLocation');
+  path := TryRegistryKeys(keys);
+  if path <> '' then
+    edModManagerPath.Text := path;
+
+  // find mods path
+  keys.Clear;
+  keys.Add(sNMMRegKey + 'Mods');
+  path := TryRegistryKeys(keys);
+  if path <> '' then
+    edModsPath.Text := path;
 end;
 
 procedure TOptionsForm.searchForModOrganizer;
@@ -299,15 +337,15 @@ begin
 
   // if found, set TEdit captions, else alert user
   if (modOrganizerPath <> '') then begin
-    edModOrganizerPath.Text := Copy(modOrganizerPath, 1, length(modOrganizerPath) - 16);
-    if DirectoryExists(edModOrganizerPath.Text + 'mods\') then begin
-      edModOrganizerModsPath.Text := edModOrganizerPath.Text + 'mods\';
-      edMergeDirectory.Text := edModOrganizerPath.Text + 'mods\';
+    edModManagerPath.Text := Copy(modOrganizerPath, 1, length(modOrganizerPath) - 16);
+    if DirectoryExists(edModManagerPath.Text + 'mods\') then begin
+      edModsPath.Text := edModManagerPath.Text + 'mods\';
+      edMergeDirectory.Text := edModManagerPath.Text + 'mods\';
     end;
   end
   else begin
     MessageDlg(GetString('mpOpt_ModOrganizerNotFound'), mtConfirmation, [mbOk], 0);
-    edModOrganizerPath.Text := '';
+    edModManagerPath.Text := '';
   end;
 end;
 
@@ -315,7 +353,7 @@ procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
   // check if we need to update merge status afterwards
   bUpdateMergeStatus := (settings.usingMO <> kbUsingMO.Checked)
-    or (settings.MOPath <> edModOrganizerPath.Text)
+    or (settings.ManagerPath <> edModManagerPath.Text)
     or (settings.mergeDirectory <> edMergeDirectory.Text);
 
   // General > Language
@@ -366,8 +404,9 @@ begin
 
   // Integrations > Mod Organizer
   settings.usingMO := kbUsingMO.Checked;
-  settings.MOPath := edModOrganizerPath.Text;
-  settings.MOModsPath := edModOrganizerModsPath.Text;
+  settings.usingNMM := kbUsingNMM.Checked;
+  settings.ManagerPath := edModManagerPath.Text;
+  settings.ModsPath := edModsPath.Text;
   settings.copyGeneralAssets := kbCopyGeneralAssets.Checked;
   // Integrations > Papyrus
   settings.decompilerPath := edDecompilerPath.Text;
@@ -611,8 +650,9 @@ begin
 
   // Integrations > Mod Organizer
   kbUsingMO.Checked := settings.usingMO;
-  edModOrganizerPath.Text := settings.MOPath;
-  edModOrganizerModsPath.Text := settings.MOModsPath;
+  kbUsingNMM.Checked := settings.usingNMM;
+  edModManagerPath.Text := settings.ManagerPath;
+  edModsPath.Text := settings.ModsPath;
   kbCopyGeneralAssets.Checked := settings.copyGeneralAssets;
   // Integrations > Papyrus
   edDecompilerPath.Text := settings.decompilerPath;
@@ -622,8 +662,9 @@ begin
   edBsaOptPath.Text := settings.bsaOptPath;
   edBsaOptOptions.Text := settings.bsaOptOptions;
 
-  // disable controls if not using mod organizer
+  // disable controls if not using MO or NMM
   kbUsingMOClick(nil);
+  kbUsingNMMClick(nil);
 
   // if already registered, lock registering controls
   edUsernameChange(nil);
@@ -664,15 +705,15 @@ begin
   end;
 
   // set up browse buttons
-  btnBrowseMO.Flat := true;
-  btnBrowseMOMods.Flat := true;
+  btnBrowseManager.Flat := true;
+  btnBrowseMods.Flat := true;
   btnBrowseAssetDirectory.Flat := true;
   btnBrowseDecompiler.Flat := true;
   btnBrowseCompiler.Flat := true;
   btnBrowseFlags.Flat := true;
   btnBrowseBsaOpt.Flat := true;
-  IconList.GetBitmap(0, btnBrowseMO.Glyph);
-  IconList.GetBitmap(0, btnBrowseMOMods.Glyph);
+  IconList.GetBitmap(0, btnBrowseManager.Glyph);
+  IconList.GetBitmap(0, btnBrowseMods.Glyph);
   IconList.GetBitmap(0, btnBrowseAssetDirectory.Glyph);
   IconList.GetBitmap(0, btnBrowseDecompiler.Glyph);
   IconList.GetBitmap(0, btnBrowseCompiler.Glyph);
@@ -697,10 +738,25 @@ var
   b: boolean;
 begin
   b := kbUsingMO.Checked;
-  edModOrganizerPath.Enabled := b;
-  edModOrganizerModsPath.Enabled := b;
-  btnBrowseMO.Enabled := b;
-  btnBrowseMOMods.Enabled := b;
+  kbUsingNMM.Checked := false;
+  edModManagerPath.Enabled := b;
+  edModsPath.Enabled := b;
+  btnBrowseManager.Enabled := b;
+  btnBrowseMods.Enabled := b;
+  kbCopyGeneralAssets.Enabled := b;
+  kbCopyGeneralAssets.Checked := b;
+end;
+
+procedure TOptionsForm.kbUsingNMMClick(Sender: TObject);
+var
+  b: boolean;
+begin
+  b := kbUsingNMM.Checked;
+  kbUsingMO.Checked := false;
+  edModManagerPath.Enabled := b;
+  edModsPath.Enabled := b;
+  btnBrowseManager.Enabled := b;
+  btnBrowseMods.Enabled := b;
   kbCopyGeneralAssets.Enabled := b;
   kbCopyGeneralAssets.Checked := b;
 end;

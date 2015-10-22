@@ -157,7 +157,7 @@ begin
 
     // PREPARE TO LOAD PLUGINS
     if settings.usingMO then
-      wbPluginsFileName := settings.MOPath + 'profiles\'+ActiveModProfile+'\plugins.txt'
+      wbPluginsFileName := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\plugins.txt'
     else
       wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
     Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);

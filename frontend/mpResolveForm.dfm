@@ -30,6 +30,10 @@ object ResolveForm: TResolveForm
     TabWidth = 140
     object tsBrokenDependencies: TTabSheet
       Caption = 'Broken dependencies'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblBrokenDependencies: TLabel
         Left = 3
         Top = 13
@@ -74,6 +78,10 @@ object ResolveForm: TResolveForm
     object tsNonContiguous: TTabSheet
       Caption = 'Non-contiguous plugins'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblNonContiguous: TLabel
         Left = 3
         Top = 13
@@ -131,6 +139,10 @@ object ResolveForm: TResolveForm
     object tsPluginErrors: TTabSheet
       Caption = 'Plugin errors'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblPluginErrors: TLabel
         Left = 3
         Top = 13
@@ -177,6 +189,10 @@ object ResolveForm: TResolveForm
     object tsOtherIssues: TTabSheet
       Caption = 'Other issues'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblOtherIssues: TLabel
         Left = 3
         Top = 13

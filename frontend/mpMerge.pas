@@ -1430,11 +1430,11 @@ var
   mergeFile, aFile: IwbFile;
   e, masters: IwbContainer;
   failed, masterName, mergeDesc, desc, bfn, mergeFilePrefix,
-  decompileFilename, compileFilename: string;
+  decompileFilename, compileFilename, fn: string;
   pluginsToMerge: TList;
   i, LoadOrder: Integer;
   usedExistingFile: boolean;
-  slMasters: TStringList;
+  slMasters, sl: TStringList;
   FileStream: TFileStream;
   time: TDateTime;
 begin
@@ -1745,11 +1745,20 @@ begin
     FileStream.Free;
   end;
 
-  // save merge map, files, fails
+  // save merge map, files, fails, plugins
   merge.map.SaveToFile(mergeFilePrefix+'_map.txt');
   merge.files.SaveToFile(mergeFilePrefix+'_files.txt');
   merge.fails.SaveToFile(mergeFilePrefix+'_fails.txt');
   merge.plugins.SaveToFile(mergeFilePrefix+'_plugins.txt');
+
+  // save empty files named after merged plugins for fomod installers
+  sl := TStringList.Create;
+  ForceDirectories(merge.dataPath + 'merge\plugins');
+  for i := 0 to Pred(merge.plugins.Count) do begin
+    fn := merge.dataPath + 'merge\plugins\' + merge.plugins[i] + '.merged';
+    sl.SaveToFile(fn);
+  end;
+  sl.Free;
 
   // update statistics
   if merge.status = msBuildReady then

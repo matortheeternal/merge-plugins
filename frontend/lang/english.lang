@@ -101,12 +101,6 @@ mpMain_CheckPluginsItem_Caption=Check plugins for errors
 mpMain_ResolveIssuesItem_Caption=Resolve issues
 mpMain_ReportOnPluginsItem_Caption=Report on plugins
 mpMain_FixPluginsItem_Caption=Fix errors in plugins
-{ ## Move Submenu ## }
-mpMain_MoveItem_Caption=Move
-mpMain_UpItem_Caption=Up
-mpMain_DownItem_Caption=Down
-mpMain_ToTopItem_Caption=To top
-mpMain_ToBottomItem_Caption=To bottom
 { #### DYNAMIC #### }
 mpMain_BuildMerge=Build merge
 mpMain_RebuildMerge=Rebuild merge
@@ -296,15 +290,17 @@ mpOpt_lblSample_Caption=Sample
 { ## Integrations Tab ## }
 mpOpt_IntegrationsTabSheet_Caption=Integrations
 mpOpt_btnDetect_Caption=Detect Integrations
-mpOpt_gbModOrganizer_Caption=Mod Organizer
+mpOpt_gbModManager_Caption=Mod Manager (NMM or MO)
 mpOpt_kbUsingMO_Caption=I'm using Mod Organizer
 mpOpt_kbUsingMO_Hint=Check this if you're using Mod Organizer and want #13#10to access your Mod Organizer profile's load order #13#10and Mod Organizer integration features.
+mpOpt_kbUsingNMM_Caption=I'm using Nexus Mod Manager
+mpOpt_kbUsingNMM_Hint=Check this if you're using Nexus Mod Manager alpha #13#10v0.60+ to access Nexus Mod Manager integration features.
 mpOpt_kbCopyGeneralAssets_Caption=Copy general asssets
-mpOpt_kbCopyGeneralAssets_Hint=If checked, general assets from Mod Organizer mod #13#10installations will be copied during the merging #13#10process, allowing you to create entirely #13#10standalone merged mods in Mod Organizer.  See the #13#10documentation for more information on general assets.
-mpOpt_lblModOrganizerPath_Caption=Mod Organizer path
-mpOpt_lblModOrganizerPath_Hint=The path to the folder containing ModOrganizer.exe.  #13#10This must be set properly for the application to #13#10access your Mod Organizer load order.
-mpOpt_lblModOrganizerModsPath_Caption=Mod Organizer mods path
-mpOpt_lblModOrganizerModsPath_Hint=The path to your Mod Organizer mods path.  This #13#10must be set properly to use Copy general assets #13#10option.
+mpOpt_kbCopyGeneralAssets_Hint=If checked, general assets from mod installations #13#10will be copied during the merging process, allowing#13#10 you to create entirely standalone #13#10merged mods.  See the documentation for more #13#10information on general assets.
+mpOpt_lblManagerPath_Caption=Mod manager path
+mpOpt_lblModManagerPath_Hint=The path to the folder containing ModOrganizer.exe or #13#10NexusModManager.exe.  When using Mod Organizer, this must be set properly for the #13#10application to access your Mod Organizer load order.
+mpOpt_lblModsPath_Caption=Mod Manager mods path
+mpOpt_lblModsPath_Hint=The path to your MO/NMM mods path.  This #13#10must be set properly to use the Copy general assets #13#10option.
 mpOpt_gbPapyrus_Caption=Papyrus
 mpOpt_lblDecompilerPath_Caption=Champollion Decompiler path
 mpOpt_lblDecompilerPath_Hint=The path to the Champollion Decompiler executable #13#10(x32 or x64), which you can download from Nexus #13#10Mods.  Must be set correctly to use the Handle #13#10script fragments option.

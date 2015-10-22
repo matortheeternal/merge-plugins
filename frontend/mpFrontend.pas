@@ -240,8 +240,9 @@ type
     debugScriptFragments: boolean;
     [IniSection('Integrations')]
     usingMO: boolean;
-    MOPath: string;
-    MOModsPath: string;
+    usingNMM: boolean;
+    ManagerPath: string;
+    ModsPath: string;
     copyGeneralAssets: boolean;
     compilerPath: string;
     decompilerPath: string;
@@ -276,6 +277,7 @@ type
   function GamePathValid(path: string; id: integer): boolean;
   procedure SetGame(id: integer);
   function GetGameID(name: string): integer;
+  function TryRegistryKeys(var keys: TStringList): string;
   function GetGamePath(mode: TGameMode): string;
   procedure LoadDefinitions;
   { Bethesda Plugin Functions }
@@ -316,6 +318,7 @@ type
   function GetActiveProfile: string;
   procedure GetActiveMods(var modlist: TStringList; profileName: string);
   function GetModContainingFile(var modlist: TStringList; filename: string): string;
+  function GetFolderContainingFile(basePath: string; filename: string): string;
   { Log methods }
   procedure InitLog;
   procedure RebuildLog;
@@ -538,6 +541,7 @@ var
   i: Integer;
   path, name: string;
 begin
+  Result := '';
   with TRegistry.Create do try
     RootKey := HKEY_LOCAL_MACHINE;
 
@@ -1415,7 +1419,7 @@ begin
     exit;
 
   // load ini file
-  fname := settings.MOPath + 'ModOrganizer.ini';
+  fname := settings.ManagerPath + 'ModOrganizer.ini';
   if(not FileExists(fname)) then begin
     Logger.Write('GENERAL', 'ModOrganizer', 'Mod Organizer ini file ' + fname + ' does not exist');
     exit;
@@ -1438,7 +1442,7 @@ begin
     exit;
 
   // prepare to load modlist
-  modlistFilePath := settings.MOPath + 'profiles/' + profileName + '/modlist.txt';
+  modlistFilePath := settings.ManagerPath + 'profiles/' + profileName + '/modlist.txt';
   modlist.Clear;
 
   // exit if modlist file doesn't exist
@@ -1474,12 +1478,31 @@ begin
   // check for file in each mod folder in modlist
   for i := 0 to Pred(modlist.Count) do begin
     modName := modlist[i];
-    filePath := settings.MOModsPath + modName + '\' + filename;
+    filePath := settings.ModsPath + modName + '\' + filename;
     if (FileExists(filePath)) then begin
       Result := modName;
       exit;
     end;
   end;
+end;
+
+function GetFolderContainingFile(basePath: string; filename: string): string;
+var
+  filePath: string;
+  rec: TSearchRec;
+begin
+  Result := '';
+
+  if FindFirst(basePath + '*', faDirectory, rec) <> 0 then
+    exit;
+  repeat
+    filePath := basePath + '\' + rec.Name + '\' + filename;
+    if FileExists(filePath) then begin
+      Result := rec.Name;
+      break;
+    end;
+  until FindNext(rec) <> 0;
+  FindClose(rec);
 end;
 
 
@@ -3157,7 +3180,12 @@ begin
   if settings.usingMO then begin
     modName := GetModContainingFile(ActiveMods, filename);
     if modName <> '' then
-      dataPath := settings.MOModsPath + modName + '\';
+      dataPath := settings.ModsPath + modName + '\';
+  end
+  else if settings.usingNMM then begin
+    modName := GetFolderContainingFile(settings.ModsPath, filename);
+    if modName <> '' then
+      dataPath := settings.ModsPath + modName + '\';
   end;
 end;
 
@@ -3487,14 +3515,14 @@ begin
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
-  if settings.usingMO and (settings.MOPath = '') then begin
+  if settings.usingMO and (settings.ManagerPath = '') then begin
     Logger.Write('MERGE', 'Status', name + ' -> Mod Organizer Directory blank');
     status := msDirInvalid;
     exit;
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
-  if settings.usingMO and not DirectoryExists(settings.MOPath) then begin
+  if settings.usingMO and not DirectoryExists(settings.ManagerPath) then begin
      Logger.Write('MERGE', 'Status', name + ' -> Mod Organizer Directory invalid');
      status := msDirInvalid;
      exit;
@@ -3679,7 +3707,7 @@ begin
   updateDictionary := false;
   updateProgram := false;
   usingMO := false;
-  MOPath := '';
+  ManagerPath := '';
   copyGeneralAssets := false;
   mergeDirectory := wbDataPath;
   handleFaceGenData := true;

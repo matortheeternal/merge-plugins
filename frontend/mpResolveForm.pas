@@ -115,7 +115,7 @@ begin
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
-  if settings.usingMO and (settings.MOPath = '') then begin
+  if settings.usingMO and (settings.ManagerPath = '') then begin
     bOtherIssues := true;
     ListItem := lvOtherIssues.Items.Add;
     ListItem.Caption := GetString('mpRes_DirInvalid');
@@ -123,7 +123,7 @@ begin
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
-  if settings.usingMO and not DirectoryExists(settings.MOPath) then begin
+  if settings.usingMO and not DirectoryExists(settings.ManagerPath) then begin
     bOtherIssues := true;
     ListItem := lvOtherIssues.Items.Add;
     ListItem.Caption := GetString('mpRes_DirInvalid');

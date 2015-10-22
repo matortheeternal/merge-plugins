@@ -217,6 +217,10 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object MergesListView: TListView
           Left = 3
           Top = 3
@@ -266,6 +270,10 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -898,7 +906,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010C001800840210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C001800880210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1439,7 +1447,7 @@ object MergeForm: TMergeForm
     Left = 1008
     Top = 8
     Bitmap = {
-      494C010108001400E40140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108001400E80140002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100006000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

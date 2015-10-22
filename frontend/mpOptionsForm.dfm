@@ -1,7 +1,7 @@
 object OptionsForm: TOptionsForm
   Left = 0
   Top = 0
-  Caption = 'Settings'
+  Caption = 'Options'
   ClientHeight = 447
   ClientWidth = 584
   Color = clBtnFace
@@ -173,7 +173,7 @@ object OptionsForm: TOptionsForm
         object lblUsername: TLabel
           Left = 12
           Top = 20
-          Width = 205
+          Width = 48
           Height = 13
           Align = alCustom
           Caption = 'Username'
@@ -201,7 +201,7 @@ object OptionsForm: TOptionsForm
         object lblStatus: TLabel
           Left = 12
           Top = 45
-          Width = 205
+          Width = 91
           Height = 13
           Align = alCustom
           Caption = 'Registration status'
@@ -259,7 +259,7 @@ object OptionsForm: TOptionsForm
         object lblLanguage: TLabel
           Left = 12
           Top = 20
-          Width = 205
+          Width = 78
           Height = 13
           Margins.Left = 6
           Margins.Top = 6
@@ -768,7 +768,7 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      object gbModOrganizer: TGroupBox
+      object gbModManager: TGroupBox
         Left = 6
         Top = 6
         Width = 548
@@ -777,16 +777,16 @@ object OptionsForm: TOptionsForm
         Margins.Top = 6
         Margins.Right = 6
         Margins.Bottom = 6
-        Caption = 'Mod Organizer'
+        Caption = 'Mod Manager (NMM or MO)'
         TabOrder = 0
-        object lblModOrganizerPath: TLabel
+        object lblModManagerPath: TLabel
           Left = 12
           Top = 50
-          Width = 95
+          Width = 90
           Height = 13
-          Caption = 'Mod Organizer path'
+          Caption = 'Mod manager path'
         end
-        object btnBrowseMO: TSpeedButton
+        object btnBrowseManager: TSpeedButton
           Left = 519
           Top = 47
           Width = 23
@@ -795,16 +795,16 @@ object OptionsForm: TOptionsForm
           Margins.Right = 6
           ParentShowHint = False
           ShowHint = True
-          OnClick = btnBrowseMOClick
+          OnClick = btnBrowseManagerClick
         end
-        object lblModOrganizerModsPath: TLabel
+        object lblModsPath: TLabel
           Left = 12
           Top = 77
-          Width = 123
+          Width = 118
           Height = 13
-          Caption = 'Mod Organizer mods path'
+          Caption = 'Mod manager mods path'
         end
-        object btnBrowseMOMods: TSpeedButton
+        object btnBrowseMods: TSpeedButton
           Left = 519
           Top = 74
           Width = 23
@@ -813,7 +813,31 @@ object OptionsForm: TOptionsForm
           Margins.Right = 6
           ParentShowHint = False
           ShowHint = True
-          OnClick = btnBrowseMOModsClick
+          OnClick = btnBrowseModsClick
+        end
+        object edModManagerPath: TEdit
+          Left = 192
+          Top = 47
+          Width = 321
+          Height = 21
+          TabOrder = 0
+          OnExit = appendBackslashOnExit
+        end
+        object kbCopyGeneralAssets: TCheckBox
+          Left = 380
+          Top = 20
+          Width = 157
+          Height = 17
+          Caption = 'Copy general asssets'
+          TabOrder = 1
+        end
+        object edModsPath: TEdit
+          Left = 192
+          Top = 74
+          Width = 321
+          Height = 21
+          TabOrder = 2
+          OnExit = appendBackslashOnExit
         end
         object kbUsingMO: TCheckBox
           Left = 12
@@ -821,32 +845,17 @@ object OptionsForm: TOptionsForm
           Width = 174
           Height = 17
           Caption = 'I'#39'm using Mod Organizer'
-          TabOrder = 0
+          TabOrder = 3
           OnClick = kbUsingMOClick
         end
-        object edModOrganizerPath: TEdit
-          Left = 192
-          Top = 47
-          Width = 321
-          Height = 21
-          TabOrder = 1
-          OnExit = appendBackslashOnExit
-        end
-        object kbCopyGeneralAssets: TCheckBox
+        object kbUsingNMM: TCheckBox
           Left = 192
           Top = 20
-          Width = 133
+          Width = 182
           Height = 17
-          Caption = 'Copy general asssets'
-          TabOrder = 2
-        end
-        object edModOrganizerModsPath: TEdit
-          Left = 192
-          Top = 74
-          Width = 321
-          Height = 21
-          TabOrder = 3
-          OnExit = appendBackslashOnExit
+          Caption = 'I'#39'm using Nexus Mod Manager'
+          TabOrder = 4
+          OnClick = kbUsingNMMClick
         end
       end
       object gbPapyrus: TGroupBox
@@ -1027,7 +1036,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800200110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800240110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
