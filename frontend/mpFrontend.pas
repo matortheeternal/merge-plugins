@@ -2010,7 +2010,7 @@ var
   sl: TStringList;
 begin
   // don't load file if it doesn't exist
-  filename := 'user\' + wbAppName + 'PluginInfo.json';
+  filename := ProfilePath + 'PluginInfo.json';
   if FileExists(filename) then begin
     // load file text into SuperObject to parse it
     sl := TStringList.Create;
