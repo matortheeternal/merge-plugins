@@ -362,9 +362,9 @@ begin
   end;
 
   // toggle menu items
-  CheckPluginItem.Enabled := bLoaderDone and bHasSelection and bAllNeedErrorCheck;
-  FixErrorsItem.Enabled := bLoaderDone and bHasSelection and bAllPluginsHaveErrors;
-  IgnoreErrorsItem.Enabled := bLoaderDone and bHasSelection and bAllPluginsHaveErrors;
+  CheckPluginItem.Enabled := ProgramStatus.bLoaderDone and bHasSelection and bAllNeedErrorCheck;
+  FixErrorsItem.Enabled := ProgramStatus.bLoaderDone and bHasSelection and bAllPluginsHaveErrors;
+  IgnoreErrorsItem.Enabled := ProgramStatus.bLoaderDone and bHasSelection and bAllPluginsHaveErrors;
 end;
 
 procedure TResolveForm.ProgressDone;
@@ -406,7 +406,7 @@ var
   ListItem: TListItem;
   plugin: TPlugin;
 begin
-  if not bLoaderDone then
+  if not ProgramStatus.bLoaderDone then
     exit;
   // create lists
   pluginsToHandle := TList.Create;
@@ -438,7 +438,7 @@ var
   ListItem: TListItem;
   plugin: TPlugin;
 begin
-  if not bLoaderDone then
+  if not ProgramStatus.bLoaderDone then
     exit;
   // create lists
   pluginsToHandle := TList.Create;

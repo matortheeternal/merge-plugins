@@ -19,6 +19,7 @@ uses
   Dialogs,
   Controls,
   SysUtils,
+  Classes,
   mpProfileForm in 'mpProfileForm.pas' {ProfileForm},
   mpProfilePanel in 'mpProfilePanel.pas',
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
@@ -49,14 +50,15 @@ begin
   // set important vars
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.HintHidePause := 8000;
-  ProgramPath := ExtractFilePath(ParamStr(0));
+  PathList := TStringList.Create;
+  PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
 
   // get command line arguments
   bProfileProvided := FindCmdLineSwitch('profile');
 
   // initialize application, load settings
   Application.Initialize;
-  ForceDirectories(ProgramPath + 'profiles');
+  ForceDirectories(PathList.Values['ProgramPath'] + 'profiles');
   LoadSettings;
   LoadStatistics;
 

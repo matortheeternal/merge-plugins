@@ -39,6 +39,8 @@ type
     constructor Create(time, appTime, group, &label, text: string); Overload;
   end;
   // SERVER/CLIENT
+  TmpMessageIDs = ( MSG_UNKNOWN, MSG_NOTIFY, MSG_REGISTER, MSG_AUTH_RESET,
+    MSG_STATISTICS, MSG_STATUS, MSG_REQUEST, MSG_REPORT );
   TmpMessage = class(TObject)
   public
     id: integer;
@@ -272,6 +274,14 @@ type
     procedure Delete;
     procedure Rename(name: string);
   end;
+  TProgramStatus = class(TObject)
+  public
+    bInitException, bLoadException, bChangeMergeProfile, bForceTerminate,
+    bLoaderDone, bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
+    bConnecting, bUpdateMergeStatus, bAllowClose: boolean;
+    local, remote: TmpStatus;
+    constructor Create; virtual;
+  end;
 
   { Initialization Methods }
   function GamePathValid(path: string; id: integer): boolean;
@@ -336,7 +346,7 @@ type
   procedure SaveSettings(var s: TSettings; path: string); overload;
   procedure LoadStatistics;
   procedure SaveStatistics;
-  procedure LoadChangelog;
+  procedure LoadChangelog(var changelog: TStringList);
   procedure LoadDictionary;
   procedure RenameSavedPlugins;
   procedure SaveMerges;
@@ -389,16 +399,6 @@ const
   ProgramTranslators = 'GabenOurSavior, fiama, dhxxqk2010, Oaristys';
   xEditVersion = '3.1.1';
   bTranslationDump = false;
-
-  // MSG IDs
-  MSG_UNKNOWN = 0;
-  MSG_NOTIFY = 1;
-  MSG_REGISTER = 2;
-  MSG_AUTH_RESET = 3;
-  MSG_STATISTICS = 4;
-  MSG_STATUS = 5;
-  MSG_REQUEST = 6;
-  MSG_REPORT = 7;
 
   // PLUGIN FLAGS
   FlagsArray: array[0..11] of TPluginFlag = (
@@ -465,24 +465,23 @@ const
   );
 
 var
+  // TODO: move labelfilters and groupfilters to mpMergeForm
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
   LabelFilters, GroupFilters, pluginsToHandle, mergesToBuild: TList;
-  timeCosts, changelog, language: TStringList;
+  // TODO: move changelog to mpChangeLogForm
+  ActiveMods, timeCosts, language, PathList: TStringList;
   settings: TSettings;
   CurrentProfile: TProfile;
   statistics, sessionStatistics: TStatistics;
-  status, RemoteStatus: TmpStatus;
   handler: IwbContainerHandler;
-  bInitException, bLoadException, bChangeMergeProfile, bForceTerminate,
-  bLoaderDone, bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
-  bConnecting, bUpdateMergeStatus, bAllowClose: boolean;
-  TempPath, LogPath, ProgramPath, dictionaryFilename, ActiveModProfile,
-  ProgramVersion, xEditLogLabel, xEditLogGroup, DataPath, GamePath,
-  ProfilePath: string;
+  ProgramStatus: TProgramStatus;
+  // TODO: move paths to PathList
+  ActiveModProfile, xEditLogLabel, xEditLogGroup, dictionaryFilename: string;
   ConnectionAttempts: Integer;
-  ActiveMods: TStringList;
   TCPClient: TidTCPClient;
+  // TODO: move LastStatusTime to ProgramStatus?
   AppStartTime, LastStatusTime: TDateTime;
+  // TODO: move gamemode to ProgramStatus?
   GameMode: TGameMode;
 
 implementation
@@ -519,7 +518,7 @@ begin
   wbAppName := GameMode.appName;
   wbDataPath := CurrentProfile.gamePath + 'Data\';
   // set general paths
-  DataPath := wbDataPath;
+  PathList.Values['DataPath'] := wbDataPath;
 end;
 
 { Get the game ID associated with a game long name }
@@ -1585,8 +1584,8 @@ begin
     sl.Add(Format('[%s] (%s) %s: %s', [msg.time, msg.group, msg.&label, msg.text]));
   end;
   fdt := FormatDateTime('mmddyy_hhnnss', TDateTime(Now));
-  ForceDirectories(LogPath);
-  sl.SaveToFile(LogPath+'log_'+fdt+'.txt');
+  ForceDirectories(PathList.Values['LogPath']);
+  sl.SaveToFile(PathList.Values['LogPath']+'log_'+fdt+'.txt');
   sl.Free;
 end;
 
@@ -1677,7 +1676,7 @@ begin
     end
     else begin
       MessageDlg(directions, mtConfirmation, [mbOk], 0);
-      ForceDirectories(ProgramPath + 'lang\');
+      ForceDirectories(PathList.Values['ProgramPath'] + 'lang\');
       ShellExecute(0, 'open', PChar(langFile), '', '', SW_SHOWNORMAL);
     end;
   end
@@ -1699,7 +1698,7 @@ var
   pSettings: TSettings;
 begin
   // get profile path
-  path := ProgramPath + 'profiles\' + p.name + '\settings.ini';
+  path := PathList.Values['ProgramPath'] + 'profiles\' + p.name + '\settings.ini';
   ForceDirectories(ExtractFilePath(path));
 
   // load settings if they exist, else create them
@@ -1776,7 +1775,7 @@ end;
 
 procedure SaveSettings;
 begin
-  TRttiIni.Save(ProfilePath + 'settings.ini', settings);
+  TRttiIni.Save(PathList.Values['ProfilePath'] + 'settings.ini', settings);
   if settings.registered then
     SaveRegistrationData(settings);
 end;
@@ -1792,7 +1791,7 @@ end;
 procedure LoadSettings;
 begin
   settings := TSettings.Create;
-  TRttiIni.Load(ProfilePath + 'settings.ini', settings);
+  TRttiIni.Load(PathList.Values['ProfilePath'] + 'settings.ini', settings);
   LoadRegistrationData(settings);
 end;
 
@@ -1828,7 +1827,7 @@ begin
   TRttiIni.Load('statistics.ini', statistics);
 end;
 
-procedure LoadChangelog;
+procedure LoadChangelog(var changelog: TStringList);
 begin
   // load changelog
   if not Assigned(changelog) then
@@ -1924,7 +1923,7 @@ begin
   end;
 
   // save and finalize
-  filename := ProfilePath + 'Merges.json';
+  filename := PathList.Values['ProfilePath'] + 'Merges.json';
   Tracker.Write(' ');
   Tracker.Write('Saving to ' + filename);
   Tracker.UpdateProgress(1);
@@ -1942,7 +1941,7 @@ var
   filename: string;
 begin
   // don't load file if it doesn't exist
-  filename := ProfilePath + 'Merges.json';
+  filename := PathList.Values['ProfilePath'] + 'Merges.json';
   if not FileExists(filename) then
     exit;
   // load file into SuperObject to parse it
@@ -2010,7 +2009,7 @@ var
   sl: TStringList;
 begin
   // don't load file if it doesn't exist
-  filename := ProfilePath + 'PluginInfo.json';
+  filename := PathList.Values['ProfilePath'] + 'PluginInfo.json';
   if FileExists(filename) then begin
     // load file text into SuperObject to parse it
     sl := TStringList.Create;
@@ -2041,7 +2040,7 @@ begin
 
   // save and finalize
   Tracker.Write(' ');
-  filename := ProfilePath + 'PluginInfo.json';
+  filename := PathList.Values['ProfilePath'] + 'PluginInfo.json';
   Tracker.Write('Saving to '+filename);
   Tracker.UpdateProgress(1);
   obj.SaveTo(filename);
@@ -2056,7 +2055,7 @@ var
   filename, hash: string;
 begin
   // don't load file if it doesn't exist
-  filename := ProfilePath + 'PluginInfo.json';
+  filename := PathList.Values['ProfilePath'] + 'PluginInfo.json';
   if not FileExists(filename) then
     exit;
   // load file into SuperObject to parse it
@@ -2153,14 +2152,14 @@ end;
 
 procedure DeleteTempPath;
 begin
-  DeleteDirectory(TempPath);
+  DeleteDirectory(PathList.Values['TempPath']);
 end;
 
 procedure ShowProgressForm(parent: TForm; var pf: TProgressForm; s: string);
 begin
   parent.Enabled := false;
   pf := TProgressForm.Create(parent);
-  pf.LogPath := LogPath;
+  pf.LogPath := PathList.Values['LogPath'];
   pf.PopupParent := parent;
   pf.Caption := s;
   pf.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
@@ -2397,11 +2396,11 @@ end;
 
 procedure ConnectToServer;
 begin
-  if (bConnecting or TCPClient.Connected)
+  if (ProgramStatus.bConnecting or TCPClient.Connected)
   or (ConnectionAttempts >= MaxConnectionAttempts) then
     exit;
 
-  bConnecting := true;
+  ProgramStatus.bConnecting := true;
   try
     Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
     TCPClient.Connect;
@@ -2420,7 +2419,7 @@ begin
           'Click the disconnected icon in the status bar to retry.');
     end;
   end;
-  bConnecting := false;
+  ProgramStatus.bConnecting := false;
 end;
 
 function ServerAvailable: boolean;
@@ -2461,7 +2460,7 @@ begin
   // throws exception if server is unavailable
   try
     // send notify request to server
-    msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, 'Authorized?');
+    msg := TmpMessage.Create(Ord(MSG_NOTIFY), settings.username, settings.key, 'Authorized?');
     SendClientMessage(msg);
 
     // get response
@@ -2476,7 +2475,7 @@ begin
   end;
 
   // set bAuthorized boolean
-  bAuthorized := Result;
+  ProgramStatus.bAuthorized := Result;
 end;
 
 procedure SendGameMode;
@@ -2490,7 +2489,7 @@ begin
   // throws exception if server is unavailable
   try
     // send notifification to server
-    msg := TmpMessage.Create(MSG_NOTIFY, settings.username, settings.key, wbAppName);
+    msg := TmpMessage.Create(Ord(MSG_NOTIFY), settings.username, settings.key, wbAppName);
     SendClientMessage(msg);
   except
     on x : Exception do begin
@@ -2511,7 +2510,7 @@ begin
   // throws exception if server is unavailable
   try
     // send statistics to server
-    msg := TmpMessage.Create(MSG_STATISTICS, settings.username, settings.key, TRttiJson.ToJson(sessionStatistics));
+    msg := TmpMessage.Create(Ord(MSG_STATISTICS), settings.username, settings.key, TRttiJson.ToJson(sessionStatistics));
     SendClientMessage(msg);
 
     // get response
@@ -2538,7 +2537,7 @@ begin
   // throws exception if server is unavailable
   try
     // send auth reset request to server
-    msg := TmpMessage.Create(MSG_AUTH_RESET, settings.username, settings.key, '');
+    msg := TmpMessage.Create(Ord(MSG_AUTH_RESET), settings.username, settings.key, '');
     SendClientMessage(msg);
 
     // get response
@@ -2566,7 +2565,7 @@ begin
   // throws exception if server is unavailable
   try
     // send register request to server
-    msg := TmpMessage.Create(MSG_REGISTER, username, settings.key, 'Check');
+    msg := TmpMessage.Create(Ord(MSG_REGISTER), username, settings.key, 'Check');
     SendClientMessage(msg);
 
     // get response
@@ -2595,7 +2594,7 @@ begin
   // throws exception if server is unavailable
   try
     // send register request to server
-    msg := TmpMessage.Create(MSG_REGISTER, username, settings.key, 'Register');
+    msg := TmpMessage.Create(Ord(MSG_REGISTER), username, settings.key, 'Register');
     SendClientMessage(msg);
 
     // get response
@@ -2627,13 +2626,13 @@ begin
   // throws exception if server is unavailable
   try
     // send status request to server
-    msg := TmpMessage.Create(MSG_STATUS, settings.username, settings.key, '');
+    msg := TmpMessage.Create(Ord(MSG_STATUS), settings.username, settings.key, '');
     SendClientMessage(msg);
 
     // get response
     LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
     response := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
-    RemoteStatus := TmpStatus(TRttiJson.FromJson(response.data, TmpStatus));
+    ProgramStatus.remote := TmpStatus(TRttiJson.FromJson(response.data, TmpStatus));
     //Logger.Write('CLIENT', 'Response', response.data);
   except
     on x : Exception do begin
@@ -2643,39 +2642,42 @@ begin
 end;
 
 procedure CompareStatuses;
+var
+  LocalStatus, RemoteStatus: TmpStatus;
 begin
-  if not Assigned(RemoteStatus) then
+  if not Assigned(ProgramStatus.remote) then
     exit;
 
   // handle program update
-  // TODO: split string on . and do a greater than comparison for each clause
-  bProgramUpdate := VersionCompare(status.programVersion, RemoteStatus.programVersion);
+  LocalStatus := ProgramStatus.local;
+  RemoteStatus := ProgramStatus.remote;
+  ProgramStatus.bProgramUpdate := VersionCompare(LocalStatus.programVersion, RemoteStatus.programVersion);
 
   // handle dictionary update based on gamemode
   case wbGameMode of
     gmTES5: begin
-      bDictionaryUpdate := status.tes5Hash <> RemoteStatus.tes5Hash;
-      if bDictionaryUpdate then
+      ProgramStatus.bDictionaryUpdate := LocalStatus.tes5Hash <> RemoteStatus.tes5Hash;
+      if ProgramStatus.bDictionaryUpdate then
         Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
-          status.tes5Hash+' != '+RemoteStatus.tes5hash);
+          LocalStatus.tes5Hash+' != '+RemoteStatus.tes5hash);
     end;
     gmTES4: begin
-      bDictionaryUpdate := status.tes4Hash <> RemoteStatus.tes4Hash;
-      if bDictionaryUpdate then
+      ProgramStatus.bDictionaryUpdate := LocalStatus.tes4Hash <> RemoteStatus.tes4Hash;
+      if ProgramStatus.bDictionaryUpdate then
         Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
-          status.tes4Hash+' != '+RemoteStatus.tes4hash);
+          LocalStatus.tes4Hash+' != '+RemoteStatus.tes4hash);
     end;
     gmFNV: begin
-      bDictionaryUpdate := status.fnvHash <> RemoteStatus.fnvHash;
-      if bDictionaryUpdate then
+      ProgramStatus.bDictionaryUpdate := LocalStatus.fnvHash <> RemoteStatus.fnvHash;
+      if ProgramStatus.bDictionaryUpdate then
         Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
-          status.fnvHash+' != '+RemoteStatus.fnvhash);
+          LocalStatus.fnvHash+' != '+RemoteStatus.fnvhash);
     end;
     gmFO3: begin
-      bDictionaryUpdate := status.fo3Hash <> RemoteStatus.fo3Hash;
-      if bDictionaryUpdate then
+      ProgramStatus.bDictionaryUpdate := LocalStatus.fo3Hash <> RemoteStatus.fo3Hash;
+      if ProgramStatus.bDictionaryUpdate then
         Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
-          status.fo3Hash+' != '+RemoteStatus.fo3hash);
+          LocalStatus.fo3Hash+' != '+RemoteStatus.fo3hash);
     end;
   end;
 end;
@@ -2695,7 +2697,7 @@ begin
   // throws exception if server is unavailable
   try
     // send request to server
-    msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, 'Changelog');
+    msg := TmpMessage.Create(Ord(MSG_REQUEST), settings.username, settings.key, 'Changelog');
     SendClientMessage(msg);
 
     // get response
@@ -2706,7 +2708,6 @@ begin
     // load changelog from response
     Logger.Write('CLIENT', 'Update', 'Changelog recieved.  (Size: '+FormatByteSize(stream.Size)+')');
     stream.Free;
-    LoadChangelog;
     Result := true;
   except
     on x : Exception do begin
@@ -2732,7 +2733,7 @@ begin
   // throws exception if server is unavailable
   try
     // send request to server
-    msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, filename);
+    msg := TmpMessage.Create(Ord(MSG_REQUEST), settings.username, settings.key, filename);
     SendClientMessage(msg);
 
     // get response
@@ -2771,9 +2772,9 @@ begin
   try
     with archive do begin
       // The name of the ZIP file to unzip
-      FileName := ProgramPath + 'MergePlugins.zip';
+      FileName := PathList.Values['ProgramPath'] + 'MergePlugins.zip';
       // Set base (default) directory for all archive operations
-      BaseDirectory := ProgramPath;
+      BaseDirectory := PathList.Values['ProgramPath'];
       // Extract all files from the archive to current directory
       ExtractOptions := [eoCreateDirs, eoRestorePath];
       ExtractFiles('*.*');
@@ -2796,6 +2797,7 @@ var
   msg: TmpMessage;
   filename: string;
   stream: TFileStream;
+  RemoteStatus: TmpStatus;
 begin
   Result := false;
   if not TCPClient.Connected then
@@ -2807,6 +2809,7 @@ begin
     exit;
   end;
 
+  RemoteStatus := ProgramStatus.remote;
   Logger.Write('CLIENT', 'Update', 'Merge Plugins v'+RemoteStatus.programVersion);
   Tracker.Write('Updating program to v'+RemoteStatus.programVersion);
 
@@ -2814,7 +2817,7 @@ begin
   // throws exception if server is unavailable
   try
     // send request to server
-    msg := TmpMessage.Create(MSG_REQUEST, settings.username, settings.key, 'Program');
+    msg := TmpMessage.Create(Ord(MSG_REQUEST), settings.username, settings.key, 'Program');
     SendClientMessage(msg);
 
     // get response
@@ -2859,7 +2862,7 @@ begin
       Logger.Write('CLIENT', 'Report', 'Sending '+report.filename);
 
       // send report to server
-      msg := TmpMessage.Create(MSG_REPORT, settings.username, settings.key, reportJson);
+      msg := TmpMessage.Create(Ord(MSG_REPORT), settings.username, settings.key, reportJson);
       SendClientMessage(msg);
 
       // get response
@@ -2890,7 +2893,7 @@ begin
     exit;
 
   // exit if no reports to load
-  path := ProgramPath + 'reports\';
+  path := PathList.Values['ProgramPath'] + 'reports\';
   if FindFirst(path + '*', faAnyFile, info) <> 0 then
     exit;  
   lst := TList.Create;
@@ -3140,7 +3143,7 @@ begin
   description.Text := Wordwrap(s, 80);
 
   // get reports
-  entry := GetEntry(filename, numRecords, ProgramVersion);
+  entry := GetEntry(filename, numRecords, ProgramStatus.local.programVersion);
   s := Trim(StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]));
   reports.Text := Wordwrap(s, 80);
 
@@ -3158,7 +3161,7 @@ var
   s: string;
 begin
   // get reports
-  entry := GetEntry(filename, numRecords, ProgramVersion);
+  entry := GetEntry(filename, numRecords, ProgramStatus.local.ProgramVersion);
   s := Trim(StringReplace(entry.notes, '@13', #13#10, [rfReplaceAll]));
   reports.Text := Wordwrap(s, 80);
 
@@ -3764,7 +3767,7 @@ procedure TProfile.Delete;
 var
   path: string;
 begin
-  path := ProgramPath + 'profiles\' + name;
+  path := PathList.Values['ProgramPath'] + 'profiles\' + name;
   if DirectoryExists(path) then
     RecycleDirectory(path);
 end;
@@ -3774,13 +3777,31 @@ var
   oldProfilePath, newProfilePath: string;
 begin
   // rename old profile folder if necessary
-  oldProfilePath := ProgramPath + 'profiles\' + self.name;
-  newProfilePath := ProgramPath + 'profiles\' + name;
+  oldProfilePath := PathList.Values['ProgramPath'] + 'profiles\' + self.name;
+  newProfilePath := PathList.Values['ProgramPath'] + 'profiles\' + name;
   if DirectoryExists(oldProfilePath) then
     RenameFile(oldProfilePath, newProfilePath);
 
   // then change name in the object
   self.name := name;
+end;
+
+constructor TProgramStatus.Create;
+begin
+  bInitException  := false;
+  bLoadException := false;
+  bChangeMergeProfile := false;
+  bForceTerminate := false;
+  bLoaderDone := false;
+  bAuthorized := false;
+  bProgramUpdate := false;
+  bDictionaryUpdate := false;
+  bInstallUpdate := false;
+  bConnecting := false;
+  bUpdateMergeStatus := false;
+  bAllowClose := false;
+  local := TmpStatus.Create;
+  remote := nil;
 end;
 
 

@@ -332,6 +332,7 @@ begin
   xEditLogLabel := 'Plugins';
   wbProgressCallback := ProgressMessage;
   StatusCallback := LoaderStatus;
+  ProgramStatus := TProgramStatus.Create;
 
   // CREATE SPLASH
   splash := TSplashForm.Create(nil);
@@ -401,10 +402,10 @@ end;
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
   // HANDLE AUTO-UPDATE
-  if bInstallUpdate then begin
+  if ProgramStatus.bInstallUpdate then begin
     Logger.Write('CLIENT', 'Disconnect', 'Disconnecting...');
     TCPClient.Disconnect;
-    bAllowClose := true;
+    ProgramStatus.bAllowClose := true;
     bClosing := true;
     Logger.Write('GENERAL', 'Update', 'Restarting.');
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
@@ -412,7 +413,7 @@ begin
   end;
 
   // DISABLE GUI IF INITIALIZATION EXCEPTION
-  if bInitException then begin
+  if ProgramStatus.bInitException then begin
     StatusPanelMessage.Caption := 'The application failed to initialize';
     Logger.Write('ERROR', 'Load', 'There was an exception initializing the application');
     Logger.Write('ERROR', 'Load', 'Review your log messages to resolve the issue');
@@ -445,7 +446,7 @@ begin
 
   // STATUSBAR VALUES
   StatusPanelLanguage.Caption := settings.language;
-  StatusPanelVersion.Caption := 'v'+ProgramVersion;
+  StatusPanelVersion.Caption := 'v'+ProgramStatus.local.programVersion;
 
   // UPDATE GUI
   PluginsListView.OwnerDraw := not settings.simplePluginsView;
@@ -456,10 +457,10 @@ begin
   UpdateStatusBar;
   UpdateQuickBar;
 
-  if not bInitException then begin
+  if not ProgramStatus.bInitException then begin
     // ATTEMPT TO CONNECT TO SERVER
     ConnectCallback := ConnectDone;
-    if (not bConnecting) and (not TCPClient.Connected) then
+    if (not ProgramStatus.bConnecting) and (not TCPClient.Connected) then
       TConnectThread.Create;
 
     // START BACKGROUND LOADER
@@ -510,14 +511,14 @@ end;
 
 procedure TMergeForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  CanClose := bAllowClose;
+  CanClose := ProgramStatus.bAllowClose;
   if not bClosing then begin
     bClosing := true;
     Enabled := false;
 
     // show progress form
     pForm := TProgressForm.Create(Self);
-    pForm.LogPath := LogPath;
+    pForm.LogPath := PathList.Values['LogPath'];
     pForm.PopupParent := Self;
     pForm.Caption := GetString('mpProg_Closing');
     pForm.MaxProgress(PluginsList.Count + MergesList.Count + 2);
@@ -537,14 +538,14 @@ begin
   pForm.Free;
 
   // restart program if update applied
-  if bInstallUpdate then
+  if ProgramStatus.bInstallUpdate then
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
   // restart program if user wants merge profile change
-  if bChangeMergeProfile then
+  if ProgramStatus.bChangeMergeProfile then
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
 
   // allow close and close
-  bAllowClose := true;
+  ProgramStatus.bAllowClose := true;
   Close;
 end;
 
@@ -582,15 +583,15 @@ procedure TMergeForm.AutoUpdate;
 begin
   if settings.updateDictionary then begin
     // update dictionary
-    if bDictionaryUpdate and UpdateDictionary then begin
-      status := TmpStatus.Create;
+    if ProgramStatus.bDictionaryUpdate and UpdateDictionary then begin
+      ProgramStatus.local := TmpStatus.Create;
       CompareStatuses;
     end;
   end;
   if settings.updateProgram then begin
     // update program
-    if bProgramUpdate and DownloadProgram then
-      bInstallUpdate := UpdateProgram;
+    if ProgramStatus.bProgramUpdate and DownloadProgram then
+      ProgramStatus.bInstallUpdate := UpdateProgram;
   end;
 end;
 
@@ -615,7 +616,7 @@ procedure TMergeForm.DisplayHints;
 var
   pt: TPoint;
 begin
-  if bLoadException and ShouldDisplay(bhLoadException) then begin
+  if ProgramStatus.bLoadException and ShouldDisplay(bhLoadException) then begin
     pt.X := 126;
     pt.Y := 16;
     pt := MainPanel.ClientToScreen(pt);
@@ -632,7 +633,7 @@ end;
 
 procedure TMergeForm.Reconnect;
 begin
-  if not (TCPClient.Connected or bConnecting or bClosing) then
+  if not (TCPClient.Connected or ProgramStatus.bConnecting or bClosing) then
     TConnectThread.Create;
 end;
 
@@ -645,7 +646,7 @@ procedure TMergeForm.Heartbeat;
 begin
   try
     if TCPClient.IOHandler.Opened and
-    not (bConnecting or bClosing or ServerAvailable) then
+    not (ProgramStatus.bConnecting or bClosing or ServerAvailable) then
       raise Exception.Create('Connection unavailable');
   except
     on x : Exception do begin
@@ -664,7 +665,7 @@ end;
 
 procedure TMergeForm.ShowAuthorizationMessage;
 begin
-  if bAuthorized then begin
+  if ProgramStatus.bAuthorized then begin
     Logger.Write('CLIENT', 'Login', 'Authorized');
   end
   else begin
@@ -674,12 +675,12 @@ end;
 
 procedure TMergeForm.UpdateStatusBar;
 begin
-  ImageBlocked.Visible := not (bLoaderDone or bInitException);
+  ImageBlocked.Visible := not (ProgramStatus.bLoaderDone or ProgramStatus.bInitException);
   ImageConnected.Visible := TCPClient.Connected;
   ImageDisconnected.Visible := not TCPClient.Connected;
-  ImageBuild.Visible := bLoaderDone and bMergesToBuild;
-  ImageDictionaryUpdate.Visible := bDictionaryUpdate;
-  ImageProgramUpdate.Visible := bProgramUpdate;
+  ImageBuild.Visible := ProgramStatus.bLoaderDone and bMergesToBuild;
+  ImageDictionaryUpdate.Visible := ProgramStatus.bDictionaryUpdate;
+  ImageProgramUpdate.Visible := ProgramStatus.bProgramUpdate;
   StatusPanelLanguage.Caption := settings.language;
 end;
 
@@ -773,7 +774,7 @@ begin
   // add details items
   AddDetailsItem(GetString('mpMain_Application'), 'Merge Plugins');
   AddDetailsItem(GetString('mpMain_Author'), 'matortheeternal');
-  AddDetailsItem(GetString('mpMain_Version'), ProgramVersion);
+  AddDetailsItem(GetString('mpMain_Version'), ProgramStatus.local.programVersion);
   AddDetailsItem(GetString('mpMain_DateBuilt'), DateTimeToStr(GetLastModified(ParamStr(0))));
   AddDetailsItem(' ', ' ');
   AddDetailsItem(GetString('mpMain_GameMode'), wbGameName);
@@ -1117,8 +1118,8 @@ begin
   AddToMergeItem.Enabled := not (bBlacklisted or bPluginInMerge or bAllDoNotMerge);
   RemoveFromMergeItem.Enabled := bAllPluginsInMerge;
   DoNotMergeItem.Enabled := not (bBlacklisted or bPluginInMerge);
-  CheckForErrorsItem.Enabled := bLoaderDone and bAllNeedErrorCheck and not bBlacklisted;
-  FixErrorsItem.Enabled := bLoaderDone and bHasErrors and not bBlacklisted;
+  CheckForErrorsItem.Enabled := ProgramStatus.bLoaderDone and bAllNeedErrorCheck and not bBlacklisted;
+  FixErrorsItem.Enabled := ProgramStatus.bLoaderDone and bHasErrors and not bBlacklisted;
   IgnoreErrorsItem.Enabled := bHasErrors and not bBlacklisted;
   ResetErrorsItem.Enabled := bHasErrors and not bBlacklisted;
   ReportOnPluginItem.Enabled := not bBlacklisted;
@@ -1297,11 +1298,11 @@ begin
     bReportsSent := SendReports(ReportForm.reportsList);
     if not bReportsSent then begin
       Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\');
+      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
     end
     else begin
       Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\submitted\');
+      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
     end;
   end;
 
@@ -1810,15 +1811,15 @@ begin
   // change enabled state of MergesPopupMenu items based on booleans
   EditMergeItem.Enabled := bHasSelection;
   DeleteMergeItem.Enabled := bHasSelection;
-  BuildMergeItem.Enabled := bHasSelection and bHasBuildStatus and bLoaderDone;
+  BuildMergeItem.Enabled := bHasSelection and bHasBuildStatus and ProgramStatus.bLoaderDone;
   ToggleRebuildItem.Enabled := bHasSelection and not bNeverBuilt and
     (bHasUpToDateStatus or bHasBuildStatus);
   OpenInExplorerItem.Enabled := bHasSelection;
   // plugins submenu
   PluginsItem.Enabled := bHasSelection;
   ResolveIssuesItem.Enabled := bHasSelection and bHasResolveStatus;
-  CheckPluginsItem.Enabled := bHasSelection and bHasCheckStatus and bLoaderDone;
-  FixPluginsItem.Enabled := bHasSelection and bHasPluginErrors and bLoaderDone;
+  CheckPluginsItem.Enabled := bHasSelection and bHasCheckStatus and ProgramStatus.bLoaderDone;
+  FixPluginsItem.Enabled := bHasSelection and bHasPluginErrors and ProgramStatus.bLoaderDone;
   ReportOnPluginsItem.Enabled := bHasSelection and bHasUpToDateStatus;
   // move submenu
   MoveItem.Enabled := bHasSelection;
@@ -2260,7 +2261,7 @@ begin
   self.Enabled := false;
   xEditLogGroup := 'MERGE';
   pForm := TProgressForm.Create(Self);
-  pForm.LogPath := LogPath;
+  pForm.LogPath := PathList.Values['LogPath'];
   pForm.PopupParent := Self;
   pForm.Caption := GetString('mpProg_Merging');
   pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
@@ -2308,11 +2309,11 @@ begin
     bReportsSent := SendReports(ReportForm.reportsList);
     if not bReportsSent then begin
       Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\');
+      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
     end
     else begin
       Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\submitted\');
+      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
     end;
   end;
 
@@ -2416,7 +2417,7 @@ var
   sTitle: string;
 begin
   // DISABLE ALL BUTTONS IF INITIALIZATION EXCEPTION
-  if bInitException then begin
+  if ProgramStatus.bInitException then begin
     NewButton.Enabled := false;
     FindErrorsButton.Enabled := false;
     BuildButton.Enabled := false;
@@ -2439,10 +2440,10 @@ begin
   end;
 
   // enable find errors button if there are unchecked plugins
-  FindErrorsButton.Enabled := bLoaderDone and bUncheckedPlugins;
+  FindErrorsButton.Enabled := ProgramStatus.bLoaderDone and bUncheckedPlugins;
   // swap hints
   sTitle := GetString('mpMain_FindErrorsButton_Hint');
-  if not bLoaderDone then
+  if not ProgramStatus.bLoaderDone then
     FindErrorsButton.Hint := sTitle + GetString('mpMain_FindErrors_Loader')
   else if not bUncheckedPlugins then
     FindErrorsButton.Hint := sTitle + GetString('mpMain_NoPluginsToCheck')
@@ -2461,10 +2462,10 @@ begin
   end;
 
   // enable build button if there are merges to build
-  BuildButton.Enabled := bMergesToBuild and bLoaderDone;
+  BuildButton.Enabled := bMergesToBuild and ProgramStatus.bLoaderDone;
   // swap hints
   sTitle := GetString('mpMain_BuildButton_Hint');
-  if not bLoaderDone then
+  if not ProgramStatus.bLoaderDone then
     BuildButton.Hint := sTitle + GetString('mpMain_BuildMerges_Loader')
   else if not bMergesToBuild then
     BuildButton.Hint := sTitle + GetString('mpMain_NoMerges')
@@ -2500,13 +2501,13 @@ begin
     DictionaryButton.Hint := GetString('mpMain_DictionaryButton_Hint');
 
   // UPDATE BUTTON
-  UpdateButton.Enabled := bProgramUpdate or bDictionaryUpdate;
+  UpdateButton.Enabled := ProgramStatus.bProgramUpdate or ProgramStatus.bDictionaryUpdate;
   sTitle := GetString('mpMain_UpdateButton_Hint');
-  if bProgramUpdate and bDictionaryUpdate then
+  if ProgramStatus.bProgramUpdate and ProgramStatus.bDictionaryUpdate then
     UpdateButton.Hint := sTitle + GetString('mpMain_UpdateBoth')
-  else if bProgramUpdate then
+  else if ProgramStatus.bProgramUpdate then
     UpdateButton.Hint := sTitle + GetString('mpMain_UpdateProgram')
-  else if bDictionaryUpdate then
+  else if ProgramStatus.bDictionaryUpdate then
     UpdateButton.Hint := sTitle + GetString('mpMain_UpdateDictionary')
   else
     UpdateButton.Hint := sTitle + GetString('mpMain_NoUpdates');
@@ -2526,7 +2527,7 @@ var
   plugin: TPlugin;
 begin
   // exit if the loader isn't done
-  if not bLoaderDone then begin
+  if not ProgramStatus.bLoaderDone then begin
     Logger.Write('ERROR', 'Check', 'Loader not done, can''t check for errors yet!');
     exit;
   end;
@@ -2565,7 +2566,7 @@ var
   merge: TMerge;
 begin
   // exit if the loader isn't done
-  if not bLoaderDone then begin
+  if not ProgramStatus.bLoaderDone then begin
     Logger.Write('ERROR', 'Merge', 'Loader not done, can''t merge yet!');
     exit;
   end;
@@ -2601,7 +2602,7 @@ begin
   self.Enabled := false;
   xEditLogGroup := 'MERGE';
   pForm := TProgressForm.Create(Self);
-  pForm.LogPath := LogPath;
+  pForm.LogPath := PathList.Values['LogPath'];
   pForm.PopupParent := Self;
   pForm.Caption := GetString('mpProg_Merging');
   pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
@@ -2656,11 +2657,11 @@ begin
     bReportsSent := SendReports(ReportForm.reportsList);
     if not bReportsSent then begin
       Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\');
+      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
     end
     else begin
       Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, ProgramPath + 'reports\submitted\');
+      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
     end;
   end;
 
@@ -2715,13 +2716,13 @@ begin
   UpdateStatusBar;
 
   // if user selected to change game mode, close application
-  if bChangeMergeProfile then
+  if ProgramStatus.bChangeMergeProfile then
     Close;
 
   // if user selected to update program, close application
-  if bInstallUpdate then begin
-    bInstallUpdate := UpdateProgram;
-    if bInstallUpdate then
+  if ProgramStatus.bInstallUpdate then begin
+    ProgramStatus.bInstallUpdate := UpdateProgram;
+    if ProgramStatus.bInstallUpdate then
       Close;
   end;
 end;
@@ -2734,15 +2735,15 @@ begin
     exit;                                               
 
   // update program
-  if bProgramUpdate and ChangeLogPrompt(self) and DownloadProgram then begin
-    bInstallUpdate := UpdateProgram;
-    if bInstallUpdate then
+  if ProgramStatus.bProgramUpdate and ChangeLogPrompt(self) and DownloadProgram then begin
+    ProgramStatus.bInstallUpdate := UpdateProgram;
+    if ProgramStatus.bInstallUpdate then
       Close;
   end;
 
   // update dictionary
-  if bDictionaryUpdate and UpdateDictionary then begin
-    status := TmpStatus.Create;
+  if ProgramStatus.bDictionaryUpdate and UpdateDictionary then begin
+    ProgramStatus.local := TmpStatus.Create;
     CompareStatuses;
     UpdatePluginData;
     UpdateListViews;

@@ -80,7 +80,7 @@ begin
     report.hash := plugin.hash;
     report.recordCount := StrToInt(plugin.numRecords);
     report.rating := 4;
-    report.mergeVersion := ProgramVersion;
+    report.mergeVersion := ProgramStatus.local.programVersion;
     report.SetNotes(PreviousNotes);
 
     // if user already made a report for this plugin, load it

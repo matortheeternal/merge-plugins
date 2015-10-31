@@ -47,7 +47,7 @@ uses
   procedure CopyFiles(src, dst: string; var list: TStringList);
   procedure CorrectListViewWidth(var lv: TListView);
   function GetVersionMem: string;
-  function FileVersion(const FileName: string): String;
+  function FileVersion(const FileName: string): string;
   procedure DeleteDirectory(const path: string);
 
 const

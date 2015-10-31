@@ -87,19 +87,15 @@ var
 begin
   try
     // INITIALIZE VARIABLES
-    ProgramVersion := GetVersionMem;
-    TempPath := ProgramPath + 'temp\';
-    LogPath := ProgramPath + 'logs\';
-    ProfilePath := ProgramPath + 'profiles\' + CurrentProfile.name + '\';
-    ForceDirectories(TempPath);
-    ForceDirectories(LogPath);
-    ForceDirectories(ProfilePath);
+    PathList.Values['TempPath'] := PathList.Values['ProgramPath'] + 'temp\';
+    PathList.Values['LogPath'] := PathList.Values['ProgramPath'] + 'logs\';
+    PathList.Values['ProfilePath'] := PathList.Values['ProgramPath'] + 'profiles\' + CurrentProfile.name + '\';
+    ForceDirectories(PathList.Values['TempPath']);
+    ForceDirectories(PathList.Values['LogPath']);
+    ForceDirectories(PathList.Values['ProfilePath']);
     MergesList := TList.Create;
     PluginsList := TList.Create;
-    bLoaderDone := false;
     LastStatusTime := 0;
-    Status := TmpStatus.Create;
-    LoadChangelog;
 
     // SET GAME VARS
     SetGame(CurrentProfile.gameMode);
@@ -132,7 +128,7 @@ begin
       ConnectToServer;
       if TCPClient.Connected then begin
         UpdateCallback;
-        if bInstallUpdate then begin
+        if ProgramStatus.bInstallUpdate then begin
           InitCallback;
           exit;
         end;
@@ -197,7 +193,7 @@ begin
         on x: Exception do begin
           Logger.Write('ERROR', 'Load', 'Exception loading '+sl[i]);
           Logger.Write('ERROR', 'Load', x.Message);
-          bLoadException := true;
+          ProgramStatus.bLoadException := true;
         end;
       end;
 
@@ -225,7 +221,7 @@ begin
     on x: Exception do begin
       if Assigned(sl) then
         sl.Free;
-      bInitException := true;
+      ProgramStatus.bInitException := true;
       Logger.Write('ERROR', 'Load', x.Message);
     end;
   end;
@@ -239,7 +235,7 @@ procedure LoaderProgress(const s: string);
 begin
   if s <> '' then
     Logger.Write('LOAD', 'Background', s);
-  if bForceTerminate then
+  if ProgramStatus.bForceTerminate then
     Abort;
 end;
 
@@ -261,7 +257,7 @@ begin
         continue;
       LoaderProgress('[' + plugin.filename + '] Building reference info.');
       f.BuildRef;
-      if bForceTerminate then begin
+      if ProgramStatus.bForceTerminate then begin
         LoaderProgress('Aborted.');
         break;
       end;
@@ -270,10 +266,10 @@ begin
     on E: Exception do begin
       LoaderProgress('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
       wbLoaderError := true;
-      bInitException := true;
+      ProgramStatus.bInitException := true;
     end;
   end;
-  bLoaderDone := true;
+  ProgramStatus.bLoaderDone := true;
   LoaderProgress('finished');
   StatusCallback(GetString('mpMain_LoaderFinished'));
   if Assigned(LoaderCallback) then
@@ -415,7 +411,7 @@ begin
   TCPClient.Disconnect;
 
   // save ESPs only if it's safe to do so
-  if not bInitException then begin
+  if not ProgramStatus.bInitException then begin
     // Save plugin errors
     SavePluginInfo;
     Tracker.SetProgress(PluginsList.Count + 1);
@@ -423,7 +419,7 @@ begin
     // save merges
     SaveMerges;
     // rename saved plugins
-    if bLoaderDone then RenameSavedPlugins;
+    if ProgramStatus.bLoaderDone then RenameSavedPlugins;
   end;
 
   // save statistics and settings

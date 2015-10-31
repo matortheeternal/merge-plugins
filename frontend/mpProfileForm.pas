@@ -136,7 +136,8 @@ end;
 
 procedure TProfileForm.FormCreate(Sender: TObject);
 begin
-  ProgramPath := ExtractFilePath(ParamStr(0));
+  PathList := TStringList.Create;
+  PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
   ProfilePanels := TList.Create;
   SelectCallback := SelectionChanged;
   DeleteCallback := DeleteClicked;
@@ -159,7 +160,7 @@ var
   p: TProfilePanel;
   aSettings: TSettings;
 begin
-  path := ProgramPath + 'profiles\';
+  path := PathList.Values['ProgramPath'] + 'profiles\';
   if not DirectoryExists(path) then
     exit;
 

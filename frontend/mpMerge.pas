@@ -1229,13 +1229,13 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+faceTintPath+plugin.filename);
-      ExtractBSA(bsaFilename, faceTintPath+plugin.filename, TempPath);
+      ExtractBSA(bsaFilename, faceTintPath+plugin.filename, PathList.Values['TempPath']);
       Tracker.Write('    Extracting '+bsaFilename+'\'+faceGeomPath+plugin.filename);
-      ExtractBSA(bsaFilename, faceGeomPath+plugin.filename, TempPath);
+      ExtractBSA(bsaFilename, faceGeomPath+plugin.filename, PathList.Values['TempPath']);
 
       // copy assets from tempPath
-      CopyFaceGen(plugin, merge, TempPath + faceTintPath, merge.dataPath + faceTintPath);
-      CopyFaceGen(plugin, merge, TempPath + faceGeomPath, merge.dataPath + faceGeomPath);
+      CopyFaceGen(plugin, merge, PathList.Values['TempPath'] + faceTintPath, merge.dataPath + faceTintPath);
+      CopyFaceGen(plugin, merge, PathList.Values['TempPath'] + faceGeomPath, merge.dataPath + faceGeomPath);
     end;
 
     // copy assets from plugin.dataPath
@@ -1251,8 +1251,8 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+voicePath+plugin.filename);
-      ExtractBSA(bsaFilename, voicePath+plugin.filename, TempPath);
-      CopyVoice(plugin, merge, TempPath + voicePath, merge.dataPath + voicePath);
+      ExtractBSA(bsaFilename, voicePath+plugin.filename, PathList.Values['TempPath']);
+      CopyVoice(plugin, merge, PathList.Values['TempPath'] + voicePath, merge.dataPath + voicePath);
     end;
     CopyVoice(plugin, merge, plugin.dataPath + voicePath, merge.dataPath + voicePath);
   end;
@@ -1264,8 +1264,8 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+translationPath);
-      ExtractBSA(bsaFilename, translationPath, TempPath);
-      CopyTranslations(plugin, merge, TempPath + translationPath);
+      ExtractBSA(bsaFilename, translationPath, PathList.Values['TempPath']);
+      CopyTranslations(plugin, merge, PathList.Values['TempPath'] + translationPath);
     end;
     CopyTranslations(plugin, merge, plugin.dataPath + translationPath);
   end;
@@ -1284,12 +1284,12 @@ begin
     if HAS_BSA in plugin.flags then begin
       bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
       Tracker.Write('    Extracting '+bsaFilename+'\'+scriptsPath);
-      ExtractBSA(bsaFilename, scriptsPath, TempPath);
-      CopyScriptFragments(plugin, merge, TempPath + scriptsPath, merge.dataPath + scriptsPath);
-      CopyGeneralScripts(TempPath + scriptsPath);
+      ExtractBSA(bsaFilename, scriptsPath, PathList.Values['TempPath']);
+      CopyScriptFragments(plugin, merge, PathList.Values['TempPath'] + scriptsPath, merge.dataPath + scriptsPath);
+      CopyGeneralScripts(PathList.Values['TempPath'] + scriptsPath);
     end;
     CopyScriptFragments(plugin, merge, plugin.dataPath + scriptsPath, merge.dataPath + scriptsPath);
-    if plugin.dataPath <> DataPath then
+    if plugin.dataPath <> PathList.Values['DataPath'] then
       CopyGeneralScripts(plugin.dataPath + scriptsPath);
     // clean up stringlist
     handledFragments.Free;
@@ -1409,7 +1409,7 @@ begin
       [settings.bsaOptPath, settings.bsaOptOptions, mergedBsaPath, bsaFilename]);
     Tracker.Write('  BSAOpt: '+bsaOptCommand);
     // create bat script
-    bsaOptBat := TempPath + 'bsaOpt.bat';
+    bsaOptBat := PathList.Values['TempPath'] + 'bsaOpt.bat';
     batchBsa.Add(bsaOptCommand);
     batchBsa.SaveToFile(bsaOptBat);
     // execute bat script
@@ -1447,14 +1447,14 @@ begin
   merge.fails.Clear;
 
   // delete temp path, it should be empty before we begin
-  DeleteDirectory(TempPath);
+  DeleteDirectory(PathList.Values['TempPath']);
   // set up directories
-  mergedBsaPath := TempPath + 'mergedBSA\';
-  pexPath := TempPath + 'pex\';
-  pscPath := TempPath + 'psc\';
-  generalPexPath := TempPath + 'generalPex\';
-  generalPscPath := TempPath + 'generalPsc\';
-  compiledPath := TempPath + 'compiled\';
+  mergedBsaPath := PathList.Values['TempPath'] + 'mergedBSA\';
+  pexPath := PathList.Values['TempPath'] + 'pex\';
+  pscPath := PathList.Values['TempPath'] + 'psc\';
+  generalPexPath := PathList.Values['TempPath'] + 'generalPex\';
+  generalPscPath := PathList.Values['TempPath'] + 'generalPsc\';
+  compiledPath := PathList.Values['TempPath'] + 'compiled\';
   mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
   // force directories to exist so we can put files in them
   ForceDirectories(mergedBsaPath);

@@ -36,6 +36,7 @@ const
 
 var
   ChangeLogForm: TChangeLogForm;
+  changelog: TStringList;
 
 implementation
 
@@ -110,7 +111,7 @@ begin
 
     // identify start of changelog as first version newer than current version
     lineVersion := Copy(line, 9, Length(line));
-    if VersionCompare(status.programVersion, lineVersion) then begin
+    if VersionCompare(ProgramStatus.local.programVersion, lineVersion) then begin
       start := i;
       break;
     end;
@@ -145,6 +146,7 @@ begin
     exit;
 
   // create change log form
+  LoadChangelog(changelog);
   clForm := TChangeLogForm.Create(AOwner);
   Result := clForm.ShowModal = mrOK;
   clForm.Free;

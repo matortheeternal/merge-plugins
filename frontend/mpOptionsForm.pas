@@ -170,35 +170,35 @@ implementation
 
 procedure TOptionsForm.btnBrowseAssetDirectoryClick(Sender: TObject);
 begin
-  BrowseForFolder(edMergeDirectory, ProgramPath);
+  BrowseForFolder(edMergeDirectory, PathList.Values['ProgramPath']);
 end;
 
 procedure TOptionsForm.btnBrowseBSAOptClick(Sender: TObject);
 begin
-  BrowseForFile(edBsaOptPath, GetString('mpOpt_ExeFilter'), ProgramPath);
+  BrowseForFile(edBsaOptPath, GetString('mpOpt_ExeFilter'), PathList.Values['ProgramPath']);
   edBsaOptPathExit(nil);
 end;
 
 procedure TOptionsForm.btnBrowseCompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edCompilerPath, GetString('mpOpt_ExeFilter'), DataPath);
+  BrowseForFile(edCompilerPath, GetString('mpOpt_ExeFilter'), PathList.Values['DataPath']);
 end;
 
 procedure TOptionsForm.btnBrowseDecompilerClick(Sender: TObject);
 begin
-  BrowseForFile(edDecompilerPath, GetString('mpOpt_ExeFilter'), ProgramPath);
+  BrowseForFile(edDecompilerPath, GetString('mpOpt_ExeFilter'), PathList.Values['ProgramPath']);
 end;
 
 procedure TOptionsForm.btnBrowseFlagsClick(Sender: TObject);
 begin
-  BrowseForFile(edFlagsPath, GetString('mpOpt_FlagsFilter'), DataPath + 'scripts\source\');
+  BrowseForFile(edFlagsPath, GetString('mpOpt_FlagsFilter'), PathList.Values['DataPath'] + 'scripts\source\');
 end;
 
 procedure TOptionsForm.btnBrowseManagerClick(Sender: TObject);
 var
   modsPath: string;
 begin
-  BrowseForFolder(edModManagerPath, ProgramPath);
+  BrowseForFolder(edModManagerPath, PathList.Values['ProgramPath']);
   modsPath := edModManagerPath.Text + 'mods\';
   if DirectoryExists(modsPath) then begin
     edModsPath.Text := modsPath;
@@ -213,7 +213,7 @@ end;
 
 procedure TOptionsForm.btnBrowseModsClick(Sender: TObject);
 begin
-  BrowseForFolder(edModsPath, ProgramPath);
+  BrowseForFolder(edModsPath, PathList.Values['ProgramPath']);
 end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
@@ -233,8 +233,8 @@ var
   paths: array[1..2] of string;
 begin
   // paths array
-  paths[1] := ProgramPath;
-  paths[2] := GamePath;
+  paths[1] := PathList.Values['ProgramPath'];
+  paths[2] := PathList.Values['GamePath'];
 
   // search for mod organizer
   if kbUsingMo.Checked then
@@ -254,7 +254,7 @@ begin
     edCompilerPath.Text := path;
 
   // search for papyrus flags
-  path := DataPath + 'scripts\source\TESV_Papyrus_Flags.flg';
+  path := PathList.Values['DataPath'] + 'scripts\source\TESV_Papyrus_Flags.flg';
   if FileExists(path) then
     edFlagsPath.Text := path;
 
@@ -302,7 +302,7 @@ var
 begin
   // search for installations in GamePath
   if (modOrganizerPath = '') then
-    modOrganizerPath := RecursiveFileSearch(GamePath, validModOrganizerFilenames, ignore, 2);
+    modOrganizerPath := RecursiveFileSearch(PathList.Values['GamePath'], validModOrganizerFilenames, ignore, 2);
 
   // search for installations in ?:\Program Files and ?:\Program Files (x86)
   for i := 65 to 90 do begin
@@ -352,7 +352,7 @@ end;
 procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
   // check if we need to update merge status afterwards
-  bUpdateMergeStatus := (settings.usingMO <> kbUsingMO.Checked)
+  ProgramStatus.bUpdateMergeStatus := (settings.usingMO <> kbUsingMO.Checked)
     or (settings.ManagerPath <> edModManagerPath.Text)
     or (settings.mergeDirectory <> edMergeDirectory.Text);
 
@@ -463,10 +463,10 @@ end;
 
 procedure TOptionsForm.btnResetClick(Sender: TObject);
 begin
-  if settings.registered and not bAuthorized then begin
+  if settings.registered and not ProgramStatus.bAuthorized then begin
     ResetAuth;
     CheckAuthorization;
-    if bAuthorized then begin
+    if ProgramStatus.bAuthorized then begin
       btnReset.Enabled := false;
       lblStatusValue.Caption := GetString('mpOpt_Registered');
       lblStatusValue.Font.Color := clGreen;
@@ -479,7 +479,7 @@ procedure TOptionsForm.btnUpdateDictionaryClick(Sender: TObject);
 begin
   if TCPClient.Connected then begin
     if UpdateDictionary then begin
-      status := TmpStatus.Create;
+      ProgramStatus.local := TmpStatus.Create;
       CompareStatuses;
       UpdatePluginData;
       btnUpdateDictionary.Enabled := false;
@@ -493,7 +493,7 @@ procedure TOptionsForm.btnUpdateProgramClick(Sender: TObject);
 begin
   if TCPClient.Connected then begin
     if ChangeLogPrompt(self) and DownloadProgram then begin
-      bInstallUpdate := true;
+      ProgramStatus.bInstallUpdate := true;
       btnOKClick(nil);
       Close;
     end;
@@ -502,7 +502,7 @@ end;
 
 procedure TOptionsForm.btnChangeMergeProfileClick(Sender: TObject);
 begin
-  bChangeMergeProfile := true;
+  ProgramStatus.bChangeMergeProfile := true;
   btnOKClick(nil);
   Close;
 end;
@@ -574,7 +574,9 @@ begin
 end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);
-var index: Integer;
+var
+  index: Integer;
+  LocalStatus, RemoteStatus: TmpStatus;
 begin
   // do translation dump?
   if bTranslationDump then
@@ -673,7 +675,7 @@ begin
     btnRegister.Enabled := false;
     // if not authorized then enable reset button
     if TCPClient.Connected then begin
-      if not bAuthorized then begin
+      if not ProgramStatus.bAuthorized then begin
         btnReset.Enabled := true;
         lblStatusValue.Caption := GetString('mpOpt_AuthFailed');
         lblStatusValue.Font.Color := clRed;
@@ -683,24 +685,28 @@ begin
         lblStatusValue.Caption := GetString('mpOpt_Registered');
         lblStatusValue.Font.Color := clGreen;
         lblStatusValue.Hint := '';
-        bAuthorized := true;
+        ProgramStatus.bAuthorized := true;
       end;
     end;
   end;
 
+  // local aliases for statuses
+  LocalStatus := ProgramStatus.local;
+  RemoteStatus := ProgramStatus.remote;
+
   // dictionary update
-  if bDictionaryUpdate then begin
-    btnUpdateDictionary.Enabled := bDictionaryUpdate;
+  if ProgramStatus.bDictionaryUpdate then begin
+    btnUpdateDictionary.Enabled := ProgramStatus.bDictionaryUpdate;
     lblDictionaryStatus.Caption := GetString('mpOpt_UpdateAvailable');
     lblDictionaryStatus.Font.Color := $000080FF;
   end;
 
   // program update
-  if bProgramUpdate then begin
-    btnUpdateProgram.Enabled := bProgramUpdate;
+  if ProgramStatus.bProgramUpdate then begin
+    btnUpdateProgram.Enabled := ProgramStatus.bProgramUpdate;
     lblProgramStatus.Caption := GetString('mpOpt_UpdateAvailable');
     lblProgramStatus.Hint := Format(GetString('mpOpt_VersionCompare'),
-      [status.programVersion, RemoteStatus.programVersion]);
+      [LocalStatus.programVersion, RemoteStatus.programVersion]);
     lblProgramStatus.Font.Color := $000080FF;
   end;
 
