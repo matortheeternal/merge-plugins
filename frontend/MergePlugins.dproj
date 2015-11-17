@@ -117,6 +117,9 @@
 			<DCCReference Include="mpResolveForm.pas">
 				<Form>ResolveForm</Form>
 			</DCCReference>
+			<DCCReference Include="mpPluginSelectionForm.pas">
+				<Form>PluginSelectionForm</Form>
+			</DCCReference>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

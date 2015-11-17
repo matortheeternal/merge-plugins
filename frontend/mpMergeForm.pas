@@ -6,7 +6,7 @@ uses
   // delphi units
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl, Menus, Grids,
-  ValEdit, ShellAPI, StrUtils, Clipbrd,
+  ValEdit, ShellAPI, StrUtils, ShlObj, Clipbrd,
   // indy units
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
   // third party libraries
@@ -17,6 +17,7 @@ uses
   // mp units
   mpFrontend, mpThreads, mpMerge, mpDictionaryForm, mpOptionsForm,
   mpSplashForm, mpEditForm, mpReportForm, mpChangeLogForm, mpResolveForm,
+  mpPluginSelectionForm,
   // tes5edit units
   wbBSA, wbHelpers, wbInterface, wbImplementation;
 
@@ -317,6 +318,123 @@ begin
   Logger.Write(xEditLogGroup, xEditLogLabel, s);
 end;
 
+function InitBase: boolean;
+var
+  wbPluginsFileName: string;
+  slAllPlugins: TStringList;
+  psForm: TPluginSelectionForm;
+begin
+  Result := false;
+
+  // INITIALIZE VARIABLES
+  PathList.Values['TempPath'] := PathList.Values['ProgramPath'] + 'temp\';
+  PathList.Values['LogPath'] := PathList.Values['ProgramPath'] + 'logs\';
+  PathList.Values['ProfilePath'] := PathList.Values['ProgramPath'] + 'profiles\' + CurrentProfile.name + '\';
+  ForceDirectories(PathList.Values['TempPath']);
+  ForceDirectories(PathList.Values['LogPath']);
+  ForceDirectories(PathList.Values['ProfilePath']);
+  MergesList := TList.Create;
+  PluginsList := TList.Create;
+  LastStatusTime := 0;
+
+  // SET GAME VARS
+  SetGame(CurrentProfile.gameMode);
+  wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
+  Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
+  Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
+
+  // INITIALIZE SETTINGS FOR GAME
+  LoadSettings;
+  LoadLanguage;
+  if settings.usingMO then
+    ModOrganizerInit;
+
+  // INITIALIZE TES5EDIT API
+  wbDisplayLoadOrderFormID := True;
+  wbSortSubRecords := True;
+  wbDisplayShorterNames := True;
+  wbHideUnused := True;
+  wbFlagsAsArray := True;
+  wbRequireLoadOrder := True;
+  wbLanguage := settings.language;
+  wbEditAllowed := True;
+  handler := wbCreateContainerHandler;
+  handler._AddRef;
+
+  // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
+  InitializeClient;
+  if settings.updateDictionary or settings.updateProgram then try
+    Tracker.Write('Checking for updates');
+    ConnectToServer;
+    if TCPClient.Connected then begin
+      UpdateCallback;
+      if ProgramStatus.bInstallUpdate then begin
+        InitCallback;
+        exit;
+      end;
+    end;
+  except
+    on x: Exception do
+      Logger.Write('CLIENT', 'Update', 'Failed to get automatic update '+x.Message);
+  end;
+
+  // INITIALIZE DICTIONARY
+  dictionaryFilename := wbAppName+'Dictionary.txt';
+  Logger.Write('GENERAL', 'Dictionary', 'Using '+dictionaryFilename);
+  LoadDictionary;
+
+  // INITIALIZE TES5EDIT DEFINITIONS
+  Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
+  LoadDefinitions;
+
+  // LOAD MERGES
+  Tracker.Write('Loading merges');
+  LoadMerges;
+
+  // PREPARE TO LOAD PLUGINS
+  if settings.usingMO then
+    wbPluginsFileName := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\plugins.txt'
+  else
+    wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
+  Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
+  slLoadOrder := TStringList.Create;
+  slLoadOrder.LoadFromFile(wbPluginsFileName);
+  RemoveCommentsAndEmpty(slLoadOrder);
+  RemoveMissingFiles(slLoadOrder);
+
+  // GET LIST OF ALL PLUGINS
+  slAllPlugins := TStringList.Create;
+  slAllPlugins.Text := slLoadOrder.Text;
+  AddMissingFiles(slAllPlugins);
+  RemoveMergedPlugins(slLoadOrder);
+
+  // if GameMode is not Skyrim sort by date modified
+  // else add Update.esm and Skyrim.esm to load order
+  if wbGameMode <> gmTES5 then begin
+    GetPluginDates(slLoadOrder);
+    slLoadOrder.CustomSort(PluginListCompare);
+    slAllPlugins.CustomSort(PluginListCompare);
+  end
+  else begin
+    if slAllPlugins.IndexOf('Update.esm') = -1 then
+      slAllPlugins.Insert(0, 'Update.esm');
+    if slAllPlugins.IndexOf('Skyrim.esm') = -1 then
+      slAllPlugins.Insert(0, 'Skyrim.esm');
+  end;
+
+  // DISPLAY PLUGIN SELECTION FORM
+  psForm := TPluginSelectionForm.Create(nil);
+  psForm.slCheckedPlugins := slLoadOrder;
+  psForm.slAllPlugins := slAllPlugins;
+  if psForm.ShowModal = mrCancel then
+    exit;
+  slLoadOrder.Text := psForm.slCheckedPlugins.Text;
+  psForm.Free;
+
+  // ALL DONE
+  Result := true;
+end;
+
 { Initialize form, initialize TES5Edit API, and load plugins }
 procedure TMergeForm.FormCreate(Sender: TObject);
 begin
@@ -333,6 +451,11 @@ begin
   wbProgressCallback := ProgressMessage;
   StatusCallback := LoaderStatus;
   ProgramStatus := TProgramStatus.Create;
+
+  if not InitBase then begin
+    ProgramStatus.bClose := true;
+    exit;
+  end;
 
   // CREATE SPLASH
   splash := TSplashForm.Create(nil);
@@ -405,7 +528,7 @@ begin
   if ProgramStatus.bInstallUpdate then begin
     Logger.Write('CLIENT', 'Disconnect', 'Disconnecting...');
     TCPClient.Disconnect;
-    ProgramStatus.bAllowClose := true;
+    ProgramStatus.bClose := true;
     bClosing := true;
     Logger.Write('GENERAL', 'Update', 'Restarting.');
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
@@ -511,7 +634,7 @@ end;
 
 procedure TMergeForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  CanClose := ProgramStatus.bAllowClose;
+  CanClose := ProgramStatus.bClose;
   if not bClosing then begin
     bClosing := true;
     Enabled := false;
@@ -545,7 +668,7 @@ begin
     ShellExecute(Application.Handle, 'runas', PChar(ParamStr(0)), '', '', SW_SHOWNORMAL);
 
   // allow close and close
-  ProgramStatus.bAllowClose := true;
+  ProgramStatus.bClose := true;
   Close;
 end;
 

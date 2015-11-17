@@ -3,7 +3,7 @@ unit mpThreads;
 interface
 
 uses
-  Classes, SysUtils, shlObj, Dialogs,
+  Controls, Classes, SysUtils, shlObj, Dialogs,
   // mte units
   mteHelpers, mteLogger, mteTracker,
   // mp units
@@ -52,7 +52,6 @@ var
 
 implementation
 
-
 {******************************************************************************}
 { THREAD METHODS
   These are threads that the program will run for various large jobs which need
@@ -79,119 +78,28 @@ end;
 { TInitThread }
 procedure TInitThread.Execute;
 var
-  wbPluginsFileName: string;
-  sl: TStringList;
   i: integer;
   plugin: TPlugin;
   aFile: IwbFile;
 begin
   try
-    // INITIALIZE VARIABLES
-    PathList.Values['TempPath'] := PathList.Values['ProgramPath'] + 'temp\';
-    PathList.Values['LogPath'] := PathList.Values['ProgramPath'] + 'logs\';
-    PathList.Values['ProfilePath'] := PathList.Values['ProgramPath'] + 'profiles\' + CurrentProfile.name + '\';
-    ForceDirectories(PathList.Values['TempPath']);
-    ForceDirectories(PathList.Values['LogPath']);
-    ForceDirectories(PathList.Values['ProfilePath']);
-    MergesList := TList.Create;
-    PluginsList := TList.Create;
-    LastStatusTime := 0;
-
-    // SET GAME VARS
-    SetGame(CurrentProfile.gameMode);
-    wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
-    Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
-    Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
-
-    // INITIALIZE SETTINGS FOR GAME
-    LoadSettings;
-    LoadLanguage;
-    if settings.usingMO then
-      ModOrganizerInit;
-
-    // INITIALIZE TES5EDIT API
-    wbDisplayLoadOrderFormID := True;
-    wbSortSubRecords := True;
-    wbDisplayShorterNames := True;
-    wbHideUnused := True;
-    wbFlagsAsArray := True;
-    wbRequireLoadOrder := True;
-    wbLanguage := settings.language;
-    wbEditAllowed := True;
-    handler := wbCreateContainerHandler;
-    handler._AddRef;
-
-    // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
-    InitializeClient;
-    if settings.updateDictionary or settings.updateProgram then try
-      Tracker.Write('Checking for updates');
-      ConnectToServer;
-      if TCPClient.Connected then begin
-        UpdateCallback;
-        if ProgramStatus.bInstallUpdate then begin
-          InitCallback;
-          exit;
-        end;
-      end;
-    except
-      on x: Exception do
-        Logger.Write('CLIENT', 'Update', 'Failed to get automatic update '+x.Message);
-    end;
-
-    // INITIALIZE DICTIONARY
-    dictionaryFilename := wbAppName+'Dictionary.txt';
-    Logger.Write('GENERAL', 'Dictionary', 'Using '+dictionaryFilename);
-    LoadDictionary;
-
-    // INITIALIZE TES5EDIT DEFINITIONS
-    Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
-    LoadDefinitions;
-
-    // LOAD MERGES
-    Tracker.Write('Loading merges');
-    LoadMerges;
-
-    // PREPARE TO LOAD PLUGINS
-    if settings.usingMO then
-      wbPluginsFileName := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\plugins.txt'
-    else
-      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
-    Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
-    sl := TStringList.Create;
-    sl.LoadFromFile(wbPluginsFileName);
-    RemoveCommentsAndEmpty(sl);
-    RemoveMissingFiles(sl);
-    RemoveMergedPlugins(sl);
-    // if GameMode is not Skyrim sort by date modified
-    // else add Update.esm and Skyrim.esm to load order
-    if wbGameMode <> gmTES5 then begin
-      GetPluginDates(sl);
-      sl.CustomSort(PluginListCompare);
-    end
-    else begin
-      if sl.IndexOf('Update.esm') = -1 then
-        sl.Insert(0, 'Update.esm');
-      if sl.IndexOf('Skyrim.esm') = -1 then
-        sl.Insert(0, 'Skyrim.esm');
-    end;
-
     // PRINT LOAD ORDER TO LOG
-    for i := 0 to Pred(sl.Count) do
-      Logger.Write('LOAD', 'Order', '['+IntToHex(i, 2)+'] '+sl[i]);
+    for i := 0 to Pred(slLoadOrder.Count) do
+      Logger.Write('LOAD', 'Order', '['+IntToHex(i, 2)+'] '+slLoadOrder[i]);
 
     // LOAD PLUGINS
-    for i := 0 to Pred(sl.Count) do begin
-      Tracker.Write('Loading '+sl[i]);
+    for i := 0 to Pred(slLoadOrder.Count) do begin
+      Tracker.Write('Loading '+slLoadOrder[i]);
       try
         plugin := TPlugin.Create;
-        plugin.filename := sl[i];
-        plugin._File := wbFile(wbDataPath + sl[i], i);
+        plugin.filename := slLoadOrder[i];
+        plugin._File := wbFile(wbDataPath + slLoadOrder[i], i);
         plugin._File._AddRef;
         plugin.GetData;
         PluginsList.Add(Pointer(plugin));
       except
         on x: Exception do begin
-          Logger.Write('ERROR', 'Load', 'Exception loading '+sl[i]);
+          Logger.Write('ERROR', 'Load', 'Exception loading '+slLoadOrder[i]);
           Logger.Write('ERROR', 'Load', x.Message);
           ProgramStatus.bLoadException := true;
         end;
@@ -216,11 +124,11 @@ begin
     LoadPluginInfo;
 
     // CLEAN UP
-    sl.Free;
+    slLoadOrder.Free;
   except
     on x: Exception do begin
-      if Assigned(sl) then
-        sl.Free;
+      if Assigned(slLoadOrder) then
+        slLoadOrder.Free;
       ProgramStatus.bInitException := true;
       Logger.Write('ERROR', 'Load', x.Message);
     end;

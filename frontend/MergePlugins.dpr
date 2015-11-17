@@ -32,7 +32,8 @@ uses
   mpEditForm in 'mpEditForm.pas' {EditForm},
   mpReportForm in 'mpReportForm.pas' {Form1},
   mpChangeLogForm in 'mpChangeLogForm.pas' {ChangeLogForm},
-  mpResolveForm in 'mpResolveForm.pas' {ResolveForm};
+  mpResolveForm in 'mpResolveForm.pas' {ResolveForm},
+  mpPluginSelectionForm in 'mpPluginSelectionForm.pas' {PluginSelectionForm};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -74,13 +75,7 @@ begin
   Inc(sessionStatistics.timesRun);
   Application.Title := 'Merge Plugins';
   Application.CreateForm(TMergeForm, MergeForm);
-  Application.CreateForm(TDictionaryForm, DictionaryForm);
-  Application.CreateForm(TEditForm, EditForm);
-  Application.CreateForm(TProfileForm, ProfileForm);
-  Application.CreateForm(TOptionsForm, OptionsForm);
-  Application.CreateForm(TSplashForm, SplashForm);
-  Application.CreateForm(TReportForm, ReportForm);
-  Application.CreateForm(TChangeLogForm, ChangeLogForm);
-  Application.CreateForm(TResolveForm, ResolveForm);
-  Application.Run;
+  // handle auto-close
+  if not ProgramStatus.bClose then
+    Application.Run;
 end.

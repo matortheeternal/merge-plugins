@@ -278,7 +278,7 @@ type
   public
     bInitException, bLoadException, bChangeMergeProfile, bForceTerminate,
     bLoaderDone, bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
-    bConnecting, bUpdateMergeStatus, bAllowClose: boolean;
+    bConnecting, bUpdateMergeStatus, bClose: boolean;
     local, remote: TmpStatus;
     constructor Create; virtual;
   end;
@@ -364,6 +364,7 @@ type
   function GetRatingColor(rating: real): integer;
   function GetEntry(pluginName, numRecords, version: string): TEntry;
   function IsBlacklisted(const filename: string): boolean;
+  function GetMergeForPlugin(filename: string): string;
   function PluginLoadOrder(filename: string): integer;
   function PluginByFilename(filename: string): TPlugin;
   function MergeByName(merges: TList; name: string): TMerge;
@@ -469,7 +470,7 @@ var
   dictionary, blacklist, PluginsList, MergesList, BaseLog, Log,
   LabelFilters, GroupFilters, pluginsToHandle, mergesToBuild: TList;
   // TODO: move changelog to mpChangeLogForm
-  ActiveMods, timeCosts, language, PathList: TStringList;
+  ActiveMods, timeCosts, language, PathList, slLoadOrder: TStringList;
   settings: TSettings;
   CurrentProfile: TProfile;
   statistics, sessionStatistics: TStatistics;
@@ -1328,6 +1329,7 @@ begin
   end;
 
   // search for missing masters, add after last master
+  Inc(i);
   if FindFirst(wbDataPath + '*.esm', faAnyFile, F) = 0 then try
     repeat
       if sl.IndexOf(F.Name) = -1 then begin
@@ -2222,6 +2224,21 @@ begin
     entry := TEntry(blacklist[i]);
     if entry.filename = filename then begin
       Result := true;
+      break;
+    end;
+  end;
+end;
+
+function GetMergeForPlugin(filename: string): string;
+var
+  i: Integer;
+  merge: TMerge;
+begin
+  Result := ' ';
+  for i := 0 to Pred(MergesList.Count) do begin
+    merge := TMerge(MergesList[i]);
+    if merge.plugins.IndexOf(filename) > -1 then begin
+      Result := merge.name;
       break;
     end;
   end;
@@ -3799,7 +3816,7 @@ begin
   bInstallUpdate := false;
   bConnecting := false;
   bUpdateMergeStatus := false;
-  bAllowClose := false;
+  bClose := false;
   local := TmpStatus.Create;
   remote := nil;
 end;
