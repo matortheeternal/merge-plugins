@@ -3,13 +3,18 @@ unit mteHelpers;
 interface
 
 uses
-  Windows, SysUtils, Masks, Dialogs, StdCtrls, StrUtils, FileCtrl, ShellApi,
-  Classes, ComCtrls, CommCtrl, DateUtils, shlObj, IOUtils;
+  Classes, ComCtrls, StdCtrls;
+
+type
+  TCallback = procedure of object;
 
   { General functions }
+  function IfThenInt(AValue: boolean; ATrue: Integer = 1; AFalse: Integer = 0): Integer;
   function TitleCase(sText: String): String;
   function SentenceCase(sText: string): string;
   function csvText(s: string): string;
+  function CopyFromTo(str: string; first, last: Integer): string;
+  function GetTextIn(str: string; open, close: char): string;
   function FormatByteSize(const bytes: Int64): string;
   function DateBuiltString(date: TDateTime): string;
   function DateTimeToSQL(date: TDateTime): string;
@@ -28,10 +33,13 @@ uses
   procedure SaveStringToFile(s: string; fn: string);
   function ApplyTemplate(const template: string; var map: TStringList): string;
   function VersionCompare(v1, v2: string): boolean;
+  procedure TryToFree(obj: TObject);
+  procedure FreeList(var lst: TList);
   { Windows API functions }
   procedure ForceForeground(hWnd: THandle);
+  function TryRegistryKeys(var keys: TStringList): string;
   function FileNameValid(filename: string): boolean;
-  procedure RecycleDirectory(const path: string);
+  function DeleteToRecycleBin(const path: string; Confirm: Boolean): Boolean;
   procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
   procedure BrowseForFile(var ed: TEdit; filter, initDir: string);
   procedure BrowseForFolder(var ed: TEdit; initDir: string);
@@ -47,7 +55,7 @@ uses
   procedure CopyFiles(src, dst: string; var list: TStringList);
   procedure CorrectListViewWidth(var lv: TListView);
   function GetVersionMem: string;
-  function FileVersion(const FileName: string): string;
+  function FileVersion(const FileName: string): String;
   procedure DeleteDirectory(const path: string);
 
 const
@@ -62,14 +70,21 @@ const
 
 implementation
 
+uses
+  Windows, SysUtils, Masks, Dialogs, StrUtils, FileCtrl, ShellApi, CommCtrl,
+  DateUtils, shlObj, IOUtils, Registry;
+
 {******************************************************************************}
 { General functions
   Set of functions that help with converting data types and handling strings.
 
   List of functions:
+  - IfThenInt
   - TitleCase
   - SentenceCase
   - csvText
+  - CopyFromTo
+  - GetTextIn
   - FormatByteSize
   - DateBuiltString
   - DateTimeToSQL
@@ -89,6 +104,16 @@ implementation
   - ApplyTemplate
 }
 {*****************************************************************************}
+
+{ Returns one of two integers based on a boolean argument.
+  Like IfThen from StrUtils, but returns an Integer. }
+function IfThenInt(AValue: boolean; ATrue: Integer = 1; AFalse: Integer = 0): Integer;
+begin
+  if AValue then
+    Result := ATrue
+  else
+    Result := AFalse;
+end;
 
 { Capitalizes the first letter of each word }
 function TitleCase(sText: String): String;
@@ -136,6 +161,33 @@ end;
 function csvText(s: string): string;
 begin
   result := StringReplace(Trim(s), #13, ', ', [rfReplaceAll]);
+end;
+
+{ Copies a substring in a string between two indexes }
+function CopyFromTo(str: string; first, last: Integer): string;
+begin
+  Result := Copy(str, first, (last - first) + 1);
+end;
+
+{ Returns a substring of @str between characters @open and @close }
+function GetTextIn(str: string; open, close: char): string;
+var
+  i, openIndex: integer;
+  bOpen: boolean;
+begin
+  Result := '';
+  bOpen := false;
+  openIndex := 0;
+  for i := 0 to Length(str) do begin
+    if not bOpen and (str[i] = open) then begin
+      openIndex := i;
+      bOpen := true;
+    end;
+    if bOpen and (str[i] = close) then begin
+      Result := CopyFromTo(str, openIndex + 1, i - 1);
+      break;
+    end;
+  end;
 end;
 
 { Format file byte size }
@@ -408,6 +460,28 @@ begin
   sl2.Free;
 end;
 
+procedure TryToFree(obj: TObject);
+begin
+  if Assigned(obj) then try
+    obj.Free;
+  except
+    on x: Exception do // nothing
+  end;
+end;
+
+procedure FreeList(var lst: TList);
+var
+  i: Integer;
+  obj: TObject;
+begin
+  for i := Pred(lst.Count) downto 0 do begin
+    obj := TObject(lst[i]);
+    TryToFree(obj);
+  end;
+  lst.Free;
+end;
+
+
 {******************************************************************************}
 { Windows API functions
   Set of functions that help deal with the Windows File System.
@@ -439,6 +513,30 @@ procedure ForceForeground(hWnd: THandle);
 begin
   SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOMOVE);
   SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOMOVE);
+end;
+
+{ Tries to load various registry keys }
+function TryRegistryKeys(var keys: TStringList): string;
+var
+  i: Integer;
+  path, name: string;
+begin
+  Result := '';
+  with TRegistry.Create do try
+    RootKey := HKEY_LOCAL_MACHINE;
+
+    // try all keys
+    for i := 0 to Pred(keys.Count) do begin
+      path := ExtractFilePath(keys[i]);
+      name := ExtractFileName(keys[i]);
+      if OpenKeyReadOnly(path) then begin
+        Result := ReadString(name);
+        break;
+      end;
+    end;
+  finally
+    Free;
+  end;
 end;
 
 { Returns true if the input filename is valid }
@@ -815,16 +913,21 @@ begin
   end;
 end;
 
-{ Sends the directory at @path and all files it contains to the recycle bin }
-procedure RecycleDirectory(const path: string);
+{ Sends the file/directory at @path to the recycle bin }
+function DeleteToRecycleBin(const path: string; Confirm: Boolean): Boolean;
 var
-  FileOp: TSHFileOpStruct;
+  sh: TSHFileOpStruct;
 begin
-  FillChar(FileOp, SizeOf(FileOp), 0);
-  FileOp.wFunc := FO_DELETE;
-  FileOp.pFrom := PChar(path); //deletes to recycle bin
-  FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
-  SHFileOperation(FileOp);
+  FillChar(sh, SizeOf(sh), 0);
+  with sh do begin
+    Wnd := 0;
+    wFunc := FO_DELETE;
+    pFrom := PChar(path + #0);
+    fFlags := FOF_SILENT or FOF_ALLOWUNDO;
+    if not Confirm then
+      fFlags := fFlags or FOF_NOCONFIRMATION;
+  end;
+  Result := SHFileOperation(sh) = 0;
 end;
 
 { Deletes the directory at @path and all files it contains }

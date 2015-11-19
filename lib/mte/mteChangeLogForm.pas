@@ -1,4 +1,4 @@
-unit mpChangeLogForm;
+unit mteChangeLogForm;
 
 interface
 
@@ -6,9 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls,
   // mte units
-  mteHelpers, RttiTranslation,
-  // mp units
-  mpFrontend;
+  mteHelpers, RttiTranslation, mteLogger;
 
 type
   TChangeLogForm = class(TForm)
@@ -33,10 +31,12 @@ type
 
 const
   spacing = 5;
+  bTranslationDump = false;
 
 var
-  ChangeLogForm: TChangeLogForm;
-  changelog: TStringList;
+  clChangeLogForm: TChangeLogForm;
+  clChangelog: TStringList;
+  clProgramVersion: string;
 
 implementation
 
@@ -44,12 +44,12 @@ implementation
 
 procedure TChangeLogForm.FormCreate(Sender: TObject);
 begin
-  // do a translation dump?
+  {// do a translation dump?
   if bTranslationDump then
     TRttiTranslation.Save('lang\english.lang', self);
 
   // load translation
-  TRttiTranslation.Load(language, self);
+  TRttiTranslation.Load(language, self);}
 
   // display changelog
   DisplayChangelog;
@@ -102,16 +102,16 @@ var
 begin
   // find start line
   start := 0;
-  if not Assigned(changelog) then
+  if not Assigned(clChangelog) then
     exit;
-  for i := 0 to Pred(changelog.Count) do begin
-    line := changelog[i];
+  for i := 0 to Pred(clChangelog.Count) do begin
+    line := clChangelog[i];
     if not IsVersionLine(line) then
       continue;
 
     // identify start of changelog as first version newer than current version
     lineVersion := Copy(line, 9, Length(line));
-    if VersionCompare(ProgramStatus.local.programVersion, lineVersion) then begin
+    if VersionCompare(clProgramVersion, lineVersion) then begin
       start := i;
       break;
     end;
@@ -120,8 +120,8 @@ begin
   // loop through the changelog, creating labels in scrollbox
   // as necessary to render text
   top := 8;
-  for i := start to Pred(changelog.Count) do begin
-    line := changelog[i];
+  for i := start to Pred(clChangelog.Count) do begin
+    line := clChangelog[i];
     if IsVersionLine(line) then
       CreateVersionLabel(line, top)
     else
@@ -129,24 +129,34 @@ begin
   end;
 end;
 
+procedure LoadChangelog(var changelog: TStringList);
+begin
+  // load changelog
+  if not Assigned(changelog) then
+    changelog := TStringList.Create;
+
+  // don't attempt to load changelog if it doesn't exist
+  if not FileExists('changelog.txt') then begin
+    Logger.Write('GENERAL', 'Changelog', 'No changelog found');
+    exit;
+  end;
+
+  // load changelog
+  changelog.LoadFromFile('changelog.txt');
+end;
+
 function ChangeLogPrompt(AOwner: TComponent): boolean;
 var
   clForm: TChangeLogForm;
 begin
   Result := false;
-  if FileExists('changelog.txt') then begin
-    if Now - GetLastModified('changelog.txt') > 1.0 then
-      UpdateChangeLog;
-  end
-  else
-     UpdateChangeLog;
 
   // if we don't have a changelog, exit returning false
   if not FileExists('changelog.txt') then
     exit;
 
   // create change log form
-  LoadChangelog(changelog);
+  LoadChangelog(clChangelog);
   clForm := TChangeLogForm.Create(AOwner);
   Result := clForm.ShowModal = mrOK;
   clForm.Free;

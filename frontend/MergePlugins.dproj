@@ -93,7 +93,6 @@
 			<DCCReference Include="mpMergeForm.pas">
 				<Form>MergeForm</Form>
 			</DCCReference>
-			<DCCReference Include="mpFrontend.pas"/>
 			<DCCReference Include="mpMerge.pas"/>
 			<DCCReference Include="mpThreads.pas"/>
 			<DCCReference Include="mpDictionaryForm.pas">
@@ -109,17 +108,15 @@
 				<Form>EditForm</Form>
 			</DCCReference>
 			<DCCReference Include="mpReportForm.pas">
-				<Form>Form1</Form>
-			</DCCReference>
-			<DCCReference Include="mpChangeLogForm.pas">
-				<Form>ChangeLogForm</Form>
+				<Form>ReportForm</Form>
 			</DCCReference>
 			<DCCReference Include="mpResolveForm.pas">
 				<Form>ResolveForm</Form>
 			</DCCReference>
-			<DCCReference Include="mpPluginSelectionForm.pas">
-				<Form>PluginSelectionForm</Form>
-			</DCCReference>
+			<DCCReference Include="mpCore.pas"/>
+			<DCCReference Include="mpClient.pas"/>
+			<DCCReference Include="mpConfiguration.pas"/>
+			<DCCReference Include="mpLoader.pas"/>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

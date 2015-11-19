@@ -6,9 +6,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
   // mte units
-  mteLogger, RttiTranslation,
+  mteBase, mteLogger, RttiTranslation,
   // mp units
-  mpFrontend;
+  mpConfiguration, mpCore;
 
 type
   TEditForm = class(TForm)
@@ -83,13 +83,16 @@ var
   loadOrderError, mergeExists: boolean;
   plugin: TPlugin;
   loadOrder, highLoadOrder, i: integer;
+  sFilename: string;
 begin
   // check if there's a load order error merging into the specified file
   plugin := PluginByFilename(edFilename.Text);
   loadOrder := PluginLoadOrder(edFilename.Text);
   highLoadOrder := MaxInt;
-  if merge.plugins.Count > 0 then
-    highLoadOrder := PluginLoadOrder(merge.plugins[merge.plugins.Count -1]);
+  if merge.plugins.Count > 0 then begin
+    sFilename := merge.plugins[merge.plugins.Count -1];
+    highLoadOrder := PluginLoadOrder(sFilename);
+  end;
   loadOrderError := Assigned(plugin) and (loadorder > -1) and (loadOrder < highLoadOrder);
 
   // check if merge exists

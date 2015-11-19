@@ -30,6 +30,10 @@ object ResolveForm: TResolveForm
     TabWidth = 140
     object tsBrokenDependencies: TTabSheet
       Caption = 'Broken dependencies'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblBrokenDependencies: TLabel
         Left = 3
         Top = 13

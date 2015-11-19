@@ -3,14 +3,8 @@ unit mpMerge;
 interface
 
 uses
-  Windows, SysUtils, Classes, ShellAPI, Controls, Dialogs,
-  // mte units
-  mteHelpers, mteLogger, mteTracker,
   // mp units
-  mpFrontend,
-  // xEdit units
-  wbBSA, wbHelpers, wbInterface, wbImplementation, wbDefinitionsFNV,
-  wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4, wbDefinitionsTES5;
+  mpCore;
 
   function GetMapIndex(var merge: TMerge; fn: string; oldForm: string): integer;
   procedure BuildMerge(var merge: TMerge);
@@ -19,6 +13,16 @@ uses
   procedure AddCopyOperation(src, dst: string);
 
 implementation
+
+uses
+  Windows, SysUtils, Classes, ShellAPI, Controls, Dialogs,
+  // mte units
+  mteBase, mteHelpers, mteLogger, mteTracker,
+  // mp units
+  mpConfiguration,
+  // xEdit units
+  wbBSA, wbHelpers, wbInterface, wbImplementation, wbDefinitionsFNV,
+  wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4, wbDefinitionsTES5;
 
 var
   pexPath, pscPath, generalPexPath, generalPscPath, mergedBsaPath, compiledPath,
@@ -812,6 +816,66 @@ begin
   end;
 end;
 
+{}
+
+{ Creates a SEQ (sequence) file for the input plugin.  Important for quests that
+  are Start Game Enabled to execute properly. }
+procedure CreateSEQFile(merge: TMerge);
+var
+  _File: IwbFile;
+  Group: IwbGroupRecord;
+  n: Integer;
+  MainRecord: IwbMainRecord;
+  QustFlags: IwbElement;
+  FormIDs: array of Cardinal;
+  FileStream: TFileStream;
+  p, s: string;
+begin
+  _File := merge.plugin._File;
+
+  // don't create SEQ file if no QUST record group
+  if not _File.HasGroup('QUST') then
+    exit;
+
+  // loop through child elements
+  Group := _File.GroupBySignature['QUST'];
+  for n := 0 to Pred(Group.ElementCount) do begin
+    if not Supports(Group.Elements[n], IwbMainRecord, MainRecord) then
+      continue;
+
+    // script quests that are not start game enabled
+    QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+    if not (Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0)) then
+      continue;
+
+    // skip quests that aren't overrides or newly flagged as start game enabled
+    if not (IsOverride(MainRecord) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0)) then
+      continue;
+
+    // add quest formID to formIDs array
+    SetLength(FormIDs, Succ(Length(FormIDs)));
+    FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
+  end;
+
+  // write formIDs to disk
+  if Length(FormIDs) <> 0 then try
+    p := merge.dataPath + 'seq\';
+    if not ForceDirectories(p) then
+      raise Exception.Create('Unable to create SEQ directory for merge.');
+    s := p + ChangeFileExt(_File.FileName, '.seq');
+    FileStream := TFileStream.Create(s, fmCreate);
+    FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
+    Tracker.Write('Created SEQ file: ' + s);
+    merge.files.Add(s);
+  except
+    on x: Exception do begin
+      if Assigned(FileStream) then
+        FreeAndNil(FileStream);
+      Tracker.Write('Error: Can''t create SEQ file: ' + s + ', ' + x.Message);
+    end;
+  end;
+end;
+
 {******************************************************************************}
 { Copying Methods
   Methods for copying records.
@@ -1533,7 +1597,7 @@ begin
   end;
   try
     mergeFormIndex := slMasters.Count - merge.plugins.Count;
-    slMasters.CustomSort(MergePluginsCompare);
+    slMasters.CustomSort(LoadOrderCompare);
     AddMasters(merge.plugin._File, slMasters);
     if settings.debugMasters then begin
       Tracker.Write('Masters added:');

@@ -23,15 +23,7 @@ object PluginSelectionForm: TPluginSelectionForm
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     Checkboxes = True
-    Columns = <
-      item
-        AutoSize = True
-        Caption = 'Plugin'
-      end
-      item
-        Caption = 'Merge'
-        Width = 150
-      end>
+    Columns = <>
     DoubleBuffered = True
     MultiSelect = True
     ReadOnly = True
@@ -39,7 +31,6 @@ object PluginSelectionForm: TPluginSelectionForm
     ParentDoubleBuffered = False
     TabOrder = 0
     ViewStyle = vsReport
-    ExplicitWidth = 468
   end
   object btnCancel: TButton
     Left = 347
@@ -51,8 +42,6 @@ object PluginSelectionForm: TPluginSelectionForm
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
-    ExplicitLeft = 383
-    ExplicitTop = 436
   end
   object btnOK: TButton
     Left = 266
@@ -65,7 +54,5 @@ object PluginSelectionForm: TPluginSelectionForm
     ModalResult = 1
     TabOrder = 2
     OnClick = btnOKClick
-    ExplicitLeft = 302
-    ExplicitTop = 436
   end
 end

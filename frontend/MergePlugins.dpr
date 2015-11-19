@@ -23,17 +23,18 @@ uses
   mpProfileForm in 'mpProfileForm.pas' {ProfileForm},
   mpProfilePanel in 'mpProfilePanel.pas',
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
-  mpFrontend in 'mpFrontend.pas',
   mpMerge in 'mpMerge.pas',
   mpThreads in 'mpThreads.pas',
   mpDictionaryForm in 'mpDictionaryForm.pas' {DictionaryForm},
   mpOptionsForm in 'mpOptionsForm.pas' {OptionsForm},
   mpSplashForm in 'mpSplashForm.pas' {SplashForm},
   mpEditForm in 'mpEditForm.pas' {EditForm},
-  mpReportForm in 'mpReportForm.pas' {Form1},
-  mpChangeLogForm in 'mpChangeLogForm.pas' {ChangeLogForm},
+  mpReportForm in 'mpReportForm.pas' {ReportForm},
   mpResolveForm in 'mpResolveForm.pas' {ResolveForm},
-  mpPluginSelectionForm in 'mpPluginSelectionForm.pas' {PluginSelectionForm};
+  mpCore in 'mpCore.pas',
+  mpClient in 'mpClient.pas',
+  mpConfiguration in 'mpConfiguration.pas',
+  mpLoader in 'mpLoader.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -51,7 +52,6 @@ begin
   // set important vars
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.HintHidePause := 8000;
-  PathList := TStringList.Create;
   PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
 
   // get command line arguments

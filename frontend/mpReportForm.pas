@@ -8,7 +8,9 @@ uses
   // mte units
   RttiTranslation,
   // mp units
-  mpFrontend, mpDictionaryForm;
+  mpCore, mpClient, mpConfiguration,
+  // mp forms
+  mpDictionaryForm;
 
 type
   TReportForm = class(TForm)
@@ -80,7 +82,7 @@ begin
     report.hash := plugin.hash;
     report.recordCount := StrToInt(plugin.numRecords);
     report.rating := 4;
-    report.mergeVersion := ProgramStatus.local.programVersion;
+    report.mergeVersion := LocalStatus.programVersion;
     report.SetNotes(PreviousNotes);
 
     // if user already made a report for this plugin, load it
@@ -142,7 +144,7 @@ begin
   Inc(currentPlugin);
   btnPrev.Enabled := true;
   if currentPlugin = Pred(pluginsToReport.Count) then
-    btnNext.Caption := GetString('mpRep_Done');
+    btnNext.Caption := GetLanguageString('mpRep_Done');
 
   // display entry
   DisplayCurrentReport;
@@ -160,7 +162,7 @@ begin
   // go to previous plugin
   Dec(currentPlugin);
   btnPrev.Enabled := currentPlugin > 0;
-  btnNext.Caption := GetString('mpRep_Next');
+  btnNext.Caption := GetLanguageString('mpRep_Next');
 
   // display entry
   DisplayCurrentReport;
@@ -169,7 +171,7 @@ end;
 procedure TReportForm.cbRatingChange(Sender: TObject);
 begin
   // set hint to current rating hint
-  cbRating.Hint := GetString('mpRep_cbRating_Hint'+IntToStr(cbRating.ItemIndex));
+  cbRating.Hint := GetLanguageString('mpRep_cbRating_Hint'+IntToStr(cbRating.ItemIndex));
 end;
 
 procedure TReportForm.FormCreate(Sender: TObject);
@@ -193,7 +195,7 @@ begin
     Close;
   case pluginsToReport.Count of
     0: Close;
-    1: btnNext.Caption := GetString('mpRep_Done');
+    1: btnNext.Caption := GetLanguageString('mpRep_Done');
   end;
 
   // display entry
@@ -248,11 +250,11 @@ begin
 
   // handle memo hint and label coloring
   if bTooShort then begin
-    meNotes.Hint := GetString('mpRep_NotesTooShort');
+    meNotes.Hint := GetLanguageString('mpRep_NotesTooShort');
     lblCharacters.Font.Color := clRed;
   end
   else if bTooLong then begin
-    meNotes.Hint := GetString('mpRep_NotesTooLong');
+    meNotes.Hint := GetLanguageString('mpRep_NotesTooLong');
     lblCharacters.Font.Color := clRed;
   end
   else begin

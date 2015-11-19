@@ -8,7 +8,7 @@ uses
   // mte units
   mteHelpers, mteLogger, RttiTranslation,
   // mp units
-  mpFrontend;
+  mpCore, mpConfiguration;
 
 type
   TDictionaryForm = class(TForm)
@@ -159,13 +159,13 @@ begin
   vl.Strings.Clear;
 
   // initialize dictionary details
-  vl.InsertRow(GetString('mpDct_Filename'), dictionaryFilename, true);
-  vl.InsertRow(GetString('mpDct_FileSize'), FormatByteSize(GetFileSize(dictionaryFilename)), true);
-  vl.InsertRow(GetString('mpDct_DateModified'), DateTimeToStr(GetLastModified(dictionaryFilename)), true);
-  vl.InsertRow(GetString('mpDct_NumEntries'), IntToStr(dictionary.Count), true);
-  vl.InsertRow(GetString('mpDct_NumReports'), IntToStr(ReportCount(dictionary)), true);
-  vl.InsertRow(GetString('mpDct_EntriesDisplayed'), IntToStr(tempDictionary.Count), true);
-  vl.InsertRow(GetString('mpDct_BlacklistSize'), IntToStr(blacklist.Count), true);
+  vl.InsertRow(GetLanguageString('mpDct_Filename'), DictionaryFilename, true);
+  vl.InsertRow(GetLanguageString('mpDct_FileSize'), FormatByteSize(GetFileSize(DictionaryFilename)), true);
+  vl.InsertRow(GetLanguageString('mpDct_DateModified'), DateTimeToStr(GetLastModified(DictionaryFilename)), true);
+  vl.InsertRow(GetLanguageString('mpDct_NumEntries'), IntToStr(dictionary.Count), true);
+  vl.InsertRow(GetLanguageString('mpDct_NumReports'), IntToStr(ReportCount(dictionary)), true);
+  vl.InsertRow(GetLanguageString('mpDct_EntriesDisplayed'), IntToStr(tempDictionary.Count), true);
+  vl.InsertRow(GetLanguageString('mpDct_BlacklistSize'), IntToStr(blacklist.Count), true);
 end;
 
 // update meNotes when user changes entry

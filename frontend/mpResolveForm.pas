@@ -6,9 +6,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, Menus,
   // mte units
-  mteHelpers, mteProgressForm, RttiTranslation,
+  mteProgressForm, RttiTranslation,
   // mp units
-  mpFrontend, mpThreads;
+  mpCore;
 
 type
   TResolveForm = class(TForm)
@@ -75,6 +75,12 @@ var
 
 implementation
 
+uses
+  // mte units
+  mteBase, mteHelpers, mteLogging,
+  // mp units
+  mpConfiguration, mpThreads;
+
 {$R *.dfm}
 
 var
@@ -102,32 +108,32 @@ begin
   if (merge.plugins.Count < 1) then begin
     bOtherIssues := true;
     ListItem := lvOtherIssues.Items.Add;
-    ListItem.Caption := GetString('mpRes_NoPlugins');
-    ListItem.SubItems.Add(GetString('mpRes_NoPlugins_Merge'));
+    ListItem.Caption := GetLanguageString('mpRes_NoPlugins');
+    ListItem.SubItems.Add(GetLanguageString('mpRes_NoPlugins_Merge'));
   end;
 
   // don't merge if mod destination directory is blank
   if (settings.mergeDirectory = '') then begin
     bOtherIssues := true;
     ListItem := lvOtherIssues.Items.Add;
-    ListItem.Caption := GetString('mpRes_DirInvalid');
-    ListItem.SubItems.Add(GetString('mpRes_DirBlank_Merge'));
+    ListItem.Caption := GetLanguageString('mpRes_DirInvalid');
+    ListItem.SubItems.Add(GetLanguageString('mpRes_DirBlank_Merge'));
   end;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.ManagerPath = '') then begin
     bOtherIssues := true;
     ListItem := lvOtherIssues.Items.Add;
-    ListItem.Caption := GetString('mpRes_DirInvalid');
-    ListItem.SubItems.Add(GetString('mpRes_DirBlank_MO'));
+    ListItem.Caption := GetLanguageString('mpRes_DirInvalid');
+    ListItem.SubItems.Add(GetLanguageString('mpRes_DirBlank_MO'));
   end;
 
   // don't merge if usingMO is true and MODirectory is invalid
   if settings.usingMO and not DirectoryExists(settings.ManagerPath) then begin
     bOtherIssues := true;
     ListItem := lvOtherIssues.Items.Add;
-    ListItem.Caption := GetString('mpRes_DirInvalid');
-    ListItem.SubItems.Add(GetString('mpRes_DirInvalid_MO'));
+    ListItem.Caption := GetLanguageString('mpRes_DirInvalid');
+    ListItem.SubItems.Add(GetLanguageString('mpRes_DirInvalid_MO'));
   end;
 
   // loop through plugins
@@ -139,7 +145,7 @@ begin
     if not Assigned(plugin) then begin
       bOtherIssues := true;
       ListItem := lvOtherIssues.Items.Add;
-      ListItem.Caption := GetString('mpRes_UnloadedPlugin');
+      ListItem.Caption := GetLanguageString('mpRes_UnloadedPlugin');
       ListItem.GroupID := 1;
       ListItem.SubItems.Add(merge.plugins[i]);
       continue;
@@ -168,13 +174,13 @@ begin
     if (not plugin.HasBeenCheckedForErrors) then begin
       bPluginErrors := true;
       ListItem := lvPluginErrors.Items.Add;
-      ListItem.Caption := GetString('mpRes_NeedsErrorCheck');
+      ListItem.Caption := GetLanguageString('mpRes_NeedsErrorCheck');
       ListItem.SubItems.Add(plugin.filename);
     end
     else if plugin.HasErrors and not plugin.bIgnoreErrors then begin
       bPluginErrors := true;
       ListItem := lvPluginErrors.Items.Add;
-      ListItem.Caption := GetString('mpRes_HasErrors');
+      ListItem.Caption := GetLanguageString('mpRes_HasErrors');
       ListItem.SubItems.Add(plugin.filename);
     end;
   end;
@@ -204,7 +210,7 @@ begin
   else if bOtherIssues then
     ResolvePageControl.ActivePage := tsOtherIssues
   else begin
-    ShowMessage(GetString('mpRes_IssuesResolved'));
+    ShowMessage(GetLanguageString('mpRes_IssuesResolved'));
     Close;
   end;
 
@@ -290,19 +296,19 @@ begin
     plugin := PluginByFilename(ListItem.SubItems[0]);
     // skip plugins that have been been disallowed by the user
     if (plugin.bDisallowMerging) then begin
-      ShowMessage(Format(GetString('mpRes_DoNotMerge'),
+      ShowMessage(Format(GetLanguageString('mpRes_DoNotMerge'),
         [plugin.filename, merge.name]));
       continue;
     end;
     // skip plugins that are blacklisted
     if (IS_BLACKLISTED in plugin.flags) then begin
-      ShowMessage(Format(GetString('mpRes_Blacklisted'),
+      ShowMessage(Format(GetLanguageString('mpRes_Blacklisted'),
         [plugin.filename, merge.name]));
       continue;
     end;
     // skip plugins that are already in another merge
     if plugin.merge <> ' ' then begin
-      ShowMessage(Format(GetString('mpRes_InMerge'),
+      ShowMessage(Format(GetLanguageString('mpRes_InMerge'),
         [plugin.filename, merge.name]));
       continue;
     end;
@@ -425,7 +431,7 @@ begin
   end;
 
   // show progress form
-  ShowProgressForm(self, pForm, GetString('mpProg_Checking'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
 
   // start error check thread
   ErrorCheckCallback := ProgressDone;
@@ -457,7 +463,7 @@ begin
   end;
 
   // show progress form
-  ShowProgressForm(self, pForm, GetString('mpProg_Fixing'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'));
 
   // start error check thread
   ErrorFixCallback := ProgressDone;
@@ -523,7 +529,7 @@ begin
     // process booleans for plugin
     bHasSelection := true;
     bAllPluginsUnloaded := bAllPluginsUnloaded and
-      (ListItem.Caption = GetString('mpRes_UnloadedPlugin'));
+      (ListItem.Caption = GetLanguageString('mpRes_UnloadedPlugin'));
   end;
 
   // toggle menu items
@@ -540,7 +546,7 @@ begin
     if not ListItem.Selected then
       continue;
     // remove plugin if is an unloaded plugin issue
-    if ListItem.Caption = GetString('mpRes_UnloadedPlugin') then
+    if ListItem.Caption = GetLanguageString('mpRes_UnloadedPlugin') then
       merge.Remove(ListItem.SubItems[0]);
   end;
 

@@ -3,18 +3,12 @@ unit mpThreads;
 interface
 
 uses
-  Controls, Classes, SysUtils, shlObj, Dialogs,
+  Classes,
   // mte units
-  mteHelpers, mteLogger, mteTracker,
-  // mp units
-  mpMerge, mpFrontend,
-  // xedit units
-  wbBSA, wbInterface, wbImplementation;
-
+  mteHelpers;
 
 type
   // THREADS AND CALLBACKS
-  TCallback = procedure of object;
   TStatusCallback = procedure(s: string) of object;
   TInitThread = class(TThread)
   protected
@@ -47,10 +41,19 @@ type
 
 var
   InitCallback, LoaderCallback, ErrorCheckCallback, ErrorFixCallback,
-  MergeCallback, SaveCallback, UpdateCallback, ConnectCallback: TCallback;
+  MergeCallback, SaveCallback, ConnectCallback: TCallback;
   StatusCallback: TStatusCallback;
 
 implementation
+
+uses
+  Controls, SysUtils, shlObj, Dialogs,
+  // mte units
+  mteBase, mteLogger, mteTracker,
+  // mp units
+  mpCore, mpConfiguration, mpLoader, mpMerge, mpClient,
+  // xedit units
+  wbBSA, wbInterface, wbImplementation;
 
 {******************************************************************************}
 { THREAD METHODS
@@ -120,7 +123,7 @@ begin
 
     // LOAD PLUGIN INFORMATION
     Tracker.Write('Loading plugin information');
-    AssignMergesToPlugins;
+    TMergeHelpers.AssignMergesToPlugins;
     LoadPluginInfo;
 
     // CLEAN UP
@@ -154,11 +157,11 @@ var
   plugin: TPlugin;
 begin
   StatusCallback(Format('%s (%d/%d)',
-    [GetString('mpMain_LoaderInProgress'), 1, PluginsList.Count]));
+    [GetLanguageString('mpMain_LoaderInProgress'), 1, PluginsList.Count]));
   try
     for i := 0 to Pred(PluginsList.Count) do begin
       StatusCallback(Format('%s (%d/%d)',
-        [GetString('mpMain_LoaderInProgress'), i + 1, PluginsList.Count]));
+        [GetLanguageString('mpMain_LoaderInProgress'), i + 1, PluginsList.Count]));
       plugin := TPlugin(PluginsList[i]);
       f := plugin._File;
       if SameText(plugin.filename, wbGameName + '.esm') then
@@ -179,7 +182,7 @@ begin
   end;
   ProgramStatus.bLoaderDone := true;
   LoaderProgress('finished');
-  StatusCallback(GetString('mpMain_LoaderFinished'));
+  StatusCallback(GetLanguageString('mpMain_LoaderFinished'));
   if Assigned(LoaderCallback) then
     Synchronize(nil, LoaderCallback);
 end;
@@ -195,7 +198,7 @@ begin
     if Tracker.Cancel then break;
     plugin := TPlugin(pluginsToHandle[i]);
     StatusCallback(Format('%s "%s" (%d/%d)',
-      [GetString('mpProg_Checking'), plugin.filename, i + 1, pluginsToHandle.Count]));
+      [GetLanguageString('mpProg_Checking'), plugin.filename, i + 1, pluginsToHandle.Count]));
     // check plugins for errors
     Tracker.Write('Checking for errors in '+plugin.filename);
     plugin.FindErrors;
@@ -210,7 +213,7 @@ begin
     Tracker.Write('All done!');
 
   Tracker.Cancel := false;
-  StatusCallback(GetString('mpProg_DoneChecking'));
+  StatusCallback(GetLanguageString('mpProg_DoneChecking'));
   if Assigned(ErrorCheckCallback) then
     Synchronize(nil, ErrorCheckCallback);
 end;
@@ -226,7 +229,7 @@ begin
     if Tracker.Cancel then break;
     plugin := TPlugin(pluginsToHandle[i]);
     StatusCallback(Format('%s "%s" (%d/%d)',
-      [GetString('mpProg_Fixing'), plugin.filename, i + 1, pluginsToHandle.Count]));
+      [GetLanguageString('mpProg_Fixing'), plugin.filename, i + 1, pluginsToHandle.Count]));
     // check plugins for errors
     Tracker.Write('Fixing errors in '+plugin.filename);
     plugin.ResolveErrors;
@@ -238,7 +241,7 @@ begin
     Tracker.Write('All done!');
 
   Tracker.Cancel := false;
-  StatusCallback(GetString('mpProg_DoneFixing'));
+  StatusCallback(GetLanguageString('mpProg_DoneFixing'));
   if Assigned(ErrorFixCallback) then
     Synchronize(nil, ErrorFixCallback);
 end;
@@ -255,7 +258,7 @@ begin
     if Tracker.Cancel then break;
     merge := TMerge(mergesToBuild[i]);
     StatusCallback(Format('%s "%s" (%d/%d)',
-      [GetString('mpProg_Merging'), merge.name, i + 1, mergesToBuild.Count]));
+      [GetLanguageString('mpProg_Merging'), merge.name, i + 1, mergesToBuild.Count]));
     try
       if (merge.status in RebuildStatuses) then
         RebuildMerge(merge)
@@ -295,16 +298,16 @@ begin
 
   // inform user about post-merge steps
   if slGeck.Count > 0 then
-    ShowMessage(Format(GetString('mpProg_GeckScripts'), [Trim(slGeck.Text)]));
+    ShowMessage(Format(GetLanguageString('mpProg_GeckScripts'), [Trim(slGeck.Text)]));
   if slNav.Count > 0 then
-    ShowMessage(Format(GetString('mpProg_NavConflicts'), [Trim(slNav.Text)]));
+    ShowMessage(Format(GetLanguageString('mpProg_NavConflicts'), [Trim(slNav.Text)]));
 
   // say thread is done if it wasn't cancelled
   if not Tracker.Cancel then
     Tracker.Write('All done!');
 
   // clean up, fire callback
-  StatusCallback(GetString('mpProg_DoneBuilding'));
+  StatusCallback(GetLanguageString('mpProg_DoneBuilding'));
   Tracker.Cancel := false;
   if Assigned(MergeCallback) then
     Synchronize(nil, MergeCallback);

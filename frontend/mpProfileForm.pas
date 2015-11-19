@@ -4,11 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Controls, Forms, StdCtrls, Graphics,
-  ImgList, Menus, Dialogs, ExtCtrls,
+  ImgList, Menus, Dialogs, ExtCtrls, pngimage,
   // mte components
   RttiIni, mteHelpers,
   // mp components
-  mpFrontend, mpProfilePanel, pngimage;
+  mpConfiguration, mpLoader, mpProfilePanel;
 
 type
   TProfileForm = class(TForm)
@@ -64,12 +64,16 @@ var
   bApproved: boolean;
   aProfile: TProfile;
 begin
+  if not Assigned(MouseOverProfile) then
+    exit;
+
   // get user verification
   aProfile := MouseOverProfile.GetProfile;
   bApproved := MessageDlg('Are you sure you want to delete '+
     aProfile.name + '?', mtConfirmation, mbOKCancel, 0) = mrOk;
 
-  if not (bApproved and Assigned(MouseOverProfile)) then exit;
+  if not bApproved then
+    exit;
   ProfilePanels.Delete(ProfilePanels.IndexOf(MouseOverProfile));
   aProfile.Delete;
   MouseOverProfile.Free;
@@ -136,8 +140,7 @@ end;
 
 procedure TProfileForm.FormCreate(Sender: TObject);
 begin
-  PathList := TStringList.Create;
-  PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
+  //PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
   ProfilePanels := TList.Create;
   SelectCallback := SelectionChanged;
   DeleteCallback := DeleteClicked;

@@ -63,3 +63,4 @@ __history/
 backend/logs/*.txt
 loc/
 test/
+frontend/logs/
