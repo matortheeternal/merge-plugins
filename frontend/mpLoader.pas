@@ -168,7 +168,7 @@ begin
   psForm.slCheckedPlugins := slLoadOrder;
   psForm.slAllPlugins := slAllPlugins;
   psForm.sColumns := 'Plugin,Merge';
-  psForm.oPluginInfoGetter := TMergeHelpers.GetMergeForPlugin;
+  psForm.PluginInfoGetter := TMergeHelpers.GetMergeForPlugin;
   if psForm.ShowModal = mrCancel then
     exit;
   slLoadOrder.Text := psForm.slCheckedPlugins.Text;

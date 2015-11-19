@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls;
+  Dialogs, StdCtrls, CommCtrl, Menus, ComCtrls, ImgList;
 
 type
   TStringFunction = function(s: string): string of object;
@@ -12,14 +12,26 @@ type
     lvPlugins: TListView;
     btnCancel: TButton;
     btnOK: TButton;
+    PluginsPopupMenu: TPopupMenu;
+    SelectAllItem: TMenuItem;
+    SelectNoneItem: TMenuItem;
+    InvertSelectionItem: TMenuItem;
+    StateImages: TImageList;
     procedure LoadSubItems(aListItem: TListItem; sPlugin: string);
     procedure FormShow(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
+    procedure SelectAllItemClick(Sender: TObject);
+    procedure SelectNoneItemClick(Sender: TObject);
+    procedure InvertSelectionItemClick(Sender: TObject);
+    procedure lvPluginsMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure lvPluginsKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     { Private declarations }
   public
     { Public declarations }
-    oPluginInfoGetter: TStringFunction;
+    PluginInfoGetter: TStringFunction;
     sColumns: string;
     slAllPlugins, slCheckedPlugins: TStringList;
   end;
@@ -28,6 +40,10 @@ var
   PluginSelectionForm: TPluginSelectionForm;
 
 implementation
+
+const
+  cChecked = 1;
+  cUnChecked = 2;
 
 {$R *.dfm}
 
@@ -41,7 +57,7 @@ begin
   // add checked plugins to slCheckedPlugins
   for i := 0 to Pred(lvPlugins.Items.Count) do begin
     ListItem := lvPlugins.Items[i];
-    if ListItem.Checked then
+    if ListItem.StateIndex = cChecked then
       slCheckedPlugins.Add(ListItem.Caption);
   end;
 end;
@@ -55,12 +71,48 @@ begin
   // get comma separated plugin info in a TStringList
   sl := TStringList.Create;
   try
-    sl.CommaText := oPluginInfoGetter(sPlugin);
+    sl.CommaText := PluginInfoGetter(sPlugin);
     for i := 0 to Pred(sl.Count) do
       aListItem.SubItems.Add(sl[i]);
   finally
     sl.Free;
   end;
+end;
+
+procedure ToggleState(ListItem: TListItem);
+begin
+  case ListItem.StateIndex of
+    cChecked: ListItem.StateIndex := cUnChecked;
+    cUnChecked: ListItem.StateIndex := cChecked;
+  end;
+end;
+
+procedure TPluginSelectionForm.lvPluginsKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  i: Integer;
+  ListItem: TListItem;
+begin
+  if Key = VK_SPACE then begin
+    for i := 0 to Pred(lvPlugins.Items.Count) do begin
+      ListItem := lvPlugins.Items[i];
+      if ListItem.Selected then
+        ToggleState(ListItem);
+    end;
+  end;
+end;
+
+procedure TPluginSelectionForm.lvPluginsMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  HT: THitTests;
+  ListItem: TListItem;
+begin
+  // toggle
+  ListItem := lvPlugins.GetItemAt(X, Y);
+  HT := lvPlugins.GetHitTestInfoAt(X, Y);
+  if (HT - [htOnStateIcon] <> HT) then
+    ToggleState(ListItem);
 end;
 
 procedure TPluginSelectionForm.FormShow(Sender: TObject);
@@ -80,6 +132,8 @@ begin
       aColumn := lvPlugins.Columns.Add;
       aColumn.Caption := sl[i];
       aColumn.Width := iColumnSize;
+      if i = 0 then
+        aColumn.Tag := 300;
     end;
   finally
     sl.Free;
@@ -89,6 +143,7 @@ begin
   for i := 0 to Pred(slAllPlugins.Count) do begin
     sPlugin := slAllPlugins[i];
     aListItem := lvPlugins.Items.Add;
+    aListItem.StateIndex := cUnChecked;
     aListItem.Caption := sPlugin;
     // check ListItem if it's in the CheckedPlugins list
     if slCheckedPlugins.IndexOf(sPlugin) > -1 then
@@ -96,6 +151,30 @@ begin
     // add merge subitems
     LoadSubItems(aListItem, sPlugin);
   end;
+end;
+
+procedure TPluginSelectionForm.SelectAllItemClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 0 to Pred(lvPlugins.Items.Count) do
+    lvPlugins.Items[i].StateIndex := cChecked;
+end;
+
+procedure TPluginSelectionForm.SelectNoneItemClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 0 to Pred(lvPlugins.Items.Count) do
+    lvPlugins.Items[i].StateIndex := cUnChecked;
+end;
+
+procedure TPluginSelectionForm.InvertSelectionItemClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 0 to Pred(lvPlugins.Items.Count) do
+    ToggleState(lvPlugins.Items[i]);
 end;
 
 end.
