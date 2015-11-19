@@ -62,17 +62,17 @@ object PluginSelectionForm: TPluginSelectionForm
   object PluginsPopupMenu: TPopupMenu
     Left = 48
     Top = 24
-    object SelectAllItem: TMenuItem
-      Caption = 'Select all'
-      OnClick = SelectAllItemClick
+    object CheckAllItem: TMenuItem
+      Caption = 'Check all'
+      OnClick = CheckAllItemClick
     end
-    object SelectNoneItem: TMenuItem
-      Caption = 'Select none'
-      OnClick = SelectNoneItemClick
+    object UncheckAllItem: TMenuItem
+      Caption = 'Uncheck all'
+      OnClick = UncheckAllItemClick
     end
-    object InvertSelectionItem: TMenuItem
-      Caption = 'Invert selection'
-      OnClick = InvertSelectionItemClick
+    object ToggleAllItem: TMenuItem
+      Caption = 'Toggle all'
+      OnClick = ToggleAllItemClick
     end
   end
   object StateImages: TImageList

@@ -13,16 +13,16 @@ type
     btnCancel: TButton;
     btnOK: TButton;
     PluginsPopupMenu: TPopupMenu;
-    SelectAllItem: TMenuItem;
-    SelectNoneItem: TMenuItem;
-    InvertSelectionItem: TMenuItem;
+    CheckAllItem: TMenuItem;
+    UncheckAllItem: TMenuItem;
+    ToggleAllItem: TMenuItem;
     StateImages: TImageList;
     procedure LoadSubItems(aListItem: TListItem; sPlugin: string);
     procedure FormShow(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
-    procedure SelectAllItemClick(Sender: TObject);
-    procedure SelectNoneItemClick(Sender: TObject);
-    procedure InvertSelectionItemClick(Sender: TObject);
+    procedure CheckAllItemClick(Sender: TObject);
+    procedure UncheckAllItemClick(Sender: TObject);
+    procedure ToggleAllItemClick(Sender: TObject);
     procedure lvPluginsMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lvPluginsKeyDown(Sender: TObject; var Key: Word;
@@ -132,9 +132,9 @@ begin
       aColumn := lvPlugins.Columns.Add;
       aColumn.Caption := sl[i];
       aColumn.Width := iColumnSize;
-      if i = 0 then
-        aColumn.Tag := 300;
     end;
+    // make first column autosize
+    lvPlugins.Columns[0].AutoSize := true;
   finally
     sl.Free;
   end;
@@ -153,7 +153,7 @@ begin
   end;
 end;
 
-procedure TPluginSelectionForm.SelectAllItemClick(Sender: TObject);
+procedure TPluginSelectionForm.CheckAllItemClick(Sender: TObject);
 var
   i: Integer;
 begin
@@ -161,7 +161,7 @@ begin
     lvPlugins.Items[i].StateIndex := cChecked;
 end;
 
-procedure TPluginSelectionForm.SelectNoneItemClick(Sender: TObject);
+procedure TPluginSelectionForm.UncheckAllItemClick(Sender: TObject);
 var
   i: Integer;
 begin
@@ -169,7 +169,7 @@ begin
     lvPlugins.Items[i].StateIndex := cUnChecked;
 end;
 
-procedure TPluginSelectionForm.InvertSelectionItemClick(Sender: TObject);
+procedure TPluginSelectionForm.ToggleAllItemClick(Sender: TObject);
 var
   i: Integer;
 begin
