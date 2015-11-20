@@ -373,11 +373,11 @@ begin
   sl := TStringList.Create;
   try
     sl.CommaText := sColumns;
-    iColumnSize := (lvPlugins.ClientWidth - 310) div (sl.Count - 1);
+    iColumnSize := (lvPlugins.ClientWidth - 300) div (sl.Count - 1);
     for i := 0 to Pred(sl.Count) do begin
       aColumn := lvPlugins.Columns.Add;
       aColumn.Caption := sl[i];
-      aColumn.Width := IfThenInt(i = 0, 310, iColumnSize);
+      aColumn.Width := IfThenInt(i = 0, 300, iColumnSize);
     end;
     // make first column autosize
     lvPlugins.Columns[0].AutoSize := true;

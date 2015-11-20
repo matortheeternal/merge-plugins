@@ -87,22 +87,22 @@ var
 begin
   try
     // PRINT LOAD ORDER TO LOG
-    for i := 0 to Pred(slLoadOrder.Count) do
-      Logger.Write('LOAD', 'Order', '['+IntToHex(i, 2)+'] '+slLoadOrder[i]);
+    for i := 0 to Pred(slPlugins.Count) do
+      Logger.Write('LOAD', 'Order', '['+IntToHex(i, 2)+'] '+slPlugins[i]);
 
     // LOAD PLUGINS
-    for i := 0 to Pred(slLoadOrder.Count) do begin
-      Tracker.Write('Loading '+slLoadOrder[i]);
+    for i := 0 to Pred(slPlugins.Count) do begin
+      Tracker.Write('Loading '+slPlugins[i]);
       try
         plugin := TPlugin.Create;
-        plugin.filename := slLoadOrder[i];
-        plugin._File := wbFile(wbDataPath + slLoadOrder[i], i);
+        plugin.filename := slPlugins[i];
+        plugin._File := wbFile(wbDataPath + slPlugins[i], i);
         plugin._File._AddRef;
         plugin.GetMpData;
         PluginsList.Add(Pointer(plugin));
       except
         on x: Exception do begin
-          Logger.Write('ERROR', 'Load', 'Exception loading '+slLoadOrder[i]);
+          Logger.Write('ERROR', 'Load', 'Exception loading '+slPlugins[i]);
           Logger.Write('ERROR', 'Load', x.Message);
           ProgramStatus.bLoadException := true;
         end;
@@ -127,11 +127,11 @@ begin
     LoadPluginInfo;
 
     // CLEAN UP
-    slLoadOrder.Free;
+    slPlugins.Free;
   except
     on x: Exception do begin
-      if Assigned(slLoadOrder) then
-        slLoadOrder.Free;
+      if Assigned(slPlugins) then
+        slPlugins.Free;
       ProgramStatus.bInitException := true;
       Logger.Write('ERROR', 'Load', x.Message);
     end;

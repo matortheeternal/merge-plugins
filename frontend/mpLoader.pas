@@ -29,7 +29,7 @@ uses
   function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 
 var
-  slLoadOrder: TStringList;
+  slPlugins: TStringList;
   UpdateCallback: TCallback;
 
 implementation
@@ -64,8 +64,8 @@ uses
 
 function InitBase: boolean;
 var
-  wbPluginsFileName: string;
-  slAllPlugins: TStringList;
+  wbLoadPath: string;
+  slLoadOrder: TStringList;
   psForm: TPluginSelectionForm;
 begin
   Result := false;
@@ -132,48 +132,53 @@ begin
   Tracker.Write('Loading merges');
   LoadMerges;
 
-  // PREPARE TO LOAD PLUGINS
-  wbPluginsFileName := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\plugins.txt';
-  if not (settings.usingMO and FileExists(wbPluginsFileName)) then
-    wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
-  Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
+  // GET LOAD ORDER PATH
+  wbLoadPath := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\';
+  if not (settings.usingMO and FileExists(wbLoadPath)) then
+    wbLoadPath := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName+'\';
+  Logger.Write('GENERAL', 'Load Order', 'Using '+wbLoadPath+'loadorder.txt');
+
+  // LOAD LIST OF ACTIVE PLUGINS (plugins.txt)
+  slPlugins := TStringList.Create;
+  slPlugins.LoadFromFile(wbLoadPath + 'plugins.txt');
+  RemoveCommentsAndEmpty(slPlugins);
+  RemoveMissingFiles(slPlugins);
+  // disable merged plugins
+  RemoveMergedPlugins(slPlugins);
+
+  // LOAD ORDER OF ALL PLUGINS (loadorder.txt)
   slLoadOrder := TStringList.Create;
-  slLoadOrder.LoadFromFile(wbPluginsFileName);
+  slLoadOrder.LoadFromFile(wbLoadPath + 'loadorder.txt');
   RemoveCommentsAndEmpty(slLoadOrder);
   RemoveMissingFiles(slLoadOrder);
-
-  // GET LIST OF ALL PLUGINS
-  slAllPlugins := TStringList.Create;
-  slAllPlugins.Text := slLoadOrder.Text;
-  AddMissingFiles(slAllPlugins);
-  RemoveMergedPlugins(slLoadOrder);
+  AddMissingFiles(slLoadOrder);
 
   // if GameMode is not Skyrim sort by date modified
   // else add Update.esm and Skyrim.esm to load order
   if wbGameMode <> gmTES5 then begin
-    GetPluginDates(slLoadOrder);
+    GetPluginDates(slPlugins);
+    slPlugins.CustomSort(PluginListCompare);
     slLoadOrder.CustomSort(PluginListCompare);
-    slAllPlugins.CustomSort(PluginListCompare);
   end
   else begin
-    if slAllPlugins.IndexOf('Update.esm') = -1 then
-      slAllPlugins.Insert(0, 'Update.esm');
-    if slAllPlugins.IndexOf('Skyrim.esm') = -1 then
-      slAllPlugins.Insert(0, 'Skyrim.esm');
+    if slLoadOrder.IndexOf('Update.esm') = -1 then
+      slLoadOrder.Insert(0, 'Update.esm');
+    if slLoadOrder.IndexOf('Skyrim.esm') = -1 then
+      slLoadOrder.Insert(0, 'Skyrim.esm');
   end;
 
   // DISPLAY PLUGIN SELECTION FORM
-  THeaderHelpers.LoadPluginHeaders(slAllPlugins);
+  THeaderHelpers.LoadPluginHeaders(slLoadOrder);
   psForm := TPluginSelectionForm.Create(nil);
-  psForm.slCheckedPlugins := slLoadOrder;
-  psForm.slAllPlugins := slAllPlugins;
+  psForm.slCheckedPlugins := slPlugins;
+  psForm.slAllPlugins := slLoadOrder;
   psForm.sColumns := 'Plugin,Merge';
   psForm.GetPluginInfo := TMergeHelpers.GetMergeForPlugin;
   psForm.GetPluginMasters := THeaderHelpers.GetPluginMasters;
   psForm.GetPluginDependencies := THeaderHelpers.GetPluginDependencies;
   if psForm.ShowModal = mrCancel then
     exit;
-  slLoadOrder.Text := psForm.slCheckedPlugins.Text;
+  slPlugins.Text := psForm.slCheckedPlugins.Text;
   psForm.Free;
   FreeList(HeaderList);
 
@@ -395,34 +400,47 @@ end;
 procedure AddMissingFiles(var sl: TStringList);
 var
   F: TSearchRec;
-  i: integer;
+  i, j: integer;
+  slNew: TStringList;
 begin
-  // find last master
-  for i := Pred(sl.Count) downto 0 do
-    if IsFileESM(sl[i]) then
-      Break;
+  slNew := TStringList.Create;
+  try
+    // search for missing plugins and masters
+    if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
+      repeat
+        if not (IsFileESM(F.Name) or IsFileESP(F.Name)) then
+          continue;
+        if sl.IndexOf(F.Name) = -1 then
+          slNew.AddObject(F.Name, TObject(FileAge(wbDataPath + F.Name)));
+      until FindNext(F) <> 0;
+    finally
+      FindClose(F);
+    end;
 
-  // search for missing plugins, add to end
-  if FindFirst(wbDataPath + '*.esp', faAnyFile, F) = 0 then try
-    repeat
-      if sl.IndexOf(F.Name) = -1 then
-        sl.Add(F.Name);
-    until FindNext(F) <> 0;
-  finally
-    FindClose(F);
-  end;
+    // sort the list
+    slNew.CustomSort(PluginListCompare);
 
-  // search for missing masters, add after last master
-  Inc(i);
-  if FindFirst(wbDataPath + '*.esm', faAnyFile, F) = 0 then try
-    repeat
-      if sl.IndexOf(F.Name) = -1 then begin
-        sl.Insert(i, F.Name);
-        Inc(i);
-      end;
-    until FindNext(F) <> 0;
+    // The for loop won't initialize j if sl.count = 0, we must force it
+    // to -1 so inserting will happen at index 0
+    if sl.Count = 0 then
+      j := -1
+    else
+      // find position of last master
+      for j := Pred(sl.Count) downto 0 do
+        if IsFileESM(sl[j]) then
+          Break;
+
+    // add esm masters after the last master, add esp plugins at the end
+    Inc(j);
+    for i := 0 to Pred(slNew.Count) do begin
+      if IsFileESM(slNew[i]) then begin
+        sl.InsertObject(j, slNew[i], slNew.Objects[i]);
+        Inc(j);
+      end else
+        sl.AddObject(slNew[i], slNew.Objects[i]);
+    end;
   finally
-    FindClose(F);
+    slNew.Free;
   end;
 end;
 

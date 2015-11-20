@@ -3,7 +3,7 @@ object PluginSelectionForm: TPluginSelectionForm
   Top = 0
   Caption = 'Plugin Selection'
   ClientHeight = 647
-  ClientWidth = 516
+  ClientWidth = 504
   Color = clBtnFace
   Constraints.MinHeight = 400
   Constraints.MinWidth = 400
@@ -21,7 +21,7 @@ object PluginSelectionForm: TPluginSelectionForm
   object lvPlugins: TListView
     Left = 8
     Top = 8
-    Width = 500
+    Width = 488
     Height = 600
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -46,11 +46,10 @@ object PluginSelectionForm: TPluginSelectionForm
     OnKeyDown = lvPluginsKeyDown
     OnMouseDown = lvPluginsMouseDown
     OnMouseMove = lvPluginsMouseMove
-    ExplicitWidth = 414
-    ExplicitHeight = 467
+    ExplicitWidth = 500
   end
   object btnCancel: TButton
-    Left = 433
+    Left = 421
     Top = 614
     Width = 75
     Height = 25
@@ -59,11 +58,10 @@ object PluginSelectionForm: TPluginSelectionForm
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
-    ExplicitLeft = 347
-    ExplicitTop = 481
+    ExplicitLeft = 433
   end
   object btnOK: TButton
-    Left = 352
+    Left = 340
     Top = 614
     Width = 75
     Height = 25
@@ -73,8 +71,7 @@ object PluginSelectionForm: TPluginSelectionForm
     ModalResult = 1
     TabOrder = 2
     OnClick = btnOKClick
-    ExplicitLeft = 266
-    ExplicitTop = 481
+    ExplicitLeft = 352
   end
   object PluginsPopupMenu: TPopupMenu
     Left = 48
@@ -98,7 +95,7 @@ object PluginSelectionForm: TPluginSelectionForm
     Left = 136
     Top = 24
     Bitmap = {
-      494C010103003400400011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103003400440011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000440000001100000001002000000000001012
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
