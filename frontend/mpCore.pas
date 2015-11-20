@@ -58,8 +58,8 @@ type
     bDisallowMerging: boolean;
     constructor Create; override;
     destructor Destroy; override;
-    procedure GetData; overload;
-    procedure UpdateData; overload;
+    procedure GetMpData; overload;
+    procedure UpdateData; override;
     procedure GetDataPath;
     procedure GetFlags;
     function GetFlagsString: string;
@@ -295,7 +295,7 @@ begin
 end;
 
 { Fetches data associated with a plugin. }
-procedure TPlugin.GetData;
+procedure TPlugin.GetMpData;
 var
   s: string;
 begin
@@ -311,8 +311,11 @@ begin
   if not (IS_BLACKLISTED in flags) then
     numOverrides := IntToStr(CountOverrides(_File));
 
-  // call inherited method
-  inherited;
+  // get hash
+  GetHash;
+
+  // call get data method
+  GetData(PluginsList);
 end;
 
 procedure TPlugin.UpdateData;

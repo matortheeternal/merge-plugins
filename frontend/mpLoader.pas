@@ -133,9 +133,8 @@ begin
   LoadMerges;
 
   // PREPARE TO LOAD PLUGINS
-  if settings.usingMO then
-    wbPluginsFileName := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\plugins.txt'
-  else
+  wbPluginsFileName := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\plugins.txt';
+  if not (settings.usingMO and FileExists(wbPluginsFileName)) then
     wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName + '\Plugins.txt';
   Logger.Write('GENERAL', 'Load Order', 'Using '+wbPluginsFileName);
   slLoadOrder := TStringList.Create;
@@ -164,15 +163,19 @@ begin
   end;
 
   // DISPLAY PLUGIN SELECTION FORM
+  THeaderHelpers.LoadPluginHeaders(slAllPlugins);
   psForm := TPluginSelectionForm.Create(nil);
   psForm.slCheckedPlugins := slLoadOrder;
   psForm.slAllPlugins := slAllPlugins;
   psForm.sColumns := 'Plugin,Merge';
-  psForm.PluginInfoGetter := TMergeHelpers.GetMergeForPlugin;
+  psForm.GetPluginInfo := TMergeHelpers.GetMergeForPlugin;
+  psForm.GetPluginMasters := THeaderHelpers.GetPluginMasters;
+  psForm.GetPluginDependencies := THeaderHelpers.GetPluginDependencies;
   if psForm.ShowModal = mrCancel then
     exit;
   slLoadOrder.Text := psForm.slCheckedPlugins.Text;
   psForm.Free;
+  FreeList(HeaderList);
 
   // ALL DONE
   Result := true;

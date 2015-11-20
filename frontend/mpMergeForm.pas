@@ -892,7 +892,7 @@ begin
   // get plugin information
   index := PluginsListView.ItemIndex;
   plugin := TPlugin(PluginsList[index]);
-  if not plugin.hasData then plugin.GetData;
+  if not plugin.hasData then plugin.GetMpData;
 
   // add details items
   sl := TStringList.Create;
@@ -933,7 +933,7 @@ begin
     // add plugin to merge
     Logger.Write('PLUGIN', 'Merge', 'Added '+plugin.filename+' to merge '+merge.name);
     if not plugin.hasData then
-      plugin.GetData;
+      plugin.GetMpData;
     merge.plugins.AddObject(plugin.filename, TObject(i));
     plugin.merge := merge.name;
   end;

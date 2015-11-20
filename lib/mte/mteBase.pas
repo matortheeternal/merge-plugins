@@ -27,8 +27,8 @@ type
     requiredBy: TStringList;
     constructor Create; virtual;
     destructor Destroy; override;
-    procedure GetData;
-    procedure UpdateData;
+    procedure GetData(var lst: TList);
+    procedure UpdateData; virtual;
     procedure GetHash;
     function GetFormIndex: Integer;
   end;
@@ -36,6 +36,11 @@ type
     class function CreateNewBasePlugin(var list: TList; filename: string): TBasePlugin;
     class function BasePluginByFilename(var list: TList; filename: string): TBasePlugin;
     class function BasePluginLoadOrder(var list: TList; filename: string): integer;
+  end;
+  THeaderHelpers = class
+    class procedure LoadPluginHeaders(var sl: TStringList);
+    class procedure GetPluginMasters(filename: string; var sl: TStringList);
+    class procedure GetPluginDependencies(filename: string; var sl: TStringList);
   end;
 
   { Bethesda Plugin Functions }
@@ -45,7 +50,8 @@ type
   function LocalFormID(aRecord: IwbMainRecord): integer;
   function LoadOrderPrefix(aRecord: IwbMainRecord): integer;
   function CountOverrides(aFile: IwbFile): integer;
-  procedure AddRequiredBy(filename: string; var masters: TStringList);
+  procedure AddRequiredBy(var lst: TList; filename: string;
+    var masters: TStringList);
   procedure GetMasters(aFile: IwbFile; var sl: TStringList);
   procedure AddMasters(aFile: IwbFile; var sl: TStringList);
   function BSAExists(filename: string): boolean;
@@ -67,6 +73,7 @@ type
 
 var
   PluginsList: TList;
+  HeaderList: TList;
 
 implementation
 
@@ -92,12 +99,13 @@ begin
   _File._Release;
 end;
 
-procedure TBasePlugin.GetData;
+procedure TBasePlugin.GetData(var lst: TList);
 var
   Container: IwbContainer;
   s: string;
 begin
   hasData := true;
+
   // get data
   filename := _File.FileName;
   Container := _File as IwbContainer;
@@ -105,12 +113,9 @@ begin
   author := Container.GetElementEditValue('CNAM - Author');
   numRecords := Container.GetElementEditValue('HEDR - Header\Number of Records');
 
-  // get masters, flags
+  // get masters, required by
   GetMasters(_File, masters);
-  AddRequiredBy(filename, masters);
-
-  // get hash, datapath
-  GetHash;
+  AddRequiredBy(lst, filename, masters);
 
   // get description
   s := Container.GetElementEditValue('SNAM - Description');
@@ -123,7 +128,7 @@ end;
 
 procedure TBasePlugin.UpdateData;
 begin
-  // abstract method to be overridden
+  // virtual method to be overridden
 end;
 
 procedure TBasePlugin.GetHash;
@@ -209,6 +214,58 @@ begin
       exit;
     end;
   end;
+end;
+
+class procedure THeaderHelpers.LoadPluginHeaders(var sl: TStringList);
+var
+  i: Integer;
+  aFile: IwbFile;
+  plugin: TBasePlugin;
+begin
+  // create header list
+  HeaderList := TList.Create;
+
+  // load plugin headers for each plugin in @sl
+  for i := 0 to Pred(sl.Count) do try
+    aFile := wbFile(wbDataPath + sl[i], -1, '', True, False);
+    plugin := TBasePlugin.Create;
+    plugin._File := aFile;
+    HeaderList.Add(plugin);
+  except
+    on x: Exception do begin
+      Tracker.Write('Failed to load '+sl[i]);
+    end;
+  end;
+
+  // get data for each plugin in the header list
+  for i := 0 to Pred(HeaderList.Count) do begin
+    plugin := TBasePlugin(HeaderList[i]);
+    plugin.GetData(HeaderList);
+  end;
+end;
+
+class procedure THeaderHelpers.GetPluginMasters(filename: string;
+  var sl: TStringList);
+var
+  plugin: TBasePlugin;
+begin
+  // get plugin
+  plugin := TPluginHelpers.BasePluginByFilename(HeaderList, filename);
+  // add its masters to list
+  if Assigned(plugin) then
+    sl.AddStrings(plugin.masters);
+end;
+
+class procedure THeaderHelpers.GetPluginDependencies(filename: string;
+  var sl: TStringList);
+var
+  plugin: TBasePlugin;
+begin
+  // get plugin
+  plugin := TPluginHelpers.BasePluginByFilename(HeaderList, filename);
+  // add its required by to @sl
+  if Assigned(plugin) then
+    sl.AddStrings(plugin.requiredBy);
 end;
 
 
@@ -299,13 +356,14 @@ end;
 
 { Populates required by field of @masters that are required by plugin
   @filename }
-procedure AddRequiredBy(filename: string; var masters: TStringList);
+procedure AddRequiredBy(var lst: TList; filename: string;
+  var masters: TStringList);
 var
   i: Integer;
   plugin: TBasePlugin;
 begin
   for i := 0 to Pred(masters.Count) do begin
-    plugin := TPluginHelpers.BasePluginByFilename(PluginsList, masters[i]);
+    plugin := TPluginHelpers.BasePluginByFilename(lst, masters[i]);
     if not Assigned(plugin) then
       continue;
     plugin.requiredBy.Add(filename);

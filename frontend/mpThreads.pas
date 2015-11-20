@@ -98,7 +98,7 @@ begin
         plugin.filename := slLoadOrder[i];
         plugin._File := wbFile(wbDataPath + slLoadOrder[i], i);
         plugin._File._AddRef;
-        plugin.GetData;
+        plugin.GetMpData;
         PluginsList.Add(Pointer(plugin));
       except
         on x: Exception do begin
