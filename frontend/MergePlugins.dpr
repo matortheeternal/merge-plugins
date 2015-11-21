@@ -47,7 +47,6 @@ const
 
 var
   bProfileProvided: boolean;
-  ProgramPath: string;
 begin
   // set important vars
   SysUtils.FormatSettings.DecimalSeparator := '.';

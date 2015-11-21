@@ -148,7 +148,7 @@ const
 implementation
 
 uses
-  Graphics, SysUtils, Dialogs, ShellAPI, Windows, Registry;
+  Graphics, UITypes, SysUtils, Dialogs, ShellAPI, Windows, Registry;
 
 { TSettings }
 constructor TSettings.Create;

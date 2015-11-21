@@ -11593,7 +11593,7 @@ end;
 procedure TwbElement.BeforeDestruction;
 begin
   Assert(eExternalRefs = 0);
-  Assert(FRefCount = 0);
+  Assert(RefCount = 0);
   Include(eStates, esDestroying);
   inherited BeforeDestruction;
   //LockedInc(eExternalRefs);

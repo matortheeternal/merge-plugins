@@ -208,7 +208,7 @@ var
 implementation
 
 uses
-  Windows, SysUtils, Dialogs,
+  Windows, SysUtils, Dialogs, UITypes,
   // mte units
   mteLogger, mteTracker, mteHelpers, mteLogging, RttiJson,
   // mp units

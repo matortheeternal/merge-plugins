@@ -99,7 +99,7 @@ function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames
 implementation
 
 uses
-  wbSort;
+  UITypes, wbSort;
 
 procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
 var

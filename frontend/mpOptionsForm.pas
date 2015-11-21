@@ -4,13 +4,13 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls,
+  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls, UITypes,
   // mte units
   mteHelpers, RttiTranslation,
   // mp units
   mpCore, mpConfiguration, mpClient,
   // mp forms
-  mteChangeLogForm;
+  mteChangeLogForm, System.ImageList;
 
 type
   TOptionsForm = class(TForm)

@@ -63,7 +63,7 @@ var
 implementation
 
 uses
-  Dialogs,
+  UITypes, Dialogs,
   // abbrevia components
   AbZBrows, AbUnZper, AbArcTyp, AbMeter, AbBrowse, AbBase,
   // mte units
@@ -162,7 +162,7 @@ begin
 
   try
     if TCPClient.Connected then begin
-      TCPClient.IOHandler.WriteLn('', TIdTextEncoding.Default);
+      TCPClient.IOHandler.WriteLn('', IndyTextEncoding_OSDefault());
       Result := true;
     end;
   except on Exception do
@@ -175,7 +175,7 @@ var
   msgJson: string;
 begin
   msgJson := TRttiJson.ToJson(msg);
-  TCPClient.IOHandler.WriteLn(msgJson, TIdTextEncoding.Default);
+  TCPClient.IOHandler.WriteLn(msgJson, IndyTextEncoding_OSDefault());
 end;
 
 function CheckAuthorization: boolean;
@@ -198,7 +198,7 @@ begin
     SendClientMessage(msg);
 
     // get response
-    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    line := TCPClient.IOHandler.ReadLn(IndyTextEncoding_OSDefault());
     response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Yes';
@@ -248,7 +248,7 @@ begin
     SendClientMessage(msg);
 
     // get response
-    LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    LLine := TCPClient.IOHandler.ReadLn(IndyTextEncoding_OSDefault());
     response := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
   except
@@ -275,7 +275,7 @@ begin
     SendClientMessage(msg);
 
     // get response
-    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    line := TCPClient.IOHandler.ReadLn(IndyTextEncoding_OSDefault());
     response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
   except
@@ -303,7 +303,7 @@ begin
     SendClientMessage(msg);
 
     // get response
-    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    line := TCPClient.IOHandler.ReadLn(IndyTextEncoding_OSDefault());
     response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = 'Available';
@@ -332,7 +332,7 @@ begin
     SendClientMessage(msg);
 
     // get response
-    line := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    line := TCPClient.IOHandler.ReadLn(IndyTextEncoding_OSDefault());
     response := TmpMessage(TRttiJson.FromJson(line, TmpMessage));
     Logger.Write('CLIENT', 'Response', response.data);
     Result := response.data = ('Registered ' + username);
@@ -364,7 +364,7 @@ begin
     SendClientMessage(msg);
 
     // get response
-    LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+    LLine := TCPClient.IOHandler.ReadLn(IndyTextEncoding_OSDefault());
     response := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
     RemoteStatus := TmpStatus(TRttiJson.FromJson(response.data, TmpStatus));
     //Logger.Write('CLIENT', 'Response', response.data);
@@ -561,7 +561,7 @@ begin
       SendClientMessage(msg);
 
       // get response
-      LLine := TCPClient.IOHandler.ReadLn(TIdTextEncoding.Default);
+      LLine := TCPClient.IOHandler.ReadLn(IndyTextEncoding_OSDefault());
       response := TmpMessage.Create;
       response := TmpMessage(TRttiJson.FromJson(LLine, response.ClassType));
       Logger.Write('CLIENT', 'Response', response.data);

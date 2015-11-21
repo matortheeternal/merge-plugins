@@ -868,7 +868,7 @@ var
 begin
   m := TMemoryStream.Create;
   try
-    rs := TResourceStream.CreateFromID(HInstance, 1, RT_VERSION);
+    rs := TResourceStream.CreateFromID(SysInit.HInstance, 1, RT_VERSION);
     try
       m.CopyFrom(rs, rs.Size);
     finally

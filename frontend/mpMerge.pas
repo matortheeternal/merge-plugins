@@ -15,7 +15,7 @@ uses
 implementation
 
 uses
-  Windows, SysUtils, Classes, ShellAPI, Controls, Dialogs,
+  Windows, SysUtils, Classes, ShellAPI, Controls, Dialogs, UITypes,
   // mte units
   mteBase, mteHelpers, mteLogger, mteTracker,
   // mp units

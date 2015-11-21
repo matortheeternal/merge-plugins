@@ -6,7 +6,7 @@ uses
   // delphi units
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Buttons, ExtCtrls, ComCtrls, XPMan, StdCtrls, ImgList, CommCtrl, Menus, Grids,
-  ValEdit, ShellAPI, StrUtils, ShlObj, Clipbrd,
+  ValEdit, ShellAPI, StrUtils, ShlObj, Clipbrd, UITypes,
   // third party libraries
   superobject, W7Taskbar,
   // mte components
@@ -18,7 +18,7 @@ uses
   mpDictionaryForm, mpOptionsForm, mpSplashForm, mpEditForm, mpReportForm,
   mpResolveForm,
   // tes5edit units
-  wbBSA, wbHelpers, wbInterface, wbImplementation;
+  wbBSA, wbHelpers, wbInterface, wbImplementation, System.ImageList;
 
 type
   TMergeForm = class(TForm)

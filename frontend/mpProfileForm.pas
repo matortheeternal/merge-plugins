@@ -4,11 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Controls, Forms, StdCtrls, Graphics,
-  ImgList, Menus, Dialogs, ExtCtrls, pngimage,
+  ImgList, Menus, Dialogs, ExtCtrls, UITypes, pngimage,
   // mte components
   RttiIni, mteHelpers,
   // mp components
-  mpConfiguration, mpLoader, mpProfilePanel;
+  mpConfiguration, mpLoader, mpProfilePanel, System.ImageList;
 
 type
   TProfileForm = class(TForm)
