@@ -1053,10 +1053,9 @@ begin
       Key := #0;
     end;
   end
-  else begin
 
-    // Restart buffering if we didn't have an active buffer
-    // or press space
+  // Restart buffering if we didn't have an active buffer
+  else begin
     fLastBufferTime := Now;
     sTempBuffer := Key;
     PluginsListView.ClearSelection;
