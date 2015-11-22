@@ -372,38 +372,33 @@ end;
 
 procedure TMergeForm.WMSize(var AMessage: TMessage);
 begin
-  if not bCreated then
-    exit;
-  if Now - LastMessageTime < MessageDelay then
-    exit;
-  LastMessageTime := Now;
-  if (AMessage.WParam <> SIZE_MINIMIZED) then
-    DisplayHints;
+  if bCreated and (Now - LastMessageTime > MessageDelay) then begin
+    LastMessageTime := Now;
+    if (AMessage.WParam <> SIZE_MINIMIZED) then
+      DisplayHints;
+  end;
   inherited;
 end;
 
 procedure TMergeForm.WMMove(var AMessage: TMessage);
 begin
-  if not bCreated then
-    exit;
-  if Now - LastMessageTime < MessageDelay then
-    exit;
-  LastMessageTime := Now;
-  DisplayHints;
+  if bCreated and (Now - LastMessageTime > MessageDelay) then begin
+    LastMessageTime := Now;
+    if (AMessage.WParam <> SIZE_MINIMIZED) then
+      DisplayHints;
+  end;
   inherited;
 end;
 
 procedure TMergeForm.WMActivateApp(var AMessage: TMessage);
 begin
-  if not bCreated then
-    exit;
-  if Now - LastMessageTime < MessageDelay then
-    exit;
-  LastMessageTime := Now;
-  if AMessage.WParam = 1 then
-    DisplayHints
-  else
-    HideHints;
+  if bCreated and (Now - LastMessageTime > MessageDelay) then begin
+    LastMessageTime := Now;
+    if AMessage.WParam = 1 then
+      DisplayHints
+    else
+      HideHints;
+  end;
   inherited;
 end;
 
