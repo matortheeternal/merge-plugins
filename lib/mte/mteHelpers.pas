@@ -56,6 +56,7 @@ type
   function GetVersionMem: string;
   function FileVersion(const FileName: string): String;
   procedure DeleteDirectory(const path: string);
+  procedure PerformFileSystemTests(sBasePath: string);
   { GUI Helper Functions }
   procedure ListView_CorrectWidth(var lv: TListView);
   function ListView_NextMatch(ListView: TListView; sSearch: string;
@@ -917,6 +918,69 @@ begin
   ShOp.pTo := nil;
   ShOp.fFlags := FOF_NOCONFIRMATION or FOF_ALLOWUNDO or FOF_NO_UI;
   SHFileOperation(ShOp);
+end;
+
+{ Performs tests of directory creation and deletion, and file creation,
+  reading, writing, and deletion at the specified @sBasePath }
+procedure PerformFileSystemTests(sBasePath: string);
+var
+  sl1, sl2: TStringList;
+  sExceptionBase, sPath, sTask: string;
+begin
+  // initialize stringlists
+  sl1 := TStringList.Create;
+  sl2 := TStringList.Create;
+  sExceptionBase := 'Could not %s at path "%s"';
+
+  try
+    // try to create a new directory
+    sTask := 'create directory';
+    sPath := sBasePath + 'test\';
+    ForceDirectories(sPath);
+    if not DirectoryExists(sPath) then
+      raise Exception.Create(Format(sExceptionBase, [sTask, sPath]));
+
+    // try to create a new file
+    sTask := 'create file';
+    sPath := sBasePath + 'test\Test.txt';
+    sl1.Text := sBasePath;
+    sl1.SaveToFile(sPath);
+
+    // if file doesn't exist after saving, raise an exception
+    if not FileExists(sPath) then
+      raise Exception.Create(Format(sExceptionBase, [sTask, sPath]));
+
+    // try to read the file
+    sTask := 'read file';
+    sl2.LoadFromFile(sPath);
+    if sl2.Text <> sl1.Text then
+      raise Exception.Create(Format(sExceptionBase, [sTask, sPath]));
+
+    // try to write to the file
+    sTask := 'write to file';
+    sl1.Text := 'Testing 123abc';
+    sl1.SaveToFile(sPath);
+    sl2.LoadFromFile(sPath);
+    if sl2.Text <> sl1.Text then
+      raise Exception.Create(Format(sExceptionBase, [sTask, sPath]));
+
+    // try to delete the file
+    sTask := 'delete file';
+    DeleteFile(sPath);
+    if FileExists(sPath) then
+      raise Exception.Create(Format(sExceptionBase, [sTask, sPath]));
+
+    // try to delete the directory
+    sTask := 'delete directory';
+    sPath := sBasePath + 'test\';
+    DeleteDirectory(sPath);
+    if DirectoryExists(sPath) then
+      raise Exception.Create(Format(sExceptionBase, [sTask, sPath]));
+  finally
+    // always free memory
+    sl1.Free;
+    sl2.Free;
+  end;
 end;
 
 

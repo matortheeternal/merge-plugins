@@ -67,6 +67,7 @@ type
         kbDebugBatchCopying: TCheckBox;
         kbDebugBSAs: TCheckBox;
         kbDebugScriptFragments: TCheckBox;
+        btnVerifyAccess: TButton;
       [FormSection('Advanced Tab')]
         AdvancedTabSheet: TTabSheet;
         gbMergeProfile: TGroupBox;
@@ -148,6 +149,7 @@ type
     procedure searchForNexusModManager;
     procedure searchForModOrganizer;
     procedure btnDetectClick(Sender: TObject);
+    procedure btnVerifyAccessClick(Sender: TObject);
     procedure edBsaOptPathExit(Sender: TObject);
     procedure kbExtractBSAsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -266,6 +268,44 @@ begin
     edBsaOptPath.Text := path;
     edBsaOptPathExit(nil);
   end;
+end;
+
+{ Verifies the application has full read/write access on the user's
+  filesystem. }
+procedure TOptionsForm.btnVerifyAccessClick(Sender: TObject);
+var
+  sFailed, sPathName, sTestPath: string;
+begin
+  // prepare failure message
+  sFailed := 'Failed.  Insufficient permissions at %s.'#13#10+
+    'Path: %s'#13#10+
+    'Exception: %s';
+    
+  // test paths
+  try
+    // test temp path
+    sPathName := 'Temporary Path';
+    sTestPath := PathList.Values['TempPath'];
+    PerformFileSystemTests(sTestPath);
+
+    // test program path
+    sPathName := 'Program Path';
+    sTestPath := PathList.Values['ProgramPath'];
+    PerformFileSystemTests(sTestPath);
+
+    // test merge directory 
+    sPathName := 'Merge Destination Directory';
+    sTestPath := edMergeDirectory.Text;
+    PerformFileSystemTests(sTestPath);
+  except
+    on x: Exception do begin
+      ShowMessage(Format(sFailed, [sPathName, sTestPath, x.Message]));
+      exit;
+    end;
+  end;
+
+  // all tests passed, yippee!
+  ShowMessage('Merge Plugins has the required file system access permissions.');
 end;
 
 procedure TOptionsForm.searchForNexusModManager;

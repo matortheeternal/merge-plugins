@@ -31,10 +31,6 @@ object OptionsForm: TOptionsForm
     TabWidth = 80
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbStyle: TGroupBox
         Left = 6
         Top = 163
@@ -291,10 +287,6 @@ object OptionsForm: TOptionsForm
     object MergingTabSheet: TTabSheet
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetHandling: TGroupBox
         Left = 6
         Top = 6
@@ -491,14 +483,20 @@ object OptionsForm: TOptionsForm
           TabOrder = 7
         end
       end
+      object btnVerifyAccess: TButton
+        Left = 424
+        Top = 330
+        Width = 130
+        Height = 25
+        Margins.Right = 6
+        Caption = 'Verify file access'
+        TabOrder = 2
+        OnClick = btnVerifyAccessClick
+      end
     end
     object AdvancedTabSheet: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbBackend: TGroupBox
         Left = 6
         Top = 72
@@ -780,10 +778,6 @@ object OptionsForm: TOptionsForm
     object IntegrationsTabSheet: TTabSheet
       Caption = 'Integrations'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbModManager: TGroupBox
         Left = 6
         Top = 6
@@ -1014,9 +1008,9 @@ object OptionsForm: TOptionsForm
         end
       end
       object btnDetect: TButton
-        Left = 408
+        Left = 424
         Top = 330
-        Width = 146
+        Width = 130
         Height = 25
         Margins.Right = 6
         Caption = 'Detect Integrations'
@@ -1052,7 +1046,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800340110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008003C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
