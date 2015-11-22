@@ -202,7 +202,7 @@ const
 var
   Dictionary, Blacklist, MergesList: TList;
   pluginsToHandle, mergesToBuild: TList;
-  ActiveMods, timeCosts: TStringList;
+  ActiveMods: TStringList;
   ActiveModProfile, xEditLogGroup, xEditLogLabel, DictionaryFilename: string;
 
 implementation
@@ -417,7 +417,7 @@ end;
 
 function TPlugin.HasBeenCheckedForErrors: boolean;
 begin
-  Result := errors.Count > 0;
+  Result := Assigned(errors) and (errors.Count > 0);
 end;
 
 function TPlugin.HasErrors: boolean;

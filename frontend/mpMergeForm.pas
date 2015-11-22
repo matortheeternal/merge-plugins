@@ -582,9 +582,9 @@ begin
   SetForegroundWindow(Application.Handle);
 
   // free lists
-  if Assigned(timeCosts) then timeCosts.Free;
-  if Assigned(pluginsToHandle) then pluginsToHandle.Free;
-  if Assigned(mergesToBuild) then mergesToBuild.Free;
+  TryToFree(timeCosts);
+  TryToFree(pluginsToHandle);
+  TryToFree(mergesToBuild);
 
   // update merges and gui
   UpdateListViews;

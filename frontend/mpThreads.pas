@@ -49,7 +49,7 @@ implementation
 uses
   Controls, SysUtils, shlObj, Dialogs,
   // mte units
-  mteBase, mteLogger, mteTracker,
+  mteBase, mteLogging, mteLogger, mteTracker,
   // mp units
   mpCore, mpConfiguration, mpLoader, mpMerge, mpClient,
   // xedit units

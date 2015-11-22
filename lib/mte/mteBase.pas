@@ -178,8 +178,6 @@ begin
   plugin := TBasePlugin.Create;
   plugin.filename := filename;
   plugin._File := aFile;
-  list.Add(plugin);
-
   Result := plugin;
 end;
 
