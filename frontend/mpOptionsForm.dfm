@@ -24,11 +24,12 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = GeneralTabSheet
+    ActivePage = IntegrationsTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     TabWidth = 80
+    OnChange = SettingsPageControlChange
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
       object gbStyle: TGroupBox

@@ -162,9 +162,11 @@ begin
   updateDictionary := false;
   updateProgram := false;
   usingMO := false;
+  usingNMM := false;
   ManagerPath := '';
+  ModsPath := '';
   copyGeneralAssets := false;
-  mergeDirectory := '';//wbDataPath;
+  mergeDirectory := PathList.Values['ProgramPath'] + 'merges\';
   handleFaceGenData := true;
   handleVoiceAssets := true;
   handleMCMTranslations := true;

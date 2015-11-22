@@ -132,6 +132,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure LoadLanguageOptions;
     procedure btnOKClick(Sender: TObject);
+    procedure SettingsPageControlChange(Sender: TObject);
+    function BSAOptIntegrationValid: boolean;
+    function PapyrusIntegrationValid: boolean;
     procedure btnBrowseAssetDirectoryClick(Sender: TObject);
     procedure btnBrowseManagerClick(Sender: TObject);
     procedure kbUsingNMMClick(Sender: TObject);
@@ -460,6 +463,43 @@ begin
 
   SaveSettings;
 end;
+
+procedure TOptionsForm.SettingsPageControlChange(Sender: TObject);
+var
+  iIndex: integer;
+begin
+  iIndex := TPageControl(Sender).ActivePageIndex;
+  if iIndex = 1 then begin
+    // Handle Script Fragments is available only when 
+    // the papyrus integration is set up correctly
+    kbFragments.Enabled := PapyrusIntegrationValid;
+    if not kbFragments.Enabled then
+      kbFragments.Checked := false;  
+      
+    // Build Merged BSA is available only when  the 
+    // BSAOpt integration is set up correctly
+    kbBuildBSA.Enabled := BSAOptIntegrationValid; 
+    if not kbBuildBSA.Enabled then
+      kbBuildBSA.Checked := false;
+  end;
+end;    
+
+function TOptionsForm.BSAOptIntegrationValid: boolean;
+begin
+  Result := (edBSAOptPath.Text <> '') 
+    and (FileExists(edBSAOptPath.Text))
+    and (edBSAOptOptions.Text <> '');
+end; 
+
+function TOptionsForm.PapyrusIntegrationValid: boolean;
+begin
+  Result := (edDecompilerPath.Text <> '')
+    and (FileExists(edDecompilerPath.Text))
+    and (edCompilerPath.Text <> '')
+    and (FileExists(edCompilerPath.Text))
+    and (edFlagsPath.Text <> '')
+    and (FileExists(edFlagsPath.Text));
+end; 
 
 procedure TOptionsForm.btnRegisterClick(Sender: TObject);
 begin
