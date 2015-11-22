@@ -49,7 +49,7 @@ implementation
 uses
   Controls, SysUtils, shlObj, Dialogs,
   // mte units
-  mteBase, mteLogger, mteTracker,
+  mteBase, mteLogging, mteLogger, mteTracker,
   // mp units
   mpCore, mpConfiguration, mpLoader, mpMerge, mpClient,
   // xedit units
@@ -96,7 +96,7 @@ begin
       try
         plugin := TPlugin.Create;
         plugin.filename := slPlugins[i];
-        plugin._File := wbFile(wbDataPath + slPlugins[i], i);
+        plugin._File := wbFile(wbDataPath + slPlugins[i], i, '', false, false);
         plugin._File._AddRef;
         plugin.GetMpData;
         PluginsList.Add(Pointer(plugin));

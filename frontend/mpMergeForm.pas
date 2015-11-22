@@ -169,6 +169,7 @@ type
       flags: string);
     procedure PluginsListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
+    procedure PluginsListViewKeyPress(Sender: TObject; var Key: Char);
     procedure PluginsListViewMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     // PLUGINS POPUP MENU EVENTS
@@ -194,8 +195,7 @@ type
     procedure MergesListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
     procedure MergesListViewDblClick(Sender: TObject);
-    procedure MergesListViewKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure MergesListViewKeyPress(Sender: TObject; var Key: Char);
     // MERGES POPUP MENU EVENTS
     procedure MergesPopupMenuPopup(Sender: TObject);
     procedure EditMergeItemClick(Sender: TObject);
@@ -241,11 +241,18 @@ type
     procedure WMActivateApp(var AMessage: TMessage); message WM_ACTIVATEAPP;
   private
     { Private declarations }
+    fLastBufferTime: TDateTime;
+    sBuffer: string;
   public
     { Public declarations }
   end;
 
 const
+  // delay for clearing keystroke buffer when
+  // performing a text search on a list view
+  fBufferDelay = 1.1 * seconds;
+  // delay for detecting WMMessages and
+  // re-displaying hints
   MessageDelay = (0.1 / 86400.0);
 
 var
@@ -290,7 +297,7 @@ begin
   end;
   // correct width if active
   if bLogActive then
-    CorrectListViewWidth(LogListView);
+    ListView_CorrectWidth(LogListView);
 end;
 
 { Prints a message to the log }
@@ -476,8 +483,8 @@ begin
     TLoaderThread.Create;
 
     // CORRECT LIST VIEW WIDTHS
-    CorrectListViewWidth(MergesListView);
-    CorrectListViewWidth(PluginsListView);
+    ListView_CorrectWidth(MergesListView);
+    ListView_CorrectWidth(PluginsListView);
 
     // LOAD AND DISPLAY HINTS
     StatusPanelMessage.Caption := GetLanguageString('mpMain_LoaderInProgress');
@@ -575,9 +582,9 @@ begin
   SetForegroundWindow(Application.Handle);
 
   // free lists
-  if Assigned(timeCosts) then timeCosts.Free;
-  if Assigned(pluginsToHandle) then pluginsToHandle.Free;
-  if Assigned(mergesToBuild) then mergesToBuild.Free;
+  TryToFree(timeCosts);
+  TryToFree(pluginsToHandle);
+  TryToFree(mergesToBuild);
 
   // update merges and gui
   UpdateListViews;
@@ -759,15 +766,15 @@ begin
   case ndx of
     0: begin
       UpdatePluginDetails;
-      CorrectListViewWidth(PluginsListView);
+      ListView_CorrectWidth(PluginsListView);
     end;
     1: begin
       UpdateMergeDetails;
-      CorrectListViewWidth(MergesListView);
+      ListView_CorrectWidth(MergesListView);
     end;
     2: begin
       UpdateApplicationDetails;
-      CorrectListViewWidth(LogListView);
+      ListView_CorrectWidth(LogListView);
     end;
   end;
 end;
@@ -1024,6 +1031,46 @@ begin
       DrawPluginFlags(ListView.Canvas, R, x, y, Item.SubItems[i])
     else
       ListView.Canvas.TextRect(R, x, y, Item.SubItems[i]);
+  end;
+end;
+
+{ Type to search for plugins. }
+procedure TMergeForm.PluginsListViewKeyPress(Sender: TObject; var Key: Char);
+var
+  iFoundIndex: Integer;
+  fBufferDiff: Real;
+  sTempBuffer: string;
+begin
+  // Calculate time between current keystroke and last
+  // keystroke we buffered
+  fBufferDiff := Now - fLastBufferTime;
+
+  // If we are within the buffer delay append the key to a
+  // temporary buffer and search for next item matching the
+  // buffer in the list view items.
+  if fBufferDiff < fBufferDelay then begin
+    fLastBufferTime := Now;
+    sTempBuffer := sBuffer + Key;
+    iFoundIndex := ListView_NextMatch(PluginsListView, sTempBuffer, 1);
+    // If we found a match, handle it
+    if iFoundIndex > -1 then begin
+      ListView_HandleMatch(PluginsListView, iFoundIndex, sBuffer, sTempBuffer);
+      Key := #0;
+    end;
+  end
+  else begin
+
+    // Restart buffering if we didn't have an active buffer
+    // or press space
+    fLastBufferTime := Now;
+    sTempBuffer := Key;
+    PluginsListView.ClearSelection;
+    iFoundIndex := ListView_NextMatch(PluginsListView, sTempBuffer, 1);
+    // If we found a match, handle it
+    if iFoundIndex > -1 then begin
+      ListView_HandleMatch(PluginsListView, iFoundIndex, sBuffer, sTempBuffer);
+      Key := #0;
+    end;
   end;
 end;
 
@@ -1703,7 +1750,7 @@ begin
   LogListView.Items.Count := 0;
   RebuildLog;
   LogListView.Items.Count := Log.Count;
-  CorrectListViewWidth(LogListView);
+  ListView_CorrectWidth(LogListView);
 end;
 
 // toggles a label filter for the LogListView
@@ -1718,7 +1765,7 @@ begin
   LogListView.Items.Count := 0;
   RebuildLog;
   LogListView.Items.Count := Log.Count;
-  CorrectListViewWidth(LogListView);
+  ListView_CorrectWidth(LogListView);
 end;
 
 // toggles auto scroll for the LogListView
@@ -2394,12 +2441,50 @@ begin
   EditMergeItemClick(nil);
 end;
 
-{ Shortcut to delete merges using the delete key }
-procedure TMergeForm.MergesListViewKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+{ Type to search for merges.  Also handles deleting merges with
+  the delete key. }
+procedure TMergeForm.MergesListViewKeyPress(Sender: TObject; var Key: Char);
+var
+  iFoundIndex: Integer;
+  fBufferDiff: Real;
+  sTempBuffer: string;
 begin
-  if HiWord(GetKeyState(vk_Delete)) <> 0 then
-    DeleteMergeItemClick(nil);
+  // Calculate time between current keystroke and last
+  // keystroke we buffered
+  fBufferDiff := Now - fLastBufferTime;
+
+  // If we are within the buffer delay append the key to a
+  // temporary buffer and search for next item matching the
+  // buffer in the list view items.
+  if fBufferDiff < fBufferDelay then begin
+    fLastBufferTime := Now;
+    sTempBuffer := sBuffer + Key;
+    iFoundIndex := ListView_NextMatch(MergesListView, sTempBuffer, 1);
+    // If we found a match, handle it
+    if iFoundIndex > -1 then begin
+      ListView_HandleMatch(MergesListView, iFoundIndex, sBuffer, sTempBuffer);
+      Key := #0;
+    end;
+  end
+  else begin
+    // Shortcut to delete merges using the delete key
+    if HiWord(GetKeyState(vk_Delete)) <> 0 then begin
+      DeleteMergeItemClick(nil);
+      Key := #0;
+      exit;
+    end;
+
+    // Restart buffering if we didn't have an active buffer
+    fLastBufferTime := Now;
+    sTempBuffer := Key;
+    MergesListView.ClearSelection;
+    iFoundIndex := ListView_NextMatch(MergesListView, sTempBuffer, 1);
+    // If we found a match, handle it
+    if iFoundIndex > -1 then begin
+      ListView_HandleMatch(MergesListView, iFoundIndex, sBuffer, sTempBuffer);
+      Key := #0;
+    end;
+  end;
 end;
 
 {******************************************************************************}

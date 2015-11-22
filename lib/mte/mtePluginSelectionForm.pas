@@ -33,13 +33,9 @@ type
     procedure ToggleAllItemClick(Sender: TObject);
     procedure lvPluginsMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure lvPluginsKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
     procedure lvPluginsChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
-    function GetMasterStatus(filename: string): Integer;
-    procedure lvPluginsData(Sender: TObject; Item: TListItem);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure lvPluginsKeyPress(Sender: TObject; var Key: Char);
     procedure DrawCheckbox(aCanvas: TCanvas; var x, y: Integer; state: Integer);
     procedure DrawSubItems(ListView: TListView; var R: TRect; Item: TListItem);
     procedure DrawItem(ListView: TListView; var R: TRect; Item: TListItem);
@@ -47,11 +43,16 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure lvPluginsMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    function GetMasterStatus(filename: string): Integer;
+    procedure lvPluginsData(Sender: TObject; Item: TListItem);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
     slMasters, slDependencies: TStringList;
     ListItems: TList;
-    LastHint: string;
+    sLastHint: string;
+    sBuffer: string;
+    fLastBufferTime: TDateTime;
   public
     { Public declarations }
     GetPluginInfo: TStringFunction;
@@ -70,8 +71,13 @@ uses
   mteHelpers;
 
 const
+  // delay for clearing keystroke buffer when
+  // performing a text search on a list view
+  fBufferDelay = 1.1 * seconds;
+  // checkbox states
   cChecked = 1;
   cUnChecked = 2;
+  // master states
   msNone = 0;
   msMaster = 1;
   msDependency = 2;
@@ -262,25 +268,57 @@ begin
   DrawSubItems(ListView, Rect, Item);
 end;
 
-
-procedure TPluginSelectionForm.lvPluginsKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TPluginSelectionForm.lvPluginsKeyPress(Sender: TObject;
+  var Key: Char);
 var
-  i: Integer;
+  i, iFoundIndex: Integer;
   ListItem: TListItem;
+  fBufferDiff: Real;
+  sTempBuffer: string;
 begin
-  // allow user to use space to toggle checkbox state
-  // for all selected items
-  if Key = VK_SPACE then begin
-    for i := 0 to Pred(lvPlugins.Items.Count) do begin
-      ListItem := lvPlugins.Items[i];
-      if ListItem.Selected then
-        ToggleState(TPluginListItem(ListItems[i]));
+  // Calculate time between current keystroke and last
+  // keystroke we buffered
+  fBufferDiff := Now - fLastBufferTime;
+
+  // If we are within the buffer delay append the key to a
+  // temporary buffer and search for next item matching the
+  // buffer in the list view items.
+  if fBufferDiff < fBufferDelay then begin
+    fLastBufferTime := Now;
+    sTempBuffer := sBuffer + Key;
+    iFoundIndex := ListView_NextMatch(lvPlugins, sTempBuffer, 0);
+    // If we found a match, handle it
+    if iFoundIndex > -1 then begin
+      ListView_HandleMatch(lvPlugins, iFoundIndex, sBuffer, sTempBuffer);
+      Key := #0;
+    end;
+  end
+  else begin
+    // Allow user to use space to toggle checkbox state
+    // for all selected items
+    if Key = ' ' then begin
+      for i := 0 to Pred(lvPlugins.Items.Count) do begin
+        ListItem := lvPlugins.Items[i];
+        if ListItem.Selected then
+          ToggleState(TPluginListItem(ListItems[i]));
+      end;
+      // repaint to show updated checkbox state and exit
+      lvPlugins.Repaint;
+      exit;
+    end;
+
+    // Restart buffering if we didn't have an active buffer
+    // or press space
+    fLastBufferTime := Now;
+    sTempBuffer := Key;
+    lvPlugins.ClearSelection;
+    iFoundIndex := ListView_NextMatch(lvPlugins, sTempBuffer, 0);
+    // If we found a match, handle it
+    if iFoundIndex > -1 then begin
+      ListView_HandleMatch(lvPlugins, iFoundIndex, sBuffer, sTempBuffer);
+      Key := #0;
     end;
   end;
-
-  // repaint to show updated checkbox state
-  lvPlugins.Repaint;
 end;
 
 function OnStateIcon(X, Y: Integer): Boolean;
@@ -341,8 +379,8 @@ begin
   hint := Trim(hint);
 
   // activate hint if it differs from previously displayed hint
-  if (hint <> LastHint) then begin
-    LastHint := hint;
+  if (hint <> sLastHint) then begin
+    sLastHint := hint;
     lvPlugins.Hint := hint;
     Application.ActivateHint(Mouse.CursorPos);
   end;
@@ -399,7 +437,7 @@ begin
 
   // set plugin count for display
   lvPlugins.Items.Count := slAllPlugins.Count;
-  CorrectListViewWidth(lvPlugins);
+  ListView_CorrectWidth(lvPlugins);
 end;
 
 procedure TPluginSelectionForm.CheckAllItemClick(Sender: TObject);
