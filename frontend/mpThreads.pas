@@ -96,7 +96,7 @@ begin
       try
         plugin := TPlugin.Create;
         plugin.filename := slPlugins[i];
-        plugin._File := wbFile(wbDataPath + slPlugins[i], i);
+        plugin._File := wbFile(wbDataPath + slPlugins[i], i, '', false, false);
         plugin._File._AddRef;
         plugin.GetMpData;
         PluginsList.Add(Pointer(plugin));

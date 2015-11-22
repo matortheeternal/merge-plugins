@@ -43,10 +43,9 @@ object PluginSelectionForm: TPluginSelectionForm
     OnChange = lvPluginsChange
     OnData = lvPluginsData
     OnDrawItem = lvPluginsDrawItem
-    OnKeyDown = lvPluginsKeyDown
+    OnKeyPress = lvPluginsKeyPress
     OnMouseDown = lvPluginsMouseDown
     OnMouseMove = lvPluginsMouseMove
-    ExplicitWidth = 500
   end
   object btnCancel: TButton
     Left = 421
@@ -58,7 +57,6 @@ object PluginSelectionForm: TPluginSelectionForm
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
-    ExplicitLeft = 433
   end
   object btnOK: TButton
     Left = 340
@@ -71,7 +69,6 @@ object PluginSelectionForm: TPluginSelectionForm
     ModalResult = 1
     TabOrder = 2
     OnClick = btnOKClick
-    ExplicitLeft = 352
   end
   object PluginsPopupMenu: TPopupMenu
     Left = 48
@@ -95,7 +92,7 @@ object PluginSelectionForm: TPluginSelectionForm
     Left = 136
     Top = 24
     Bitmap = {
-      494C010103003400440011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103003400480011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000440000001100000001002000000000001012
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

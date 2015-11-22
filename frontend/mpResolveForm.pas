@@ -221,10 +221,10 @@ begin
   tsOtherIssues.TabVisible := bOtherIssues;
 
   // correct list view widths
-  CorrectListViewWidth(lvBrokenDependencies);
-  CorrectListViewWidth(lvNonContiguous);
-  CorrectListViewWidth(lvPluginErrors);
-  CorrectListViewWidth(lvOtherIssues);
+  ListView_CorrectWidth(lvBrokenDependencies);
+  ListView_CorrectWidth(lvNonContiguous);
+  ListView_CorrectWidth(lvPluginErrors);
+  ListView_CorrectWidth(lvOtherIssues);
 end;
 
 procedure TResolveForm.FormShow(Sender: TObject);

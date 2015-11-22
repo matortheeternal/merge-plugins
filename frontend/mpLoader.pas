@@ -180,6 +180,7 @@ begin
     exit;
   slPlugins.Text := psForm.slCheckedPlugins.Text;
   psForm.Free;
+  wbFileForceClosed;
   FreeList(HeaderList);
 
   // ALL DONE

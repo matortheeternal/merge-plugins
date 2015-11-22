@@ -53,10 +53,17 @@ type
   procedure CopyDirectory(src, dst: string; fIgnore, dIgnore: TStringList);
   procedure GetFilesList(path: string; var fIgnore, dIgnore, list: TStringList);
   procedure CopyFiles(src, dst: string; var list: TStringList);
-  procedure CorrectListViewWidth(var lv: TListView);
   function GetVersionMem: string;
   function FileVersion(const FileName: string): String;
   procedure DeleteDirectory(const path: string);
+  { GUI Helper Functions }
+  procedure ListView_CorrectWidth(var lv: TListView);
+  function ListView_NextMatch(ListView: TListView; sSearch: string;
+    iIndex: Integer): Integer;
+  procedure ListView_HandleMatch(ListView: TListView; iFoundIndex: Integer;
+    var sBuffer: string; sTempBuffer: string);
+
+
 
 const
   wndBorderSide = 8;
@@ -827,37 +834,6 @@ begin
   end;
 end;
 
-{ Fixes @lv's width to fit client width if it has autosizable columns,
-  which resolves an issue where autosize doesn't work on virtual vsReport
-  TListViews when a scroll bar becomes visible. }
-procedure CorrectListViewWidth(var lv: TListView);
-var
-  i, w: Integer;
-  col: TListColumn;
-  AutoSizedColumns: TList;
-begin
-  AutoSizedColumns := TList.Create;
-  w := lv.ClientWidth;
-
-  // loop through columns keeping track of remaining width
-  for i := 0 to Pred(lv.Columns.Count) do begin
-    col := lv.Columns[i];
-    if col.AutoSize then
-      AutoSizedColumns.Add(col)
-    else
-      Dec(w, ListView_GetColumnWidth(lv.Handle, i));
-  end;
-
-  // set auotsized columns to fit client width
-  for i := 0 to Pred(AutoSizedColumns.Count) do begin
-    col := TListColumn(AutoSizedColumns[i]);
-    col.Width := w div AutoSizedColumns.Count;
-  end;
-
-  // clean up
-  AutoSizedColumns.Free;
-end;
-
 { Get program version from memory }
 function GetVersionMem: string;
 var
@@ -941,6 +917,96 @@ begin
   ShOp.pTo := nil;
   ShOp.fFlags := FOF_NOCONFIRMATION or FOF_ALLOWUNDO or FOF_NO_UI;
   SHFileOperation(ShOp);
+end;
+
+
+{******************************************************************************}
+{ GUI Helper Functions
+  - ListView_CorrectWidth
+  - ListView_FindNextMatch
+  - ListView_HandleMatch
+}
+{******************************************************************************}
+
+{ Fixes @lv's width to fit client width if it has autosizable columns,
+  which resolves an issue where autosize doesn't work on virtual vsReport
+  TListViews when a scroll bar becomes visible. }
+procedure ListView_CorrectWidth(var lv: TListView);
+var
+  i, w: Integer;
+  col: TListColumn;
+  AutoSizedColumns: TList;
+begin
+  AutoSizedColumns := TList.Create;
+  w := lv.ClientWidth;
+
+  // loop through columns keeping track of remaining width
+  for i := 0 to Pred(lv.Columns.Count) do begin
+    col := lv.Columns[i];
+    if col.AutoSize then
+      AutoSizedColumns.Add(col)
+    else
+      Dec(w, ListView_GetColumnWidth(lv.Handle, i));
+  end;
+
+  // set auotsized columns to fit client width
+  for i := 0 to Pred(AutoSizedColumns.Count) do begin
+    col := TListColumn(AutoSizedColumns[i]);
+    col.Width := w div AutoSizedColumns.Count;
+  end;
+
+  // clean up
+  AutoSizedColumns.Free;
+end;
+
+{ If @iIndex = 0, returns the index of the next @ListView item
+  matching the input @sSearch string.  Else returns the index
+  of the next @ListView subitem at index @iIndex - 1 matching
+  the input @sSearch string. }
+function ListView_NextMatch(ListView: TListView; sSearch: string;
+  iIndex: Integer): Integer;
+var
+  i, iStart: Integer;
+  ListItem: TListITem;
+  sCaption, sCompare: string;
+begin
+  Result := -1;
+
+  // Start at selected item's index, if there
+  // is an item selected
+  if Assigned(ListView.Selected) then
+    iStart := ListView.Selected.Index
+  // Else start at 0, the first item
+  else
+    iStart := 0;
+
+  // Loop through items looking for a match
+  for i := iStart to Pred(ListView.Items.Count) do begin
+    ListItem := ListView.Items[i];
+    if iIndex = 0 then
+      sCaption := ListItem.Caption
+    else
+      sCaption := ListItem.SubItems[iIndex - 1];
+    sCompare := Copy(sCaption, 1, Length(sSearch));
+    if SameText(sSearch, sCompare) then begin
+      Result := i;
+      break;
+    end;
+  end;
+end;
+
+{ Sets @sBuffer to @sTempBuffer, then selects and jumps to the item
+  at @iFoundIndex in @ListView }
+procedure ListView_HandleMatch(ListView: TListView; iFoundIndex: Integer;
+  var sBuffer: string; sTempBuffer: string);
+begin
+  // Set the actual buffer to our temporary buffer
+  // and jump to the item we found
+  sBuffer := sTempBuffer;
+  if Assigned(ListView.Selected) then
+    ListView.ClearSelection;
+  ListView.Selected := ListView.Items[iFoundIndex];
+  ListView.Items[iFoundIndex].MakeVisible(false);
 end;
 
 end.
