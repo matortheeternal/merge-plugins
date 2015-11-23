@@ -64,8 +64,6 @@ type
   procedure ListView_HandleMatch(ListView: TListView; iFoundIndex: Integer;
     var sBuffer: string; sTempBuffer: string);
 
-
-
 const
   wndBorderSide = 8;
   wndBorderTop = 30;
@@ -516,14 +514,20 @@ end;
 }
 {******************************************************************************}
 
-{ Forces a hWnd to the foreground }
+{
+  ForceForeground:
+  Forces a hWnd to the foreground.
+}
 procedure ForceForeground(hWnd: THandle);
 begin
   SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOMOVE);
   SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOMOVE);
 end;
 
-{ Tries to load various registry keys }
+{
+  TryRegistryKeys:
+  Tries to load various registry keys.
+}
 function TryRegistryKeys(var keys: TStringList): string;
 var
   i: Integer;
@@ -547,14 +551,20 @@ begin
   end;
 end;
 
-{ Returns true if the input filename is valid }
+{
+  FileNameValid:
+  Returns true if the input filename is valid.
+}
 function FileNameValid(filename: string): boolean;
 begin
   Result := (Length(Trim(filename)) > 0) and
     TPath.HasValidFileNameChars(filename, false);
 end;
 
-{ Create a new synchronous or asynchronous process }
+{
+  ExecNewProcess:
+  Create a new synchronous or asynchronous process.
+}
 procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
 var
   StartInfo : TStartupInfo;
@@ -582,8 +592,11 @@ begin
   CloseHandle(ProcInfo.hThread);
 end;
 
-{ Links a file selection through a TOpenDialog to the text stored in @ed,
-  applying filter @filter }
+{
+  BrowseForFile:
+  Links a file selection through a TOpenDialog to the text stored in @ed,
+  applying filter @filter.
+}
 procedure BrowseForFile(var ed: TEdit; filter, initDir: string);
 var
   openDialog: TOpenDialog;
@@ -602,8 +615,11 @@ begin
     ed.Text := openDialog.FileName;
 end;
 
-{ Links a file selection through a TOpenDialog to the text stored in @ed,
-  applying filter @filter }
+{
+  BrowseForFolder:
+  Links a file selection through a TOpenDialog to the text stored in @ed,
+  applying filter @filter
+}
 procedure BrowseForFolder(var ed: TEdit; initDir: string);
 var
   s: string;
@@ -621,7 +637,10 @@ begin
     ed.Text := AppendIfMissing(s, '\');
 end;
 
-{ Gets a folder by its integer CSID. }
+{
+  GetCSIDLShellFolder:
+  Gets a folder by its integer CSID.
+}
 function GetCSIDLShellFolder(CSIDLFolder: integer): string;
 begin
   SetLength(Result, MAX_PATH);
@@ -631,7 +650,10 @@ begin
     Result := IncludeTrailingBackslash(Result);
 end;
 
-{ Gets the size of a file at @aFilename through the windows API }
+{
+  GetFileSize:
+  Gets the size of a file at @aFilename through the windows API.
+}
 function GetFileSize(const aFilename: String): Int64;
 var
   info: TWin32FileAttributeData;
@@ -644,7 +666,10 @@ begin
   result := Int64(info.nFileSizeLow) or Int64(info.nFileSizeHigh shl 32);
 end;
 
-{ Gets the last time a file was modified }
+{
+  GetLastModified:
+  Gets the last time a file was modified.
+}
 function GetLastModified(const aFileName: String): TDateTime;
 var
   info: TWin32FileAttributeData;
@@ -668,8 +693,8 @@ begin
   Result := SystemTimeToDateTime(LocalTime);
 end;
 {
-  MultFileSearch: Wraps around RecursiveFileSearch, allowing the searching of
-  multiple paths.
+  MultFileSearch:
+  Wraps around RecursiveFileSearch, allowing the searching of multiple paths.
 }
 function MultFileSearch(paths, filenames, ignore: array of string; maxDepth: integer): string;
 var
