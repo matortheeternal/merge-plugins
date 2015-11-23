@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
   // mte units
-  mteBase, mteLogger, RttiTranslation,
+  mteHelpers, mteBase, mteLogger, RttiTranslation,
   // mp units
   mpConfiguration, mpCore;
 
@@ -36,6 +36,7 @@ type
     procedure edFilenameKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
+    procedure edFilenameEnter(Sender: TObject);
   private
     { Private declarations }
   public
@@ -62,29 +63,44 @@ end;
 
 function TEditForm.NameValid: boolean;
 var
-  mergeExists: boolean;
+  aMerge: TMerge;
   i: integer;
 begin
-  // check if merge exists
-  mergeExists := false;
-  for i := 0 to Pred(MergesList.Count) do
-    if (TMerge(MergesList[i]).name = edName.Text)
-    and (TMerge(MergesList[i]) <> merge) then begin
-      mergeExists := true;
-      break;
-    end;
+  Result := false;
 
-  // invalid if filename is blank or mergeExists
-  Result := not ((edName.Text = '') or mergeExists);
+  // return false if edName is blank
+  if Trim(edName.Text) = '' then
+    exit;
+
+  // return false if merge with specified name already exists
+  for i := 0 to Pred(MergesList.Count) do begin
+    aMerge := TMerge(MergesList[i]);
+    if (aMerge.name = edName.Text) and (aMerge <> merge) then
+      exit;
+  end;
+
+  // all tests passed, return true
+  Result := true;
 end;
 
 function TEditForm.FilenameValid: boolean;
 var
-  loadOrderError, mergeExists: boolean;
+  aMerge: TMerge;
   plugin: TPlugin;
   loadOrder, highLoadOrder, i: integer;
   sFilename: string;
 begin
+  Result := false;
+
+  // return false if filename doesn't end in .esp
+  if not StrEndsWith(edFilename.Text, '.esp') then
+    exit;
+
+  // return false if specified filename corresponds to a
+  // plugin that is in merge
+  if merge.plugins.IndexOf(edFilename.Text) > -1 then
+    exit;
+
   // check if there's a load order error merging into the specified file
   plugin := PluginByFilename(edFilename.Text);
   loadOrder := PluginLoadOrder(edFilename.Text);
@@ -93,19 +109,20 @@ begin
     sFilename := merge.plugins[merge.plugins.Count -1];
     highLoadOrder := PluginLoadOrder(sFilename);
   end;
-  loadOrderError := Assigned(plugin) and (loadorder > -1) and (loadOrder < highLoadOrder);
 
-  // check if merge exists
-  mergeExists := false;
-  for i := 0 to Pred(MergesList.Count) do
-    if (TMerge(MergesList[i]).filename = edFileName.Text)
-    and (TMerge(MergesList[i]) <> merge) then begin
-      mergeExists := true;
-      break;
-    end;
+  // return false if there's a load order error
+  if Assigned(plugin) and (loadOrder > highLoadOrder) then
+    exit;
 
-  // invalid if load order error or filename is blank or mergeExists
-  Result := not (loadOrderError or (edFilename.Text = '') or mergeExists);
+  // return false if merge exists
+  for i := 0 to Pred(MergesList.Count) do begin
+    aMerge := TMerge(MergesList[i]);
+    if (aMerge.filename = edFileName.Text) and (aMerge <> merge) then
+      exit;
+  end;
+
+  // all tests passed, return true
+  Result := true;
 end;
 
 procedure TEditForm.edFilenameChange(Sender: TObject);
@@ -120,6 +137,14 @@ begin
     edFilename.Font.Color := clWindowText
   else
     edFilename.Font.Color := $0000ff;
+end;
+
+procedure TEditForm.edFilenameEnter(Sender: TObject);
+begin
+  // change selection to not include the .esp
+  if (edFilename.SelLength = Length(edFilename.Text))
+  and StrEndsWith(edFilename.Text, '.esp') then
+    edFilename.SelLength := edFilename.SelLength - 4;
 end;
 
 procedure TEditForm.edNameChange(Sender: TObject);
