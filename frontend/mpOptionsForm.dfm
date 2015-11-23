@@ -1,6 +1,7 @@
 object OptionsForm: TOptionsForm
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
   Caption = 'Options'
   ClientHeight = 447
   ClientWidth = 584
@@ -490,8 +491,16 @@ object OptionsForm: TOptionsForm
         Top = 330
         Width = 130
         Height = 25
+        Hint = 
+          'Click this to verify Merge Plugins has file system access permis' +
+          'sions so it can read/write files as necessary for merging plugin' +
+          's.'
         Margins.Right = 6
+        Align = alCustom
+        Anchors = [akRight, akBottom]
         Caption = 'Verify file access'
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 2
         OnClick = btnVerifyAccessClick
       end

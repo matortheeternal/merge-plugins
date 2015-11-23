@@ -26,6 +26,7 @@ type
     language: string;
     username: string;
     key: string;
+    newProfile: boolean;
     registered: boolean;
     simpleDictionaryView: boolean;
     simplePluginsView: boolean;
@@ -154,6 +155,7 @@ uses
 constructor TSettings.Create;
 begin
   // default settings
+  newProfile := true;
   language := 'English';
   serverHost := 'mergeplugins.us.to';
   serverPort := 960;
@@ -381,6 +383,8 @@ end;
 
 procedure SaveSettings;
 begin
+  // user saving settings from options form
+  settings.newProfile := false;
   TRttiIni.Save(PathList.Values['ProfilePath'] + 'settings.ini', settings);
   if settings.registered then
     SaveRegistrationData(settings);

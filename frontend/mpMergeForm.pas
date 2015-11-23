@@ -138,6 +138,7 @@ type
     procedure ProgressDone;
     procedure AutoUpdate;
     function ShouldDisplay(bh: TBalloonHint): boolean;
+    procedure ConfigureSettings;
     procedure DisableHints;
     procedure HideHints;
     procedure DisplayHints;
@@ -496,6 +497,7 @@ begin
     TaskHandler.AddTask(TTask.Create('Reconnect', 15.0 * seconds, Reconnect));
     TaskHandler.AddTask(TTask.Create('Heartbeat', 0.9 * seconds, Heartbeat));
     TaskHandler.AddTask(TTask.Create('Refresh GUI', 3.0 * seconds, RefreshGUI));
+    TaskHandler.AddTask(TTask.Create('Configure Settings', 0.8 * seconds, ConfigureSettings));
     TaskTimer.Enabled := true;
   end;
 
@@ -607,6 +609,15 @@ end;
 function TMergeForm.ShouldDisplay(bh: TBalloonHint): boolean;
 begin
   Result := (Now - FormDisplayTime) * 86400 < (bh.HideAfter / 1000);
+end;
+
+procedure TMergeForm.ConfigureSettings;
+begin
+  TaskHandler.RemoveTask('Configure Settings');
+
+  // BRING UP OPTIONS FORM IF WE'RE ON A NEW PROFILE
+  if settings.newProfile then
+    OptionsButtonClick(nil);
 end;
 
 procedure TMergeForm.DisableHints;
@@ -2521,8 +2532,10 @@ begin
     plugin := TPlugin(PluginsList[i]);
     if (IS_BLACKLISTED in plugin.flags) then
       continue;
-    if not plugin.HasBeenCheckedForErrors then
+    if not plugin.HasBeenCheckedForErrors then begin
       bUncheckedPlugins := true;
+      break;
+    end;
   end;
 
   // enable find errors button if there are unchecked plugins
@@ -2781,9 +2794,6 @@ begin
 
   // update owner draw if changed
   PluginsListView.OwnerDraw := not settings.simplePluginsView;
-
-  // rebuild log because some messages may have been enabled/disabled
-  RebuildLog;
 
   // initialize MO if usingMO changed
   if settings.usingMO then

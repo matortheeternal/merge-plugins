@@ -501,7 +501,6 @@ var
   i: integer;
   modOrganizerPath, paths: string;
   pathList: TStringList;
-  info: TSearchRec;
 begin
   // search for installations in GamePath
   if (modOrganizerPath = '') then
@@ -569,6 +568,14 @@ begin
   HandleRegistrationControls;
   HandleUpdateControls;
   LoadButtonGlyphs;
+
+  // Handle new profile
+  if settings.newProfile then begin
+    btnCancel.Enabled := false;
+    ShowMessage('You''ve made a new profile.  Please configure settings '+
+      'to use with this profile.  If you have questions refer to the '+
+      'documentation.');
+  end;
 end;  
 
 procedure TOptionsForm.btnOKClick(Sender: TObject);
@@ -593,18 +600,20 @@ var
   iIndex: integer;
 begin
   iIndex := TPageControl(Sender).ActivePageIndex;
-  if iIndex = 1 then begin
-    // Handle Script Fragments is available only when 
-    // the papyrus integration is set up correctly
-    kbFragments.Enabled := PapyrusIntegrationValid;
-    if not kbFragments.Enabled then
-      kbFragments.Checked := false;  
+  case iIndex of
+    1: begin
+      // Handle Script Fragments is available only when 
+      // the papyrus integration is set up correctly
+      kbFragments.Enabled := PapyrusIntegrationValid;
+      if not kbFragments.Enabled then
+        kbFragments.Checked := false;  
       
-    // Build Merged BSA is available only when  the 
-    // BSAOpt integration is set up correctly
-    kbBuildBSA.Enabled := BSAOptIntegrationValid; 
-    if not kbBuildBSA.Enabled then
-      kbBuildBSA.Checked := false;
+      // Build Merged BSA is available only when  the 
+      // BSAOpt integration is set up correctly
+      kbBuildBSA.Enabled := BSAOptIntegrationValid; 
+      if not kbBuildBSA.Enabled then
+        kbBuildBSA.Checked := false;
+    end;
   end;
 end; 
 
