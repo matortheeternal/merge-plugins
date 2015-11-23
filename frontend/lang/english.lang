@@ -314,8 +314,8 @@ mpOpt_lblBSAOptPath_Hint=The path to the BSAOpt v2.0 executable (x32 or #13#10x6
 mpOpt_lblBSAOptOptions_Caption=BSAOpt options
 mpOpt_lblBSAOptOptions_Hint=Your command line options for building BSAs using #13#10BSAOpt.  Must be set properly to use the Build #13#10merged BSA option.  See the documentation for #13#10more information.
 { #### DYNAMIC #### }
-mpOpt_ExeFilter=Executables|*.exe
-mpOpt_FlagsFilter=Flags files|*.flg
+mpOpt_ExeFilter=Executables (*.exe)|*.EXE|All files (*.*)|*.*
+mpOpt_FlagsFilter=Flags files (*.flg)|*.FLG|All files (*.*)|*.*
 mpOpt_ModOrganizerNotFound=Couldn't automatically detect Mod Organizer's file path.  Please locate it yourself.
  
 { TReportForm }
