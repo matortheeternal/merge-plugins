@@ -55,8 +55,8 @@ type
     extractBSAs: boolean;
     buildMergedBSA: boolean;
     batCopy: boolean;
-    bForceOversizedBSA: boolean;
-    bSkipOversizedBSA: boolean;
+    forceOversizedBSA: boolean;
+    skipOversizedBSA: boolean;
     debugRenumbering: boolean;
     debugMergeStatus: boolean;
     debugAssetCopying: boolean;

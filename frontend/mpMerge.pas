@@ -1412,25 +1412,25 @@ begin
 
   // prompt user if total BSA size exceeds 2gb
   if (totalArchiveSize > 2147483648) and
-  not (settings.bForceOversizedBSA or settings.bSkipOversizedBSA) then begin
+  not (settings.forceOversizedBSA or settings.skipOversizedBSA) then begin
     mr := MessageDlg('Merged BSA filesize will likely exceed 2.0GB, which will cause BSA creation to fail.  Continue?',
       mtWarning, [mbYesToAll, mbYes, mbNoToAll, mbNo], 0);
     case mr of
       mrNo: bSkip := true;
       mrNoToAll: begin
         bSkip := true;
-        settings.bSkipOversizedBSA := true;
+        settings.skipOversizedBSA := true;
         SaveSettings;
       end;
       mrYesToAll: begin
-        settings.bForceOversizedBSA := true;
+        settings.forceOversizedBSA := true;
         SaveSettings;
       end;
     end;
   end;
 
   // exit if skipping
-  if bSkip or (settings.bSkipOversizedBSA and (totalArchiveSize > 2147483648)) then
+  if bSkip or (settings.skipOversizedBSA and (totalArchiveSize > 2147483648)) then
     exit;
 
   // initialize stringlists
