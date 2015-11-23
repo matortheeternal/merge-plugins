@@ -64,7 +64,7 @@ uses
 
 function InitBase: boolean;
 var
-  wbLoadPath: string;
+  sLoadPath, sPath: string;
   slLoadOrder: TStringList;
   psForm: TPluginSelectionForm;
 begin
@@ -133,22 +133,33 @@ begin
   LoadMerges;
 
   // GET LOAD ORDER PATH
-  wbLoadPath := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\';
-  if not (settings.usingMO and FileExists(wbLoadPath)) then
-    wbLoadPath := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName+'\';
-  Logger.Write('GENERAL', 'Load Order', 'Using '+wbLoadPath+'loadorder.txt');
+  sLoadPath := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\';
+  if not (settings.usingMO and FileExists(sLoadPath)) then
+    sLoadPath := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName+'\';
+  Logger.Write('GENERAL', 'Load Order', 'Using '+sLoadPath);
 
   // LOAD LIST OF ACTIVE PLUGINS (plugins.txt)
   slPlugins := TStringList.Create;
-  slPlugins.LoadFromFile(wbLoadPath + 'plugins.txt');
+  sPath := sLoadPath + 'plugins.txt';
+  if FileExists(sPath) then
+    slPlugins.LoadFromFile(sPath)
+  else
+    AddMissingFiles(slPlugins);
+
+  // PREPARE PLUGINS LIST
   RemoveCommentsAndEmpty(slPlugins);
   RemoveMissingFiles(slPlugins);
-  // disable merged plugins
   RemoveMergedPlugins(slPlugins);
 
   // LOAD ORDER OF ALL PLUGINS (loadorder.txt)
   slLoadOrder := TStringList.Create;
-  slLoadOrder.LoadFromFile(wbLoadPath + 'loadorder.txt');
+  sPath := sLoadPath + 'loadorder.txt';
+  if FileExists(sPath) then
+    slLoadOrder.LoadFromFile(sPath)
+  else
+    slLoadOrder.AddStrings(slPlugins);
+
+  // PREPARE LOAD ORDER
   RemoveCommentsAndEmpty(slLoadOrder);
   RemoveMissingFiles(slLoadOrder);
   AddMissingFiles(slLoadOrder);
