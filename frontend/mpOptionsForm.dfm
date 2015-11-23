@@ -17,6 +17,7 @@ object OptionsForm: TOptionsForm
   OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object SettingsPageControl: TPageControl
@@ -24,7 +25,7 @@ object OptionsForm: TOptionsForm
     Top = 8
     Width = 568
     Height = 401
-    ActivePage = IntegrationsTabSheet
+    ActivePage = GeneralTabSheet
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0

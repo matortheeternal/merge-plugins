@@ -46,6 +46,7 @@ type
   function GetCSIDLShellFolder(CSIDLFolder: integer): string;
   function GetFileSize(const aFilename: String): Int64;
   function GetLastModified(const aFileName: String): TDateTime;
+  function SearchPathsForFile(sPaths, sFileName: string): string;
   function MultFileSearch(paths, filenames, ignore: array of string;
     maxDepth: integer): string;
   function RecursiveFileSearch(aPath: string; filenames, ignore: array of string;
@@ -692,6 +693,41 @@ begin
 
   Result := SystemTimeToDateTime(LocalTime);
 end;
+
+{
+  SearchPathsForFile:
+  Searches for a file @sFileName in each path in @sPaths.
+}
+function SearchPathsForFile(sPaths, sFileName: string): string;
+var
+  slPaths: TStringList;
+  i: Integer;
+  info: TSearchRec;
+begin
+  slPaths := TStringList.Create;
+  try
+    while (Pos(';', sPaths) > 0) do begin
+      slPaths.Add(Copy(sPaths, 1, Pos(';', sPaths) - 1));
+      sPaths := Copy(sPaths, Pos(';', sPaths) + 1, Length(sPaths));
+    end;
+    for i := 0 to slPaths.Count - 1 do begin
+      if FindFirst(slPaths[i] + '\*', faDirectory, info) = 0 then begin
+        repeat
+          Result := FileSearch(sFileName, slPaths[i] + '\' + info.Name);
+          if (Result <> '') then
+            break;
+        until FindNext(info) <> 0;
+        FindClose(info);
+        // break if we found it
+        if (Result <> '') then
+          break;
+      end;
+    end;
+  finally
+    slPaths.Free;
+  end;
+end;
+
 {
   MultFileSearch:
   Wraps around RecursiveFileSearch, allowing the searching of multiple paths.
