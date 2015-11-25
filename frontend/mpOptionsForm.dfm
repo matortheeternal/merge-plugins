@@ -327,7 +327,7 @@ object OptionsForm: TOptionsForm
         end
         object edMergeDirectory: TEdit
           Left = 192
-          Top = 18
+          Top = 21
           Width = 321
           Height = 21
           TabOrder = 1
@@ -842,6 +842,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 0
+          OnChange = edModManagerPathChange
           OnExit = appendBackslashOnExit
         end
         object kbCopyGeneralAssets: TCheckBox
@@ -858,6 +859,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 2
+          OnChange = edModsPathChange
           OnExit = appendBackslashOnExit
         end
         object kbUsingMO: TCheckBox
@@ -867,7 +869,7 @@ object OptionsForm: TOptionsForm
           Height = 17
           Caption = 'I'#39'm using Mod Organizer'
           TabOrder = 3
-          OnClick = kbUsingMOClick
+          OnClick = kbUsingManagerClick
         end
         object kbUsingNMM: TCheckBox
           Left = 192
@@ -876,7 +878,7 @@ object OptionsForm: TOptionsForm
           Height = 17
           Caption = 'I'#39'm using Nexus Mod Manager'
           TabOrder = 4
-          OnClick = kbUsingNMMClick
+          OnClick = kbUsingManagerClick
         end
       end
       object gbPapyrus: TGroupBox
@@ -1057,7 +1059,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C0101010008003C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800400110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

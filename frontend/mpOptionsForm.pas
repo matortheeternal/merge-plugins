@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls,
+  Dialogs, ComCtrls, StdCtrls, Buttons, ImgList, FileCtrl, ExtCtrls, Types,
   // mte units
   mteHelpers, RttiTranslation,
   // mp units
@@ -141,14 +141,16 @@ type
     procedure SaveGeneralSettings;
     procedure SaveMergingSettings;
     procedure SaveAdvancedSettings;
-    procedure SaveIntegrationSettings;  
+    procedure SaveIntegrationSettings;
+    function ManagerIntegrationValid: boolean;
     function BSAOptIntegrationValid: boolean;
-    function PapyrusIntegrationValid: boolean; 
+    function PapyrusIntegrationValid: boolean;
     procedure searchForNexusModManager;
     procedure searchForModOrganizer;
     // PRIMARY EVENTS
     procedure FormCreate(Sender: TObject); 
     procedure FormShow(Sender: TObject);
+    procedure ToggleOkButton;
     procedure btnOKClick(Sender: TObject);
     procedure SettingsPageControlChange(Sender: TObject); 
     procedure appendBackslashOnExit(Sender: TObject); 
@@ -169,8 +171,7 @@ type
     procedure btnChangeMergeProfileClick(Sender: TObject);
     procedure meTemplateChange(Sender: TObject);
     // INTEGRATIONS TAB EVENTS
-    procedure kbUsingMOClick(Sender: TObject); 
-    procedure kbUsingNMMClick(Sender: TObject);
+    procedure kbUsingManagerClick(Sender: TObject);
     procedure btnBrowseManagerClick(Sender: TObject);  
     procedure btnBrowseModsClick(Sender: TObject);
     procedure btnBrowseDecompilerClick(Sender: TObject);
@@ -179,6 +180,8 @@ type
     procedure btnBrowseBSAOptClick(Sender: TObject);    
     procedure edBsaOptPathExit(Sender: TObject);
     procedure btnDetectClick(Sender: TObject);
+    procedure edModManagerPathChange(Sender: TObject);
+    procedure edModsPathChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -308,8 +311,8 @@ begin
   edBsaOptOptions.Text := settings.bsaOptOptions;
 
   // disable controls if not using MO or NMM
-  kbUsingMOClick(nil);
-  kbUsingNMMClick(nil);
+  if not (settings.usingMO or settings.usingNMM) then
+    kbUsingManagerClick(nil);
 end;
 
 procedure TOptionsForm.HandleRegistrationControls;
@@ -452,6 +455,31 @@ begin
   settings.bsaOptOptions := edBsaOptOptions.Text;
 end;
 
+function TOptionsForm.ManagerIntegrationValid: boolean;
+var
+  sPath: string;
+begin
+  Result := false;
+
+  // if not using a mod manager integration, result is true
+  if not (kbUsingMO.Checked or kbUsingNMM.Checked) then begin
+    Result := true;
+    exit;
+  end;
+
+  // validate MO integration
+  if kbUsingMO.Checked then begin
+    sPath := edModManagerPath.Text + 'ModOrganizer.ini';
+    Result := DirectoryExists(edModsPath.Text) and FileExists(sPath);
+  end
+
+  // validate NMM integration
+  else if kbUsingNMM.Checked then begin
+    Result := DirectoryExists(edModManagerPath.Text)
+      and DirectoryExists(edModsPath.Text);
+  end;
+end;
+
 function TOptionsForm.BSAOptIntegrationValid: boolean;
 begin
   Result := (edBSAOptPath.Text <> '') 
@@ -467,7 +495,7 @@ begin
     and (FileExists(edCompilerPath.Text))
     and (edFlagsPath.Text <> '')
     and (FileExists(edFlagsPath.Text));
-end;   
+end;
 
 procedure TOptionsForm.searchForNexusModManager;
 const
@@ -498,27 +526,30 @@ const
   validModOrganizerFilenames: array[1..1] of string = ('ModOrganizer.exe');
   ignore: array[1..1] of string = ('data');
 var
-  i: integer;
-  modOrganizerPath, paths: string;
-  pathList: TStringList;
+  DrivesArray: TStringDynArray;
+  modOrganizerPath, sPaths, sDrive: string;
 begin
   // search for installations in GamePath
-  if (modOrganizerPath = '') then
-    modOrganizerPath := RecursiveFileSearch(PathList.Values['GamePath'], validModOrganizerFilenames, ignore, 2);
+  modOrganizerPath := RecursiveFileSearch(PathList.Values['GamePath'],
+    validModOrganizerFilenames, ignore, 2);
 
   // search for installations in ?:\Program Files and ?:\Program Files (x86)
-  for i := 65 to 90 do begin
-    if DirectoryExists(chr(i) + ':\Program Files') then
-      paths := paths + chr(i) + ':\Program Files;';
-    if DirectoryExists(chr(i) + ':\Program Files (x86)') then
-      paths := paths + chr(i) + ':\Program Files (x86);';
+  DrivesArray := GetDriveList;
+  for sDrive in DrivesArray do begin
+    if not DriveReady(sDrive) then
+      continue;
+    if DirectoryExists(sDrive + 'Program Files') then
+      sPaths := sPaths + sDrive + 'Program Files;';
+    if DirectoryExists(sDrive + 'Program Files (x86)') then
+      sPaths := sPaths + sDrive + 'Program Files (x86);';
   end;
 
-  modOrganizerPath := FileSearch('Mod Organizer\ModOrganizer.exe', paths);
+  if (modOrganizerPath = '') then
+    modOrganizerPath := FileSearch('Mod Organizer\ModOrganizer.exe', sPaths);
 
   // search each folder in each valid Program Files directory for ModOrganizer.exe
   if (modOrganizerPath = '') then 
-    modOrganizerPath := SearchPathsForFile(paths, 'ModOrganizer.exe');
+    modOrganizerPath := SearchPathsForFile(sPaths, 'ModOrganizer.exe');
 
   // if found, set TEdit captions, else alert user
   if (modOrganizerPath <> '') then begin
@@ -576,7 +607,13 @@ begin
       'to use with this profile.  If you have questions refer to the '+
       'documentation.');
   end;
-end;  
+end;
+
+procedure TOptionsForm.ToggleOkButton;
+begin
+  btnOK.Enabled := ManagerIntegrationValid and
+    DirectoryValid(edMergeDirectory.Text);
+end;
 
 procedure TOptionsForm.btnOKClick(Sender: TObject);
 begin
@@ -845,33 +882,24 @@ end;
  
 {=== MOD MANAGER INTEGRATION ===}
 
-procedure TOptionsForm.kbUsingMOClick(Sender: TObject);
+procedure TOptionsForm.kbUsingManagerClick(Sender: TObject);
 var
   b: boolean;
 begin
-  b := kbUsingMO.Checked;
-  kbUsingNMM.Checked := false;
-  edModManagerPath.Enabled := b;
-  edModsPath.Enabled := b;
-  btnBrowseManager.Enabled := b;
-  btnBrowseMods.Enabled := b;
-  kbCopyGeneralAssets.Enabled := b;
-  kbCopyGeneralAssets.Checked := b;
-end;
+  if kbUsingMO.Checked then
+    kbUsingNMM.Checked := false;
+  if kbUsingNMM.Checked then
+    kbUsingMO.Checked := false;
 
-procedure TOptionsForm.kbUsingNMMClick(Sender: TObject);
-var
-  b: boolean;
-begin
-  b := kbUsingNMM.Checked;
-  kbUsingMO.Checked := false;
+  b := kbUsingMO.Checked or kbUsingNMM.Checked;
   edModManagerPath.Enabled := b;
   edModsPath.Enabled := b;
   btnBrowseManager.Enabled := b;
   btnBrowseMods.Enabled := b;
   kbCopyGeneralAssets.Enabled := b;
   kbCopyGeneralAssets.Checked := b;
-end;           
+  ToggleOkButton;
+end;          
 
 procedure TOptionsForm.btnBrowseManagerClick(Sender: TObject);
 var
@@ -888,12 +916,24 @@ begin
     edModsPath.Text := modsPath;
     edMergeDirectory.Text := modsPath;
   end;
+  ToggleOkButton;
 end;
 
 procedure TOptionsForm.btnBrowseModsClick(Sender: TObject);
 begin
   BrowseForFolder(edModsPath, PathList.Values['ProgramPath']);
-end; 
+  ToggleOkButton;
+end;
+
+procedure TOptionsForm.edModManagerPathChange(Sender: TObject);
+begin
+  ToggleOkButton;
+end;
+
+procedure TOptionsForm.edModsPathChange(Sender: TObject);
+begin
+  ToggleOkButton;
+end;
 
 {=== PAPYRUS INTEGRATION ===}
 
@@ -925,7 +965,7 @@ begin
   if FileExists(edBsaOptPath.Text) and (edBsaOptOptions.Text = '') then
     edBsaOptOptions.Text := Format('-game %s -passthrough -compress 9',
       [ProgramStatus.GameMode.bsaOptMode]);
-end;   
+end;
 
 procedure TOptionsForm.btnDetectClick(Sender: TObject);
 const

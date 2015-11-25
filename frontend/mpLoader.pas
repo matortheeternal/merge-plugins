@@ -215,6 +215,7 @@ begin
   wbDataPath := CurrentProfile.gamePath + 'Data\';
   // set general paths
   PathList.Values['DataPath'] := wbDataPath;
+  PathList.Values['GamePath'] := UpDirectory(wbDataPath)
 end;
 
 { Get the game ID associated with a game long name }
@@ -311,7 +312,7 @@ var
 begin
   // exit if not using MO
   Result := '';
-  if not settings.usingMO then
+  if (not settings.usingMO) or (Trim(settings.ManagerPath) = '') then
     exit;
 
   // load ini file
@@ -334,7 +335,7 @@ var
   i: integer;
 begin
   // exit if not using MO
-  if not settings.usingMO then
+  if (not settings.usingMO) or (Trim(settings.ManagerPath) = '') then
     exit;
 
   // prepare to load modlist
@@ -344,6 +345,7 @@ begin
   // exit if modlist file doesn't exist
   if not (FileExists(modlistFilePath)) then begin
     Tracker.Write('Cannot find modlist ' + modListFilePath);
+    Logger.Write('GENERAL', 'ModOrganizer', 'Cannot find modlist ' + modListFilePath);
     exit;
   end;
 

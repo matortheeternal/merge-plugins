@@ -3,7 +3,7 @@ unit mteHelpers;
 interface
 
 uses
-  Classes, ComCtrls, StdCtrls;
+  Classes, ComCtrls, StdCtrls, Types;
 
 type
   TCallback = procedure of object;
@@ -37,8 +37,13 @@ type
   procedure FreeList(var lst: TList);
   { Windows API functions }
   procedure ForceForeground(hWnd: THandle);
+  function GetDriveList: TStringDynArray;
+  function DOSDrive(const sDrive: String ): Integer;
+  function DriveReady(const sDrive: String): Boolean;
   function TryRegistryKeys(var keys: TStringList): string;
   function FileNameValid(filename: string): boolean;
+  function DirectoryValid(dir: string): boolean;
+  function UpDirectory(sPath: string): string;
   function DeleteToRecycleBin(const path: string; Confirm: Boolean): Boolean;
   procedure ExecNewProcess(ProgramName: string; synchronous: Boolean);
   procedure BrowseForFile(var ed: TEdit; filter, initDir: string);
@@ -526,6 +531,66 @@ begin
 end;
 
 {
+  GetDriveList:
+  Returns an array filled wit the assigned
+  drive letters on the current computer.
+}
+
+function GetDriveList: TStringDynArray;
+var
+  Buff: array[0..128] of Char;
+  ptr: PChar;
+  Idx: Integer;
+begin
+  if (GetLogicalDriveStrings(Length(Buff), Buff) = 0) then
+    RaiseLastOSError;
+  // There can't be more than 26 lettered drives (A..Z).
+  SetLength(Result, 26);
+
+  Idx := 0;
+  ptr := @Buff;
+  while StrLen(ptr) > 0 do
+  begin
+    Result[Idx] := ptr;
+    ptr := StrEnd(ptr);
+    Inc(ptr);
+    Inc(Idx);
+  end;
+  SetLength(Result, Idx);
+end;
+
+{
+  DOSDrive:
+  Converts a drive letter into the integer drive #
+  required by DiskSize().
+}
+function DOSDrive( const sDrive: String ): Integer;
+begin
+  if (Length(sDrive) < 1) then
+    Result := -1
+  else
+    Result := (Ord(UpCase(sDrive[1])) - 64);
+end;
+
+{
+  DriveReady:
+  Tests the status of a drive to see if it's ready
+  to access.
+}
+function DriveReady(const sDrive: String): Boolean;
+var
+  ErrMode: Word;
+begin
+  ErrMode := SetErrorMode(0);
+  SetErrorMode(ErrMode or SEM_FAILCRITICALERRORS);
+  try
+    Result := (DiskSize(DOSDrive(sDrive)) > -1);
+  finally
+    SetErrorMode(ErrMode);
+  end;
+end;
+
+{
   TryRegistryKeys:
   Tries to load various registry keys.
 }
@@ -550,6 +615,39 @@ begin
   finally
     Free;
   end;
+end;
+
+{
+  DirectoryValid:
+  Returns true if the input directory path is valid.
+}
+function DirectoryValid(dir: string): boolean;
+begin
+  Result := false;
+  if (dir = '') then
+    exit;
+
+  dir := ExcludeTrailingPathDelimiter(dir);
+{$IFDEF MSWINDOWS}
+  if (Length(dir) < 3) or (ExtractFilePath(dir) = dir) then
+    exit; // avoid 'xyz:\' problem.
+{$ENDIF}
+{$IFDEF POSIX}
+  if (dir = '') then
+    exit;
+{$ENDIF POSIX};
+  Result := true;
+end;
+
+{
+  UpDirectory:
+  Returns the path of the directory holding a directory.
+}
+function UpDirectory(sPath: string): string;
+begin
+  if not StrEndsWith(sPath, '\') then
+    sPath := ExtractFilePath(sPath);
+  Result := ExtractFilePath(RemoveFromEnd(sPath, '\'));
 end;
 
 {
