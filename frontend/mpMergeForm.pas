@@ -128,6 +128,7 @@ type
     procedure UpdateLog;
     procedure LogMessage(const group, &label, text: string);
     procedure FormCreate(Sender: TObject);
+    procedure ToggleFormState(bEnabled: boolean);
     procedure InitDone;
     procedure FormShow(Sender: TObject);
     procedure LoaderStatus(s: string);
@@ -371,6 +372,18 @@ begin
   bCreated := true;
 end;
 
+procedure TMergeForm.ToggleFormState(bEnabled: boolean);
+begin
+  // show/hide hints
+  if bEnabled then
+    DisplayHints
+  else
+    HideHints;
+
+  // disable/enable form
+  Enabled := bEnabled;
+end;
+
 procedure TMergeForm.WMSize(var AMessage: TMessage);
 begin
   if bCreated and (Now - LastMessageTime > MessageDelay) then begin
@@ -525,7 +538,7 @@ begin
   CanClose := ProgramStatus.bClose;
   if not bClosing then begin
     bClosing := true;
-    Enabled := false;
+    ToggleFormState(false);
 
     // show progress form
     pForm := TProgressForm.Create(Self);
@@ -574,7 +587,7 @@ begin
   FlashWindow(Application.Handle, True);
   pForm.ShowModal;
   pForm.Free;
-  Enabled := true;
+  ToggleFormState(true);
   ShowWindow(Application.Handle, SW_RESTORE);
   SetForegroundWindow(Application.Handle);
 
@@ -1252,6 +1265,7 @@ begin
   end;
 
   // show progress form
+  ToggleFormState(false);
   ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
 
   // start error check thread
@@ -1284,6 +1298,7 @@ begin
   end;
 
   // show progress form
+  ToggleFormState(false);
   ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'));
 
   // start error check thread
@@ -1345,29 +1360,33 @@ begin
   end;
 
   // report on all merges
+  ToggleFormState(false);
   ReportForm := TReportForm.Create(Self);
-  if PluginsToReport.Count > 0 then begin
-    ReportForm.pluginsToReport := PluginsToReport;
-    ReportForm.AppName := wbAppName;
-    bModalOK := ReportForm.ShowModal = mrOk;
-  end;
-
-  // Send reports to backend
-  if bModalOK then begin
-    bReportsSent := SendReports(ReportForm.reportsList);
-    if not bReportsSent then begin
-      Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
-    end
-    else begin
-      Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
+  try
+    if PluginsToReport.Count > 0 then begin
+      ReportForm.pluginsToReport := PluginsToReport;
+      ReportForm.AppName := wbAppName;
+      bModalOK := ReportForm.ShowModal = mrOk;
     end;
-  end;
 
-  // clean up
-  ReportForm.Free;
-  PluginsToReport.Free;
+    // Send reports to backend
+    if bModalOK then begin
+      bReportsSent := SendReports(ReportForm.reportsList);
+      if not bReportsSent then begin
+        Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
+        SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
+      end
+      else begin
+        Logger.Write('CLIENT', 'Reports', 'Saving reports locally');
+        SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
+      end;
+    end;
+  finally
+    ToggleFormState(true);
+    // clean up
+    ReportForm.Free;
+    PluginsToReport.Free;
+  end;
 end;
 
 procedure TMergeForm.ResetErrorsItemClick(Sender: TObject);
@@ -2105,6 +2124,7 @@ begin
   end;
 
   // show progress form
+  ToggleFormState(false);
   ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'));
 
   // start error checking thread
@@ -2149,6 +2169,7 @@ begin
   end;
 
   // Show progress form
+  ToggleFormState(false);
   ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
 
   // start error checking thread
@@ -2317,14 +2338,9 @@ begin
   end;
 
   // Show progress form
-  self.Enabled := false;
+  ToggleFormState(false);
   xEditLogGroup := 'MERGE';
-  pForm := TProgressForm.Create(Self);
-  pForm.LogPath := PathList.Values['LogPath'];
-  pForm.PopupParent := Self;
-  pForm.Caption := GetLanguageString('mpProg_Merging');
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Merging'));
 
   // start merge thread
   MergeCallback := ProgressDone;
@@ -2356,29 +2372,33 @@ begin
   end;
 
   // report on all merges
+  ToggleFormState(false);
   ReportForm := TReportForm.Create(Self);
-  if pluginsList.Count > 0 then begin
-    ReportForm.pluginsToReport := pluginsList;
-    ReportForm.AppName := wbAppName;
-    bModalOK := ReportForm.ShowModal = mrOk;
-  end;
-
-  // Send reports to backend
-  if bModalOK then begin
-    bReportsSent := SendReports(ReportForm.reportsList);
-    if not bReportsSent then begin
-      Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
-    end
-    else begin
-      Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
+  try
+    if pluginsList.Count > 0 then begin
+      ReportForm.pluginsToReport := pluginsList;
+      ReportForm.AppName := wbAppName;
+      bModalOK := ReportForm.ShowModal = mrOk;
     end;
-  end;
 
-  // clean up
-  ReportForm.Free;
-  pluginsList.Free;
+    // Send reports to backend
+    if bModalOK then begin
+      bReportsSent := SendReports(ReportForm.reportsList);
+      if not bReportsSent then begin
+        Logger.Write('MERGE', 'Report', 'Saving reports locally');
+        SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
+      end
+      else begin
+        Logger.Write('MERGE', 'Report', 'Saving reports locally');
+        SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
+      end;
+    end;
+  finally
+    ToggleFormState(true);
+    // clean up
+    ReportForm.Free;
+    pluginsList.Free;
+  end;
 end;
 
 procedure TMergeForm.OpenInExplorerItemClick(Sender: TObject);
@@ -2652,6 +2672,7 @@ begin
   end;
 
   // make and show progress form
+  ToggleFormState(false);
   ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
 
   // start error check thread
@@ -2698,14 +2719,9 @@ begin
   end;
 
   // make and show progress form
-  self.Enabled := false;
+  ToggleFormState(false);
   xEditLogGroup := 'MERGE';
-  pForm := TProgressForm.Create(Self);
-  pForm.LogPath := PathList.Values['LogPath'];
-  pForm.PopupParent := Self;
-  pForm.Caption := GetLanguageString('mpProg_Merging');
-  pForm.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
-  pForm.Show;
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Merging'));
 
   // start merge thread
   MergeCallback := ProgressDone;
@@ -2744,29 +2760,33 @@ begin
 
   // create report form
   bModalOK := false;
+  ToggleFormState(false);
   ReportForm := TReportForm.Create(Self);
-  if pluginsList.Count > 0 then begin
-    ReportForm.pluginsToReport := pluginsList;
-    ReportForm.AppName := wbAppName;
-    bModalOK := ReportForm.ShowModal = mrOk;
-  end;
-
-  // Send reports to backend
-  if bModalOK then begin
-    bReportsSent := SendReports(ReportForm.reportsList);
-    if not bReportsSent then begin
-      Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
-    end
-    else begin
-      Logger.Write('MERGE', 'Report', 'Saving reports locally');
-      SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
+  try
+    if pluginsList.Count > 0 then begin
+      ReportForm.pluginsToReport := pluginsList;
+      ReportForm.AppName := wbAppName;
+      bModalOK := ReportForm.ShowModal = mrOk;
     end;
-  end;
 
-  // clean up
-  ReportForm.Free;
-  pluginsList.Free;
+    // Send reports to backend
+    if bModalOK then begin
+      bReportsSent := SendReports(ReportForm.reportsList);
+      if not bReportsSent then begin
+        Logger.Write('MERGE', 'Report', 'Saving reports locally');
+        SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\');
+      end
+      else begin
+        Logger.Write('MERGE', 'Report', 'Saving reports locally');
+        SaveReports(ReportForm.reportsList, PathList.Values['ProgramPath'] + 'reports\submitted\');
+      end;
+    end;
+  finally
+    ToggleFormState(true);
+    // clean up
+    ReportForm.Free;
+    pluginsList.Free;
+  end;
 end;
 
 { View the dictionary file }
@@ -2774,10 +2794,14 @@ procedure TMergeForm.DictionaryButtonClick(Sender: TObject);
 var
   DictionaryForm: TDictionaryForm;
 begin
-  //LogMessage(TButton(Sender).Hint+' clicked!');
+  ToggleFormState(false);
   DictionaryForm := TDictionaryForm.Create(Self);
-  DictionaryForm.ShowModal;
-  DictionaryForm.Free;
+  try
+    DictionaryForm.ShowModal;
+  finally
+    DictionaryForm.Free;
+    ToggleFormState(true);
+  end;
 end;
 
 { Options }
@@ -2787,6 +2811,7 @@ var
   prevLanguage: string;
 begin
   prevLanguage := settings.language;
+  ToggleFormState(false);
   // Create and show options form
   OptionsForm := TOptionsForm.Create(Self);
   OptionsForm.ShowModal;
@@ -2806,6 +2831,7 @@ begin
   end;
 
   // update gui
+  ToggleFormState(true);
   UpdateMerges;
   UpdateListViews;
   UpdateQuickBar;
@@ -2830,6 +2856,9 @@ begin
   if not TCPClient.Connected then
     exit;                                               
 
+  // disable form
+  ToggleFormState(false);
+
   // set up changelog variables
   clProgramVersion := LocalStatus.ProgramVersion;
   // update program
@@ -2846,6 +2875,9 @@ begin
     UpdatePluginData;
     UpdateListViews;
   end;
+
+  // re-enable form
+  ToggleFormState(true);
 end;
 
 { Help }

@@ -161,7 +161,6 @@ end;
 
 procedure ShowProgressForm(parent: TForm; var pf: TProgressForm; s: string);
 begin
-  parent.Enabled := false;
   pf := TProgressForm.Create(parent);
   pf.LogPath := LogPath;
   pf.PopupParent := parent;
