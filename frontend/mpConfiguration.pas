@@ -104,7 +104,7 @@ type
   public
     bInitException, bLoadException, bChangeMergeProfile, bForceTerminate,
     bLoaderDone, bAuthorized, bProgramUpdate, bDictionaryUpdate, bInstallUpdate,
-    bConnecting, bUpdateMergeStatus, bClose: boolean;
+    bConnecting, bUpdateMergeStatus, bClose, bOfflineMode: boolean;
     GameMode: TGameMode;
     constructor Create; virtual;
   end;
@@ -439,11 +439,13 @@ end;
 
 initialization
 begin
+  ProgramStatus := TProgramStatus.Create;
   PathList := TStringList.Create;
 end;
 
 finalization
 begin
+  ProgramStatus.Free;
   PathList.Free;
 end;
 

@@ -20,6 +20,7 @@ uses
   Controls,
   SysUtils,
   Classes,
+  RttiIni,
   mpProfileForm in 'mpProfileForm.pas' {ProfileForm},
   mpProfilePanel in 'mpProfilePanel.pas',
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
@@ -47,15 +48,35 @@ const
 
 var
   bProfileProvided: boolean;
-  ProgramPath: string;
+  sParam, sProfile, sPath: string;
+  aSettings: TSettings;
+  i: Integer;
 begin
   // set important vars
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.HintHidePause := 8000;
   PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
 
-  // get command line arguments
-  bProfileProvided := FindCmdLineSwitch('profile');
+  // get current profile if profile switch provided
+  for i := 1 to ParamCount do begin
+    sParam := ParamStr(i);
+    if sParam = '-profile' then
+      sProfile := ParamStr(i + 1);
+    if sParam = '-offline' then
+      ProgramStatus.bOfflineMode := true;
+
+  end;
+  bProfileProvided := sProfile <> '';
+  sPath := Format('%sprofiles\%s\settings.ini',
+    [PathList.Values['ProgramPath'], sProfile]);
+  if bProfileProvided and FileExists(sPath) then begin
+    aSettings := TSettings.Create;
+    TRttiIni.Load(sPath, aSettings);
+    CurrentProfile := TProfile.Create(aSettings.profile);
+    CurrentProfile.gameMode := aSettings.gameMode;
+    CurrentProfile.gamePath := aSettings.gamePath;
+    aSettings.Free;
+  end;
 
   // initialize application, load settings
   Application.Initialize;

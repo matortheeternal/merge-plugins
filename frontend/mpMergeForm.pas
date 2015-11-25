@@ -329,12 +329,50 @@ begin
   Logger.Write(xEditLogGroup, xEditLogLabel, s);
 end;
 
+procedure InitLog;
+begin
+  // INITIALIZE GROUP FILTERS
+  GroupFilters.Add(TFilter.Create('GENERAL', true));
+  GroupFilters.Add(TFilter.Create('LOAD', true));
+  GroupFilters.Add(TFilter.Create('CLIENT', true));
+  GroupFilters.Add(TFilter.Create('MERGE', true));
+  GroupFilters.Add(TFilter.Create('PLUGIN', true));
+  GroupFilters.Add(TFilter.Create('ERROR', true));
+  // INITIALIZE LABEL FILTERS
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Game', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Status', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Path', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Definitions', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Dictionary', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Load Order', true));
+  LabelFilters.Add(TFilter.Create('GENERAL', 'Log', true));
+  LabelFilters.Add(TFilter.Create('LOAD', 'Order', false));
+  LabelFilters.Add(TFilter.Create('LOAD', 'Plugins', false));
+  LabelFilters.Add(TFilter.Create('LOAD', 'Background', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Status', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Login', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Response', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Update', true));
+  LabelFilters.Add(TFilter.Create('CLIENT', 'Report', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Status', false));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Create', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Edit', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Check', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Clean', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Delete', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Build', true));
+  LabelFilters.Add(TFilter.Create('MERGE', 'Report', true));
+  LabelFilters.Add(TFilter.Create('PLUGIN', 'Report', true));
+  LabelFilters.Add(TFilter.Create('PLUGIN', 'Check', true));
+end;
+
 { Initialize form, initialize TES5Edit API, and load plugins }
 procedure TMergeForm.FormCreate(Sender: TObject);
 begin
   // INITIALIAZE BASE
   bCreated := false;
   AppStartTime := Now;
+  InitLog;
   Logger.OnLogEvent := LogMessage;
   //bAutoScroll := true;
   InitializeTaskbarAPI;
@@ -343,7 +381,6 @@ begin
   xEditLogLabel := 'Plugins';
   wbProgressCallback := ProgressMessage;
   StatusCallback := LoaderStatus;
-  ProgramStatus := TProgramStatus.Create;
   UpdateCallback := AutoUpdate;
 
   if not InitBase then begin
@@ -424,9 +461,13 @@ end;
 // Force PluginsListView to autosize columns
 procedure TMergeForm.FormShow(Sender: TObject);
 begin
+  // HANDLE OFFLINE MODE
+  if ProgramStatus.bOfflineMode then
+    Logger.Write('CLIENT', 'Status', 'Running in offline mode.');
+
   // HANDLE AUTO-UPDATE
   if ProgramStatus.bInstallUpdate then begin
-    Logger.Write('CLIENT', 'Disconnect', 'Disconnecting...');
+    Logger.Write('CLIENT', 'Status', 'Disconnecting...');
     TCPClient.Disconnect;
     ProgramStatus.bClose := true;
     bClosing := true;
@@ -2455,7 +2496,7 @@ procedure TMergeForm.ImageDisconnectedClick(Sender: TObject);
 begin
   if (not TCPClient.Connected)
   and (ConnectionAttempts = MaxConnectionAttempts) then begin
-    Logger.Write('CLIENT', 'Connect', 'Retrying connecting to the server.');
+    Logger.Write('CLIENT', 'Status', 'Retrying connecting to the server.');
     ConnectionAttempts := 0;
   end;
 end;

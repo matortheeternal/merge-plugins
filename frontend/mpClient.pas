@@ -130,15 +130,17 @@ end;
 
 procedure ConnectToServer;
 begin
-  if (ProgramStatus.bConnecting or TCPClient.Connected)
+  if ProgramStatus.bOfflineMode
+  or ProgramStatus.bConnecting
+  or TCPClient.Connected
   or (ConnectionAttempts >= MaxConnectionAttempts) then
     exit;
 
   ProgramStatus.bConnecting := true;
   try
-    Logger.Write('CLIENT', 'Connect', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
+    Logger.Write('CLIENT', 'Status', 'Attempting to connect to '+TCPClient.Host+':'+IntToStr(TCPClient.Port));
     TCPClient.Connect;
-    Logger.Write('CLIENT', 'Connect', 'Connection successful!');
+    Logger.Write('CLIENT', 'Status', 'Connection successful!');
     CheckAuthorization;
     SendGameMode;
     GetStatus;
@@ -146,10 +148,10 @@ begin
     SendPendingReports;
   except
     on x: Exception do begin
-      Logger.Write('ERROR', 'Connect', 'Connection failed.');
+      Logger.Write('ERROR', 'Status', 'Connection failed.');
       Inc(ConnectionAttempts);
       if ConnectionAttempts = MaxConnectionAttempts then
-        Logger.Write('CLIENT', 'Connect', 'Maximum connection attempts reached.  '+
+        Logger.Write('CLIENT', 'Status', 'Maximum connection attempts reached.  '+
           'Click the disconnected icon in the status bar to retry.');
     end;
   end;
@@ -424,7 +426,6 @@ begin
     exit;
   filename := wbAppName+'Dictionary.txt';
   Logger.Write('CLIENT', 'Update',  filename);
-  Tracker.Write('Updating '+filename);
 
   // attempt to request dictionary
   // throws exception if server is unavailable
