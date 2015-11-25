@@ -16,6 +16,7 @@ type
     lblVersion: TLabel;
     procedure ProgressMessage(const s: string);
     procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
   public
@@ -33,6 +34,11 @@ procedure TSplashForm.ProgressMessage(const s: string);
 begin
   lblProgress.Caption := s;
   Application.ProcessMessages;
+end;
+
+procedure TSplashForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Tracker.OnLogEvent := nil;
 end;
 
 procedure TSplashForm.FormCreate(Sender: TObject);
