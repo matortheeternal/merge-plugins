@@ -1236,6 +1236,9 @@ begin
   // exit if we've already copyied files from the source path
   if CopiedFrom.IndexOf(srcPath) > -1 then
     exit;
+  // exit if settings.modsPath is not in srcPath
+  if Pos(settings.ModsPath, srcPath) = 0 then
+    exit;
 
   // set up files to ignore
   fileIgnore := TStringList.Create;
