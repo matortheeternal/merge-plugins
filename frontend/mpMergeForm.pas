@@ -804,15 +804,21 @@ procedure TMergeForm.AddDetailsList(name: string; sl: TStringList;
   editable: boolean = false);
 var
   i: integer;
+  slTemp: TStringList;
 begin
-  sl.Text := Wordwrap(sl.Text, 80);
-  if sl.Count > 0 then begin
-    AddDetailsItem(name, sl[0], editable);
-    for i := 1 to Pred(sl.Count) do
-      AddDetailsItem(' ', sl[i], editable);
-  end
-  else
-    AddDetailsItem(name, ' ', editable);
+  slTemp := TStringList.Create;
+  try
+    slTemp.Text := Wordwrap(sl.Text, 80);
+    if slTemp.Count > 0 then begin
+      AddDetailsItem(name, slTemp[0], editable);
+      for i := 1 to Pred(slTemp.Count) do
+        AddDetailsItem(' ', slTemp[i], editable);
+    end
+    else
+      AddDetailsItem(name, ' ', editable);
+  finally
+    slTemp.Free;
+  end;
 end;
 
 {

@@ -64,7 +64,6 @@ begin
       sProfile := ParamStr(i + 1);
     if sParam = '-offline' then
       ProgramStatus.bOfflineMode := true;
-
   end;
   bProfileProvided := sProfile <> '';
   sPath := Format('%sprofiles\%s\settings.ini',
