@@ -26,6 +26,7 @@ type
     ToggleAllItem: TMenuItem;
     StateImages: TImageList;
     procedure LoadFields(aListItem: TPluginListItem; sPlugin: string);
+    procedure UpdateDisabled;
     procedure FormShow(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure CheckAllItemClick(Sender: TObject);
@@ -48,7 +49,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
-    slMasters, slDependencies: TStringList;
+    slMasters, slDependencies, slMissing, slDisabled: TStringList;
     ListItems: TList;
     sLastHint: string;
     sBuffer: string;
@@ -78,10 +79,12 @@ const
   cChecked = 1;
   cUnChecked = 2;
   // master states
-  msNone = 0;
-  msMaster = 1;
-  msDependency = 2;
-  msBoth = 3;
+  mstNone = 0;
+  mstMaster = 1;
+  mstDependency = 2;
+  mstBoth = 3;
+  mstMissing = 4;
+  mstDisabled = 5;
 
 {$R *.dfm}
 
@@ -131,6 +134,46 @@ begin
   end;
 end;
 
+procedure TPluginSelectionForm.UpdateDisabled;
+var
+  i, j, index: Integer;
+  filename: string;
+  ListItem, MasterItem: TPluginListItem;
+  sl: TStringList;
+begin
+  // update slDisabled
+  slDisabled.Clear;
+  sl := TStringList.Create;
+  try
+    for i := 0 to Pred(lvPlugins.Items.Count) do begin
+      ListItem := TPluginListItem(ListItems[i]);
+      filename := ListItem.Fields[0];
+      // if unchecked, skip
+      if ListItem.StateIndex = cUnChecked then
+        continue;
+      // if checked, make sure its masters are checked
+      GetPluginMasters(filename, sl);
+      for j := 0 to Pred(sl.Count) do begin
+        index := slAllPlugins.IndexOf(sl[j]);
+        // if master is not found, continue
+        if (index = -1) then
+          continue;
+        // if master is unchecked, ad to slDisabled
+        MasterItem := TPluginListItem(ListItems[index]);
+        if MasterItem.StateIndex = cUnChecked then
+          slDisabled.Add(sl[j]);
+      end;
+      // clear masters
+      sl.Clear;
+    end;
+  finally
+    sl.Free;
+  end;
+
+  // disable OK button if there are any disabled masters
+  btnOK.Enabled := slDisabled.Count = 0;
+end;
+
 procedure ToggleState(ListItem: TPluginListItem);
 begin
   case ListItem.StateIndex of
@@ -142,7 +185,7 @@ end;
 procedure TPluginSelectionForm.lvPluginsChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 var
-  i: Integer;
+  i, j, index: Integer;
   filename: string;
 begin
   // update slMasters and slDependencies
@@ -165,6 +208,21 @@ function TPluginSelectionForm.GetMasterStatus(filename: string): Integer;
 var
   bIsDependency, bIsMaster: boolean;
 begin
+  // if file has masters that are missing from slAllPlugins,
+  // return mstMissing
+  if slMissing.IndexOf(filename) > -1 then begin
+    Result := mstMissing;
+    exit;
+  end;
+
+  // if file has masters that are disabled,
+  // return mstDisabled
+  if slDisabled.IndexOf(filename) > -1 then begin
+    Result := mstDisabled;
+    exit;
+  end;
+
+  // compute master or dependency status based on selection
   bIsMaster := slMasters.IndexOf(filename) > -1;
   bIsDependency := slDependencies.IndexOf(filename) > -1;
   Result := IfThenInt(bIsMaster, 1, 0) + IfThenInt(bIsDependency, 2, 0);
@@ -188,13 +246,21 @@ begin
   lvPlugins.Canvas.Font.Style := [fsBold];
   MasterStatus := GetMasterStatus(Item.Caption);
   case MasterStatus of
-    msNone: begin
+    mstNone: begin
       lvPlugins.Canvas.Font.Style := [];
       lvPlugins.Canvas.Font.Color := clBlack;
     end;
-    msMaster: lvPlugins.Canvas.Font.Color := clGreen;
-    msDependency: lvPlugins.Canvas.Font.Color := clMaroon;
-    msBoth: lvPlugins.Canvas.Font.Color := clPurple;
+    mstMaster: lvPlugins.Canvas.Font.Color := clGreen;
+    mstDependency: lvPlugins.Canvas.Font.Color := clMaroon;
+    mstBoth: lvPlugins.Canvas.Font.Color := clPurple;
+    mstMissing: begin
+      lvPlugins.Canvas.Font.Style := [fsItalic];
+      lvPlugins.Canvas.Font.Color := clGray;
+    end;
+    mstDisabled: begin
+      lvPlugins.Canvas.Font.Style := [fsItalic];
+      lvPlugins.Canvas.Font.Color := clRed;
+    end;
   end;
 end;
 
@@ -300,9 +366,11 @@ begin
       for i := 0 to Pred(lvPlugins.Items.Count) do begin
         ListItem := lvPlugins.Items[i];
         if ListItem.Selected then
-          ToggleState(TPluginListItem(ListItems[i]));
+          if slMissing.IndexOf(slAllPlugins[i]) = -1 then
+            ToggleState(TPluginListItem(ListItems[i]));
       end;
       // repaint to show updated checkbox state and exit
+      UpdateDisabled;
       lvPlugins.Repaint;
       exit;
     end;
@@ -333,11 +401,14 @@ var
 begin
   // toggle checkbox state
   ListItem := lvPlugins.GetItemAt(X, Y);
-  if OnStateIcon(X, Y) then
-    ToggleState(TPluginListItem(ListItems[ListItem.Index]));
+  if OnStateIcon(X, Y) then begin
+    if slMissing.IndexOf(slAllPlugins[ListItem.Index]) = -1 then
+      ToggleState(TPluginListItem(ListItems[ListItem.Index]));
 
-  // repaint to show updated checkbox state
-  lvPlugins.Repaint;
+    // repaint to show updated checkbox state
+    UpdateDisabled;
+    lvPlugins.Repaint;
+  end;
 end;
 
 procedure TPluginSelectionForm.lvPluginsMouseMove(Sender: TObject;
@@ -391,12 +462,14 @@ procedure TPluginSelectionForm.FormClose(Sender: TObject;
 begin
   slMasters.Free;
   slDependencies.Free;
+  slMissing.Free;
+  slDisabled.Free;
   ListItems.Free;
 end;
 
 procedure TPluginSelectionForm.FormShow(Sender: TObject);
 var
-  i, iColumnSize: Integer;
+  i, j, iColumnSize: Integer;
   aListItem: TPluginListItem;
   sPlugin: string;
   sl: TStringList;
@@ -405,6 +478,8 @@ begin
   // create lists
   slMasters := TStringList.Create;
   slDependencies := TStringList.Create;
+  slMissing := TStringList.Create;
+  slDisabled := TStringList.Create;
   ListItems := TList.Create;
 
   // create columns
@@ -435,6 +510,26 @@ begin
     ListItems.Add(aListItem);
   end;
 
+  // determine which plugins can't be loaded because their masters
+  // are missing
+  sl := TStringList.Create;
+  try
+    for i := 0 to Pred(slAllPlugins.Count) do begin
+      sPlugin := slAllPlugins[i];
+      aListItem := TPluginListItem(ListItems[i]);
+      GetPluginMasters(sPlugin, sl);
+      for j := 0 to Pred(sl.Count) do
+        if slAllPlugins.IndexOf(sl[j]) = -1 then begin
+          slMissing.Add(sPlugin);
+          aListItem.StateIndex := cUnChecked;
+          break;
+        end;
+      sl.Clear;
+    end;
+  finally
+    sl.Free;
+  end;
+
   // set plugin count for display
   lvPlugins.Items.Count := slAllPlugins.Count;
   ListView_CorrectWidth(lvPlugins);
@@ -445,9 +540,11 @@ var
   i: Integer;
 begin
   for i := 0 to Pred(lvPlugins.Items.Count) do
-    TPluginListItem(ListItems[i]).StateIndex := cChecked;
+    if slMissing.IndexOf(slAllPlugins[i]) = -1 then
+      TPluginListItem(ListItems[i]).StateIndex := cChecked;
 
   // repaint to show updated checkbox state
+  UpdateDisabled;
   lvPlugins.Repaint;
 end;
 
@@ -459,6 +556,7 @@ begin
     TPluginListItem(ListItems[i]).StateIndex := cUnChecked;
 
   // repaint to show updated checkbox state
+  UpdateDisabled;
   lvPlugins.Repaint;
 end;
 
@@ -467,9 +565,11 @@ var
   i: Integer;
 begin
   for i := 0 to Pred(lvPlugins.Items.Count) do
-    ToggleState(TPluginListItem(ListItems[i]));
+    if slMissing.IndexOf(slAllPlugins[i]) = -1 then
+      ToggleState(TPluginListItem(ListItems[i]));
 
   // repaint to show updated checkbox state
+  UpdateDisabled;
   lvPlugins.Repaint;
 end;
 
