@@ -127,6 +127,7 @@ type
   end;
 
   // Loading/Saving functions
+  procedure HandleCanceled(msg: string);
   procedure RenameSavedPlugins;
   procedure LoadDictionary;
   procedure SaveMerges;
@@ -1200,6 +1201,12 @@ begin
   sl.LoadFromFile(filename);
   report := TReport(TRttiJson.FromJson(sl.Text, report.ClassType));
   sl.Free;
+end;
+
+procedure HandleCanceled(msg: string);
+begin
+  if Tracker.Cancel then
+    raise Exception.Create(msg);
 end;
 
 procedure RenameSavedPlugins;

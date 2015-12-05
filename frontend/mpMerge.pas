@@ -19,14 +19,14 @@ uses
   // mte units
   mteBase, mteHelpers, mteLogger, mteTracker,
   // mp units
-  mpConfiguration,
+  mpConfiguration, mpClient,
   // xEdit units
   wbBSA, wbHelpers, wbInterface, wbImplementation, wbDefinitionsFNV,
   wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4, wbDefinitionsTES5;
 
 var
   pexPath, pscPath, generalPexPath, generalPscPath, mergedBsaPath, compiledPath,
-  compileLog, decompileLog: string;
+  compileLog, decompileLog, mergeFilePrefix: string;
   mergeFormIndex: integer;
   UsedFormIDs: array [0..$FFFFFF] of byte;
   handledFragments, batchCopy, batchDecompile, batchCompile: TStringList;
@@ -1491,28 +1491,8 @@ begin
   batchBsa.Free;
 end;
 
-procedure BuildMerge(var merge: TMerge);
-var
-  plugin: TPlugin;
-  mergeFile, aFile: IwbFile;
-  e, masters: IwbContainer;
-  failed, masterName, mergeDesc, desc, bfn, mergeFilePrefix,
-  decompileFilename, compileFilename, fn: string;
-  pluginsToMerge: TList;
-  i, LoadOrder: Integer;
-  usedExistingFile: boolean;
-  slMasters, sl: TStringList;
-  FileStream: TFileStream;
-  time: TDateTime;
+procedure SetUpDirectories;
 begin
-  // initialize
-  Tracker.Write('Building merge: '+merge.name);
-  batchCopy := TStringList.Create;
-  CopiedFrom := TStringList.Create;
-  time := Now;
-  failed := 'Failed to merge '+merge.name;
-  merge.fails.Clear;
-
   // delete temp path, it should be empty before we begin
   DeleteDirectory(PathList.Values['TempPath']);
   // set up directories
@@ -1522,7 +1502,6 @@ begin
   generalPexPath := PathList.Values['TempPath'] + 'generalPex\';
   generalPscPath := PathList.Values['TempPath'] + 'generalPsc\';
   compiledPath := PathList.Values['TempPath'] + 'compiled\';
-  mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
   // force directories to exist so we can put files in them
   ForceDirectories(mergedBsaPath);
   ForceDirectories(pexPath);
@@ -1530,139 +1509,159 @@ begin
   ForceDirectories(generalPexPath);
   ForceDirectories(generalPscPath);
   ForceDirectories(compiledPath);
-  ForceDirectories(ExtractFilePath(mergeFilePrefix));
+end;
 
-  // don't merge if merge has plugins not found in current load order
-  pluginsToMerge := TList.Create;
+procedure BuildPluginsList(var merge: TMerge; var lst: TList);
+var
+  i: Integer;
+  plugin: TPlugin;
+begin
   for i := 0 to Pred(merge.plugins.Count) do begin
     plugin := PluginByFileName(merge.plugins[i]);
-
-    if not Assigned(plugin) then begin
-      Tracker.Write(failed + ', couldn''t find plugin '+merge.plugins[i]);
-      pluginsToMerge.Free;
-      merge.status := msFailed;
-      exit;
-    end;
-    pluginsToMerge.Add(plugin);
+    if not Assigned(plugin) then
+      raise Exception.Create('Couldn''t find plugin '+merge.plugins[i]);
+    lst.Add(plugin);
   end;
+end;
 
-  // identify destination file or create new one
-  plugin := PluginByFilename(merge.filename);
+procedure SetMergeAttributes(var merge: TMerge; var lst: TList);
+var
+  mergeFile, aFile: IwbFile;
+  fileHeader: IwbContainer;
+  desc, mergeDesc: string;
+  i: Integer;
+  plugin: TPlugin;
+begin
+  mergeFile := merge.plugin._File;
+  fileHeader := mergeFile.Elements[0] as IwbContainer;
+
+  // set author
+  fileHeader.ElementEditValues['CNAM'] := 'Merge Plugins v'+LocalStatus.programVersion;
+
+  // set description
+  desc := 'Merged Plugin: ';
+  for i := 0 to Pred(lst.Count) do begin
+    plugin := lst[i];
+    aFile := plugin._File;
+    mergeDesc := fileHeader.ElementEditValues['SNAM'];
+    if Pos('Merged Plugin', mergeDesc) > 0 then
+      desc := desc+StringReplace(mergeDesc, 'Merged Plugin:', '', [rfReplaceAll])
+    else
+      desc := desc+#13#10+'  '+merge.plugins[i];
+  end;
+  fileHeader.ElementEditValues['SNAM'] := desc;
+end;
+
+function GetMergeFile(var merge: TMerge; var lst: TList): IwbFile;
+var
+  plugin: TPlugin;
+  bUsedExistingFile: boolean;
+  pluginFile: IwbFile;
+  i: Integer;
+begin
+  // get plugin if it exists
+  // else create it
+  plugin := PluginByFilename(plugin.filename);
   merge.plugin := nil;
-  merge.map.Clear;
   if Assigned(plugin) then begin
-    usedExistingFile := true;
+    bUsedExistingFile := true;
     merge.plugin := plugin;
   end
   else begin
-    usedExistingFile := false;
-    merge.plugin := CreateNewPlugin(merge.filename);
+    bUsedExistingFile := false;
+    merge.plugin := CreateNewPlugin(plugin.filename);
   end;
-  mergeFile := merge.plugin._File;
+
+  // don't plugin if pluginFile not assigned
+  if not Assigned(merge.plugin) then
+    raise Exception.Create('Couldn''t assign plugin file');
+
+  // don't plugin if pluginFile is at an invalid load order position relative
+  // to the plugins being plugined
+  if bUsedExistingFile then begin
+    for i := 0 to Pred(lst.Count) do begin
+      plugin := TPlugin(lst[i]);
+      if PluginsList.IndexOf(plugin) > PluginsList.IndexOf(merge.plugin) then
+        raise Exception.Create(Format('%s is at a lower load order position than %s',
+          [plugin.filename, plugin.filename]));
+    end;
+
+    // clean up the plugin file
+    pluginFile := merge.plugin._File;
+    for i := Pred(pluginFile.RecordCount) downto 0 do
+      pluginFile.Records[i].Remove;
+    pluginFile.CleanMasters;
+  end;
+
+  // set result
+  Result := merge.plugin._File;
   Tracker.Write(' ');
   Tracker.Write('Merge is using plugin: '+merge.plugin.filename);
+end;
 
-  // don't merge if mergeFile not assigned
-  if not Assigned(merge.plugin) then begin
-    Tracker.Write(failed + ', couldn''t assign merge file.');
-    merge.status := msFailed;
-    exit;
-  end;
-
-  // don't merge if mergeFile is at an invalid load order position relative
-  // don't the plugins being merged
-  if usedExistingFile then begin
-    for i := 0 to Pred(pluginsToMerge.Count) do begin
-      plugin := pluginsToMerge[i];
-
-      if PluginsList.IndexOf(plugin) > PluginsList.IndexOf(merge.plugin) then begin
-        Tracker.Write(failed + ', '+plugin.filename +
-          ' is at a lower load order position than '+merge.filename);
-        pluginsToMerge.Free;
-        merge.status := msFailed;
-        exit;
-      end;
-    end;
-  end;
-
-  // force merge directories to exist
-  merge.dataPath := settings.mergeDirectory + merge.name + '\';
-  Tracker.Write('Merge data path: '+merge.dataPath);
-  ForceDirectories(merge.dataPath);
-
-  // add required masters
+procedure AddRequiredMasters(var merge: TMerge; var lst: TList);
+var
+  slMasters: TStringList;
+  i: Integer;
+  plugin: TPlugin;
+begin
   slMasters := TStringList.Create;
-  Tracker.Write('Adding masters...');
-  for i := 0 to Pred(pluginsToMerge.Count) do begin
-    plugin := TPlugin(pluginsToMerge[i]);
-    slMasters.AddObject(plugin.filename, merge.plugins.Objects[i]);
-    GetMasters(plugin._File, slMasters);
-  end;
   try
-    mergeFormIndex := slMasters.Count - merge.plugins.Count;
-    slMasters.CustomSort(LoadOrderCompare);
-    AddMasters(merge.plugin._File, slMasters);
-    if settings.debugMasters then begin
-      Tracker.Write('Masters added:');
-      Tracker.Write(slMasters.Text);
-      slMasters.Clear;
-      GetMasters(merge.plugin._File, slMasters);
-      Tracker.Write('Actual masters:');
-      Tracker.Write(slMasters.Text);
+    Tracker.Write('Adding masters...');
+    for i := 0 to Pred(lst.Count) do begin
+      plugin := TPlugin(lst[i]);
+      GetMasters(plugin._File, slMasters);
+      slMasters.AddObject(plugin.filename, merge.plugins.Objects[i]);
     end;
-  except on Exception do
-    // nothing
-  end;
-  slMasters.Free;
-  if Tracker.Cancel then exit;
-  Tracker.Write('Done adding masters');
-
-  try
-    // overrides merging method
-    if merge.method = 'Overrides' then
-      RenumberRecords(pluginsToMerge, merge);
-
-    // copy records
-    CopyRecords(pluginsToMerge, merge);
-
-    // new records merging method
-    if merge.method = 'New records' then
-      RemapRecords(merge);
-  except
-    // exception, discard changes to source plugin, free merge file, and exit
-    on x : Exception do begin
-      Tracker.Write('Exception: '+x.Message);
-      Tracker.Write(' ');
-      if merge.method = 'Overrides' then begin
-        Tracker.Write('Discarding changes to source plugins');
-        for i := 0 to Pred(pluginsToMerge.Count) do begin
-          plugin := pluginsToMerge[i];
-          Tracker.Write('  Reloading '+plugin.filename+' from disk');
-          LoadOrder := PluginsList.IndexOf(plugin);
-          plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
-        end;
+    try
+      slMasters.CustomSort(LoadOrderCompare);
+      AddMasters(merge.plugin._File, slMasters);
+      if settings.debugMasters then begin
+        Tracker.Write('Masters added:');
+        Tracker.Write(slMasters.Text);
+        slMasters.Clear;
+        GetMasters(merge.plugin._File, slMasters);
+        Tracker.Write('Actual masters:');
+        Tracker.Write(slMasters.Text);
       end;
-
-      // release merge file
-      mergeFile._Release;
-      mergeFile := nil;
-
-      // exit
-      Tracker.Write(' ');
-      Tracker.Write('Merge failed.');
-      merge.status := msFailed;
-      exit;
+    except on Exception do
+      // nothing
     end;
+  finally
+    slMasters.Free;
+    if Tracker.Cancel then
+      raise Exception.Create('User cancelled smashing.');
+    Tracker.Write('Done adding masters');
   end;
+end;
 
+procedure MergeRecords(var merge: TMerge; var lst: TList);
+begin
+  // overrides merging method
+  if merge.method = 'Overrides' then
+    RenumberRecords(lst, merge);
+
+  // copy records
+  CopyRecords(lst, merge);
+
+  // new records merging method
+  if merge.method = 'New records' then
+    RemapRecords(merge);
+end;
+
+procedure HandleMergeAssets(var merge: TMerge; var lst: TList);
+var
+  i: Integer;
+  plugin: TPlugin;
+begin
   // handle assets
   if not Tracker.Cancel then begin
     Tracker.Write(' ');
     Tracker.Write('Handling assets');
     languages := TStringList.Create;
     MergeIni := TStringList.Create;
-    for i := Pred(pluginsToMerge.Count) downto 0 do begin
-      plugin := pluginsToMerge[i];
+    for i := Pred(lst.Count) downto 0 do begin
+      plugin := TPlugin(lst[i]);
       Tracker.Write('  Handling assets for '+plugin.filename);
       HandleAssets(plugin, merge);
     end;
@@ -1673,7 +1672,12 @@ begin
     languages.Free;
     MergeIni.Free;
   end;
+end;
 
+procedure HandleScripts(var merge: TMerge);
+var
+  decompileFilename, compileFilename: string;
+begin
   // decompile, remap, and recompile script fragments
   if settings.handleScriptFragments and not Tracker.Cancel then begin
     // prep
@@ -1718,15 +1722,23 @@ begin
     batchDecompile.Free;
     batchCompile.Free;
   end;
+end;
 
+procedure HandleMergedBSA(var merge: TMerge; var lst: TList);
+begin
   // build merged bsa
   if settings.buildMergedBSA and FileExists(settings.bsaOptPath)
   and (settings.bsaOptOptions <> '') and (not Tracker.Cancel) then begin
     Tracker.Write(' ');
     Tracker.Write('Building Merged BSA...');
-    BuildMergedBSA(merge, pluginsToMerge);
+    BuildMergedBSA(merge, lst);
   end;
+end;
 
+procedure HandleBatchCopy(var merge: TMerge);
+var
+  bfn: string;
+begin
   // batch copy assets
   if settings.batCopy and (batchCopy.Count > 0) and (not Tracker.Cancel) then begin
     bfn := mergeFilePrefix + '-Copy.bat';
@@ -1734,7 +1746,10 @@ begin
     batchCopy.Clear;
     ShellExecute(0, 'open', PChar(bfn), '', PChar(wbProgramPath), SW_SHOWMINNOACTIVE);
   end;
+end;
 
+procedure HandleSEQFile(var merge: TMerge);
+begin
   // create SEQ file
   if (not Tracker.Cancel) and settings.handleSEQ then try
     CreateSEQFile(merge);
@@ -1742,30 +1757,21 @@ begin
     on x: Exception do
       Tracker.Write('Failed to create SEQ file, '+x.Message);
   end;
+end;
 
-  // set description
-  if not Tracker.Cancel then try
-    desc := 'Merged Plugin: ';
-    for i := 0 to Pred(pluginsToMerge.Count) do begin
-      plugin := pluginsToMerge[i];
-      aFile := plugin._File;
-      mergeDesc := (aFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'];
-      if Pos('Merged Plugin', mergeDesc) > 0 then
-        desc := desc+StringReplace(mergeDesc, 'Merged Plugin:', '', [rfReplaceAll])
-      else
-        desc := desc+#13#10+'  '+merge.plugins[i];
-    end;
-    (mergeFile.Elements[0] as IwbContainer).ElementEditValues['SNAM'] := desc;
-  except
-    on x: Exception do
-      Tracker.Write('Failed to create description, '+x.Message);
-  end;
-
+procedure CleanMerge(var merge: TMerge);
+var
+  masters: IwbContainer;
+  mergeFile: IwbFile;
+  i: Integer;
+  e: IwbContainer;
+  masterName: string;
+begin
   // if overrides method, remove masters to force clamping
-  // else clean masters
   if merge.method = 'Overrides' then begin
     Tracker.Write(' ');
     Tracker.Write('Removing unncessary masters');
+    mergeFile := merge.plugin._File;
     masters := mergeFile.Elements[0] as IwbContainer;
     masters := masters.ElementByPath['Master Files'] as IwbContainer;
     for i := Pred(masters.ElementCount) downto 0 do begin
@@ -1778,34 +1784,25 @@ begin
       end;
     end;
   end
+  // else just clean masters
   else
     mergeFile.CleanMasters;
+end;
 
-  // reload plugins to be merged to discard changes
-  if Tracker.Cancel and (merge.method = 'Overrides') then begin
-    merge.status := msCanceled;
-    {Tracker.Write(' ');
-    Tracker.Write('Discarding changes to source plugins');
-    for i := 0 to Pred(pluginsToMerge.Count) do begin
-      plugin := pluginsToMerge[i];
-      Tracker.Write('  Reloading '+plugin.filename+' from disk');
-      LoadOrder := PluginsList.IndexOf(plugin);
-      plugin._File._Release;
-      plugin._File := wbFile(wbDataPath + plugin.filename, LoadOrder);
-      plugin._File._AddRef;
-      plugin._File.BuildRef;
-    end;}
-  end;
-  if Tracker.Cancel then exit;
-
-  // update merge plugin hashes
-  merge.UpdateHashes;
-
+procedure SaveMergeFiles(var merge: TMerge);
+var
+  FileStream: TFileStream;
+  mergeFile: IwbFile;
+  sl: TStringList;
+  fn: string;
+  i: Integer;
+begin
   // save merged plugin
   FileStream := TFileStream.Create(merge.dataPath + merge.filename, fmCreate);
   try
     Tracker.Write(' ');
     Tracker.Write('Saving: ' + merge.dataPath + merge.filename);
+    mergeFile := merge.plugin._File;
     mergeFile.WriteToStream(FileStream, False);
     merge.files.Add(merge.dataPath + merge.filename);
   finally
@@ -1826,20 +1823,84 @@ begin
     sl.SaveToFile(fn);
   end;
   sl.Free;
+end;
 
-  // update statistics
-  if merge.status = msBuildReady then
-    Inc(sessionStatistics.pluginsMerged, merge.plugins.Count);
-  Inc(sessionStatistics.mergesBuilt);
+procedure BuildMerge(var merge: TMerge);
+var
+  mergeFile: IwbFile;
+  failed: string;
+  pluginsToMerge: TList;
+  time: TDateTime;
+begin
+  // initialize
+  Tracker.Write('Building merge: '+merge.name);
+  time := Now;
+  merge.fails.Clear;
+  batchCopy := TStringList.Create;
+  CopiedFrom := TStringList.Create;
+  failed := 'Failed to merge '+merge.name;
+
+  // set up directories
+  mergeFilePrefix := merge.dataPath + 'merge\'+ChangeFileExt(merge.filename, '');
+  ForceDirectories(ExtractFilePath(mergeFilePrefix));
+  SetUpDirectories;
+
+  try
+    // build list of plugins to patch
+    BuildPluginsList(merge, pluginsToMerge);
+    HandleCanceled(failed);
+
+    // identify or create merged plugin
+    mergeFile := GetMergeFile(merge, pluginsToMerge);
+    SetMergeAttributes(merge, pluginsToMerge);
+
+    // add masters to merge file
+    AddRequiredMasters(merge, pluginsToMerge);
+    HandleCanceled(failed);
+
+    // merge the plugins
+    MergeRecords(merge, pluginsToMerge);
+    HandleCanceled(failed);
+
+    // handle all assets
+    HandleMergeAssets(merge, pluginsToMerge);
+    HandleCanceled(failed);
+    HandleScripts(merge);
+    HandleCanceled(failed);
+    HandleMergedBSA(merge, pluginsToMerge);
+    HandleCanceled(failed);
+    HandleBatchCopy(merge);
+    HandleCanceled(failed);
+    HandleSEQFile(merge);
+    HandleCanceled(failed);
+
+    // clean merge
+    CleanMerge(merge);
+
+    // save merge files and update hashes
+    SaveMergeFiles(merge);
+    merge.UpdateHashes;
+
+    // update statistics
+    if merge.status = msBuildReady then
+      Inc(sessionStatistics.pluginsMerged, merge.plugins.Count);
+    Inc(sessionStatistics.mergesBuilt);
+
+    // finalization messages
+    time := (Now - time) * 86400;
+    merge.dateBuilt := Now;
+    merge.status := msBuilt;
+    Tracker.Write(Format('Done merging %s (%.3fs)', [merge.name, Real(time)]));
+  except
+    on x: Exception do begin
+      merge.status := msFailed;
+      Tracker.Write(Format('Failed to merge %s, %s', [merge.name, x.Message]));
+    end;
+  end;
 
   // clean up
   batchCopy.Free;
-
-  // done merging
-  time := (Now - time) * 86400;
-  merge.dateBuilt := Now;
-  merge.status := msBuilt;
-  Tracker.Write('Done merging '+merge.name+' ('+FormatFloat('0.###', time) + 's)');
+  pluginsToMerge.Free;
 end;
 
 procedure DeleteOldMergeFiles(var merge: TMerge);
