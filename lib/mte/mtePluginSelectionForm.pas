@@ -185,7 +185,7 @@ end;
 procedure TPluginSelectionForm.lvPluginsChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 var
-  i, j, index: Integer;
+  i: Integer;
   filename: string;
 begin
   // update slMasters and slDependencies
