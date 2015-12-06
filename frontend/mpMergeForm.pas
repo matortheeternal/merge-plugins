@@ -52,7 +52,7 @@ type
         DetailsPanel: TPanel;
         [FormSection('Details Panel')]
           DetailsLabel: TLabel;
-          DetailsEditor: TValueListEditor;
+          DetailsGrid: TStringGrid;
           DetailsPopupMenu: TPopupMenu;
           DetailsCopyToClipboardItem: TMenuItem;
         [FormSection('Plugins Tab')]
@@ -133,6 +133,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure LoaderStatus(s: string);
     procedure LoaderDone;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure SaveDone;
     procedure ConnectDone;
@@ -150,15 +151,15 @@ type
     procedure ShowAuthorizationMessage;
     procedure UpdateStatusBar;
     procedure UpdateListViews;
-    // DETAILS EDITOR EVENTS
-    function AddDetailsItem(name, value: string; editable: boolean = false):
-      TItemProp;
-    procedure AddDetailsList(name: string; sl: TStringList;
-      editable: boolean = false);
+    // DETAILS GRID EVENTS
+    procedure AddDetailsItem(name, value: string);
+    procedure AddDetailsList(name: string; sl: TStringList);
     procedure PageControlChange(Sender: TObject);
     procedure UpdateApplicationDetails;
-    procedure DetailsEditorMouseUp(Sender: TObject; Button: TMouseButton;
+    procedure DetailsGridMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure DetailsGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
     // PLUGINS LIST VIEW EVENTS
     procedure UpdatePluginDetails;
     procedure AddPluginsToMerge(var merge: TMerge);
@@ -245,6 +246,7 @@ type
     { Private declarations }
     fLastBufferTime: TDateTime;
     sBuffer: string;
+    slDetails: TStringList;
   public
     { Public declarations }
   end;
@@ -513,6 +515,8 @@ begin
   StatusPanelVersion.Caption := 'v'+LocalStatus.programVersion;
 
   // UPDATE GUI
+  slDetails := TStringList.Create;
+  DetailsGrid.ColWidths[1] := DetailsGrid.ClientWidth - DetailsGrid.ColWidths[0];
   PluginsListView.OwnerDraw := not settings.simplePluginsView;
   PluginsListView.Items.Count := PluginsList.Count;
   UpdateLog;
@@ -572,6 +576,11 @@ begin
   xEditLogLabel := 'xEdit';
   FlashWindow(Application.Handle, True);
   UpdateQuickbar;
+end;
+
+procedure TMergeForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  slDetails.Free;
 end;
 
 procedure TMergeForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -719,6 +728,8 @@ end;
 procedure TMergeForm.Heartbeat;
 begin
   try
+    if not Assigned(TCPClient.IOHandler) then
+      raise Exception.Create('IOHandler not open');
     if TCPClient.IOHandler.Opened and
     not (ProgramStatus.bConnecting or bClosing or ServerAvailable) then
       raise Exception.Create('Connection unavailable');
@@ -785,23 +796,16 @@ end;
 {
    Adds a ListItem to DetailsView with @name and @value
 }
-function TMergeForm.AddDetailsItem(name, value: string;
-  editable: boolean = false): TItemProp;
-var
-  prop: TItemProp;
+procedure TMergeForm.AddDetailsItem(name, value: string);
 begin
-  DetailsEditor.InsertRow(name, value, true);
-  prop := DetailsEditor.ItemProps[DetailsEditor.RowCount - 1];
-  prop.ReadOnly := not editable;
-  Result := prop;
+  slDetails.Values[name] := value;
 end;
 
 {
   Add one or more ListItem to DetailsView with @name and the values
   in @sl
 }
-procedure TMergeForm.AddDetailsList(name: string; sl: TStringList;
-  editable: boolean = false);
+procedure TMergeForm.AddDetailsList(name: string; sl: TStringList);
 var
   i: integer;
   slTemp: TStringList;
@@ -810,12 +814,12 @@ begin
   try
     slTemp.Text := Wordwrap(sl.Text, 80);
     if slTemp.Count > 0 then begin
-      AddDetailsItem(name, slTemp[0], editable);
+      AddDetailsItem(name, slTemp[0]);
       for i := 1 to Pred(slTemp.Count) do
-        AddDetailsItem(' ', slTemp[i], editable);
+        AddDetailsItem(' ', slTemp[i]);
     end
     else
-      AddDetailsItem(name, ' ', editable);
+      AddDetailsItem(name, ' ');
   finally
     slTemp.Free;
   end;
@@ -848,7 +852,7 @@ end;
 procedure TMergeForm.UpdateApplicationDetails;
 begin
   // prepare list view for application information
-  DetailsEditor.Strings.Clear;
+  slDetails.Clear;
   DetailsLabel.Caption := GetLanguageString('mpMain_AppDetails');
 
   // add details items
@@ -873,6 +877,9 @@ begin
   AddDetailsItem(GetLanguageString('mpMain_xEditCredits'), 'zilav, hlp, Sharlikran, ElminsterAU');
   AddDetailsItem(GetLanguageString('mpMain_Testers'), ProgramTesters);
   AddDetailsItem(GetLanguageString('mpMain_Translators'), ProgramTranslators);
+
+  // update details item count
+  DetailsGrid.RowCount := slDetails.Count;
 end;
 
 procedure TMergeForm.DetailsCopyToClipboardItemClick(Sender: TObject);
@@ -887,11 +894,11 @@ begin
   // empty names and empty values
   name := ' ';
   value := ' ';
-  for i := 0 to Pred(DetailsEditor.Strings.Count) do begin
+  for i := 0 to Pred(slDetails.Count) do begin
     previousName := name;
-    name := DetailsEditor.Strings.Names[i];
+    name := slDetails.Names[i];
     previousValue := value;
-    value := DetailsEditor.Strings.ValueFromIndex[i];
+    value := slDetails.ValueFromIndex[i];
     if (name <> ' ') then
       sl.Add(Format('%s: %s', [name, value]))
     else if (value <> ' ') then begin
@@ -911,7 +918,49 @@ begin
 end;
 
 { Handle user clicking URL }
-procedure TMergeForm.DetailsEditorMouseUp(Sender: TObject; Button: TMouseButton;
+procedure TMergeForm.DetailsGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+var
+  sText: string;
+  iHalfBottom, iPadding: Integer;
+begin
+  // initialize stuff
+  sText := ' ';
+  iPadding := (Rect.Bottom - Rect.Top) - DetailsGrid.Canvas.TextHeight('Hg');
+  iHalfBottom := Rect.Top + (Rect.Bottom - Rect.Top) div 2;
+  DetailsGrid.Font.Style := [];
+  DetailsGrid.Font.Color := clBlack;
+
+  // draw name
+  if ACol = 0 then begin
+    DetailsGrid.Canvas.Brush.Color := clMenu;
+    DetailsGrid.Canvas.Rectangle(Rect);
+    DetailsGrid.Canvas.Brush.Color := clWindow;
+    DetailsGrid.Canvas.Rectangle(Rect.Left, Rect.Top, Rect.Right, iHalfBottom);
+
+    if Assigned(slDetails) and (slDetails.Count > ARow) then
+      sText := slDetails.Names[ARow];
+    DetailsGrid.Canvas.Brush.Style := bsClear;
+    DetailsGrid.Canvas.TextOut(Rect.Left + 4, Rect.Top + (iPadding div 2), sText);
+  end
+  // draw value
+  else if ACol = 1 then begin
+    DetailsGrid.Canvas.Brush.Color := clWindow;
+    DetailsGrid.Canvas.Rectangle(Rect);
+
+    if Assigned(slDetails) and (slDetails.Count > ARow) then
+      sText := slDetails.ValueFromIndex[ARow];
+    if (slDetails.Count - 1 > ARow)
+    and IsURL(slDetails.ValueFromIndex[ARow + 1]) then begin
+      DetailsGrid.Font.Style := [fsUnderline];
+      DetailsGrid.Font.Color := clBlue;
+    end;
+    DetailsGrid.Canvas.Brush.Style := bsClear;
+    DetailsGrid.Canvas.TextOut(Rect.Left + 4, Rect.Top + (iPadding div 2), sText);
+  end;
+end;
+
+procedure TMergeForm.DetailsGridMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
   ACol, ARow: integer;
@@ -920,9 +969,14 @@ begin
   // only process left clicks
   if Button <> mbLeft then
     exit;
-  DetailsEditor.MouseToCell(X, Y, ACol, ARow);
+
+  DetailsGrid.MouseToCell(X, Y, ACol, ARow);
+  // skip clicks on cells in column 0
+  if ACol = 0 then
+    exit;
+
   try
-    value := DetailsEditor.Cells[ACol, ARow];
+    value := slDetails.ValueFromIndex[ARow];
     if Pos(' ', value) > 0 then
       value := Copy(value, 1, Pos(' ', value));
     if IsURL(value) and ((Now - LastURLTime) * 86400 > 1.0) then begin
@@ -959,7 +1013,7 @@ begin
     exit;
 
   // prepare list view for plugin information
-  DetailsEditor.Strings.Clear;
+  slDetails.Clear;
   DetailsLabel.Caption := GetLanguageString('mpMain_PluginDetails');
 
   // get plugin information
@@ -985,6 +1039,7 @@ begin
   AddDetailsList(GetLanguageString('mpMain_Reports'), plugin.reports);
 
   // free
+  DetailsGrid.RowCount := slDetails.Count;
   sl.Free;
 end;
 
@@ -1566,32 +1621,31 @@ begin
     exit;
 
   // prepare list view for merge information
-  DetailsEditor.Strings.Clear;
+  slDetails.Clear;
   DetailsLabel.Caption := GetLanguageString('mpMain_MergeDetails');
 
   // get merge information
   merge := MergesList[MergesListView.ItemIndex];
-  AddDetailsItem(GetLanguageString('mpMain_Status'), StatusArray[Ord(merge.status)].desc, false);
-  AddDetailsItem(GetLanguageString('mpMain_MergeName'), merge.name, true);
-  AddDetailsItem(GetLanguageString('mpMain_Filename'), merge.filename, true);
+  AddDetailsItem(GetLanguageString('mpMain_Status'), StatusArray[Ord(merge.status)].desc);
+  AddDetailsItem(GetLanguageString('mpMain_MergeName'), merge.name);
+  AddDetailsItem(GetLanguageString('mpMain_Filename'), merge.filename);
   AddDetailsItem(GetLanguageString('mpMain_PluginCount'), IntToStr(merge.plugins.Count));
   AddDetailsItem(GetLanguageString('mpMain_DateBuilt'), DateBuiltString(merge.dateBuilt));
   AddDetailsList(GetLanguageString('mpMain_Plugins'), merge.plugins);
   AddDetailsItem(' ', ' ');
-  AddDetailsItem(GetLanguageString('mpMain_MergeMethod'), merge.method, false);
-  AddDetailsItem(GetLanguageString('mpMain_Renumbering'), merge.renumbering, false);
-  if merge.files.Count < 250 then begin
-    sl := TStringList.Create;
-    sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
-    AddDetailsList(GetLanguageString('mpMain_Files'), sl);
-    sl.Free;
-  end
-  else
-    AddDetailsItem(GetLanguageString('mpMain_Files'), GetLanguageString('mpMain_TooManyFiles'));
-  if merge.fails.Count < 250 then
-    AddDetailsList(GetLanguageString('mpMain_Fails'), merge.fails)
-  else
-    AddDetailsItem(GetLanguageString('mpMain_Fails'), GetLanguageString('mpMain_TooManyFails'));
+  AddDetailsItem(GetLanguageString('mpMain_MergeMethod'), merge.method);
+  AddDetailsItem(GetLanguageString('mpMain_Renumbering'), merge.renumbering);
+
+  // files list
+  sl := TStringList.Create;
+  sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
+  AddDetailsList(GetLanguageString('mpMain_Files'), sl);
+  sl.Free;
+  // fails list
+  AddDetailsList(GetLanguageString('mpMain_Fails'), merge.fails);
+
+  // update row count
+  DetailsGrid.RowCount := slDetails.Count;
 end;
 
 procedure TMergeForm.UpdateMerges;
@@ -2326,7 +2380,7 @@ begin
     exit;
 
   // clear details editor
-  DetailsEditor.Strings.Clear;
+  slDetails.Clear;
 
   // loop through merges
   for i := Pred(mergesToDelete.Count) downto 0 do begin

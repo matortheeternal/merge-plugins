@@ -12,6 +12,7 @@ object MergeForm: TMergeForm
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
@@ -218,10 +219,6 @@ object MergeForm: TMergeForm
       object MergesTabSheet: TTabSheet
         Caption = 'Merges'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object MergesListView: TListView
           Left = 3
           Top = 3
@@ -271,10 +268,6 @@ object MergeForm: TMergeForm
       object LogTabSheet: TTabSheet
         Caption = 'Log'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LogListView: TListView
           Left = 3
           Top = 3
@@ -337,27 +330,25 @@ object MergeForm: TMergeForm
       Height = 13
       Caption = 'Details'
     end
-    object DetailsEditor: TValueListEditor
+    object DetailsGrid: TStringGrid
       Left = 3
-      Top = 27
-      Width = 591
-      Height = 584
+      Top = 29
+      Width = 590
+      Height = 582
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
-      DisplayOptions = [doAutoColResize, doKeyColFixed]
+      ColCount = 2
+      DefaultColWidth = 175
+      DefaultRowHeight = 22
       DoubleBuffered = True
-      FixedCols = 1
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goAlwaysShowEditor, goThumbTracking]
+      RowCount = 1
+      FixedRows = 0
       ParentDoubleBuffered = False
       PopupMenu = DetailsPopupMenu
+      ScrollBars = ssVertical
       TabOrder = 0
-      TitleCaptions.Strings = (
-        'Name'
-        'Value')
-      OnMouseUp = DetailsEditorMouseUp
-      ColWidths = (
-        150
-        435)
+      OnDrawCell = DetailsGridDrawCell
+      OnMouseUp = DetailsGridMouseUp
     end
   end
   object StatusPanel: TPanel
@@ -907,7 +898,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010C001800BC0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C001800C00210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1448,7 +1439,7 @@ object MergeForm: TMergeForm
     Left = 1008
     Top = 8
     Bitmap = {
-      494C0101080014001C0240002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108001400200240002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100006000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
