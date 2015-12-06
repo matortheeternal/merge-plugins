@@ -798,7 +798,7 @@ end;
 }
 procedure TMergeForm.AddDetailsItem(name, value: string);
 begin
-  slDetails.Values[name] := value;
+  slDetails.Add(name + '=' + value);
 end;
 
 {
@@ -814,12 +814,12 @@ begin
   try
     slTemp.Text := Wordwrap(sl.Text, 80);
     if slTemp.Count > 0 then begin
-      AddDetailsItem(name, slTemp[0]);
+      slDetails.Add(name + '=' + slTemp[0]);
       for i := 1 to Pred(slTemp.Count) do
-        AddDetailsItem(' ', slTemp[i]);
+        slDetails.Add(' =' + slTemp[0]);
     end
     else
-      AddDetailsItem(name, ' ');
+      slDetails.Add(name + '= ');
   finally
     slTemp.Free;
   end;
