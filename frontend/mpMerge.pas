@@ -1491,6 +1491,13 @@ begin
   batchBsa.Free;
 end;
 
+
+{******************************************************************************}
+{ Top Level Merging Methods
+  These are methods that are directly called by BuildMerge.
+}
+{******************************************************************************}
+
 procedure SetUpDirectories;
 begin
   // delete temp path, it should be empty before we begin
