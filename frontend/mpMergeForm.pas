@@ -156,6 +156,7 @@ type
     procedure AddDetailsList(name: string; sl: TStringList);
     procedure PageControlChange(Sender: TObject);
     procedure UpdateApplicationDetails;
+    procedure DetailsPanelResize(Sender: TObject);
     procedure DetailsGridMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure DetailsGridDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -810,20 +811,13 @@ end;
 procedure TMergeForm.AddDetailsList(name: string; sl: TStringList);
 var
   i: integer;
-  slTemp: TStringList;
 begin
-  slTemp := TStringList.Create;
-  try
-    slTemp.Text := Wordwrap(sl.Text, 80);
-    if slTemp.Count > 0 then begin
-      for i := 0 to Pred(slTemp.Count) do
-        slDetails.Add(Format('%s[%d]=%s', [name, i, slTemp[i]]));
-    end
-    else
-      slDetails.Add(name + '= ');
-  finally
-    slTemp.Free;
-  end;
+  if sl.Count > 0 then begin
+    for i := 0 to Pred(sl.Count) do
+      slDetails.Add(Format('%s[%d]=%s', [name, i, sl[i]]));
+  end
+  else
+    slDetails.Add(name + '= ');
 end;
 
 {
@@ -884,6 +878,7 @@ begin
 
   // update details item count
   DetailsGrid.RowCount := slDetails.Count;
+  StringGrid_CorrectWidth(DetailsGrid);
 end;
 
 procedure TMergeForm.DetailsCopyToClipboardItemClick(Sender: TObject);
@@ -919,6 +914,12 @@ begin
   // copy to clipboard
   Clipboard.AsText := sl.Text;
   sl.Free;
+end;
+
+{ Resize StringGrid columns when parent panel changes size }
+procedure TMergeForm.DetailsPanelResize(Sender: TObject);
+begin
+  StringGrid_CorrectWidth(DetailsGrid);
 end;
 
 { Handle user clicking URL }
@@ -973,6 +974,11 @@ begin
 
     if Assigned(slDetails) and (slDetails.Count > ARow) then
       sText := slDetails.Names[ARow];
+    // handle lists
+    sText := RemoveFromEnd(sText, '[0]');
+    if StrEndsWith(sText, ']') then
+      exit;
+
     DetailsGrid.Canvas.Brush.Style := bsClear;
     DetailsGrid.Canvas.TextOut(Rect.Left + 4, Rect.Top + (iPadding div 2), sText);
   end
@@ -1059,6 +1065,7 @@ begin
   AddDetailsList(GetLanguageString('mpMain_Reports'), plugin.reports);
 
   // update gui
+  StringGrid_CorrectWidth(DetailsGrid);
   DetailsGrid.RowCount := slDetails.Count;
 
   // free memory
@@ -1669,6 +1676,7 @@ begin
 
   // update gui
   DetailsGrid.RowCount := slDetails.Count;
+  StringGrid_CorrectWidth(DetailsGrid);
 end;
 
 procedure TMergeForm.UpdateMerges;

@@ -3,7 +3,7 @@ unit mteHelpers;
 interface
 
 uses
-  Classes, ComCtrls, StdCtrls, Types;
+  Classes, ComCtrls, Grids, StdCtrls, Types;
 
 type
   TCallback = procedure of object;
@@ -64,6 +64,7 @@ type
   procedure DeleteDirectory(const path: string);
   procedure PerformFileSystemTests(sBasePath: string);
   { GUI Helper Functions }
+  procedure StringGrid_CorrectWidth(var sg: TStringGrid);
   procedure ListView_CorrectWidth(var lv: TListView);
   function ListView_NextMatch(ListView: TListView; sSearch: string;
     iIndex: Integer): Integer;
@@ -1150,6 +1151,15 @@ end;
   - ListView_HandleMatch
 }
 {******************************************************************************}
+
+procedure StringGrid_CorrectWidth(var sg: TStringGrid);
+var
+  w: Integer;
+begin
+  w := sg.ClientWidth;
+  Dec(w, sg.ColWidths[0]);
+  sg.ColWidths[1] := w;
+end;
 
 { Fixes @lv's width to fit client width if it has autosizable columns,
   which resolves an issue where autosize doesn't work on virtual vsReport

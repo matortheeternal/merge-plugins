@@ -324,6 +324,7 @@ object MergeForm: TMergeForm
     BevelOuter = bvNone
     Constraints.MinWidth = 200
     TabOrder = 2
+    OnResize = DetailsPanelResize
     object DetailsLabel: TLabel
       Left = 6
       Top = 10
@@ -339,7 +340,7 @@ object MergeForm: TMergeForm
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       ColCount = 2
-      DefaultColWidth = 175
+      DefaultColWidth = 150
       DefaultRowHeight = 22
       DoubleBuffered = True
       RowCount = 1

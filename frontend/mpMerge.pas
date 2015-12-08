@@ -1568,7 +1568,7 @@ var
 begin
   // get plugin if it exists
   // else create it
-  plugin := PluginByFilename(plugin.filename);
+  plugin := PluginByFilename(merge.filename);
   merge.plugin := nil;
   if Assigned(plugin) then begin
     bUsedExistingFile := true;
@@ -1576,7 +1576,7 @@ begin
   end
   else begin
     bUsedExistingFile := false;
-    merge.plugin := CreateNewPlugin(plugin.filename);
+    merge.plugin := CreateNewPlugin(merge.filename);
   end;
 
   // don't plugin if pluginFile not assigned
@@ -1590,7 +1590,7 @@ begin
       plugin := TPlugin(lst[i]);
       if PluginsList.IndexOf(plugin) > PluginsList.IndexOf(merge.plugin) then
         raise Exception.Create(Format('%s is at a lower load order position than %s',
-          [plugin.filename, plugin.filename]));
+          [merge.filename, plugin.filename]));
     end;
 
     // clean up the plugin file
@@ -1843,6 +1843,7 @@ begin
   Tracker.Write('Building merge: '+merge.name);
   time := Now;
   merge.fails.Clear;
+  pluginsToMerge := TList.Create;
   batchCopy := TStringList.Create;
   CopiedFrom := TStringList.Create;
   failed := 'Failed to merge '+merge.name;
@@ -1907,6 +1908,7 @@ begin
 
   // clean up
   batchCopy.Free;
+  CopiedFrom.Free;
   pluginsToMerge.Free;
 end;
 

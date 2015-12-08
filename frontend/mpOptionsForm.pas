@@ -129,7 +129,7 @@ type
           btnBrowseFlags: TSpeedButton;
           btnBrowseBSAOpt: TSpeedButton;
 
-    // HELPERS 
+    // HELPERS
     procedure LoadLanguageOptions;
     procedure LoadGeneralSettings;
     procedure LoadMergingSettings;
@@ -165,19 +165,20 @@ type
     procedure kbExtractBSAsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure kbBuildBSAMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);         
-    procedure btnVerifyAccessClick(Sender: TObject); 
-    // ADVANCED TAB EVENTS                       
+      Shift: TShiftState; X, Y: Integer);
+    procedure btnVerifyAccessClick(Sender: TObject);
+    // ADVANCED TAB EVENTS
     procedure btnChangeMergeProfileClick(Sender: TObject);
     procedure meTemplateChange(Sender: TObject);
     // INTEGRATIONS TAB EVENTS
-    procedure kbUsingManagerClick(Sender: TObject);
-    procedure btnBrowseManagerClick(Sender: TObject);  
+    procedure kbUsingMOClick(Sender: TObject);
+    procedure kbUsingNMMClick(Sender: TObject);
+    procedure btnBrowseManagerClick(Sender: TObject);
     procedure btnBrowseModsClick(Sender: TObject);
     procedure btnBrowseDecompilerClick(Sender: TObject);
     procedure btnBrowseCompilerClick(Sender: TObject);
     procedure btnBrowseFlagsClick(Sender: TObject);
-    procedure btnBrowseBSAOptClick(Sender: TObject);    
+    procedure btnBrowseBSAOptClick(Sender: TObject);
     procedure edBsaOptPathExit(Sender: TObject);
     procedure btnDetectClick(Sender: TObject);
     procedure edModManagerPathChange(Sender: TObject);
@@ -194,9 +195,9 @@ var
 
 implementation
 
-{$R *.dfm}  
+{$R *.dfm}
 
-          
+
 {******************************************************************************}
 { HELPERS
   General functions and procedures used by the 
@@ -311,8 +312,7 @@ begin
   edBsaOptOptions.Text := settings.bsaOptOptions;
 
   // disable controls if not using MO or NMM
-  if not (settings.usingMO or settings.usingNMM) then
-    kbUsingManagerClick(nil);
+  kbUsingMOClick(nil);
 end;
 
 procedure TOptionsForm.HandleRegistrationControls;
@@ -879,19 +879,16 @@ end;
   the integrations tab sheet.
 }
 {******************************************************************************}
- 
+
 {=== MOD MANAGER INTEGRATION ===}
 
-procedure TOptionsForm.kbUsingManagerClick(Sender: TObject);
+procedure TOptionsForm.kbUsingMOClick(Sender: TObject);
 var
   b: boolean;
 begin
-  if kbUsingMO.Checked then
-    kbUsingNMM.Checked := false;
-  if kbUsingNMM.Checked then
-    kbUsingMO.Checked := false;
-
   b := kbUsingMO.Checked or kbUsingNMM.Checked;
+  if kbUsingMO.Checked then
+    kbUsingNMM.State := cbUnchecked;
   edModManagerPath.Enabled := b;
   edModsPath.Enabled := b;
   btnBrowseManager.Enabled := b;
@@ -899,7 +896,25 @@ begin
   kbCopyGeneralAssets.Enabled := b;
   kbCopyGeneralAssets.Checked := b;
   ToggleOkButton;
-end;          
+  gbModManager.Repaint;
+end;
+
+procedure TOptionsForm.kbUsingNMMClick(Sender: TObject);
+var
+  b: boolean;
+begin
+  b := kbUsingMO.Checked or kbUsingNMM.Checked;
+  if kbUsingNMM.Checked then
+    kbUsingMO.State := cbUnchecked;
+  edModManagerPath.Enabled := b;
+  edModsPath.Enabled := b;
+  btnBrowseManager.Enabled := b;
+  btnBrowseMods.Enabled := b;
+  kbCopyGeneralAssets.Enabled := b;
+  kbCopyGeneralAssets.Checked := b;
+  ToggleOkButton;
+  gbModManager.Repaint;
+end;
 
 procedure TOptionsForm.btnBrowseManagerClick(Sender: TObject);
 var
