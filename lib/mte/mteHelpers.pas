@@ -9,6 +9,7 @@ type
   TCallback = procedure of object;
 
   { General functions }
+  function ShortenVersion(vs: string; numClauses: Integer): string;
   function IfThenInt(AValue: boolean; ATrue: Integer = 1; AFalse: Integer = 0): Integer;
   function TitleCase(sText: String): String;
   function SentenceCase(sText: string): string;
@@ -117,6 +118,20 @@ uses
   - ApplyTemplate
 }
 {*****************************************************************************}
+
+function ShortenVersion(vs: string; numClauses: Integer): string;
+var
+  i, numDots: Integer;
+begin
+  numDots := 0;
+  for i := 0 to Pred(Length(vs)) do begin
+    if vs[i] = '.' then
+      Inc(numDots);
+    if numDots = numClauses then
+      break;
+    Result := Result + vs[i];
+  end;
+end;
 
 { Returns one of two integers based on a boolean argument.
   Like IfThen from StrUtils, but returns an Integer. }

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls,
   // mte units
-  RttiTranslation,
+  RttiTranslation, mteHelpers,
   // mp units
   mpCore, mpClient, mpConfiguration,
   // mp forms
@@ -82,7 +82,7 @@ begin
     report.hash := plugin.hash;
     report.recordCount := StrToInt(plugin.numRecords);
     report.rating := 4;
-    report.mergeVersion := LocalStatus.programVersion;
+    report.mergeVersion := ShortenVersion(LocalStatus.programVersion, 2);
     report.SetNotes(PreviousNotes);
 
     // if user already made a report for this plugin, load it

@@ -449,6 +449,7 @@ end;
 procedure TMergeForm.WMActivateApp(var AMessage: TMessage);
 begin
   if bCreated and (Now - LastMessageTime > MessageDelay) then begin
+    Repaint;
     LastMessageTime := Now;
     if AMessage.WParam = 1 then
       DisplayHints
@@ -575,6 +576,7 @@ end;
 procedure TMergeForm.LoaderDone;
 begin
   SetTaskbarProgressState(tbpsNone);
+  DisableHints;
   xEditLogGroup := 'GENERAL';
   xEditLogLabel := 'xEdit';
   FlashWindow(Application.Handle, True);

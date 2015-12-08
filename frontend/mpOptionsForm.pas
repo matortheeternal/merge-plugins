@@ -312,7 +312,8 @@ begin
   edBsaOptOptions.Text := settings.bsaOptOptions;
 
   // disable controls if not using MO or NMM
-  kbUsingMOClick(nil);
+  if not (kbUsingMO.Checked or kbUsingNMM.Checked) then
+    kbUsingMOClick(nil);
 end;
 
 procedure TOptionsForm.HandleRegistrationControls;
