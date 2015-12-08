@@ -216,6 +216,8 @@ type
     procedure ToTopItemClick(Sender: TObject);
     procedure ToBottomItemClick(Sender: TObject);
     // LOG LIST VIEW EVENTS
+    procedure LogListViewChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
     procedure LogListViewData(Sender: TObject; Item: TListItem);
     procedure LogListViewDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
@@ -814,9 +816,8 @@ begin
   try
     slTemp.Text := Wordwrap(sl.Text, 80);
     if slTemp.Count > 0 then begin
-      slDetails.Add(name + '=' + slTemp[0]);
-      for i := 1 to Pred(slTemp.Count) do
-        slDetails.Add(' =' + slTemp[0]);
+      for i := 0 to Pred(slTemp.Count) do
+        slDetails.Add(Format('%s[%d]=%s', [name, i, slTemp[i]]));
     end
     else
       slDetails.Add(name + '= ');
@@ -847,6 +848,9 @@ begin
       ListView_CorrectWidth(LogListView);
     end;
   end;
+
+  // force repaint
+  PageControl.Repaint;
 end;
 
 procedure TMergeForm.UpdateApplicationDetails;
@@ -918,10 +922,39 @@ begin
 end;
 
 { Handle user clicking URL }
+procedure TMergeForm.DetailsGridMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  ACol, ARow: integer;
+  value: string;
+begin
+  // only process left clicks
+  if Button <> mbLeft then
+    exit;
+
+  DetailsGrid.MouseToCell(X, Y, ACol, ARow);
+  // skip clicks on cells in column 0
+  if ACol = 0 then
+    exit;
+
+  try
+    value := slDetails.ValueFromIndex[ARow];
+    if Pos(' ', value) > 0 then
+      value := Copy(value, 1, Pos(' ', value));
+    if IsURL(value) and ((Now - LastURLTime) * 86400 > 1.0) then begin
+      ShellExecute(0, 'open', PChar(value), '', '', SW_SHOWNORMAL);
+      LastURLTime := Now;
+    end;
+  except
+    // invalid cell
+  end;
+end;
+
+{ Handle drawing of a cell }
 procedure TMergeForm.DetailsGridDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
-  sText: string;
+  sText, sNextVal, sNextName: string;
   iHalfBottom, iPadding: Integer;
 begin
   // initialize stuff
@@ -950,43 +983,28 @@ begin
 
     if Assigned(slDetails) and (slDetails.Count > ARow) then
       sText := slDetails.ValueFromIndex[ARow];
-    if (slDetails.Count - 1 > ARow)
-    and IsURL(slDetails.ValueFromIndex[ARow + 1]) then begin
-      DetailsGrid.Font.Style := [fsUnderline];
-      DetailsGrid.Font.Color := clBlue;
+    // handle special drawing of urls and master files
+    if (Pred(slDetails.Count) > ARow) then begin
+      sNextVal := slDetails.ValueFromIndex[ARow + 1];
+      sNextName := slDetails.Names[ARow + 1];
+      // urls blue and underlined
+      if IsURL(sNextVal) then begin
+        DetailsGrid.Font.Style := [fsUnderline];
+        DetailsGrid.Font.Color := clBlue;
+      end
+      // esps and esms red if not loaded
+      else if Pos('Plugins[', sNextName) = 1 then begin
+        if not Assigned(PluginByFileName(sNextVal)) then
+          DetailsGrid.Font.Color := clRed;
+      end;
     end;
+
+    // draw text
     DetailsGrid.Canvas.Brush.Style := bsClear;
     DetailsGrid.Canvas.TextOut(Rect.Left + 4, Rect.Top + (iPadding div 2), sText);
   end;
 end;
 
-procedure TMergeForm.DetailsGridMouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-var
-  ACol, ARow: integer;
-  value: string;
-begin
-  // only process left clicks
-  if Button <> mbLeft then
-    exit;
-
-  DetailsGrid.MouseToCell(X, Y, ACol, ARow);
-  // skip clicks on cells in column 0
-  if ACol = 0 then
-    exit;
-
-  try
-    value := slDetails.ValueFromIndex[ARow];
-    if Pos(' ', value) > 0 then
-      value := Copy(value, 1, Pos(' ', value));
-    if IsURL(value) and ((Now - LastURLTime) * 86400 > 1.0) then begin
-      ShellExecute(0, 'open', PChar(value), '', '', SW_SHOWNORMAL);
-      LastURLTime := Now;
-    end;
-  except
-    // invalid cell
-  end;
-end;
 
 {******************************************************************************}
 { PluginsListView Events
@@ -1021,9 +1039,11 @@ begin
   plugin := TPlugin(PluginsList[index]);
   if not plugin.hasData then plugin.GetMpData;
 
-  // add details items
+  // get flags description
   sl := TStringList.Create;
   sl.Text := plugin.GetFlagsDescription;
+
+  // add details items
   AddDetailsItem(GetLanguageString('mpMain_Filename'), plugin.filename);
   AddDetailsItem(GetLanguageString('mpMain_Hash'), plugin.hash);
   AddDetailsItem(GetLanguageString('mpMain_FileSize'), FormatByteSize(plugin.fileSize));
@@ -1038,8 +1058,10 @@ begin
   AddDetailsList(GetLanguageString('mpMain_Errors'), plugin.errors);
   AddDetailsList(GetLanguageString('mpMain_Reports'), plugin.reports);
 
-  // free
+  // update gui
   DetailsGrid.RowCount := slDetails.Count;
+
+  // free memory
   sl.Free;
 end;
 
@@ -1077,6 +1099,7 @@ procedure TMergeForm.PluginsListViewChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 begin
   UpdatePluginDetails;
+  PluginsListView.Repaint;
 end;
 
 procedure TMergeForm.PluginsListViewData(Sender: TObject; Item: TListItem);
@@ -1644,7 +1667,7 @@ begin
   // fails list
   AddDetailsList(GetLanguageString('mpMain_Fails'), merge.fails);
 
-  // update row count
+  // update gui
   DetailsGrid.RowCount := slDetails.Count;
 end;
 
@@ -1697,6 +1720,7 @@ procedure TMergeForm.MergesListViewChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 begin
   UpdateMergeDetails;
+  MergesListView.Repaint;
 end;
 
 procedure TMergeForm.MergesListViewData(Sender: TObject; Item: TListItem);
@@ -1747,6 +1771,13 @@ end;
 { LogListView methods
 }
 {******************************************************************************}
+
+procedure TMergeForm.LogListViewChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+begin
+  // repaint whenever user changes selection
+  LogListView.Repaint;
+end;
 
 procedure TMergeForm.LogListViewData(Sender: TObject; Item: TListItem);
 var
