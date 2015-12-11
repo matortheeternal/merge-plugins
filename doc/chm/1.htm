@@ -1,0 +1,516 @@
+<html>
+<head>
+<title>Help content</title>
+<link rel=stylesheet type=text/css href="style.css">
+
+<meta name="GENERATOR" content="chmProcessor" >
+
+
+</head>
+</html>
+
+<BODY>
+<div class="imgBig">
+  <IMG SRC="images\img00.png" ALIGN=CENTER VSPACE=2 WIDTH=600 HEIGHT=300><BR CLEAR=LEFT>
+  <P class="titleLine">Merge Plugins Standalone<a name=m00></a></P>
+  <P class="authorLine1">by Mator</P>
+  <P class="authorLine2">aka matortheeternal</P>
+</div>
+<BR>
+<BR>
+
+<h1>Introduction<a name=m02></a></h1>
+
+<h2>What is merge plugins?<a name=m03></a></h2>
+
+<P>Merge Plugins is a Windows application coded in Delphi
+(object-oriented Pascal).  Merge Plugins automates the process of
+combining multiple Bethesda Plugin/Master Files (<B>.esp</B> and
+<B>.esm</B>) into a single file.  The program interfaces with plugins
+through the xEdit framework, and supports plugin files from Skyrim,
+Oblivion, Fallout: New Vegas, and Fallout 3.</P>
+
+<P>Merge Plugins doesn't just combine the contents of plugin files,
+it also handles asset files associated with those plugin files,
+automatically copying, renaming, and rebuilding assets as necessary
+to create a mod that functions as the original mods did prior to
+merging.  It also provides a dictionary file built from reports
+submitted by users as a guide to the tool's effectiveness at merging
+various plugin files.  Overall, Merge Plugins provides a powerful
+interface by which merges can be created, tracked, and rebuilt.</P>
+
+<H2>Why should I use Merge Plugins?<a name=m04></a></H2>
+
+<H3>What are the benefits of merging plugins?<a name=m05></a></H3>
+
+<UL>
+	<LI><P>You can (indirectly) pass the 255 plugin file limit</P>
+	<LI><P>Increased game stability</P>
+	<LI><P>A better organized, easier to manage load order</P>
+</UL>
+
+<H3>What are the alternatives?<a name=m06></a></H3>
+<UL>
+	<LI><P><B><A HREF="http://www.nexusmods.com/skyrim/mods/37981">Merge
+	Plugins xEdit Script</A><BR></B><SPAN STYLE="font-weight: normal">The
+	precursor to Merge Plugins Standalone.  It's somewhat dated and
+	doesn't provide the power, speed, flexibility, or features of Merge
+	Plugins Standalone.</SPAN></P>
+	<LI><P><A HREF="http://www.nexusmods.com/skyrim/mods/51467"><B>Skyrim
+	Mod Combiner (SMC)</B></A><BR>Only works for texture mods, and
+	doesn't combine ESP files.  Fulfills a very different use case
+	compared to Merge Plugins Standalone.</P>
+	<LI><P><B><A HREF="http://forums.nexusmods.com/index.php?/topic/904953-how-to-merge-multiple-mods-with-multiple-master-files/">Manual
+	merging</A><BR></B><SPAN STYLE="font-weight: normal">You can use
+	TES5Edit to manually merge mods.  This will not handle asset files
+	for you, so you'll have to do all of that by hand after merging. 
+	While this can be educational, it will limit you to merging only
+	certain types of mods (e.g. armor and weapon mods) before requiring
+	an unfeasible amount of manual file copying, renaming, and
+	modification.</SPAN></P>
+</UL>
+
+<H2>Documentation Overview</H2>
+<P>This document is divided into 5 major sections:<a name=m07></a></P>
+<OL>
+	<LI><P><B><A HREF="#">Comparison</A><BR></B>
+  <SPAN STYLE="font-weight: normal">Covers the differences between 
+  Merge Plugins Standalone and the Merge Plugins xEdit Script.</SPAN></P>
+	<LI><P><B><A HREF="#">Guide to the GUI</A><BR></B>
+  <SPAN STYLE="font-weight: normal">Explains the graphical user interface 
+  of Merge Plugins Standalone.</SPAN></P>
+	<LI><P><B><A HREF="#">General Reference</A><BR></B>
+  <SPAN STYLE="font-weight: normal">Provides some general information 
+  on coloring or rating that is reflected in multiple parts of the 
+  Merge Plugins GUI.</SPAN></P>
+	<LI><P><B><A HREF="#">Tutorials</A><BR></B>
+  <SPAN STYLE="font-weight: normal">Teaches you how to use different parts 
+  of the application with step-by-step instructions.</SPAN></P>
+	<LI><P><A HREF="#"><B>Community</A><BR></B>
+  <SPAN STYLE="font-weight: normal">Specifies what you can do to contribute 
+  to the Merge Plugins community, and your relationship with Merge Plugins 
+  as a user.</SPAN></P>
+</OL>
+<P><BR><BR>
+</P>
+
+<H1>Comparison<a name=m08></a></H1>
+
+<H2>Removed Features<a name=m09></a></H2>
+<P>Several features were present in the Merge Plugins script, but are
+no longer present in Merge Plugins Standalone.  These features are
+listed below:</P>
+<TABLE WIDTH=665 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=146>
+	<COL WIDTH=501>
+	<TR VALIGN=TOP>
+		<TH WIDTH=146>
+			<P>Feature</P>
+		</TH>
+		<TH WIDTH=501>
+			<P>Reason</P>
+		</TH>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=146>
+			<P class="TableText">Removing plugins from a merged plugin</P>
+		</TD>
+		<TD WIDTH=501>
+			<P class="TableText">This can't be done properly due to issues 
+      with the Rule of One and conflicting asset files.  Rather than 
+      providing a feature that will randomly not work, I've removed 
+      this feature.  If you want to remove a plugin from a merge, just 
+      rebuild the merge.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=146>
+			<P class="TableText">Renumber none</P>
+		</TD>
+		<TD WIDTH=501>
+			<P class="TableText">There's no reason for you to use this with 
+      the standalone version of Merge Plugins.  The standalone program 
+      reloads the plugins so this feature has no use case and would only 
+      create conflicting FormIDs and broken merged plugins.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=146>
+			<P class="TableText">Two-pass copying</P>
+		</TD>
+		<TD WIDTH=501>
+			<P class="TableText">This used to be necessary a long time ago 
+      due to NAVI/NAVM copying issues, but is no longer necessary.  
+      It provides no quantifiable benefits, and has thus been removed.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+<H2>New Features<a name=m10></a></H2>
+<P>Merge Plugins Standalone provides a large number of new features
+that greatly enhance the experience of merging plugins and managing
+merges.  New features are listed below: 
+</P>
+<TABLE WIDTH=665 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=190>
+	<COL WIDTH=457>
+	<TR VALIGN=TOP>
+		<TH WIDTH=190>
+			<P>Feature</P>
+		</TH>
+		<TH WIDTH=457>
+			<P>Description</P>
+		</TH>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Script fragment handling</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Script fragments are small scripts that are 
+      created by the game to assist with Quests, Scenes, and Dialog Topics.  
+      These script fragments have FormID specific filenames, and thus need 
+      to be renamed and recompiled when the FormID of the record they're 
+      associated with changes.  Merge Plugins Standalone does this if you 
+      set up the Papyrus Compiler and Champollion Decompiler integrations.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">INI file handling</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Some ESP files have INI files associated with 
+      them.  These INI files are loaded by the game based on their filename.  
+      In Merge Plugins Standalone, INI files are renamed and combined so 
+      their functionality is retained after merging.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Merged BSA creation</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Merge Plugins Standalone can create a merged 
+      BSA file for your merges.  This is done through the BSAOpt integration.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Toggleable asset handling</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">In Merge Plugins Standalone you can toggle 
+      what asset copying features you want to make use of.  This allows 
+      users to debug merges more effectively.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Speed increase</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Because Merge Plugins Standalone is a compiled 
+      program, rather than an interpreted script, it runs a lot faster.  
+      You will now be able to build merges faster than ever before.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Merge tracking</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Merges created with Merge Plugins Standalone 
+      will be tracked from within the program.  When a plugin that is in 
+      a merge changes (e.g. is updated), the merge it is associated with 
+      will flag itself as needing to be rebuilt.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Easy merge rebuilding</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">You can now rebuild a merge with the click of a 
+      button.  Combined with merge tracking, this makes for a far more 
+      efficient workflow around merging plugins.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Integrated dictionary updates</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">With the script, you had to update the dictionary 
+      through the Merge Plugins Report Client Java application.  Now, you will 
+      be notified of dictionary updates directly from the program and will be 
+      able to update the dictionary without the hassle of having to start
+			another application.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Integrated program updates</P>  <!-- <FONT FACE="Arial, sans-serif"><FONT SIZE=2> -->
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Merge Plugins Standalone can be updated easily.   
+      You won't need to re-download it from the Nexus to update it, you will 
+      be informed of updates from within the program itself, and can update 
+      the program with a click of a button.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Integrated reporting</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">With the script, reports had to be generated as 
+      text files that were then read by a separate Java application which 
+      sent them to a server to be combined into a dictionary file.  With 
+      Merge Plugins Standalone this functionality has been integrated into 
+      the main program, so you don't need to start a separate program to submit
+			reports anymore.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Plugin error tracking</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Once you check a plugin for errors in Merge 
+      Plugins Standalone, its errors will be saved, and then reloaded 
+      the next time you use the program.  These saved errors are linked 
+      to the CRC32 hash of the plugin, so when the plugin is updated 
+      you'll have to check it for errors again (it may have more/fewer errors).</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Multiple languages</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">With
+			an easily extensible language system, the program can now be
+			easily translated.  Several translations have already been made
+			thanks to some volunteer translators.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=190>
+			<P class="TableText">Statistics tracking</P>
+		</TD>
+		<TD WIDTH=457>
+			<P class="TableText">Merge Plugins Standalone will locally track 
+      statistics relating to merging.  Now you can keep track of how 
+      many merges you've built, how many plugins you've checked for 
+      errors, how many times you've started the program, etc.</P>
+		</TD>
+	</TR>
+</TABLE>
+<P><BR><BR>
+</P>
+
+<H1>Guide to the GUI<a name=m11></a></H1>
+
+<center>
+  <div class="imgbig" style="height:517">
+    <img src="images/img01.png"></img>
+    <br><P class="caption">Illustration 1: The select profile window.</P>
+  </div>
+</center>
+
+<H2>Select Profile Window<a name=m12></a></H2>
+<P>The select profile window displays when the program first starts. 
+From here you can create and manage your merge profiles.  To start
+the application, select a valid profile and click OK.</P>
+
+<H3>Automatic Game Detection</H3>
+<P>The profile window will automatically detect the games you have
+installed from the registry.  Assuming you performed a standard or
+steam game installation, the program should detect any supported
+games you have installed and create profiles for them when you first
+run it.  Automatic detection will only occur if you have no profiles
+saved in the <I>profiles </I><SPAN>folder.</SPAN></P>
+
+<H3>New Profile Panel</H3>
+<P>This is a special panel which will always be below your other profiles.  
+You can click it at any time to create a new profile.</P>
+
+<H3>Profile Panel</H3>
+<TABLE WIDTH=665 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=152>
+	<COL WIDTH=495>
+	<TR VALIGN=TOP>
+		<TD WIDTH=152>
+			<P><I><B>Component</B></I></P>
+		</TD>
+		<TD WIDTH=495>
+			<P><I><B>Description</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=152>
+			<P>Game icon</P>
+		</TD>
+		<TD WIDTH=495>
+			<P>An icon corresonding to the currently selected
+			game mode.  If the profile is valid, you can click the game icon
+			or anywhere else on the panel to select the profile.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=152>
+			<P>Profile name text box</P>
+		</TD>
+		<TD WIDTH=495>
+			<P>Here you can enter a profile name, which will
+			be used to identify the profile.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=152>
+			<P>Game mode drop-down</P>
+		</TD>
+		<TD WIDTH=495>
+			<P>A drop down where you can specify the game mode
+			you want the profile to be for.  The options are: Skyrim,
+			Oblivion, Fallout New Vegas, and Fallout 3.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=152>
+			<P>Game path text box</P>
+		</TD>
+		<TD WIDTH=495>
+			<P>The path to the folder where the game you have
+			selected is installed.  You can use the browse button to browse
+			for this folder.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=152>
+			<P>Browse button</P>
+		</TD>
+		<TD WIDTH=495>
+			<P>Click this button to browse for your game path.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=152>
+			<P>Delete button</P>
+		</TD>
+		<TD WIDTH=495>
+			<P>Click this button to delete the profile.  You
+			will be asked to confirm this action to make sure you didn't
+			accidentally click delete.</P>
+		</TD>
+	</TR>
+</TABLE>
+<H3><A NAME="__RefHeading__3374_397888203"></A>Profile
+States</H3>
+<TABLE WIDTH=665 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=84>
+	<COL WIDTH=101>
+	<COL WIDTH=454>
+	<TR VALIGN=TOP>
+		<TD WIDTH=84>
+			<P><I><B>State</B></I></P>
+		</TD>
+		<TD WIDTH=101>
+			<P><I><B>Color</B></I></P>
+		</TD>
+		<TD WIDTH=454>
+			<P><I><B>Description</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=84>
+			<P>Invalid</P>
+		</TD>
+		<TD WIDTH=101>
+			<P><FONT COLOR="#ff6666">Light red</FONT></P>
+		</TD>
+		<TD WIDTH=454>
+			<P>If the profile name or game path is invalid,
+			the background color of the profile panel will turn light red. 
+			You can't select an invalid profile.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=84>
+			<P>Valid</P>
+		</TD>
+		<TD WIDTH=101>
+			<P><FONT COLOR="#669933">Light green</FONT></P>
+		</TD>
+		<TD WIDTH=454>
+			<P>If the profile name and game path are valid,
+			the background color of the profile panel will turn light green. 
+			You can select valid profiles.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=84>
+			<P>Selected</P>
+		</TD>
+		<TD WIDTH=101>
+			<P><FONT COLOR="#3399ff">Light blue</FONT></P>
+		</TD>
+		<TD WIDTH=454>
+			<P>If you click a valid profile, its background
+			color will turn light blue.  This indicates the profile is
+			selected.  Once you've selected a profile, you can click OK to
+			start Merge Plugins with that profile.</P>
+		</TD>
+	</TR>
+</TABLE>
+<H3><A NAME="__RefHeading__3376_397888203"></A>Profile
+Popup Menu</H3>
+<P>Right-click in the scrollbox to access the profile popup menu.</P>
+<TABLE WIDTH=665 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=137>
+	<COL WIDTH=247>
+	<COL WIDTH=255>
+	<TR VALIGN=TOP>
+		<TD WIDTH=137>
+			<P><I><B>Name</B></I></P>
+		</TD>
+		<TD WIDTH=247>
+			<P><I><B>Action</B></I></P>
+		</TD>
+		<TD WIDTH=255>
+			<P><I><B>Enabled</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=137>
+			<P>New profile</P>
+		</TD>
+		<TD WIDTH=247>
+			<P>Creates a new merge profile.</P>
+		</TD>
+		<TD WIDTH=255>
+			<P>Always.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=137>
+			<P>Delete profile</P>
+		</TD>
+		<TD WIDTH=247>
+			<P>Deletes the profile you right clicked on.</P>
+		</TD>
+		<TD WIDTH=255>
+			<P>If you right clicked on a merge profile.</P>
+		</TD>
+	</TR>
+</TABLE>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+
+<br>
+<br>
+<br>
+</BODY>
