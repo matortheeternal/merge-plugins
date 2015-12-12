@@ -31,7 +31,7 @@ h3
   font-family: Arial, sans-serif;
   font-style: italic;
   font-weight: 100;
-  font-size: 17px;
+  font-size: 19px;
   margin-top: 10px;
   margin-bottom: 6px;
 }
@@ -39,8 +39,8 @@ h3
 h4
 {
   font-family: Arial, sans-serif;
-  font-style: bold;
-  font-size: 14px;
+  font-weight: bold;
+  font-size: 16px;
   margin-top: 10px;
   margin-bottom: 6px;
 }
@@ -54,6 +54,13 @@ ul, dl, p
 ul, dl
 {
   line-height: 17px;
+}
+
+th p
+{
+  text-align: left;
+  font-weight: bold;
+  font-style: italic;
 }
 
 li p
@@ -86,7 +93,7 @@ img
 .titleLine
 {
   text-align: center;
-  font-weight: 700;
+  font-weight: bold;
   font-size: 50px;
   margin-bottom: 0px;
   font-family: Times New Roman, serif;
