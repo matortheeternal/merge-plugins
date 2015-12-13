@@ -73,15 +73,11 @@ html
   background-color: White;
 }
 
-body
+#Content
 {
   width: 900px;
-  margin: 15px;
-}
-
-img
-{
-  max-width: 879;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .caption
