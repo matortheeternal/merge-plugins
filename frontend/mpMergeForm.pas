@@ -853,6 +853,7 @@ end;
 procedure TMergeForm.UpdateApplicationDetails;
 begin
   // prepare list view for application information
+  DetailsGrid.HelpKeyword := 'Application Details';
   slDetails.Clear;
   DetailsLabel.Caption := GetLanguageString('mpMain_AppDetails');
 
@@ -1037,6 +1038,7 @@ var
   i: Integer;
 begin
   // get selected item
+  DetailsGrid.HelpKeyword := 'Plugin Details';
   if not Assigned(PluginsListView.Selected) then
     exit;
 
@@ -1650,6 +1652,7 @@ var
   sl: TStringList;
 begin
   // don't do anything if no item selected
+  DetailsGrid.HelpKeyword := 'Merge Details';
   mergeItem := MergesListView.Selected;
   if not Assigned(mergeItem) then
     exit;

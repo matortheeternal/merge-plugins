@@ -177,7 +177,7 @@ const
     ( id: msUnknown; color: $808080; desc: 'Unknown'; ),
     ( id: msNoPlugins; color: $0000FF; desc: 'No plugins to merge'; ),
     ( id: msDirInvalid; color: $0000FF; desc: 'Directories invalid'; ),
-    ( id: msUnloaded; color: $0000FF; desc: 'Plugins not loaded'; ),
+    ( id: msUnloaded; color: $808080; desc: 'Plugins not loaded'; ),
     ( id: msErrors; color: $0000FF; desc: 'Errors in plugins'; ),
     ( id: msFailed; color: $0000FF; desc: 'Merge failed'; ),
     ( id: msNotContiguous; color: $0080ed; desc: 'Plugins not contiguous'; ),
