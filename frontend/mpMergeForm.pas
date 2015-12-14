@@ -260,13 +260,14 @@ const
   fBufferDelay = 1.1 * seconds;
   // delay for detecting WMMessages and
   // re-displaying hints
-  MessageDelay = (0.1 / 86400.0);
+  MessageDelay = 0.1 * seconds;
+  ItemChangeDelay = 0.1 * seconds;
 
 var
   splash: TSplashForm;
   MergeForm: TMergeForm;
   LastHint: string;
-  LastURLTime, LastMessageTime, FormDisplayTime: double;
+  LastURLTime, LastItemChange, LastMessageTime, FormDisplayTime: double;
   bMergesToBuild, bMergesToCheck, bAutoScroll, bCreated, bClosing: boolean;
   pForm: TProgressForm;
   rForm: TResolveForm;
@@ -969,7 +970,7 @@ begin
 
   // draw name
   if ACol = 0 then begin
-    DetailsGrid.Canvas.Brush.Color := clMenu;
+    DetailsGrid.Canvas.Brush.Color := TColor($00f6f4f3);
     DetailsGrid.Canvas.Rectangle(Rect);
     DetailsGrid.Canvas.Brush.Color := clWindow;
     DetailsGrid.Canvas.Rectangle(Rect.Left, Rect.Top, Rect.Right, iHalfBottom);
@@ -1033,8 +1034,9 @@ var
   plugin: TPlugin;
   index: integer;
   sl: TStringList;
+  i: Integer;
 begin
-  // don't do anything if no item selected
+  // get selected item
   if not Assigned(PluginsListView.Selected) then
     exit;
 
@@ -2675,6 +2677,9 @@ var
   plugin: TPlugin;
   sTitle: string;
 begin
+  // HELP BUTTON
+  HelpButton.Enabled := FileExists(Application.HelpFile);
+
   // DISABLE ALL BUTTONS IF INITIALIZATION EXCEPTION
   if ProgramStatus.bInitException then begin
     NewButton.Enabled := false;
@@ -2684,7 +2689,6 @@ begin
     DictionaryButton.Enabled := false;
     OptionsButton.Enabled := true;
     UpdateButton.Enabled := false;
-    HelpButton.Enabled := false;
     exit;
   end;
 
@@ -2772,9 +2776,6 @@ begin
     UpdateButton.Hint := sTitle + GetLanguageString('mpMain_UpdateDictionary')
   else
     UpdateButton.Hint := sTitle + GetLanguageString('mpMain_NoUpdates');
-
-  // HELP BUTTON
-  HelpButton.Enabled := false; // TODO: help file integration
 end;
 
 procedure TMergeForm.CreateMergeButtonClick(Sender: TObject);
@@ -3025,7 +3026,7 @@ end;
 { Help }
 procedure TMergeForm.HelpButtonClick(Sender: TObject);
 begin
-  //LogMessage(TButton(Sender).Hint+' clicked!');
+  Screen.Cursor := crHelp;
 end;
 
 end.

@@ -3,10 +3,14 @@ unit mteHelpers;
 interface
 
 uses
-  Classes, ComCtrls, Grids, StdCtrls, Types;
+  Windows, Forms, Classes, ComCtrls, Grids, StdCtrls, Types;
 
 type
   TCallback = procedure of object;
+  TAppHelpers = class
+    class procedure GetHelp(var Msg: TMsg; var Handled: Boolean);
+    class function HandleHelp(Command: Word; Data: Integer; var CallHelp: Boolean): Boolean;
+  end;
 
   { General functions }
   function ShortenVersion(vs: string; numClauses: Integer): string;
@@ -82,11 +86,57 @@ const
   minutes = hours / 60.0;
   seconds = minutes / 60.0;
 
+var
+  bAllowHelp: boolean;
+
 implementation
 
 uses
-  Windows, SysUtils, Masks, Dialogs, StrUtils, FileCtrl, ShellApi, CommCtrl,
-  DateUtils, shlObj, IOUtils, Registry;
+  SysUtils, Controls, Masks, Dialogs, StrUtils, FileCtrl, ShellApi,
+  Messages, CommCtrl, DateUtils, shlObj, IOUtils, Registry;
+
+
+{******************************************************************************}
+{ Application Helpers
+  General helpers for applications
+}
+{******************************************************************************}
+
+class procedure TAppHelpers.GetHelp(var Msg: TMsg; var Handled: Boolean);
+var
+  form: TForm;
+  control: TControl;
+  sKeyword: string;
+begin
+  if (Msg.message = WM_KEYDOWN) and (LoWord(Msg.wParam) = VK_F1) then begin
+    Screen.Cursor := crHelp;
+    Handled := true;
+  end
+  else if (Msg.message = WM_LBUTTONDOWN) and (Screen.Cursor = crHelp) then begin
+    // get control the user clicked on
+    control := FindVCLWindow(Mouse.CursorPos);
+    // if we found a control, jump to help keyword for that control
+    if Assigned(control) then begin
+      bAllowHelp := true;
+      sKeyword := control.HelpKeyword;
+      while (sKeyword = '') and Assigned(control.Parent) do begin
+        control := control.Parent;
+        sKeyword := control.HelpKeyword;
+      end;
+      Application.HelpKeyword(sKeyword);
+      Screen.Cursor := crDefault;
+      Handled := true;
+    end;
+  end;
+end;
+
+class function TAppHelpers.HandleHelp(Command: Word; Data: Integer;
+  var CallHelp: Boolean): Boolean;
+begin
+  CallHelp := bAllowHelp;
+  bAllowHelp := false;
+end;
+
 
 {******************************************************************************}
 { General functions
@@ -1255,6 +1305,11 @@ begin
     ListView.ClearSelection;
   ListView.Selected := ListView.Items[iFoundIndex];
   ListView.Items[iFoundIndex].MakeVisible(false);
+end;
+
+initialization
+begin
+  bAllowHelp := false;
 end;
 
 end.

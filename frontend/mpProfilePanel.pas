@@ -77,6 +77,7 @@ begin
   Height := 100;
   Left := 0;
   Top := 0;
+  HelpKeyword := 'Profile Panel';
   ParentBackground := false;
   ParentColor := false;
   ParentDoubleBuffered := false;

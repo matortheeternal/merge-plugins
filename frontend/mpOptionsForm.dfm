@@ -1,6 +1,8 @@
 object OptionsForm: TOptionsForm
   Left = 0
   Top = 0
+  HelpType = htKeyword
+  HelpKeyword = 'Options Window'
   BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
   Caption = 'Options'
   ClientHeight = 447
@@ -33,12 +35,16 @@ object OptionsForm: TOptionsForm
     TabWidth = 80
     OnChange = SettingsPageControlChange
     object GeneralTabSheet: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'General Tab'
       Caption = 'General'
       object gbStyle: TGroupBox
         Left = 6
         Top = 163
         Width = 548
         Height = 71
+        HelpType = htKeyword
+        HelpKeyword = 'Style'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -70,6 +76,8 @@ object OptionsForm: TOptionsForm
         Top = 246
         Width = 548
         Height = 82
+        HelpType = htKeyword
+        HelpKeyword = 'Updating'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -166,6 +174,8 @@ object OptionsForm: TOptionsForm
         Top = 69
         Width = 548
         Height = 82
+        HelpType = htKeyword
+        HelpKeyword = 'Reports'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -252,6 +262,8 @@ object OptionsForm: TOptionsForm
         Top = 6
         Width = 548
         Height = 51
+        HelpType = htKeyword
+        HelpKeyword = 'Language'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -288,17 +300,17 @@ object OptionsForm: TOptionsForm
       end
     end
     object MergingTabSheet: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Merging Tab'
       Caption = 'Merging'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbAssetHandling: TGroupBox
         Left = 6
         Top = 6
         Width = 548
         Height = 179
+        HelpType = htKeyword
+        HelpKeyword = 'Asset Handling'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -510,17 +522,17 @@ object OptionsForm: TOptionsForm
       end
     end
     object AdvancedTabSheet: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Advanced Tab'
       Caption = 'Advanced'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbBackend: TGroupBox
         Left = 6
         Top = 72
         Width = 548
         Height = 76
+        HelpType = htKeyword
+        HelpKeyword = 'Backend'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -572,6 +584,8 @@ object OptionsForm: TOptionsForm
         Top = 160
         Width = 548
         Height = 190
+        HelpType = htKeyword
+        HelpKeyword = 'Logging'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -751,6 +765,8 @@ object OptionsForm: TOptionsForm
         Top = 6
         Width = 548
         Height = 54
+        HelpType = htKeyword
+        HelpKeyword = 'Merge Profile'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -795,6 +811,8 @@ object OptionsForm: TOptionsForm
       end
     end
     object IntegrationsTabSheet: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Integrations Tab'
       Caption = 'Integrations'
       ImageIndex = 3
       object gbModManager: TGroupBox
@@ -802,6 +820,8 @@ object OptionsForm: TOptionsForm
         Top = 6
         Width = 548
         Height = 107
+        HelpType = htKeyword
+        HelpKeyword = 'Mod Manager'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -894,6 +914,8 @@ object OptionsForm: TOptionsForm
         Top = 125
         Width = 548
         Height = 107
+        HelpType = htKeyword
+        HelpKeyword = 'Papyrus'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -981,6 +1003,8 @@ object OptionsForm: TOptionsForm
         Top = 244
         Width = 548
         Height = 77
+        HelpType = htKeyword
+        HelpKeyword = 'BSAs'
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -1067,7 +1091,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C010101000800480110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008004C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

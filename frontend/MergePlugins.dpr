@@ -15,12 +15,15 @@
 program MergePlugins;
 
 uses
+  Windows,
   Forms,
   Dialogs,
   Controls,
   SysUtils,
   Classes,
   RttiIni,
+  HtmlHelpViewer,
+  mteHelpers,
   mpProfileForm in 'mpProfileForm.pas' {ProfileForm},
   mpProfilePanel in 'mpProfilePanel.pas',
   mpMergeForm in 'mpMergeForm.pas' {MergeForm},
@@ -57,7 +60,14 @@ begin
   Application.HintHidePause := 8000;
   PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
 
-  // get current profile if profile switch provided
+  // set up help file
+  sPath := PathList.Values['ProgramPath'] + 'doc\Merge Plugins Documentation.chm';
+  if FileExists(sPath) then
+    Application.HelpFile := sPath;
+  Application.OnHelp := TAppHelpers.HandleHelp;
+  Application.OnMessage := TAppHelpers.GetHelp;
+
+  // load target line params
   for i := 1 to ParamCount do begin
     sParam := ParamStr(i);
     if sParam = '-profile' then
@@ -65,6 +75,8 @@ begin
     if sParam = '-offline' then
       ProgramStatus.bOfflineMode := true;
   end;
+
+  // load specified profile if it exists
   bProfileProvided := sProfile <> '';
   sPath := Format('%sprofiles\%s\settings.ini',
     [PathList.Values['ProgramPath'], sProfile]);

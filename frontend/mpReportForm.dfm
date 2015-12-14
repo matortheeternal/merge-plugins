@@ -1,6 +1,8 @@
 object ReportForm: TReportForm
   Left = 0
   Top = 0
+  HelpType = htKeyword
+  HelpKeyword = 'Report Window'
   Caption = 'Submit report'
   ClientHeight = 342
   ClientWidth = 328

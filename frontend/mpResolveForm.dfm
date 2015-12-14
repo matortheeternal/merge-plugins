@@ -1,6 +1,8 @@
 object ResolveForm: TResolveForm
   Left = 0
   Top = 0
+  HelpType = htKeyword
+  HelpKeyword = 'Resolve Issues Window'
   BorderIcons = [biSystemMenu]
   Caption = 'Resolve merge issues'
   ClientHeight = 417
@@ -30,10 +32,6 @@ object ResolveForm: TResolveForm
     TabWidth = 140
     object tsBrokenDependencies: TTabSheet
       Caption = 'Broken dependencies'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblBrokenDependencies: TLabel
         Left = 3
         Top = 13

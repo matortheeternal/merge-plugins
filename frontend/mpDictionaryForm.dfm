@@ -1,6 +1,8 @@
 object DictionaryForm: TDictionaryForm
   Left = 0
   Top = 0
+  HelpType = htKeyword
+  HelpKeyword = 'View Dictionary Window'
   Caption = 'Dictionary Viewer'
   ClientHeight = 682
   ClientWidth = 1264
@@ -43,6 +45,8 @@ object DictionaryForm: TDictionaryForm
       Top = 58
       Width = 852
       Height = 621
+      HelpType = htKeyword
+      HelpKeyword = 'Entry Fields'
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       Columns = <
@@ -86,6 +90,8 @@ object DictionaryForm: TDictionaryForm
       Top = 3
       Width = 852
       Height = 49
+      HelpType = htKeyword
+      HelpKeyword = 'Filtering and Sorting'
       Margins.Left = 2
       Margins.Right = 2
       Align = alCustom
@@ -275,6 +281,8 @@ object DictionaryForm: TDictionaryForm
       Top = 1
       Width = 399
       Height = 203
+      HelpType = htKeyword
+      HelpKeyword = 'Dictionary Information'
       Align = alTop
       TabOrder = 0
       object lblDictionary: TLabel
@@ -310,6 +318,8 @@ object DictionaryForm: TDictionaryForm
       Top = 204
       Width = 399
       Height = 477
+      HelpType = htKeyword
+      HelpKeyword = 'Entry Notes'
       Align = alClient
       TabOrder = 1
       object lblNotes: TLabel

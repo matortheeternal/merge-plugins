@@ -7,7 +7,7 @@ mpMain_ReportButton_Hint=Submit reports|Submit reports on all plugins in merges 
 mpMain_DictionaryButton_Hint=View dictionary|Open the dictionary viewer to see all reports #13#10submitted by other users.#13#10
 mpMain_OptionsButton_Hint=Options|Change the options that control how the #13#10program runs.#13#10
 mpMain_UpdateButton_Hint=Update|
-mpMain_HelpButton_Hint=Help|Sorry, this isn't working yet.
+mpMain_HelpButton_Hint=Help|Click this button, then click any component #13#10on the form to get help on it.#13#10
 { #### DYNAMIC #### }
 mpMain_NoPluginsToCheck=There aren't any plugins to check for errors.
 mpMain_FindErrors_Loader=You can't check plugins for errors until the #13#10background loader is done.#13#10

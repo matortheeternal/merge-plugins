@@ -1,6 +1,8 @@
 object EditForm: TEditForm
   Left = 0
   Top = 0
+  HelpType = htKeyword
+  HelpKeyword = 'Edit Merge Window'
   ActiveControl = edName
   Caption = 'Edit Merge'
   ClientHeight = 222

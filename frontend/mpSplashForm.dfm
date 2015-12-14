@@ -1,6 +1,8 @@
 object SplashForm: TSplashForm
   Left = 0
   Top = 0
+  HelpType = htKeyword
+  HelpKeyword = 'Splash Window'
   BorderIcons = []
   BorderStyle = bsSingle
   Caption = 'Merge Plugins'

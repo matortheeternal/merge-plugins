@@ -1,6 +1,8 @@
 object MergeForm: TMergeForm
   Left = 0
   Top = 0
+  HelpType = htKeyword
+  HelpKeyword = 'Main Application Form'
   Caption = 'Merge Plugins'
   ClientHeight = 682
   ClientWidth = 1264
@@ -33,6 +35,8 @@ object MergeForm: TMergeForm
     Top = 0
     Width = 1264
     Height = 45
+    HelpType = htKeyword
+    HelpKeyword = 'Quick Bar'
     Align = alTop
     TabOrder = 0
     DesignSize = (
@@ -44,6 +48,8 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Create new merge|Make a new empty merge.'
+      HelpType = htKeyword
+      HelpKeyword = 'Create New Merge'
       CustomHint = bhNew
       NumGlyphs = 2
       ParentShowHint = False
@@ -58,6 +64,8 @@ object MergeForm: TMergeForm
       Hint = 
         'Build merges|Build all merges that are ready to be built or rebu' +
         'ilt.'
+      HelpType = htKeyword
+      HelpKeyword = 'Builds Merges'
       CustomHint = bhBuild
       NumGlyphs = 2
       ParentShowHint = False
@@ -72,6 +80,8 @@ object MergeForm: TMergeForm
       Hint = 
         'Submit reports|Submit reports on all plugins in merges you'#39've bu' +
         'ilt successfully.'
+      HelpType = htKeyword
+      HelpKeyword = 'Submit Reports'
       CustomHint = bhReport
       NumGlyphs = 2
       ParentShowHint = False
@@ -86,6 +96,8 @@ object MergeForm: TMergeForm
       Hint = 
         'View dictionary|Open the dictionary viewer to see all reports su' +
         'bmitted by other users.'
+      HelpType = htKeyword
+      HelpKeyword = 'View Dictionary'
       CustomHint = bhDict
       NumGlyphs = 2
       ParentShowHint = False
@@ -98,6 +110,8 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Options|Change the options that control how the plugin runs.'
+      HelpType = htKeyword
+      HelpKeyword = 'Options'
       CustomHint = bhOptions
       NumGlyphs = 2
       ParentShowHint = False
@@ -110,6 +124,8 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Update|No updates available!'
+      HelpType = htKeyword
+      HelpKeyword = 'Update'
       CustomHint = bhUpdate
       Anchors = [akTop, akRight]
       NumGlyphs = 2
@@ -123,6 +139,8 @@ object MergeForm: TMergeForm
       Width = 48
       Height = 40
       Hint = 'Help|Sorry, this isn'#39't working yet.'
+      HelpType = htKeyword
+      HelpKeyword = 'Help'
       CustomHint = bhHelp
       Anchors = [akTop, akRight]
       NumGlyphs = 2
@@ -138,6 +156,8 @@ object MergeForm: TMergeForm
       Hint = 
         'Find errors|Check all plugins that are loaded and not blackliste' +
         'd for errors.'
+      HelpType = htKeyword
+      HelpKeyword = 'Find Errors'
       CustomHint = bhFind
       NumGlyphs = 2
       ParentShowHint = False
@@ -160,12 +180,16 @@ object MergeForm: TMergeForm
       Top = 7
       Width = 654
       Height = 605
+      HelpType = htKeyword
+      HelpKeyword = 'Merges Tab'
       ActivePage = PluginsTabSheet
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
       OnChange = PageControlChange
       object PluginsTabSheet: TTabSheet
+        HelpType = htKeyword
+        HelpKeyword = 'Plugins Tab'
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -176,6 +200,8 @@ object MergeForm: TMergeForm
           Top = 3
           Width = 640
           Height = 571
+          HelpType = htKeyword
+          HelpKeyword = 'Plugins Tab'
           Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
           Columns = <
@@ -224,6 +250,8 @@ object MergeForm: TMergeForm
           Top = 3
           Width = 640
           Height = 571
+          HelpType = htKeyword
+          HelpKeyword = 'Merges Tab'
           Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
           Columns = <
@@ -266,6 +294,8 @@ object MergeForm: TMergeForm
         end
       end
       object LogTabSheet: TTabSheet
+        HelpType = htKeyword
+        HelpKeyword = 'Log Tab'
         Caption = 'Log'
         ImageIndex = 2
         object LogListView: TListView
@@ -273,6 +303,8 @@ object MergeForm: TMergeForm
           Top = 3
           Width = 640
           Height = 571
+          HelpType = htKeyword
+          HelpKeyword = 'Log Tab'
           Align = alCustom
           Anchors = [akLeft, akTop, akRight, akBottom]
           Columns = <
@@ -320,6 +352,8 @@ object MergeForm: TMergeForm
     Top = 45
     Width = 601
     Height = 615
+    HelpType = htKeyword
+    HelpKeyword = 'Main Application Window'
     Align = alClient
     BevelOuter = bvNone
     Constraints.MinWidth = 200
@@ -337,6 +371,8 @@ object MergeForm: TMergeForm
       Top = 29
       Width = 590
       Height = 582
+      HelpType = htKeyword
+      HelpKeyword = 'Main Application Window'
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       ColCount = 2
@@ -358,6 +394,8 @@ object MergeForm: TMergeForm
     Top = 660
     Width = 1264
     Height = 22
+    HelpType = htKeyword
+    HelpKeyword = 'Status Bar'
     Align = alBottom
     BevelOuter = bvLowered
     TabOrder = 3
@@ -366,6 +404,8 @@ object MergeForm: TMergeForm
       Top = 0
       Width = 797
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -384,6 +424,8 @@ object MergeForm: TMergeForm
       Top = -1
       Width = 32
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -446,6 +488,8 @@ object MergeForm: TMergeForm
       Top = 0
       Width = 32
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -514,6 +558,8 @@ object MergeForm: TMergeForm
       Top = 0
       Width = 32
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -582,6 +628,8 @@ object MergeForm: TMergeForm
       Top = 0
       Width = 32
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -688,6 +736,8 @@ object MergeForm: TMergeForm
       Top = 0
       Width = 32
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -748,6 +798,8 @@ object MergeForm: TMergeForm
       Top = 0
       Width = 130
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -765,6 +817,8 @@ object MergeForm: TMergeForm
       Top = 0
       Width = 130
       Height = 22
+      HelpType = htKeyword
+      HelpKeyword = 'Status Bar'
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alCustom
@@ -900,7 +954,7 @@ object MergeForm: TMergeForm
     Left = 1056
     Top = 8
     Bitmap = {
-      494C01010C001800C40210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C001800C80210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1441,7 +1495,7 @@ object MergeForm: TMergeForm
     Left = 1008
     Top = 8
     Bitmap = {
-      494C010108001400240240002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108001400280240002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100006000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
