@@ -873,7 +873,8 @@ begin
   AddDetailsItem(GetLanguageString('mpMain_PluginsMerged'), IntToStr(statistics.pluginsMerged + sessionStatistics.pluginsMerged));
   AddDetailsItem(GetLanguageString('mpMain_ReportsSubmitted'), IntToStr(statistics.reportsSubmitted + sessionStatistics.reportsSubmitted));
   AddDetailsItem(' ', ' ');
-  AddDetailsItem(GetLanguageString('mpMain_Website'), 'http://www.nexusmods.com/skyrim/mods/37981');
+  AddDetailsItem(GetLanguageString('mpMain_NexusMods'), 'http://www.nexusmods.com/skyrim/mods/37981');
+  AddDetailsItem(GetLanguageString('mpMain_GitHub'), 'http://github.com/matortheeternal/merge-plugins');
   AddDetailsItem(GetLanguageString('mpMain_ApiCredits'), 'superobject, TurboPower Abbrevia, xEdit');
   AddDetailsItem(GetLanguageString('mpMain_xEditVersion'), xEditVersion);
   AddDetailsItem(GetLanguageString('mpMain_xEditCredits'), 'zilav, hlp, Sharlikran, ElminsterAU');
