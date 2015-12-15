@@ -880,9 +880,10 @@ begin
   AddDetailsItem(GetLanguageString('mpMain_Testers'), ProgramTesters);
   AddDetailsItem(GetLanguageString('mpMain_Translators'), ProgramTranslators);
 
-  // update details item count
-  DetailsGrid.RowCount := slDetails.Count;
+  // update gui
   StringGrid_CorrectWidth(DetailsGrid);
+  DetailsGrid.RowCount := slDetails.Count;
+  DetailsGrid.Repaint;
 end;
 
 procedure TMergeForm.DetailsCopyToClipboardItemClick(Sender: TObject);
@@ -944,8 +945,6 @@ begin
 
   try
     value := slDetails.ValueFromIndex[ARow];
-    if Pos(' ', value) > 0 then
-      value := Copy(value, 1, Pos(' ', value));
     if IsURL(value) and ((Now - LastURLTime) * 86400 > 1.0) then begin
       ShellExecute(0, 'open', PChar(value), '', '', SW_SHOWNORMAL);
       LastURLTime := Now;
@@ -1073,6 +1072,7 @@ begin
   // update gui
   StringGrid_CorrectWidth(DetailsGrid);
   DetailsGrid.RowCount := slDetails.Count;
+  DetailsGrid.Repaint;
 
   // free memory
   sl.Free;
@@ -1682,8 +1682,9 @@ begin
   AddDetailsList(GetLanguageString('mpMain_Fails'), merge.fails);
 
   // update gui
-  DetailsGrid.RowCount := slDetails.Count;
   StringGrid_CorrectWidth(DetailsGrid);
+  DetailsGrid.RowCount := slDetails.Count;
+  DetailsGrid.Repaint;
 end;
 
 procedure TMergeForm.UpdateMerges;
