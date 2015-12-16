@@ -1667,7 +1667,7 @@ begin
     Tracker.Write('Handling assets');
     languages := TStringList.Create;
     MergeIni := TStringList.Create;
-    for i := Pred(lst.Count) downto 0 do begin
+    for i := 0 to Pred(lst.Count) do begin
       plugin := TPlugin(lst[i]);
       Tracker.Write('  Handling assets for '+plugin.filename);
       HandleAssets(plugin, merge);
