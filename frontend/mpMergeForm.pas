@@ -937,6 +937,10 @@ var
   ACol, ARow: integer;
   value: string;
 begin
+  // don't change cursor if in help mode
+  if Screen.Cursor = crHelp then
+    exit;
+
   DetailsGrid.MouseToCell(X, Y, ACol, ARow);
   // use default cursor on cells in column 0, or at an invalid cell
   if (ACol = 0) or (ARow > Pred(slDetails.Count)) then begin
