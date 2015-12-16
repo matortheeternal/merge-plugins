@@ -159,13 +159,13 @@ begin
   vl.Strings.Clear;
 
   // initialize dictionary details
-  vl.InsertRow(GetLanguageString('mpDct_Filename'), DictionaryFilename, true);
-  vl.InsertRow(GetLanguageString('mpDct_FileSize'), FormatByteSize(GetFileSize(DictionaryFilename)), true);
-  vl.InsertRow(GetLanguageString('mpDct_DateModified'), DateTimeToStr(GetLastModified(DictionaryFilename)), true);
-  vl.InsertRow(GetLanguageString('mpDct_NumEntries'), IntToStr(dictionary.Count), true);
-  vl.InsertRow(GetLanguageString('mpDct_NumReports'), IntToStr(ReportCount(dictionary)), true);
-  vl.InsertRow(GetLanguageString('mpDct_EntriesDisplayed'), IntToStr(tempDictionary.Count), true);
-  vl.InsertRow(GetLanguageString('mpDct_BlacklistSize'), IntToStr(blacklist.Count), true);
+  vl.InsertRow(GetLanguageString('mpDict_Filename'), DictionaryFilename, true);
+  vl.InsertRow(GetLanguageString('mpDict_FileSize'), FormatByteSize(GetFileSize(DictionaryFilename)), true);
+  vl.InsertRow(GetLanguageString('mpDict_DateModified'), DateTimeToStr(GetLastModified(DictionaryFilename)), true);
+  vl.InsertRow(GetLanguageString('mpDict_NumEntries'), IntToStr(dictionary.Count), true);
+  vl.InsertRow(GetLanguageString('mpDict_NumReports'), IntToStr(ReportCount(dictionary)), true);
+  vl.InsertRow(GetLanguageString('mpDict_EntriesDisplayed'), IntToStr(tempDictionary.Count), true);
+  vl.InsertRow(GetLanguageString('mpDict_BlacklistSize'), IntToStr(blacklist.Count), true);
 end;
 
 // update meNotes when user changes entry

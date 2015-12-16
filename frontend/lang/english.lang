@@ -158,6 +158,14 @@ mpDict_lblRating_Caption=Rating
 mpDict_lblDictionary_Caption=Dictionary information:
 { ## Notes ## }
 mpDict_lblNotes_Caption=Entry notes:
+{ #### DYNAMIC #### }
+mpDict_Filename=Filename
+mpDict_FileSize=Filesize
+mpDict_DateModified=Date modified
+mpDict_NumEntries=Number of entries
+mpDict_NumReports=Total reports
+mpDict_EntriesDisplayed=Entries displayed
+mpDict_BlacklistSize=Blacklist size
  
 { TEditForm }
 mpEdit_lblName_Caption=Name
