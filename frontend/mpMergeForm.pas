@@ -1059,7 +1059,6 @@ var
   plugin: TPlugin;
   index: integer;
   sl: TStringList;
-  i: Integer;
 begin
   // get selected item
   DetailsGrid.HelpKeyword := 'Plugin Details';

@@ -104,7 +104,6 @@ uses
 
 class procedure TAppHelpers.GetHelp(var Msg: TMsg; var Handled: Boolean);
 var
-  form: TForm;
   control: TControl;
   sKeyword: string;
 begin
@@ -135,6 +134,7 @@ class function TAppHelpers.HandleHelp(Command: Word; Data: Integer;
 begin
   CallHelp := bAllowHelp;
   bAllowHelp := false;
+  Result := true;
 end;
 
 
