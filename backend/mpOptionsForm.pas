@@ -190,8 +190,8 @@ procedure TOptionsForm.FormShow(Sender: TObject);
 begin
   // correct list view widths
   SettingsPageControl.ActivePage := UsersTabSheet;
-  CorrectListViewWidth(lvBlacklist);
-  CorrectListViewWidth(lvUsers);
+  ListView_CorrectWidth(lvBlacklist);
+  ListView_CorrectWidth(lvUsers);
 
   // return to general page
   SettingsPageControl.ActivePage := GeneralTabSheet;

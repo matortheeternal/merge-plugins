@@ -134,6 +134,7 @@ type
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     // SERVER EVENTS
+    procedure CloseInactiveConnections;
     procedure TCPServerConnect(AContext: TIdContext);
     procedure TCPServerDisconnect(AContext: TIdContext);
     procedure TCPServerException(AContext: TIdContext; AException: Exception);
@@ -187,7 +188,7 @@ begin
       LogListView.Items[Pred(LogListView.Items.Count)].MakeVisible(false);
       SendMessage(LogListView.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
     end;
-    CorrectListViewWidth(LogListView);
+    ListView_CorrectWidth(LogListView);
   end;
 end;
 
@@ -271,9 +272,9 @@ procedure TBackendForm.FormShow(Sender: TObject);
 begin
   // Correct list view widths
   PageControl.ActivePage := UnapprovedTabSheet;
-  CorrectListViewWidth(UnapprovedListView);
+  ListView_CorrectWidth(UnapprovedListView);
   PageControl.ActivePage := ApprovedTabSheet;
-  CorrectListViewWidth(ApprovedListView);
+  ListView_CorrectWidth(ApprovedListView);
   PageControl.ActivePage := LogTabSheet;
 
   // Refresh GUI
@@ -286,6 +287,7 @@ begin
   TaskHandler.AddTask(TTask.Create('Rebuild Dictionaries', 1.0 * days, TTaskProcedures.RebuildDictionaries));
   TaskHandler.AddTask(TTask.Create('Refresh GUI', 3.0 * seconds, RefreshGUI));
   TaskHandler.AddTask(TTask.Create('Save and Clear Log', 10.0 * minutes, SaveAndClearLog));
+  TaskHandler.AddTask(TTask.Create('Close Inactive Connections', 10.0 * minutes, CloseInactiveConnections));
 end;
 
 procedure TBackendForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -385,15 +387,15 @@ begin
   case ndx of
     0: begin
       UpdateUnapprovedDetails;
-      CorrectListViewWidth(UnapprovedListView);
+      ListView_CorrectWidth(UnapprovedListView);
     end;
     1: begin
       UpdateApprovedDetails;
-      CorrectListViewWidth(ApprovedListView);
+      ListView_CorrectWidth(ApprovedListView);
     end;
     2: begin
       UpdateApplicationDetails;
-      CorrectListViewWidth(LogListView);
+      ListView_CorrectWidth(LogListView);
     end;
   end;
 end;
@@ -1091,6 +1093,12 @@ end;
 }
 {******************************************************************************}
 
+procedure TBackendForm.CloseInactiveConnections;
+begin
+  // ?
+
+end;
+
 procedure TBackendForm.TCPServerConnect(AContext: TIdContext);
 var
   ip: string;
@@ -1106,7 +1114,7 @@ begin
 
   // handle connection
   LogMessage('SERVER', 'Connected', ip);
-  slConnectedIPs.Add(ip);
+  slConnectedIPs.AddObject(ip, TObject(AContext));
   user := GetUser(ip);
   if not Assigned(user) then
     user := AddUser(ip);
@@ -1119,6 +1127,7 @@ var
   index: integer;
 begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
+  AContext.Connection.Disconnect;
   LogMessage('SERVER', 'Disconnected', ip);
   index := slConnectedIPs.IndexOf(ip);
   if index > -1 then
@@ -1128,11 +1137,13 @@ end;
 procedure TBackendForm.TCPServerException(AContext: TIdContext;
   AException: Exception);
 begin
-  if AException.Message = 'Connection Closed Gracefully.' then
-    exit;
+  if AException.Message <> 'Connection Closed Gracefully.' then
+    LogMessage('ERROR', 'Server', AContext.Connection.Socket.Binding.PeerIP+
+      ' '+AException.Message);
 
-  LogMessage('ERROR', 'Server', AContext.Connection.Socket.Binding.PeerIP+
-    ' '+AException.Message);
+  // disconnect because there was an exception
+  // we don't like exceptions
+  AContext.Connection.Disconnect;
 end;
 
 procedure TBackendForm.SendResponse(var user: TUser; var AContext: TIdContext;
