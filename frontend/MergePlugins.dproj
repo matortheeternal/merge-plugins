@@ -167,7 +167,7 @@
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">Merge Plugins</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">2.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">2.1</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments">created by matortheeternal</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Excluded_Packages>

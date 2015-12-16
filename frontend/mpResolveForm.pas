@@ -431,7 +431,7 @@ begin
   end;
 
   // show progress form
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'), 'errors');
 
   // start error check thread
   ErrorCheckCallback := ProgressDone;
@@ -463,7 +463,7 @@ begin
   end;
 
   // show progress form
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'), 'errors');
 
   // start error check thread
   ErrorFixCallback := ProgressDone;

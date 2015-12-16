@@ -600,7 +600,7 @@ begin
 
     // show progress form
     pForm := TProgressForm.Create(Self);
-    pForm.LogPath := PathList.Values['LogPath'];
+    pForm.pfLogPath := LogPath + 'main\';
     pForm.PopupParent := Self;
     pForm.Caption := GetLanguageString('mpProg_Closing');
     pForm.MaxProgress(PluginsList.Count + MergesList.Count + 2);
@@ -1428,7 +1428,7 @@ begin
 
   // show progress form
   ToggleFormState(false);
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'), 'errors');
 
   // start error check thread
   ErrorCheckCallback := ProgressDone;
@@ -1461,7 +1461,7 @@ begin
 
   // show progress form
   ToggleFormState(false);
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'), 'errors');
 
   // start error check thread
   ErrorFixCallback := ProgressDone;
@@ -2297,7 +2297,7 @@ begin
 
   // show progress form
   ToggleFormState(false);
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Fixing'), 'errors');
 
   // start error checking thread
   ErrorFixCallback := ProgressDone;
@@ -2342,7 +2342,7 @@ begin
 
   // Show progress form
   ToggleFormState(false);
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'), 'errors');
 
   // start error checking thread
   ErrorCheckCallback := ProgressDone;
@@ -2512,7 +2512,7 @@ begin
   // Show progress form
   ToggleFormState(false);
   xEditLogGroup := 'MERGE';
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Merging'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Merging'), 'merge');
 
   // start merge thread
   MergeCallback := ProgressDone;
@@ -2844,7 +2844,7 @@ begin
 
   // make and show progress form
   ToggleFormState(false);
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Checking'), 'errors');
 
   // start error check thread
   ErrorCheckCallback := ProgressDone;
@@ -2892,7 +2892,7 @@ begin
   // make and show progress form
   ToggleFormState(false);
   xEditLogGroup := 'MERGE';
-  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Merging'));
+  ShowProgressForm(self, pForm, GetLanguageString('mpProg_Merging'), 'merge');
 
   // start merge thread
   MergeCallback := ProgressDone;

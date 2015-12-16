@@ -39,7 +39,8 @@ type
   procedure RebuildLog;
   procedure SaveLog(var Log: TList);
   function MessageEnabled(msg: TLogMessage): boolean;
-  procedure ShowProgressForm(parent: TForm; var pf: TProgressForm; s: string);
+  procedure ShowProgressForm(parent: TForm; var pf: TProgressForm;
+    sCaption, sLogSubPath: string);
 
 var
   BaseLog, Log, LabelFilters, GroupFilters: TList;
@@ -111,8 +112,8 @@ begin
     sl.Add(Format('[%s] (%s) %s: %s', [msg.time, msg.group, msg.&label, msg.text]));
   end;
   fdt := FormatDateTime('mmddyy_hhnnss', TDateTime(Now));
-  ForceDirectories(LogPath);
-  sl.SaveToFile(LogPath+'log_'+fdt+'.txt');
+  ForceDirectories(LogPath+'main\');
+  sl.SaveToFile(LogPath+'main\log_'+fdt+'.txt');
   sl.Free;
 end;
 
@@ -159,12 +160,13 @@ begin
     Result := Result and LabelFilter.enabled;
 end;
 
-procedure ShowProgressForm(parent: TForm; var pf: TProgressForm; s: string);
+procedure ShowProgressForm(parent: TForm; var pf: TProgressForm;
+  sCaption, sLogSubPath: string);
 begin
   pf := TProgressForm.Create(parent);
-  pf.LogPath := LogPath;
+  pf.pfLogPath := LogPath + sLogSubPath + '\';
   pf.PopupParent := parent;
-  pf.Caption := s;
+  pf.Caption := sCaption;
   pf.MaxProgress(IntegerListSum(timeCosts, Pred(timeCosts.Count)));
   pf.Show;
 end;

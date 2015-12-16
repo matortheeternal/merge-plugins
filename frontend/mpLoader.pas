@@ -71,12 +71,12 @@ begin
   Result := false;
 
   // INITIALIZE VARIABLES
+  LogPath := PathList.Values['ProgramPath'] + 'logs\';
   PathList.Values['TempPath'] := PathList.Values['ProgramPath'] + 'temp\';
-  PathList.Values['LogPath'] := PathList.Values['ProgramPath'] + 'logs\';
   PathList.Values['ProfilePath'] := PathList.Values['ProgramPath'] +
     'profiles\'+ CurrentProfile.name + '\';
   ForceDirectories(PathList.Values['TempPath']);
-  ForceDirectories(PathList.Values['LogPath']);
+  ForceDirectories(LogPath);
   ForceDirectories(PathList.Values['ProfilePath']);
   LocalStatus := TmpStatus.Create;
   LastStatusTime := 0;
