@@ -241,6 +241,8 @@ type
     procedure ToggleAutoScrollItemClick(Sender: TObject);
     procedure DetailsCopyToClipboardItemClick(Sender: TObject);
     procedure ImageDisconnectedClick(Sender: TObject);
+    procedure DetailsGridMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
   protected
     procedure WMSize(var AMessage: TMessage); message WM_SIZE;
     procedure WMMove(var AMessage: TMessage); message WM_MOVE;
@@ -926,6 +928,28 @@ end;
 procedure TMergeForm.DetailsPanelResize(Sender: TObject);
 begin
   StringGrid_CorrectWidth(DetailsGrid);
+end;
+
+{ Make cursor pointer if mouse is over a URL }
+procedure TMergeForm.DetailsGridMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+var
+  ACol, ARow: integer;
+  value: string;
+begin
+  DetailsGrid.MouseToCell(X, Y, ACol, ARow);
+  // use default cursor on cells in column 0, or at an invalid cell
+  if (ACol = 0) or (ARow > Pred(slDetails.Count)) then begin
+    Screen.Cursor := crDefault;
+    exit;
+  end;
+
+  // test if cell is a url
+  value := slDetails.ValueFromIndex[ARow];
+  if IsURL(value) then
+    Screen.Cursor := crHandPoint
+  else
+    Screen.Cursor := crDefault;
 end;
 
 { Handle user clicking URL }
