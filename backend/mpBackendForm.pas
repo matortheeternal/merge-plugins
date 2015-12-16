@@ -134,7 +134,6 @@ type
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     // SERVER EVENTS
-    procedure CloseInactiveConnections;
     procedure TCPServerConnect(AContext: TIdContext);
     procedure TCPServerDisconnect(AContext: TIdContext);
     procedure TCPServerException(AContext: TIdContext; AException: Exception);
@@ -287,7 +286,6 @@ begin
   TaskHandler.AddTask(TTask.Create('Rebuild Dictionaries', 1.0 * days, TTaskProcedures.RebuildDictionaries));
   TaskHandler.AddTask(TTask.Create('Refresh GUI', 3.0 * seconds, RefreshGUI));
   TaskHandler.AddTask(TTask.Create('Save and Clear Log', 10.0 * minutes, SaveAndClearLog));
-  TaskHandler.AddTask(TTask.Create('Close Inactive Connections', 10.0 * minutes, CloseInactiveConnections));
 end;
 
 procedure TBackendForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1092,12 +1090,6 @@ end;
   - TCPServerExecute
 }
 {******************************************************************************}
-
-procedure TBackendForm.CloseInactiveConnections;
-begin
-  // ?
-
-end;
 
 procedure TBackendForm.TCPServerConnect(AContext: TIdContext);
 var
