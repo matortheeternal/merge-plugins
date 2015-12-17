@@ -37,3 +37,18 @@ Version 2.0.2.1
   - Fixed issue with language files not being unpacked when updating
   - Added a fallback for users who won't have lang\english.lang, which directs them to GitHub to download it
   - No longer throwing an exception when a language file fails to load
+
+Version 2.0.2.37
+  - Profile form vertical scroll bar now has tracking
+  - Now updating quickbar and statusbar when language is changed
+  - Added options for server host and server port
+  - Do not send statistics option is now functional
+  - Fixed issue with merges not saving if the background loader wasn't done
+  - Status message panel now provides status messages in more circumstances
+  - Added "Built" merge status, so you can only build merges once per session (as intended)
+  - Added German translation (thanks GabenOurSavior!)
+  - Now detects when plugins in a merge are not contiguous or break dependencies
+  - Created a new form for resolving issues with a merge
+  - Now handles initialization exceptions better, so you'll know when the program has borked up
+  - Program updates will now properly extract ALL files from the program zip archive to relative directories
+  - Profiles now get sent to the recycle bin instead of deleted permanently

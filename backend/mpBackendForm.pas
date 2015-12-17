@@ -1128,14 +1128,16 @@ end;
 
 procedure TBackendForm.TCPServerException(AContext: TIdContext;
   AException: Exception);
+var
+  index: Integer;
 begin
   if AException.Message <> 'Connection Closed Gracefully.' then
     LogMessage('ERROR', 'Server', AContext.Connection.Socket.Binding.PeerIP+
       ' '+AException.Message);
 
-  // disconnect because there was an exception
-  // we don't like exceptions
-  AContext.Connection.Disconnect;
+  index := slConnectedIPs.IndexOf(AContext.Connection.Socket.Binding.PeerIP);
+  if index > -1 then
+    slConnectedIPs.Delete(index);
 end;
 
 procedure TBackendForm.SendResponse(var user: TUser; var AContext: TIdContext;
@@ -1363,18 +1365,26 @@ var
   LLine: string;
   size: integer;
 begin
-  LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
-  size := Length(LLine);
-  Inc(sessionBandwidth, size);
-  if size < 3 then
-    exit;
+  try
+    LLine := AContext.Connection.IOHandler.ReadLn(TIdTextEncoding.Default);
+    size := Length(LLine);
+    Inc(sessionBandwidth, size);
+    if size < 3 then
+      exit;
 
-  msg := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
-  if (msg.id > 0) then
-    HandleMessage(msg, size, AContext);
-
-  // free message
-  msg.Free;
+    // attempt to parse as a message
+    msg := TmpMessage(TRttiJson.FromJson(LLine, TmpMessage));
+    try
+      if (msg.id > 0) then
+        HandleMessage(msg, size, AContext);
+    finally
+      // free message
+      msg.Free;
+    end;
+  except
+    on x: Exception do
+      TCPServerException(AContext, Exception.Create('Read exception'));
+  end;
 end;
 
 {******************************************************************************}

@@ -60,7 +60,11 @@ __history/
 *.json
 *.ini
 *.zip
-backend/logs/*.txt
 loc/
 test/
+frontend/changelog.txt
 frontend/logs/
+backend/logs/
+backend/doc/
+backend/lang/
+backend/*.dat
