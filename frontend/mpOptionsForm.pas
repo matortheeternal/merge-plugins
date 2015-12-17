@@ -750,7 +750,9 @@ procedure TOptionsForm.btnResetClick(Sender: TObject);
 begin
   if settings.registered and not ProgramStatus.bAuthorized then begin
     ResetAuth;
-    CheckAuthorization;
+    ProgramStatus.bAuthorized := CheckAuthorization;
+    if not ProgramStatus.bAuthorized then
+      ProgramStatus.bAuthorized := RegisterUser(edUsername.Text);
     if ProgramStatus.bAuthorized then begin
       btnReset.Enabled := false;
       lblStatusValue.Caption := GetLanguageString('mpOpt_Registered');
