@@ -1,0 +1,15 @@
+AliveWaters - Koi Addon.esp;136;2.0;4.0;1;[User: Hishutp] [Hash: DD380B77] [Version: 2.0]@13Merged without errors.@13@13
+AliveWaters - Slaughterfish Addon.esp;11;2.0;4.0;1;[User: Hishutp] [Hash: 9B1847DA] [Version: 2.0]@13Merged without errors.@13@13
+AliveWaters.esp;4354;2.0;4.0;1;[User: Hishutp] [Hash: 143CF909] [Version: 2.0]@13Merged without errors.@13@13
+Bashed Patch, 0.esp;2013;2.0;-1.0;1;[User: Hishutp] [Hash: 314C1932] [Version: 2.0]@13Generated Patch.@13@13
+DLCBattlehornCastle.esp;3277;2.0;-1.0;1;[User: Hishutp] [Hash: E449E3FA] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+DLCFrostcrag.esp;1354;2.0;-1.0;1;[User: Hishutp] [Hash: 5AEE2921] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+DLCHorseArmor.esp;179;2.0;-1.0;1;[User: Hishutp] [Hash: BD0084C5] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+DLCMehrunesRazor.esp;5656;2.0;-1.0;1;[User: Hishutp] [Hash: 98F295F5] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+DLCOrrery.esp;167;2.0;-1.0;1;[User: Hishutp] [Hash: 351A3894] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+DLCShiveringIsles.esp;0;2.0;-1.0;1;[User: Hishutp] [Hash: 2BB84977] [Version: 2.0]@13Official DLC, dummy plugin to load multiple BSAs@13@13
+DLCSpellTomes.esp;741;2.0;-1.0;1;[User: Hishutp] [Hash: 02FA9682] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+DLCThievesDen.esp;2237;2.0;-1.0;1;[User: Hishutp] [Hash: 7F76D2D3] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+DLCVileLair.esp;1268;2.0;-1.0;1;[User: Hishutp] [Hash: 1D2570A8] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+Knights.esp;10090;2.0;-1.0;1;[User: Hishutp] [Hash: 6C88EDB3] [Version: 2.0]@13Official DLC, unmergeable.@13@13
+Oblivion.esm;1252095;2.0;-1.0;1;[User: Hishutp] [Hash: 2FF840C5] [Version: 2.0]@13Main ESM, do not merge@13@13

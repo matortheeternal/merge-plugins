@@ -1,0 +1,52 @@
+01AtM - Firefly Ranch.esp;3237;2.0;4.0;1;[User: Hauntedabyss] [Hash: 897E8CFE] [Version: 2.0]@13no errors!!!!!!!@13@13
+Anchorage.esm;46887;2.0;-1.0;2;[User: Hishutp] [Hash: A4BA9D10] [Version: 2.0]@13Official DLC Plugin, do not merge.@13@13[User: hishutup] [Hash: A4BA9D10] [Version: 2.0]@13Main DLC ESM, do not merge@13@13
+ArefuExpandedByAzar-FixEyes.esp;14;2.0;4.0;1;[User: Hauntedabyss] [Hash: 05B18A37] [Version: 2.0]@13no errors as of yet@13@13
+ArefuExpandedByAzar-FixMisc.esp;67;2.0;4.0;1;[User: Hauntedabyss] [Hash: 2624EB6A] [Version: 2.0]@13no errors as of yet@13@13
+ArefuExpandedByAzar-FixOptAddNew.esp;24;2.0;4.0;1;[User: Hauntedabyss] [Hash: 7D82F9F4] [Version: 2.0]@13no errors as of yet@13@13
+ArefuExpandedByAzar-FixOptRemOld.esp;56;2.0;4.0;1;[User: Hauntedabyss] [Hash: 8B2098F5] [Version: 2.0]@13no errors as of yet@13@13
+Blammo Corp. 1.02.esp;4436;2.0;4.0;1;[User: Hauntedabyss] [Hash: 27F16774] [Version: 2.0]@13no errors!!!!!!!@13@13
+Bobblehead Quest.esp;136;2.0;4.0;1;[User: Hauntedabyss] [Hash: 61539579] [Version: 2.0]@13no errors!!!!!!!@13@13
+BrokenSteel.esm;43505;2.0;-1.0;2;[User: Hishutp] [Hash: 30011B79] [Version: 2.0]@13Official DLC Plugin, do not merge.@13@13[User: hishutup] [Hash: 30011B79] [Version: 2.0]@13Main DLC ESM, do not merge@13@13
+BusworldV3.esp;5686;2.0;4.0;1;[User: Hauntedabyss] [Hash: BE820C09] [Version: 2.0]@13Perfect merge!!!!@13@13
+CharonImproved.esp;1274;2.0;4.0;1;[User: Hauntedabyss] [Hash: 97E43980] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Crowded Cities Redux.esm;296;2.0;4.0;1;[User: Hauntedabyss] [Hash: C0E40B8F] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+CrowdedCities_v2.esp;342;2.0;4.0;1;[User: Hauntedabyss] [Hash: 0550B07F] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+DarNifiedUIF3.esp;21;2.0;4.0;1;[User: Hauntedabyss] [Hash: 33D1F89A] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+DCInteriors_ComboEdition.esm;103004;2.0;4.0;1;[User: Hauntedabyss] [Hash: AE7EC283] [Version: 2.0]@13Perfect merge!!!!@13@13
+Enclave Faction Overhaul.esp;841;2.0;4.0;1;[User: Hauntedabyss] [Hash: 3992A991] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Fallout3.esm;808699;2.0;-1.0;2;[User: Hishutp] [Hash: C092218B] [Version: 2.0]@13Official Plugin, do not merge.@13@13[User: hishutup] [Hash: C092218B] [Version: 2.0]@13Main ESM, do not merge@13@13
+FO3 NPCs Travel.esp;1167;2.0;4.0;1;[User: Hauntedabyss] [Hash: BB70CA1C] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Follower Amata ULTIMATE.esp;367;2.0;4.0;1;[User: Hauntedabyss] [Hash: 576A4FD9] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Handy Companions.esp;233;2.0;4.0;1;[User: Hauntedabyss] [Hash: E72A32D3] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+K9Breeds.esp;163;2.0;4.0;1;[User: Hauntedabyss] [Hash: FBD39364] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+K9BreedsMoreDogs.esp;179;2.0;4.0;1;[User: Hauntedabyss] [Hash: 75B13906] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+K9BreedsPatchDLCPitt.esp;3;2.0;4.0;1;[User: Hauntedabyss] [Hash: FC07ADF1] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Kidnapped.esp;363;2.0;4.0;1;[User: Hauntedabyss] [Hash: F81CC0CB] [Version: 2.0]@13no errors!!!!!!!@13@13
+KillableChildren.esp;77;2.0;4.0;1;[User: Hauntedabyss] [Hash: 5AC216C8] [Version: 2.0]@13no errors!!!!!!!@13@13
+lexx_brahmin-variant-Fo3.esp;166;2.0;4.0;1;[User: Hauntedabyss] [Hash: 6DF399BC] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Metros Alive.esm;7170;2.0;4.0;1;[User: Hauntedabyss] [Hash: CE97972E] [Version: 2.0]@13Perfect merge!!!!@13@13
+Moo.esp;157;2.0;4.0;1;[User: Hauntedabyss] [Hash: 3860D2A4] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+MooBS.esp;2;2.0;4.0;1;[User: Hauntedabyss] [Hash: 6FE21980] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+PointLookout.esm;68565;2.0;-1.0;2;[User: Hishutp] [Hash: D92704D8] [Version: 2.0]@13Official DLC Plugin, do not merge.@13@13[User: hishutup] [Hash: D92704D8] [Version: 2.0]@13Main DLC ESM, do not merge@13@13
+Regulators.esp;6163;2.0;4.0;1;[User: Hauntedabyss] [Hash: 3041AE1E] [Version: 2.0]@13no errors!!!!!!!@13@13
+RezDCSubway.esm;4489;2.0;4.0;1;[User: Hauntedabyss] [Hash: 27CFA099] [Version: 2.0]@13Perfect merge!!!!@13@13
+Sealurk .32 Pistol Enhanced.esp;2;2.0;4.0;1;[User: Hauntedabyss] [Hash: CCEC92CA] [Version: 2.0]@13no errors!!!!!!!@13@13
+Shadows and Dust - Southwest DC - Public.esp;2859;2.0;4.0;1;[User: Hauntedabyss] [Hash: 611DB4B4] [Version: 2.0]@13no errors!!!!!!!@13@13
+Solace.esp;2096;2.0;4.0;1;[User: Hauntedabyss] [Hash: BE9AD53E] [Version: 2.0]@13no errors!!!!!!!@13@13
+ThePitt.esm;36013;2.0;-1.0;2;[User: hishutup] [Hash: B38B3E44] [Version: 2.0]@13Main DLC ESM, do not merge@13@13[User: Hishutp] [Hash: B38B3E44] [Version: 2.0]@13Official DLC Plugin, do not merge.@13@13
+TSC Black Guards.esp;84;2.0;4.0;1;[User: Hauntedabyss] [Hash: 05A0EB85] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Dialogues.esp;98;2.0;4.0;1;[User: Hauntedabyss] [Hash: BC7F6DC5] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Erebus.esp;1312;2.0;4.0;1;[User: Hauntedabyss] [Hash: 79552B49] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Expansion.esm;11198;2.0;4.0;1;[User: Hauntedabyss] [Hash: 8F366C50] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Grenade.esp;15;2.0;4.0;1;[User: Hauntedabyss] [Hash: 7105D2E0] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Lincoln Memorial.esm;3742;2.0;4.0;1;[User: Hauntedabyss] [Hash: 214B3C38] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Point Lookout.esm;2192;2.0;4.0;1;[User: Hauntedabyss] [Hash: 869A4D5B] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Rooms.esp;40;2.0;4.0;1;[User: Hauntedabyss] [Hash: 4D5DEE8B] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+TSC Samurai.esp;151;2.0;4.0;1;[User: Hauntedabyss] [Hash: 7DDDF2B3] [Version: 2.0]@13Put all of Mothership Zeta and TSC cew addon together. NO apparent @13problems after bootup@13@13
+UF3P - Exotic Caravans.esp;45;2.0;4.0;1;[User: Hauntedabyss] [Hash: F49253F1] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Ultimate Companion Overhaul.esp;480;2.0;4.0;1;[User: Hauntedabyss] [Hash: 0798929A] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Ursus.esp;100;2.0;4.0;1;[User: Hauntedabyss] [Hash: 73FEC62E] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+UrsusBS.esp;15;2.0;4.0;1;[User: Hauntedabyss] [Hash: D499828B] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Vault 691.esm;7220;2.0;4.0;1;[User: Hauntedabyss] [Hash: A1EC08EF] [Version: 2.0]@13no errors!!!!!!!@13@13
+WastelandGuards01.esm;318;2.0;4.0;1;[User: Hauntedabyss] [Hash: B91A82C7] [Version: 2.0]@13Merged Perfect No Issues as of yet@13@13
+Zeta.esm;37109;2.0;-1.0;2;[User: Hishutp] [Hash: 1D017E23] [Version: 2.0]@13Official DLC Plugin, do not merge.@13@13[User: hishutup] [Hash: 1D017E23] [Version: 2.0]@13Main DLC ESM, do not merge@13@13

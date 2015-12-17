@@ -68,3 +68,7 @@ backend/logs/
 backend/doc/
 backend/lang/
 backend/*.dat
+frontend/FNVDictionary.txt
+frontend/FO3Dictionary.txt
+frontend/TES4Dictionary.txt
+frontend/TES5Dictionary.txt
