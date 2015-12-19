@@ -25,6 +25,8 @@ object PluginSelectionForm: TPluginSelectionForm
     Top = 8
     Width = 488
     Height = 600
+    HelpType = htKeyword
+    HelpKeyword = 'Plugin Selection Styles'
     Align = alCustom
     Anchors = [akLeft, akTop, akRight, akBottom]
     Columns = <>
@@ -54,6 +56,8 @@ object PluginSelectionForm: TPluginSelectionForm
     Top = 614
     Width = 75
     Height = 25
+    HelpType = htKeyword
+    HelpKeyword = 'Plugin Selection Actions'
     Align = alCustom
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
@@ -65,6 +69,8 @@ object PluginSelectionForm: TPluginSelectionForm
     Top = 614
     Width = 75
     Height = 25
+    HelpType = htKeyword
+    HelpKeyword = 'Plugin Selection Actions'
     Align = alCustom
     Anchors = [akRight, akBottom]
     Caption = 'OK'
@@ -95,7 +101,7 @@ object PluginSelectionForm: TPluginSelectionForm
     Left = 136
     Top = 24
     Bitmap = {
-      494C010103003400580011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101030034005C0011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000440000001100000001002000000000001012
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
