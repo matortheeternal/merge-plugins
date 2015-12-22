@@ -118,6 +118,7 @@ object EditForm: TEditForm
         ItemIndex = 0
         TabOrder = 2
         Text = 'Overrides'
+        OnChange = cbMethodChange
         Items.Strings = (
           'Overrides'
           'New records')

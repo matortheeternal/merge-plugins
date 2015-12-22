@@ -37,6 +37,7 @@ type
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure edFilenameEnter(Sender: TObject);
+    procedure cbMethodChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -123,6 +124,16 @@ begin
 
   // all tests passed, return true
   Result := true;
+end;
+
+procedure TEditForm.cbMethodChange(Sender: TObject);
+var
+  bNewRecords: boolean;
+begin
+  bNewRecords := cbMethod.Text = 'New records';
+  cbRenumbering.ItemIndex := IfThenInt(bNewRecords, 1, 0);
+  cbRenumbering.Enabled := not bNewRecords;
+  Repaint;
 end;
 
 procedure TEditForm.edFilenameChange(Sender: TObject);
