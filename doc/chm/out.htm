@@ -563,24 +563,179 @@ want to load.
 		</TD>
 		<TD>
 			<P>If no unchecked plugin is required by checked
-			plugins as a master, as indicated by <FONT COLOR="#ff0000"><I>The splash will be displayed after a merge
-profile has been chosen.  The splash shows the progress of automatic
-updates as well as the loading of plugins, merges, and plugin
-information.  It also displays the version of the application.  The
-splash should close automatically and open the main application
-window after 10-30 seconds, depending on the size of your load order
-and your system specs.
+			plugins as a master, as indicated by <FONT COLOR="#ff0000"><I><SPAN STYLE="background: transparent">red
+			italic</SPAN></I></FONT> font.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Enter</P>
+		</TD>
+		<TD>
+			<P>Equivalent to clicking OK.</P>
+		</TD>
+		<TD>
+			<P>Same as OK.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Space</P>
+		</TD>
+		<TD>
+			<P>Toggles the check box of the selected plugins.</P>
+		</TD>
+		<TD>
+			<P>If one or more plugins are selected.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Cancel</P>
+		</TD>
+		<TD>
+			<P>Terminates the application.</P>
+		</TD>
+		<TD>
+			<P>Always.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Close</P>
+		</TD>
+		<TD>
+			<P>Terminates the application.</P>
+		</TD>
+		<TD>
+			<P>Always.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+
+<H3>Plugin Selection Popup Menu<A NAME="m00"></A></H3>
+<P>Right click in the list view to access the &ldquo;Plugin Selection
+Popup Menu&rdquo;.</P>
+<TABLE>
+	<COL WIDTH=147>
+	<COL WIDTH=500>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Name</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Action</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Check all</P>
+		</TD>
+		<TD>
+			<P>Checks all plugins in the list except ones that
+			cannot be loaded.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Uncheck all</P>
+		</TD>
+		<TD>
+			<P>Unchecks all plugins in the list.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Toggle all</P>
+		</TD>
+		<TD>
+			<P>Toggles the selection of all plugins in the
+			list except ones that cannot be loaded.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+<H3>Plugin Selection Styles<A NAME="m00"></A></H3>
+<TABLE>
+	<COL WIDTH=148>
+	<COL WIDTH=499>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Style</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Meaning</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=148 BGCOLOR="#ddeeff">
+			<P>
+			Light blue background</P>
+		</TD>
+		<TD>
+			<P>
+			The plugin is selected.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#005000"><B>Bold green font</B></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin is required as a master by a
+			selected plugin.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#990000"><B>Bold maroon font</B></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin requires a selected plugin as a
+			master.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#800080"><B>Bold magenta font</B></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin is required as a master by a
+			selected plugin, and requires a selected plugin as a master.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#808080"><I>Gray italic font</I></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin cannot be loaded because one or more
+			of its masters aren't installed.  That is, its masters were not
+			found in the data directory.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#ff0000"><I>Red italic font</I></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin is unchecked but is required as a
+			master by one or plugins that are checked.  You will need to check
+			this plugin or uncheck the plugins that depend on it to continue.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+
+<H2>Splash Window<A NAME="m00"></A></H2>
+<P>The Main Application Window is the location
+from which you can interface with all of the functionality offered by
+Merge Plugins, and is the window that is shown after you've selected
+a profile and the plugins you want to load.
 </P>
 
-<H3>Automatic Updates<A NAME="m00"></A></H3>
-<P>If you have enabled automatic updates in your settings, the
-application will attempt to connect to the server and get any
-dictionary or program updates that are available.  If there is a
-program update, the application will restart, taking you back to the
-profile screen.</P>
-
-
-<H2>Main Application Window<A NAME="m00"></A></H2>
+<H3>Quick Bar<A NAME="m00"></A></H3>
 <P>The Quick Bar provides multiple buttons to
 quickly access various functionalities in the application.
 </P>
@@ -3487,31 +3642,131 @@ FormIDs &ndash; the IDs associated with records.  There is no way to
 easily bypass this, so you're just going to have to deal with it. 
 Load only the plugins you plan on merging if your load order is
 extremely large, uninstalling/disabling them after merging.</P>
-<P>If you use Mod Organizer you can configure the
-Merge Plugins executable to have the arguments you want from the
-Arguments text box in the Modify Executables Window.  See <A HREF="#5.1.2.1.Starting Merge Plugins through Mod Organizer|outline">Starting
-Merge Plugins through Mod Organizer</A> for more information.
-</P>
+<P><SPAN STYLE="font-style: normal"><B>Note:</B></SPAN> Each merge
+you build will also use up another of the slots going towards the 255
+plugin limit.  So, if you have 250 plugins loaded in Merge Plugins
+you can build a maximum of 5 merges before running out of plugin
+slots.</P>
 
-<H3>Arguments with Shortcuts<A NAME="m00"></A></H3>
-<P>If you don't use Mod Organizer you can apply a target line
-parameter to a shortcut to Merge Plugins.</P>
-<OL>
-	<LI><P>Go to the directory where you installed Merge Plugins, right
-	click the Merge Plugins executable, and choose Create Shortcut.  
+<H3>Plugins Must be Loaded<A NAME="m00"></A></H3>
+<P>You cannot build a merge unless all of the source plugins for it
+are loaded.  In the past you could merge a merged plugin or merge
+into an existing plugin, but that is no longer supported due to
+issues with asset priority and override record priority.  You'll have
+to load all plugins associated with a merge in order to rebuild it,
+even if you're only removing or adding a single plugin.</P>
+
+<H3>GetFormFromFile
+isn't Handled<A NAME="m00"></A></H3>
+<P>Some papyrus scripts use GetFormFromFile to get a record reference
+in the context of the script.  This call includes both the filename
+and the FormID to be targeted.  If a plugin is targeted by this sort
+of script call and is then merged, the GetFormFromFile calls will
+stop working.  Fixing this requires a very large and complex feature.
+ This sort of feature is on the horizon, but isn't the current
+priority.  For now all you can do is avoid merging mods that are
+targeted by other scripts using GetFormFromFile.  There is currently
+no easy way to recognize whether or not a mod is targeted by
+GetFormFromFile, so the community will have to use user reports to
+identify and share information on which mods are targeted in this
+way.</P>
+
+<H2>Arguments<A NAME="m00"></A></H2>
+<P>The following table lists arguments you can use to adjust how
+Merge Plugins starts.  You can apply these arguments to shortcuts to
+the Merge Plugins executable or in Mod Organizer.</P>
+<TABLE>
+	<COL WIDTH=143>
+	<COL WIDTH=504>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Argument</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>-profile {ProfileName}</P>
+		</TD>
+		<TD>
+			<P>Use this argument to start the program using
+			the profile specified by {ProfileName}.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>-offline</P>
+		</TD>
+		<TD>
+			<P>Use this argument to start the program in
+			offline mode.  In this mode the program will not attempt to
+			connect to the backend server under any circumstances.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+<H3>Arguments with Mod Organizer<A NAME="m00"></A></H3>
+<P>Click on the Modify Executables button.
 	</P>
-	<LI><P>Move the shortcut wherever you want, and rename it as you see
-	fit.</P>
-	<LI><P>Right-click the shortcut and choose properties.</P>
-	<LI><P>When you want to start Merge Plugins, select
-	it from the drop-down menu and click Run.
+	<LI><P>Open the <A HREF="#3.8.Options Window |outline">Options
+	Window</A> and go to the Integrations Tab.
 	</P>
+	<LI><P>Check <B>I'm using Mod Organizer</B> and click <B>Detect
+	integrations</B>.  If your Mod Organizer installation is not found
+	automatically, click on the folder icon by the <B>Mod manager path</B>
+	text box and browse to its location on your file system.  Do the
+	same for the <B>Mod manager mods path</B><SPAN STYLE="font-weight: normal">,
+	browsing to the location of your mods folder if it is not the
+	default </SPAN><I><SPAN STYLE="font-weight: normal">Mod
+	Organizer\mods</SPAN></I><SPAN STYLE="font-weight: normal"> folder.</SPAN></P>
+	<LI><P>Verify the paths are correct.</P>
+	<LI><P>Proceed to the <A HREF="#3.8.2.Merging Tab|outline">Merging
+	Tab</A> of the Options Window and specify the <B>Merge destination
+	directory</B>.   It is best to set this to Mod Organizer's mods
+	folder because merges will then be created as mods directly
+	available through Mod Organizer's interface, without requiring any
+	post-merge steps.</P>
+	<LI><P>Restart Merge Plugins to correctly load your Mod Organizer
+	load order.</P>
 </OL>
 
-<H4>Configuring the Mod Organizer Integration<A NAME="m00"></A></H4>
+
+<H3>
+Mod Organizer Post-Merge Steps<A NAME="m00"></A></H3>
+
+<H4>With Copy General Assets<A NAME="m00"></A></H4>
 <OL>
-	<LI><P>Run Merge Plugins through Mod Organizer.</P>
-	<LI><P>Open the <A HREF="#3.8.Options Window |outline">Options
+	<LI><P>If you don't see the merged mod in Mod Organizer, right-click
+	&rarr; All &rarr; Refresh.</P>
+	<LI><P>Enable the merged mod in Mod Organizer.  It should be the
+	last mod in your list, before Overwrite.</P>
+	<LI><P>Disable the mods you merged in Mod Organizer.  For mods that
+	have multiple ESPs in them, if you didn't include all of those ESPs
+	in your merge you'll have to leave the mod enabled and disable the
+	ESPs you merged from your load order instead (in the plugins tab). 
+	It's not recommended to merge only a few ESPs from a mod because it
+	will create asset duplication.</P>
+	<LI><P>Go to the Archives tab in Mod Organizer and enable all BSA
+	archives associated with the merged mod you just created.  Be sure
+	to order them properly as well by dragging and dropping them.</P>
+</OL>
+
+<H4>Without Copy General Assets<A NAME="m00"></A></H4>
+<OL>
+	<LI><P>If you don't see the merged mod in Mod Organizer, right-click
+	&rarr; All &rarr; Refresh.</P>
+	<LI><P>Enable the merged mod in Mod Organizer.  It should be the
+	last mod in your list, before Overwrite.</P>
+	<LI><P>Disable the ESPs you merged from your load order.</P>
+</OL>
+
+<H3>Nexus Mod Manager Integration Set Up<A NAME="m00"></A></H3>
+
+<H4>Configuring the Nexus Mod Manager Integration<A NAME="m00"></A></H4>
+<OL>
+	<LI VALUE=1><P>Open the <A HREF="#3.8.Options Window |outline">Options
 	Window</A> and go to the Integrations Tab.
 	</P>
 	<LI><P>Check <B>I'm using Nexus Mod Manager</B> and click <B>Detect

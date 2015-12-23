@@ -36,7 +36,7 @@ with open(filename, 'r') as input:
 	# add m-num links
 	data = re.sub('</H([1-5])>', '<A NAME="m00"></A></H\\1>', data)
 	# remove spans
-	data = re.sub('<SPAN ([\w|\W]{1,4000})</SPAN><BR CLEAR=LEFT>', '', data)
+	data = re.sub('<SPAN ID="Frame([\w|\W]{1,4000})</SPAN><BR CLEAR=LEFT>', '', data)
 	# remove newlines from headers
 	data = re.sub('<H([1-5])>([\w| ]*)\n([\w| |?]*)(\n){0,1}<A NAME="m00"></A></H([1-5])>', '<H\\1>\\2 \\3<A NAME="m00"></A></H\\5>', data)
 	data = re.sub('<H([1-5])>( ){0,1}([\w| ]*)<A NAME="m00"></A></H([1-5])>', '<H\\1>\\3<A NAME="m00"></A></H\\4>', data)
