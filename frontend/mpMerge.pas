@@ -610,7 +610,7 @@ var
   bIndexChanged: boolean;
   fn, nfn, oldFormID, oldFileFormID, newFileFormID, infoFragmentsPath: string;
 begin
-  f := merge.plugin._File;
+  f := plugin._File;
   // exit if no DIAL records in file
   if not f.HasGroup('DIAL') then begin
     if settings.debugScriptFragments then
@@ -687,7 +687,7 @@ var
   bIndexChanged: boolean;
   fn, nfn, oldFormID, oldFileFormID, newFileFormID, questFragmentsPath: string;
 begin
-  f := merge.plugin._File;
+  f := plugin._File;
   // exit if no QUST records in file
   if not f.HasGroup('QUST') then begin
     if settings.debugScriptFragments then
@@ -758,7 +758,7 @@ var
   bIndexChanged: boolean;
   fn, nfn, oldFormID, oldFileFormID, newFileFormID, sceneFragmentsPath: string;
 begin
-  f := merge.plugin._File;
+  f := plugin._File;
   // exit if no SCEN records in file
   if not f.HasGroup('SCEN') then begin
     if settings.debugScriptFragments then
