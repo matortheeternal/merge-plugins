@@ -1,11 +1,8 @@
 <html>
 <head>
-<title>Help content</title>
-<link rel=stylesheet type=text/css href="style.css">
-
-<meta name="GENERATOR" content="chmProcessor" >
-
-
+  <title>Help content</title>
+  <link rel=stylesheet type=text/css href="style.css">
+  <meta name="GENERATOR" content="chmProcessor" >
 </head>
 </html>
 
@@ -19,17 +16,17 @@
 <BR>
 <BR>
 
+
 <h1>Introduction<a name=m01></a></h1>
 
-<h2>What is merge plugins?<a name=m02></a></h2>
-
+<H2>What is Merge Plugins?<A name=m02></A></H2>
 <P>Merge Plugins is a Windows application coded in Delphi
 (object-oriented Pascal).  Merge Plugins automates the process of
 combining multiple Bethesda Plugin/Master Files (<B>.esp</B> and
 <B>.esm</B>) into a single file.  The program interfaces with plugins
 through the xEdit framework, and supports plugin files from Skyrim,
-Oblivion, Fallout: New Vegas, and Fallout 3.</P>
-
+Oblivion, Fallout: New Vegas, and Fallout 3.  
+</P>
 <P>Merge Plugins doesn't just combine the contents of plugin files,
 it also handles asset files associated with those plugin files,
 automatically copying, renaming, and rebuilding assets as necessary
@@ -39,17 +36,16 @@ submitted by users as a guide to the tool's effectiveness at merging
 various plugin files.  Overall, Merge Plugins provides a powerful
 interface by which merges can be created, tracked, and rebuilt.</P>
 
-<H2>Why should I use Merge Plugins?<a name=m03></a></H2>
+<H2>Why should I use Merge Plugins?<A name=m03></A></H2>
 
-<H3>What are the benefits of merging plugins?<a name=m04></a></H3>
-
+<H3>What are the benefits of merging plugins?<A name=m04></A></H3>
 <UL>
 	<LI><P>You can (indirectly) pass the 255 plugin file limit</P>
 	<LI><P>Increased game stability</P>
 	<LI><P>A better organized, easier to manage load order</P>
 </UL>
 
-<H3>What are the alternatives?<a name=m05></a></H3>
+<H3>What are the alternatives?<A name=m05></A></H3>
 <UL>
 	<LI><P><B><A HREF="http://www.nexusmods.com/skyrim/mods/37981">Merge
 	Plugins xEdit Script</A><BR></B><SPAN STYLE="font-weight: normal">The
@@ -92,9 +88,10 @@ interface by which merges can be created, tracked, and rebuilt.</P>
   as a user.</SPAN></P>
 </OL>
 
+
 <H1>Comparison<a name=m07></a><a name="Comparison"></a></H1>
 
-<H2>Removed Features<a name=m08></a></H2>
+<H2>Removed Features<A name=m08></A></H2>
 <P>Several features were present in the Merge Plugins script, but are
 no longer present in Merge Plugins Standalone.  These features are
 listed below:</P>
@@ -102,49 +99,69 @@ listed below:</P>
 	<COL WIDTH=146>
 	<COL WIDTH=501>
 	<TR VALIGN=TOP>
-		<TH WIDTH=146>
+		<TH>
 			<P>Feature</P>
 		</TH>
-		<TH WIDTH=501>
+		<TH>
 			<P>Reason</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Removing plugins from a merged plugin</P>
+			<P CLASS="tableText">Removing
+			plugins from a merged plugin</P>
 		</TD>
 		<TD>
-			<P class="TableText">This can't be done properly due to issues 
-      with the Rule of One and conflicting asset files.  Rather than 
-      providing a feature that will randomly not work, I've removed 
-      this feature.  If you want to remove a plugin from a merge, just 
-      rebuild the merge.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="TableText">Renumber none</P>
-		</TD>
-		<TD>
-			<P class="TableText">There's no reason for you to use this with 
-      the standalone version of Merge Plugins.  The standalone program 
-      reloads the plugins so this feature has no use case and would only 
-      create conflicting FormIDs and broken merged plugins.</P>
+			<P CLASS="tableText">This
+			can't be done properly due to issues with the Rule of One and
+			conflicting asset files.  Rather than providing a feature that
+			will randomly not work, I've removed this feature.  If you want to
+			remove a plugin from a merge, just rebuild the merge.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Two-pass copying</P>
+			<P CLASS="tableText">Merging
+			into existing merges and combining merges</P>
 		</TD>
 		<TD>
-			<P class="TableText">This used to be necessary a long time ago 
-      due to NAVI/NAVM copying issues, but is no longer necessary.  
-      It provides no quantifiable benefits, and has thus been removed.</P>
+			<P CLASS="tableText">Due
+			to complexities in overrides and conflicting asset files, using an
+			existing merged plugin in a merge can't be done properly in most
+			circumstances.  Additionally, allowing it creates issues with
+			managed merges and creates a large increase in complexity.  To
+			merge a merged plugin you will have make a secondary merge
+			profile.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Renumber
+			none</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">There's
+			no reason for you to use this with the standalone version of Merge
+			Plugins.  The standalone program reloads the plugins so this
+			feature has no use case and would only create conflicting FormIDs
+			and broken merged plugins.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Two-pass
+			copying</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">This
+			used to be necessary a long time ago due to NAVI/NAVM copying
+			issues, but is no longer necessary.  It provides no quantifiable
+			benefits, and has thus been removed.</P>
 		</TD>
 	</TR>
 </TABLE>
 
-<H2>New Features<a name=m09></a></H2>
+<H2>New Features<A name=m09></A></H2>
 <P>Merge Plugins Standalone provides a large number of new features
 that greatly enhance the experience of merging plugins and managing
 merges.  New features are listed below: 
@@ -153,141 +170,164 @@ merges.  New features are listed below:
 	<COL WIDTH=190>
 	<COL WIDTH=457>
 	<TR VALIGN=TOP>
-		<TH WIDTH=190>
+		<TH>
 			<P>Feature</P>
 		</TH>
-		<TH WIDTH=457>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Script fragment handling</P>
+			<P CLASS="tableText">Script
+			fragment handling</P>
 		</TD>
 		<TD>
-			<P class="TableText">Script fragments are small scripts that are 
-      created by the game to assist with Quests, Scenes, and Dialog Topics.  
-      These script fragments have FormID specific filenames, and thus need 
-      to be renamed and recompiled when the FormID of the record they're 
-      associated with changes.  Merge Plugins Standalone does this if you 
-      set up the Papyrus Compiler and Champollion Decompiler integrations.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="TableText">INI file handling</P>
-		</TD>
-		<TD>
-			<P class="TableText">Some ESP files have INI files associated with 
-      them.  These INI files are loaded by the game based on their filename.  
-      In Merge Plugins Standalone, INI files are renamed and combined so 
-      their functionality is retained after merging.</P>
+			<P CLASS="tableText">Script
+			fragments are small scripts that are created by the game to assist
+			with Quests, Scenes, and Dialog Topics.  These script fragments
+			have FormID specific filenames, and thus need to be renamed and
+			recompiled when the FormID of the record they're associated with
+			changes.  Merge Plugins Standalone does this if you set up the
+			Papyrus Compiler and Champollion Decompiler integrations.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Merged BSA creation</P>
+			<P CLASS="tableText">INI
+			file handling</P>
 		</TD>
 		<TD>
-			<P class="TableText">Merge Plugins Standalone can create a merged 
-      BSA file for your merges.  This is done through the BSAOpt integration.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="TableText">Toggleable asset handling</P>
-		</TD>
-		<TD>
-			<P class="TableText">In Merge Plugins Standalone you can toggle 
-      what asset copying features you want to make use of.  This allows 
-      users to debug merges more effectively.</P>
+			<P CLASS="tableText">Some
+			ESP files have INI files associated with them.  These INI files
+			are loaded by the game based on their filename.  In Merge Plugins
+			Standalone, INI files are renamed and combined so their
+			functionality is retained after merging.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Speed increase</P>
+			<P CLASS="tableText">Merged
+			BSA creation</P>
 		</TD>
 		<TD>
-			<P class="TableText">Because Merge Plugins Standalone is a compiled 
-      program, rather than an interpreted script, it runs a lot faster.  
-      You will now be able to build merges faster than ever before.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="TableText">Merge tracking</P>
-		</TD>
-		<TD>
-			<P class="TableText">Merges created with Merge Plugins Standalone 
-      will be tracked from within the program.  When a plugin that is in 
-      a merge changes (e.g. is updated), the merge it is associated with 
-      will flag itself as needing to be rebuilt.</P>
+			<P CLASS="tableText">Merge
+			Plugins Standalone can create a merged BSA file for your merges. 
+			This is done through the BSAOpt integration.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Easy merge rebuilding</P>
+			<P CLASS="tableText">Toggleable
+			asset handling</P>
 		</TD>
 		<TD>
-			<P class="TableText">You can now rebuild a merge with the click of a 
-      button.  Combined with merge tracking, this makes for a far more 
-      efficient workflow around merging plugins.</P>
+			<P CLASS="tableText">In
+			Merge Plugins Standalone you can toggle what asset copying
+			features you want to make use of.  This allows users to debug
+			merges more effectively.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Integrated dictionary updates</P>
+			<P CLASS="tableText">Speed
+			increase</P>
 		</TD>
 		<TD>
-			<P class="TableText">With the script, you had to update the dictionary 
-      through the Merge Plugins Report Client Java application.  Now, you will 
-      be notified of dictionary updates directly from the program and will be 
-      able to update the dictionary without the hassle of having to start
+			<P CLASS="tableText">Because
+			Merge Plugins Standalone is a compiled program, rather than an
+			interpreted script, it runs a lot faster.  You will now be able to
+			build merges faster than ever before.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Merge
+			tracking</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">Merges
+			created with Merge Plugins Standalone will be tracked from within
+			the program.  When a plugin that is in a merge changes (e.g. is
+			updated), the merge it is associated with will flag itself as
+			needing to be rebuilt.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Easy
+			merge rebuilding</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">You
+			can now rebuild a merge with the click of a button.  Combined with
+			merge tracking, this makes for a far more efficient workflow
+			around merging plugins.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Integrated
+			dictionary updates</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">With
+			the script, you had to update the dictionary through the Merge
+			Plugins Report Client Java application.  Now, you will be notified
+			of dictionary updates directly from the program and will be able
+			to update the dictionary without the hassle of having to start
 			another application.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Integrated program updates</P>
+			<P CLASS="tableText">Integrated
+			program updates</P>
 		</TD>
 		<TD>
-			<P class="TableText">Merge Plugins Standalone can be updated easily.   
-      You won't need to re-download it from the Nexus to update it, you will 
-      be informed of updates from within the program itself, and can update 
-      the program with a click of a button.</P>
+			<P CLASS="tableText">Merge
+			Plugins Standalone can be updated easily.   You won't need to
+			re-download it from the Nexus to update it, you will be informed
+			of updates from within the program itself, and can update the
+			program with a click of a button.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Integrated reporting</P>
+			<P CLASS="tableText">Integrated
+			reporting</P>
 		</TD>
 		<TD>
-			<P class="TableText">With the script, reports had to be generated as 
-      text files that were then read by a separate Java application which 
-      sent them to a server to be combined into a dictionary file.  With 
-      Merge Plugins Standalone this functionality has been integrated into 
-      the main program, so you don't need to start a separate program to submit
+			<P CLASS="tableText">With
+			the script, reports had to be generated as text files that were
+			then read by a separate Java application which sent them to a
+			server to be combined into a dictionary file.  With Merge Plugins
+			Standalone this functionality has been integrated into the main
+			program, so you don't need to start a separate program to submit
 			reports anymore.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Plugin error tracking</P>
+			<P CLASS="tableText">Plugin
+			error tracking</P>
 		</TD>
 		<TD>
-			<P class="TableText">Once you check a plugin for errors in Merge 
-      Plugins Standalone, its errors will be saved, and then reloaded 
-      the next time you use the program.  These saved errors are linked 
-      to the CRC32 hash of the plugin, so when the plugin is updated 
-      you'll have to check it for errors again (it may have more/fewer errors).</P>
+			<P CLASS="tableText">Once
+			you check a plugin for errors in Merge Plugins Standalone, its
+			errors will be saved, and then reloaded the next time you use the
+			program.  These saved errors are  linked to the CRC32 hash of the
+			plugin, so when the plugin is updated you'll have to check it for
+			errors again (it may have more/fewer errors).</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Multiple languages</P>
+			<P CLASS="tableText">Multiple
+			languages</P>
 		</TD>
 		<TD>
-			<P class="TableText">With
+			<P CLASS="tableText">With
 			an easily extensible language system, the program can now be
 			easily translated.  Several translations have already been made
 			thanks to some volunteer translators.</P>
@@ -295,18 +335,23 @@ merges.  New features are listed below:
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="TableText">Statistics tracking</P>
+			<P CLASS="tableText">Statistics
+			tracking</P>
 		</TD>
 		<TD>
-			<P class="TableText">Merge Plugins Standalone will locally track 
-      statistics relating to merging.  Now you can keep track of how 
-      many merges you've built, how many plugins you've checked for 
-      errors, how many times you've started the program, etc.</P>
+			<P CLASS="tableText">Merge
+			Plugins Standalone will locally track statistics relating to
+			merging.  Now you can keep track of how many merges you've build,
+			how many plugins you've checked for errors, how many times you've
+			started the program, etc.</P>
 		</TD>
 	</TR>
 </TABLE>
 
+
 <H1>Guide to the GUI<a name=m10></a><a name="Guide to the GUI"></a></H1>
+
+<H2>Select Profile Window<A name=m11></A></H2>
 
 <center>
   <div class="imgbig" style="height:517">
@@ -315,41 +360,44 @@ merges.  New features are listed below:
   </div>
 </center>
 
-<H2>Select Profile Window<a name=m11></a></H2>
-<P>The select profile window displays when the program first starts. 
+<P>The Select Profile Window displays when the program first starts. 
 From here you can create and manage your merge profiles.  To start
-the application, select a valid profile and click OK.</P>
+the application, select a valid profile and click OK.  You can bypass
+the Select Profile window by using the -profile target line
+parameter.</P>
 
-<H3>Automatic Game Detection<a name=m12></a></H3>
+<H3>Automatic Game Detection<A name=m12></A></H3>
 <P>The profile window will automatically detect the games you have
 installed from the registry.  Assuming you performed a standard or
 steam game installation, the program should detect any supported
 games you have installed and create profiles for them when you first
 run it.  Automatic detection will only occur if you have no profiles
-saved in the <I>profiles </I><SPAN>folder.</SPAN></P>
+saved in the <I>profiles </I><SPAN STYLE="font-style: normal">folder.</SPAN></P>
 
-<H3>New Profile Panel<a name=m13></a></H3>
-<P>This is a special panel which will always be below your other profiles.  
-You can click it at any time to create a new profile.</P>
+<H3>New Profile Panel<A name=m13></A></H3>
+<P>This is a special panel which will
+always be below your other profiles.  You can click it at any time to
+create a new profile.</P>
 
-<H3>Profile Panel<a name=m14></a></H3>
+
+<H3>Profile Panel<A name=m14></A></H3>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=152>
 	<COL WIDTH=495>
 	<TR VALIGN=TOP>
-		<TH WIDTH=152>
-			<P>Component</P>
-		</TH>
-		<TH WIDTH=495>
-			<P>Description</P>
-		</TH>
+		<TD>
+			<P><I><B>Component</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>Game icon</P>
 		</TD>
 		<TD>
-			<P>An icon corresonding to the currently selected
+			<P>An icon corresponding to the currently selected
 			game mode.  If the profile is valid, you can click the game icon
 			or anywhere else on the panel to select the profile.</P>
 		</TD>
@@ -403,21 +451,21 @@ You can click it at any time to create a new profile.</P>
 	</TR>
 </TABLE>
 
-<H3>Profile States<a name=m15></a></H3>
+<H3>Profile States<A name=m15></A></H3>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=84>
 	<COL WIDTH=101>
 	<COL WIDTH=454>
 	<TR VALIGN=TOP>
-		<TH WIDTH=84>
-			<P>State</P>
-		</TH>
-		<TH WIDTH=101>
-			<P>Color</P>
-		</TH>
-		<TH WIDTH=454>
-			<P>Description</P>
-		</TH>
+		<TD>
+			<P><I><B>State</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Color</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
@@ -461,22 +509,22 @@ You can click it at any time to create a new profile.</P>
 	</TR>
 </TABLE>
 
-<H3>Profile Popup Menu<a name=m16></a></H3>
+<H3>Profile Popup Menu<A name=m16></A></H3>
 <P>Right-click in the scrollbox to access the profile popup menu.</P>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=137>
 	<COL WIDTH=247>
 	<COL WIDTH=255>
 	<TR VALIGN=TOP>
-		<TH WIDTH=137>
-			<P>Name</P>
-		</TH>
-		<TH WIDTH=247>
-			<P>Action</P>
-		</TH>
-		<TH WIDTH=255>
-			<P>Enabled</P>
-		</TH>
+		<TD>
+			<P><I><B>Name</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Action</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Enabled</B></I></P>
+		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
@@ -502,148 +550,367 @@ You can click it at any time to create a new profile.</P>
 	</TR>
 </TABLE>
 
+
+<H2>Plugin Selection Window<A name=m17></A></H2>
+
 <center>
-  <div class="imgbig" style="height:347">
-    <img src="images/img02.png"></img>
-    <br><P class="caption">Illustration 2: The splash window.</P>
+  <div class="imgbig" style="height:700">
+    <img src="images/img16.png"></img>
+    <br><P class="caption">Illustration 2: The Plugin Selection Window.</P>
   </div>
 </center>
 
-<H2>Splash Window<a name=m17></a></H2>
-<P>The splash will be displayed after a merge profile has been
-chosen.  The splash shows the progress of automatic updates as well
-as the loading of plugins, merges, and plugin information.  It also
-displays the version of the application.  The splash should close
-automatically and open the main application window after 10-30
-seconds, depending on the size of your load order and your system
-specs.</P>
+<P>The plugin selection window appears after
+you've selected a profile, and allows you to specify what plugins you
+want to load.
+</P>
 
-<H3>Automatic Updates<a name=m18></a></H3>
+<H3>Plugins Selection Actions<A name=m18></A></H3>
+<TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=77>
+	<COL WIDTH=220>
+	<COL WIDTH=342>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Action</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Availability</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>OK</P>
+		</TD>
+		<TD>
+			<P>Starts the application and loads the checked
+			plugins.</P>
+		</TD>
+		<TD>
+			<P>If no unchecked plugin is required by checked
+			plugins as a master, as indicated by <FONT COLOR="#ff0000"><I><SPAN STYLE="background: transparent">red
+			italic</SPAN></I></FONT> font.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Enter</P>
+		</TD>
+		<TD>
+			<P>Equivalent to clicking OK.</P>
+		</TD>
+		<TD>
+			<P>Same as OK.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Space</P>
+		</TD>
+		<TD>
+			<P>Toggles the check box of the selected plugins.</P>
+		</TD>
+		<TD>
+			<P>If one or more plugins are selected.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Cancel</P>
+		</TD>
+		<TD>
+			<P>Terminates the application.</P>
+		</TD>
+		<TD>
+			<P>Always.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Close</P>
+		</TD>
+		<TD>
+			<P>Terminates the application.</P>
+		</TD>
+		<TD>
+			<P>Always.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+
+<H3>Plugin Selection Popup Menu<A name=m19></A></H3>
+<P>Right click in the list view to access the &ldquo;Plugin Selection
+Popup Menu&rdquo;.</P>
+<TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=147>
+	<COL WIDTH=500>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Name</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Action</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Check all</P>
+		</TD>
+		<TD>
+			<P>Checks all plugins in the list except ones that
+			cannot be loaded.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Uncheck all</P>
+		</TD>
+		<TD>
+			<P>Unchecks all plugins in the list.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Toggle all</P>
+		</TD>
+		<TD>
+			<P>Toggles the selection of all plugins in the
+			list except ones that cannot be loaded.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+<H3>Plugin Selection Styles<A name=m20></A></H3>
+<TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=148>
+	<COL WIDTH=499>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Style</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Meaning</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=148 BGCOLOR="#ddeeff">
+			<P>
+			Light blue background</P>
+		</TD>
+		<TD>
+			<P>
+			The plugin is selected.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#005000"><B>Bold green font</B></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin is required as a master by a
+			selected plugin.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#990000"><B>Bold maroon font</B></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin requires a selected plugin as a
+			master.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#800080"><B>Bold magenta font</B></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin is required as a master by a
+			selected plugin, and requires a selected plugin as a master.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#808080"><I>Gray italic font</I></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin cannot be loaded because one or more
+			of its masters aren't installed.  That is, its masters were not
+			found in the data directory.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><FONT COLOR="#ff0000"><I>Red italic font</I></FONT></P>
+		</TD>
+		<TD>
+			<P>The plugin is unchecked but is required as a
+			master by one or plugins that are checked.  You will need to check
+			this plugin or uncheck the plugins that depend on it to continue.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+
+<H2>Splash Window<A name=m21></A></H2>
+
+<center>
+  <div class="imgbig" style="height:347">
+    <img src="images/img02.png"></img>
+    <br><P class="caption">Illustration 3: The splash window.</P>
+  </div>
+</center>
+
+<P>The splash will be displayed after a merge
+profile has been chosen.  The splash shows the progress of automatic
+updates as well as the loading of plugins, merges, and plugin
+information.  It also displays the version of the application.  The
+splash should close automatically and open the main application
+window after 10-30 seconds, depending on the size of your load order
+and your system specs.
+</P>
+
+<H3>Automatic Updates<A name=m22></A></H3>
 <P>If you have enabled automatic updates in your settings, the
 application will attempt to connect to the server and get any
 dictionary or program updates that are available.  If there is a
 program update, the application will restart, taking you back to the
 profile screen.</P>
 
+
+<H2>Main Application Window<A name=m23></A></H2>
+
 <center>
   <div class="imgbig" style="height:524">
     <img src="images/img03.png"></img>
-    <br><P class="caption">Illustration 3: The main application window 
+    <br><P class="caption">Illustration 4: The main application window 
     (at small window size so you can see	it).</P>
   </div>
 </center>
 
-<H2>Main Application Window<a name=m19></a></H2>
-<P>The main application window is the location from which you
-interface with all of the functionality offered by Merge Plugins.</P>
+<P>The Main Application Window is the location
+from which you can interface with all of the functionality offered by
+Merge Plugins, and is the window that is shown after you've selected
+a profile and the plugins you want to load.
+</P>
+
+<H3>Quick Bar<A name=m24></A></H3>
 
 <center>
   <div class="imgbig" style="height:65">
     <img src="images/img04.png"></img>
-    <br><P class="caption">Illustration 4: The quick bar.</P>
+    <br><P class="caption">Illustration 5: The quick bar.</P>
   </div>
 </center>
 
-<H3>Quick Bar<a name=m20></a></H3>
-<P>The Quick Bar provides multiple buttons to quickly access various
-functionalities in the application.</P>
+<P>The Quick Bar provides multiple buttons to
+quickly access various functionalities in the application.
+</P>
 
-<H4>Create New Merge<a name=m21></a></H4>
+<H4>Create New Merge<A name=m25></A></H4>
 <P>You can click the Create New Merge button at any time to create a
-new merge.  The button will automatically bring up the Edit Merge
-window for the new merge so you can specify the merge's name,
-filename, and options.</P>
+new merge.  The button will automatically bring up the <A HREF="#3.6.Edit Merge Window|outline">Edit
+Merge Window</A> for the new merge so you can specify the merge's
+name, filename, and options.</P>
 
-<H4>Find Errors<a name=m22></a></H4>
-<P>Clicking the Find Errors button will start a check for errors
-task on all loaded plugins that have not been checked for errors.</P>
-
-<H4>Build Merges<a name=m23></a></H4>
+<H4>Build Merges<A name=m26></A></H4>
 <P>Clicking the Build Merges button will
 build any merges that are ready to be built or rebuilt.  The button
 will be disabled if the background loader is not completed or if
-there are no merges to build.  See <a href="#m69">Merge Statuses</a> if you want to
-force a rebuild of your merges.</P>
+there are no merges to build.  See <A HREF="#4.1.Merge Statuses|outline">Merge
+Statuses</A> if you want to force a rebuild of your merges.</P>
 
-<H4>Report on Merges<a name=m24></a></H4>
-<P>Clicking the Report on Merges button will bring up the Report
-Window.  From there, the user can create and submit reports on all
-plugins in merges that have been built successfully, excluding
+<H4>Report on Merges<A name=m27></A></H4>
+<P>Clicking the Report on Merges button will bring up the <A HREF="#3.6.Report Window|outline">Report
+Window</A>.  From there, the user can create and submit reports on
+all plugins in merges that have been built successfully, excluding
 plugins the user has already submitted reports for.</P>
 
-<H4>View Dictionary<a name=m25></a></H4>
-<P>Clicking the View Dictionary button will bring up the Dictionary
-Viewer with no filters set.</P>
+<H4>View Dictionary<A name=m28></A></H4>
+<P>Clicking the View Dictionary button will bring up the <A HREF="#3.5.View Dictionary Window|outline">View
+Dictionary Window</A> with no filters set.</P>
 
-<H4>Options<a name=m26></a></H4>
-<P>Clicking the Options button will bring up the Options Window.</P>
+<H4>Options<A name=m29></A></H4>
+<P>Clicking the Options button will bring up the <A HREF="#3.7.Options Window |outline">Options
+Window</A>.</P>
 
-<H4>Update<a name=m27></a></H4>
-<P>Clicking the Update button will update the dictionary and
-application if any update is available.  Hovering over the Update
-button will display a hint specifying what updates are available and
-a brief change log.</P>
+<H4>Update<A name=m30></A></H4>
+<P>Clicking the Update button will update the dictionary if any
+update is available.  If an application update is available the
+<A HREF="#3.8.Changelog Window|outline">Changelog Window</A> will be
+shown, where you can see the changes between your current version and
+the most up-to-date version and choose to download and install the
+new version.  Hovering over the &ldquo;Update&rdquo; button will
+display a hint specifying what updates are available.</P>
 
-<H4>Help<a name=m28></a></H4>
-<P>Clicking the Help button will change the mouse cursor to a pointer
-with a question mark.  You can then click on any component on the Main
-Application Window to access the help files on it.  You can also press 
-F1 from any other window that's a part of the application to access the
-same functionality.</P>
+<H4>Help<A name=m31></A></H4>
+<P>Clicking the Help button will change the mouse cursor
+to a pointer with a question mark.  You can then click on any
+component on the <A HREF="#3.3.Main Application Window|outline">Main
+Application Window</A> to access the help files on it.  You can also
+press F1 from any window that's a part of the application to access
+the same functionality.</P>
+
+<H3>Plugins Tab<A name=m32></A></H3>
 
 <center>
   <div class="imgbig" style="height:424">
     <img src="images/img05.png"></img>
-    <br><P class="caption">Illustration 5: The Plugins Tab and Plugins List View.</P>
+    <br><P class="caption">Illustration 6: The Plugins Tab and Plugins List View.</P>
   </div>
 </center>
 
-<H3>Plugins Tab<a name=m29></a></H3>
-<P>The Plugins Tab displays an ordered list of loaded plugins. 
-Unless simple plugins list is enabled, the plugins will be colored
-based on average rating reported by users.  See Rating Colors for a
-table of colors and their meaning.</P>
+<P>The Plugins Tab displays an ordered list of
+loaded plugins.  Unless simple plugins list is enabled, the plugins
+will be colored based on average rating reported by users.  See
+<A HREF="#4.2.Rating Colors|outline">Rating Colors</A> for a table of
+colors and their meaning.
+</P>
 
-<H4>Plugin Fields<a name=m30></a></H4>
+<H4>Plugin Fields<A name=m33></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=77>
 	<COL WIDTH=569>
 	<TR VALIGN=TOP>
-		<TH WIDTH=77>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=569>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Index</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Index</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
-			hexadecimal load-order index of the plugin. 
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>The
+			hexadecimal load-order index of the plugin. </FONT></FONT>
 			</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Filename</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Filename</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			filename of the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Flags</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Flags</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			flags associated with the plugin.  If you have simple plugins list
 			enabled, flags will be represented by a single character, else
 			flags will be displayed as icons.</P>
@@ -652,16 +919,17 @@ table of colors and their meaning.</P>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Merge</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Merge</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			merge that the plugin is associated with.</P>
 		</TD>
 	</TR>
 </TABLE>
 
-<H4>Plugin Flags<a name=m31></a></H4>
+
+<H4>Plugin Flags<A name=m34></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=42>
 	<COL WIDTH=90>
@@ -847,7 +1115,8 @@ table of colors and their meaning.</P>
 	</TR>
 </TABLE>
 
-<H4>Plugins Popup Menu<a name=m32></a></H4>
+
+<H4>Plugins Popup Menu<A name=m35></A></H4>
 <P>Right-clicking on the plugins list will bring up a popup menu with
 various options.  Below is a listing of these options, what they do,
 and under what conditions they're enabled.</P>
@@ -1029,7 +1298,8 @@ and under what conditions they're enabled.</P>
 	</TR>
 </TABLE>
 
-<H4>Plugin Details<a name=m33></a></H4>
+
+<H4>Plugin Details<A name=m36></A></H4>
 <P>When you select a plugin, its details will be populated in the
 Details Pane.  Below is a listing of these details, with
 descriptions.</P>
@@ -1037,220 +1307,223 @@ descriptions.</P>
 	<COL WIDTH=136>
 	<COL WIDTH=511>
 	<TR VALIGN=TOP>
-		<TH WIDTH=136>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=511>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Filename</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Filename</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			filename of the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Hash</P>
+			<P CLASS="tableText">Hash</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			CRC32 hash of the plugin file.  This is used to track when the
 			plugin is updated.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">File
+			<P CLASS="tableText">File
 			size</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			file size of the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Date
+			<P CLASS="tableText">Date
 			modified</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			date the plugin was last modified.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Merge
+			<P CLASS="tableText">Merge
 			rating</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			plugin's average rating as reported by users, between 0.0 and 4.0.
 			 See Merge Ratings for more information.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Flags</P>
+			<P CLASS="tableText">Flags</P>
 		</TD>
 		<TD>
-			<P class="tableText">A
+			<P CLASS="tableText">A
 			list of the flag characters associated with the flags on the
 			plugin.  See Plugin Flags for more information.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Number
+			<P CLASS="tableText">Number
 			of records</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			number of records in the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Number
+			<P CLASS="tableText">Number
 			of overrides</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			number of override records in the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Author</P>
+			<P CLASS="tableText">Author</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			author of the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Description</P>
+			<P CLASS="tableText">Description</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			description of the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Masters</P>
+			<P CLASS="tableText">Masters</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			master files of the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Errors</P>
+			<P CLASS="tableText">Errors</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			errors in the plugin.  Will be &ldquo;None&rdquo; if no errors
 			were found in the plugin.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Reports</P>
+			<P CLASS="tableText">Reports</P>
 		</TD>
 		<TD>
-			<P class="tableText">A
+			<P CLASS="tableText">A
 			list of the user reports submitted on the plugin.</P>
 		</TD>
 	</TR>
 </TABLE>
 
+
+<H3>Merges Tab<A name=m37></A></H3>
+
 <center>
   <div class="imgbig" style="height:429">
     <img src="images/img06.png"></img>
-    <br><P class="caption">Illustration 6: The merges tab.</P>
+    <br><P class="caption">Illustration 7: The merges tab.</P>
   </div>
 </center>
 
-<H3>Merges Tab<a name=m34></a></H3>
-<P>The Merges Tab displays a list of merges managed with the program.
-Merges are colored based on their status.  See the 
-<a href="m69">Merge Statuses</a> section for information on merge 
-statuses.</P>
+<P>The Merges Tab displays a list of merges
+managed with the program.  Merges are colored based on their status. 
+Also see <A HREF="#4.1.Merge Statuses|outline">Merge Statuses</A>.
+</P>
 
- <H4>Merge Fields<a name=m35></a></H4>
+<H4>Merge Fields<A name=m38></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=77>
 	<COL WIDTH=569>
 	<TR VALIGN=TOP>
-		<TH WIDTH=77>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=569>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Index</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Index</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			build order of the merge.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Name</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Name</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			name of the merge.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Filename</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Filename</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			filename of the plugin file created for the merge.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Size</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Size</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			size of the merge in number of plugins.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
 			<P>
-			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Date built</P>
+			<FONT FACE="Arial, sans-serif"><FONT SIZE=2>Date built</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			date when the merge was last built.</P>
 		</TD>
 	</TR>
 </TABLE>
 
-<H4>Merges Popup Menu<a name=m36></a></H4>
+
+<H4>Merges Popup Menu<A name=m39></A></H4>
 <P>Right-clicking on the merges list will bring up a popup menu with
 various options.  Below is a listing of these options, what they do,
 and under what conditions they're enabled.</P>
@@ -1407,176 +1680,198 @@ and under what conditions they're enabled.</P>
 	</TR>
 </TABLE>
 
-<H4>Merge Details<a name=m37></a></H4>
+
+<H4>Merge Details<A name=m40></A></H4>
 <P>When you select a merge, its details will be populated in the
-Details Pane.  Below is a listing of these details, with descriptions.</P>
+Details Panel.  Below is a listing of these details, with
+descriptions.</P>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=125>
 	<COL WIDTH=522>
 	<TR VALIGN=TOP>
-		<TH WIDTH=125>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=522>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Status</P>
+			<P CLASS="tableText">Status</P>
 		</TD>
 		<TD>
-			<P class="tableText">The status of the merge.  See 
-      <a href="#m69">Merge Statuses</a>.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="tableText">Merge name</P>
-		</TD>
-		<TD>
-			<P class="tableText">The name of the merge.</P>
+			<P CLASS="tableText">The
+			status of the merge.  See Merge Statuses.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Filename</P>
+			<P CLASS="tableText">Merge
+			name</P>
 		</TD>
 		<TD>
-			<P class="tableText">The filename of the merge.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="tableText">Plugin count</P>
-		</TD>
-		<TD>
-			<P class="tableText">The number of plugins in the merge.</P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>The
+			name of the merge. </FONT></FONT>
+			</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Date built</P>
+			<P CLASS="tableText">Filename</P>
 		</TD>
 		<TD>
-			<P class="tableText">The date the merge was last built.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="tableText">Plugins</P>
-		</TD>
-		<TD>
-			<P class="tableText">A list of the plugins in the merge.</P>
+			<P CLASS="tableText">The
+			filename of the merge.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Merge method</P>
+			<P CLASS="tableText">Plugin
+			count</P>
 		</TD>
 		<TD>
-			<P class="tableText">The merge method that will be used 
-      when building the merge.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="tableText">Renumbering</P>
-		</TD>
-		<TD>
-			<P class="tableText">Ther enumbering method that will be 
-      used when building the merge.</P>
+			<P CLASS="tableText">The
+			number of plugins in the merge.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Files</P>
+			<P CLASS="tableText">Date
+			built</P>
 		</TD>
 		<TD>
-			<P class="tableText">A list of the files associated with 
-      the merge.</P>
+			<P CLASS="tableText">The
+			date the merge was last built.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Fails</P>
+			<P CLASS="tableText">Plugins</P>
 		</TD>
 		<TD>
-			<P class="tableText">A list of the failures that occurred when 
-      last building the merge.</P>
+			<P CLASS="tableText">A
+			list of the plugins in the merge.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Merge
+			method</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">The
+			merge method that will be used when building the merge.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Renumbering</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">The
+			renumbering method that will be used when building the merge.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Files</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">A
+			list of the files associated with the merge.  If there are over
+			250 files the list will not be displayed.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Fails</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">A
+			list of the failures that occurred when last building the merge. 
+			If there are over 250 failures the list will not be displayed.</P>
 		</TD>
 	</TR>
 </TABLE>
 
-<H3>Log Tab<a name=m38></a></H3>
+
+<H3>Log Tab<A name=m41></A></H3>
+
 <P>The Log Tab displays enabled log messages that have occurred
 during program execution.  You can change the colors of log messages
-from the Options Window.  You can filter what log messages are
-displayed from the Log Popup Menu.
+from the <A HREF="#3.7.Options Window |outline">Options Window</A>. 
+You can filter what log messages are displayed from the Log Popup
+Menu.<SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">
+ </SPAN></SPAN>
 </P>
-<P><SPAN><B>Note:</B></SPAN> 
-Log messages are displayed as a single string.  The log
-message template string can be specified from the Options Window. 
+<P><SPAN STYLE="font-style: normal"><B>Note:</B></SPAN><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">
+</SPAN></SPAN>Log messages are displayed as a single string.  The log
+message template string can be specified from the <A HREF="#3.7.Options Window |outline">Options
+Window</A>. 
 </P>
 
-<H4>Log Fields<a name=m39></a></H4>
+<H4>Log Fields<A name=m42></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=81>
 	<COL WIDTH=566>
 	<TR VALIGN=TOP>
-		<TH WIDTH=81>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=566>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Time</P>
+			<P CLASS="tableText">Time</P>
 		</TD>
 		<TD>
-			<P class="tableText">The time when the log message was created.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="tableText">AppTime</P>
-		</TD>
-		<TD>
-			<P class="tableText">The application time when the log message 
-      was created. (00:00:00 is when the application is started).</P>
+			<P CLASS="tableText">The
+			time when the log message was created.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Group</P>
+			<P CLASS="tableText">AppTime</P>
 		</TD>
 		<TD>
-			<P class="tableText">The group the log message is assocaited with.  
-      See Log Groups.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P class="tableText">Label</P>
-		</TD>
-		<TD>
-			<P class="tableText">The label the log message is associated with.  
-      See Log Labels.</P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>The
+			application time when the log message was created. (00:00:00 is
+			when the application is started).</FONT></FONT></P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText">Text</P>
+			<P CLASS="tableText">Group</P>
 		</TD>
 		<TD>
-			<P class="tableText">The text of the log message.</P>
+			<P CLASS="tableText">The
+			group the log message is associated with.  See Log Groups.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Label</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">The
+			label the log message is associated with.  See Log Labels.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText">Text</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">The
+			text of the log message.</P>
 		</TD>
 	</TR>
 </TABLE>
 
-<H4>Log Popup Menu<a name=m40></a></H4>
+<H4>Log Popup Menu<A name=m43></A></H4>
 <P>Right-clicking on the log will bring up a popup menu with various
 options.  Below is a listing of these options, what they do, and
 under what conditions they're enabled.</P>
@@ -1656,17 +1951,18 @@ under what conditions they're enabled.</P>
 	</TR>
 </TABLE>
 
-<H4>Application Details<a name=m41></a></H4>
-<P>Application Details appear in the Details Pane when you switch to
+
+<H4>Application Details<A name=m44></A></H4>
+<P>Application details appear in the Details Pane when you switch to
 the Log Tab.  Below is a listing of these details, with descriptions.</P>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=183>
 	<COL WIDTH=464>
 	<TR VALIGN=TOP>
-		<TH WIDTH=183>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=464>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -1766,10 +2062,20 @@ the Log Tab.  Below is a listing of these details, with descriptions.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P>Website</P>
+			<P>GitHub Repo</P>
 		</TD>
 		<TD>
-			<P>The website for the Merge Plugins project.</P>
+			<P>The GitHub repositoriy for the Merge Plugins
+			project.  You can go here to submit issues, track development, and
+			download dev builds.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Nexus Mods Page</P>
+		</TD>
+		<TD>
+			<P>The Nexus Mods page for Merge Plugins.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
@@ -1817,18 +2123,21 @@ the Log Tab.  Below is a listing of these details, with descriptions.</P>
 	</TR>
 </TABLE>
 
+
+<H3>Status Bar<A name=m45></A></H3>
+
 <center>
   <div class="imgbig" style="height:38">
     <img src="images/img07.png"></img>
-    <br><P class="caption">Illustration 7: The status bar.</P>
+    <br><P class="caption">Illustration 8: The status bar.</P>
   </div>
 </center>
 
-<H3>Status Bar<a name=m42></a></H3>
-<P>The Status Bar provides quick reference to the status of various
-aspects of the Merge Plugins program.</P>
+<P>The Status Bar provides quick reference to the
+status of various aspects of the Merge Plugins program.
+</P>
 
-<H4>Status Panels<a name=m43></a></H4>
+<H4>Status Panels<A name=m46></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=118>
 	<COL WIDTH=55>
@@ -1950,38 +2259,40 @@ aspects of the Merge Plugins program.</P>
 	</TR>
 </TABLE>
 
-<H2>View Dictionary Window<a name=m44></a></H2>
+
+<H2>View Dictionary Window<A name=m47></A></H2>
 
 <center>
   <div class="imgbig" style="height:471">
-    <img src="images/img08.png"></img>
-    <br><P class="caption">Illustration 8: The view dictionary window.</P>
+    <img src="images/img08.png" width=890px></img>
+    <br><P class="caption">Illustration 9: The view dictionary window.</P>
   </div>
 </center>
 
-<P>The View Dictionary Window displays a list of all dictionary
-entries in the dictionary file for the current game mode.  The View
-Dictionary Window supports full filtering and sorting functionality.</P>
+<P>The View Dictionary Window displays a list of
+all dictionary entries in the dictionary file for the current game
+mode.  The window supports full filtering and sorting functionality.
+</P>
 
-<H3>Filtering and Sorting<a name=m45></a></H3>
+<H3>Filtering and Sorting<A name=m48></A></H3>
 <P>You can sort by any single column by clicking on its header.  You
 can reverse the order of sorting from ascending to descending and
 vice versa by clicking on the column header a second time.</P>
-<P>Filtering options are provided in a groupbox above the entries
-list.  After entering your filters, press <SPAN>Enter</SPAN>
+<P>Filtering options are provided in a group above the entries list. 
+After entering your filters, press <SPAN STYLE="font-weight: normal">Enter</SPAN>
 in any of the filtering text fields to filter the entries list.</P>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=92>
 	<COL WIDTH=158>
 	<COL WIDTH=389>
 	<TR VALIGN=TOP>
-		<TH WIDTH=92>
+		<TH>
 			<P>Field</P>
 		</TH>
-		<TH WIDTH=158>
+		<TH>
 			<P>Modes</P>
 		</TH>
-		<TH WIDTH=389>
+		<TH>
 			<P>Filtering functionality</P>
 		</TH>
 	</TR>
@@ -2052,15 +2363,15 @@ in any of the filtering text fields to filter the entries list.</P>
 	</TR>
 </TABLE>
 
-<H3>Entry Fields<a name=m46></a></H3>
+<H3>Entry Fields <A name=m49></A></H3>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=125>
 	<COL WIDTH=522>
 	<TR VALIGN=TOP>
-		<TH WIDTH=125>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=522>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2113,17 +2424,17 @@ in any of the filtering text fields to filter the entries list.</P>
 	</TR>
 </TABLE>
 
-<H3>Dictionary Information<a name=m47></a></H3>
+<H3>Dictionary Information<A name=m50></A></H3>
 <P>The Dictionary Information panel lists various stats relating to
 the dictionary file being viewed.</P>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=124>
 	<COL WIDTH=523>
 	<TR VALIGN=TOP>
-		<TH WIDTH=124>
+		<TH>
 			<P>Name</P>
 		</TH>
-		<TH WIDTH=523>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2190,7 +2501,7 @@ the dictionary file being viewed.</P>
 	</TR>
 </TABLE>
 
-<H3>Entry Notes<a name=m48></a></H3>
+<H3>Entry Notes<A name=m51></A></H3>
 <P>The Entry Notes panel displays the user notes associated with the
 selected entry.  User notes have a header associated with them which
 displays information relating to the particular report the notes are
@@ -2203,25 +2514,27 @@ the header will differ.</P>
 </P>
 <P>[User: {{user}}] [Records: {{records}}] [Version: {{version}}]</P>
 
+<H2>Report Window<A name=m52></A></H2>
+
 <center>
   <div class="imgbig" style="height:400">
     <img src="images/img09.png"></img>
-    <br><P class="caption">Illustration 9: The report window.</P>
+    <br><P class="caption">Illustration 10: The report window.</P>
   </div>
 </center>
 
-<H2>Report Window<a name=m49></a></H2>
-<P>The Report Window is used to create reports on the merge-ability
-of plugins to be submitted to the Merge Plugins server, where it is
-later built into the dictionary file.</P>
+<P>The Report Window is used to create reports on
+the merge-ability of plugins to be submitted to the Merge Plugins
+server, where it is later built into the dictionary file.
+</P>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=133>
 	<COL WIDTH=514>
 	<TR VALIGN=TOP>
-		<TH WIDTH=133>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=514>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2327,23 +2640,29 @@ later built into the dictionary file.</P>
 	</TR>
 </TABLE>
 
+
+<H2>Edit Merge Window<A name=m53></A></H2>
+
 <center>
   <div class="imgbig" style="height:280">
     <img src="images/img10.png"></img>
-    <br><P class="caption">Illustration 10: The edit merge window.</P>
+    <br><P class="caption">Illustration 11: The edit merge window.</P>
   </div>
 </center>
 
-<H2>Edit Merge Window<a name=m50></a></H2>
-<P>The Edit Merge Window is used to edit the details of a merge.</P>
+<P>The Edit Merge Window is used to edit
+the details of a merge.  Also see <A HREF="#4.5.Merging Methods|outline">Merging
+and Renumbering Methods</A>.</P>
+
+
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=133>
 	<COL WIDTH=514>
 	<TR VALIGN=TOP>
-		<TH WIDTH=133>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=514>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2368,7 +2687,8 @@ later built into the dictionary file.</P>
 			produced by the merge.  Also used for determining the path of
 			various asset files.  The text will turn red and the OK button
 			will be disabled if an ESP of the specified filename is currently
-			loaded in Merge Plugins.</P>
+			loaded in Merge Plugins.  
+			</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
@@ -2410,17 +2730,27 @@ later built into the dictionary file.</P>
 	</TR>
 </TABLE>
 
-<H2>Options Window<a name=m51></a></H2>
-<P>The options window is where you can set options that dictate how
+
+<H2>
+Options Window	<A name=m54></A></H2>
+<P>The Options Window is where you can set options that dictate how
 the program runs and how merges are executed.  You won't need to go
 here much after initial set up.</P>
 
-<H3>General Tab<a name=m52></a></H3>
-<H4>Language<a name=m53></a></H4>
+<H3>General Tab<A name=m55></A></H3>
+
+<center>
+  <div class="imgbig" style="height:500">
+    <img src="images/img17.png"></img>
+    <br><P class="caption">Illustration 12: The General Tab of the Options Window.</P>
+  </div>
+</center>
+
+<H4>Language<A name=m56></A></H4>
 <P>Here you can set the language to be used by the program.  For
 information on creating translations, see Making a Translation.</P>
 
-<H4>Reports<a name=m54></a></H4>
+<H4>Reports<A name=m57></A></H4>
 <P>This group has controls that pertain to the submission of user
 reports to the backend.  If you want to submit reports on plugins
 you've merged to the backend, you need to register a username.</P>
@@ -2434,28 +2764,30 @@ you've merged to the backend, you need to register a username.</P>
 	username.</P>
 </OL>
 
-<H5>Technical<a name=m55></a></H5>
-<P>Whenever you start the program, the program generates a random 
-32-character long Base64 key.  When you register, your key at the 
-time of registering is stored in your settings.ini file and in the 
-registry.  This key serves to authenticate you to the server.  If 
-you somehow lose this key, you can attempt to reset it by clicking 
-the Reset button.  This will only work if your IP address hasn't 
-changed since the key was lost.</P>
-<P>If you're planning on reformatting your drive and want to maintain 
-access to your old username, you should save your settings.ini file 
-somewhere where you can access it later (e.g. email, upload to dropbox, 
-external storage, etc.).</P>
+<H5>Technical<A name=m58></A></H5>
+<P>Whenever you start
+the program, the program generates a random 32-character long Base64
+key.  When you register, your key at the time of registering is
+stored in your settings.ini file and in the registry.  This key
+serves to authenticate you to the server.  If you somehow lose this
+key, you can attempt to reset it by clicking the Reset button.  This
+will only work if your IP address hasn't changed since the key was
+lost.</P>
+<P>If you're planning
+on reformatting your drive and want to maintain access to your old
+username, you should save your settings.ini file somewhere where you
+can access it later (e.g. email, upload to Dropbox, external storage
+medium, etc.).</P>
 
-<H4>Style<a name=m56></a></H4>
+<H4>Style<A name=m59></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=156>
 	<COL WIDTH=491>
 	<TR VALIGN=TOP>
-		<TH WIDTH=156>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=491>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2480,15 +2812,15 @@ external storage, etc.).</P>
 	</TR>
 </TABLE>
 
-<H4>Updating<a name=m57></a></H4>
+<H4>Updating<A name=m60></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=212>
 	<COL WIDTH=435>
 	<TR VALIGN=TOP>
-		<TH WIDTH=212>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=435>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2507,7 +2839,7 @@ external storage, etc.).</P>
 			<P>Update program automatically</P>
 		</TD>
 		<TD>
-			<P>If checked, Merge Pluigns will check for a
+			<P>If checked, Merge Plugins will check for a
 			program update as soon as the program is started.  If an update is
 			found, it will be downloaded and installed automatically, and the
 			program will restart itself.</P>
@@ -2552,20 +2884,32 @@ external storage, etc.).</P>
 	</TR>
 </TABLE>
 
-<H3>Merging Tab<a name=m58></a></H3>
 
-<H4>Asset handling<a name=m59></a></H4>
-See the <a href="#m72">File-Specific Assets section</a> for general 
-information on file-specific assets.
+<H3>Merging Tab<A name=m61></A></H3>
 
+<center>
+  <div class="imgbig" style="height:500">
+    <img src="images/img18.png"></img>
+    <br><P class="caption">Illustration 13: The Merging Tab of the Options Window.</P>
+  </div>
+</center>
+
+<H4>Verify File Access<A name=m62></A></H4>
+<P>You can click the &ldquo;Verify file
+access&rdquo; button to verify that Merge Plugins has the necessary
+filesystem permissions to function properly.  I recommend you verify
+file access when you first install Merge Plugins and again whenever
+you change the directories used by Merge Plugins.</P>
+
+<H4>Asset handling<A name=m63></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=194>
 	<COL WIDTH=453>
 	<TR VALIGN=TOP>
-		<TH WIDTH=194>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=453>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2585,12 +2929,12 @@ information on file-specific assets.
 			<P>Handle FaceGenData</P>
 		</TD>
 		<TD>
-			<P>If checked, file-specifc FaceGenData will be
+			<P>If checked, file-specific FaceGenData will be
 			handled when merging.  This means that facegeom and facetint data
 			files that were associated with the plugins you were merging will
 			be copied to a new directory for the merged plugin and renamed if
 			the FormID of the NPC record they are associated with was changed.
-			 If not checked, the grey face bug will occur for new NPCs in the
+			 If not checked, the gray face bug will occur for new NPCs in the
 			merged plugin.</P>
 		</TD>
 	</TR>
@@ -2636,10 +2980,11 @@ information on file-specific assets.
 		<TD>
 			<P>If checked, Script Fragments that were
 			associated with the plugins being merged that were associated with
-			a record that was renumbered will be recompiled.  This requires
-			setting up the decompiler and compiler integrations correctly.  If
-			not checked, Quests, Scenes, and Dialog Topics that relied on new
-			script fragments may not work correctly.</P>
+			a record that was renumbered will be recompiled.  This option
+			requires setting the papyrus integration up correctly, and will be
+			disabled until you have done so.  If not checked, Quests, Scenes,
+			and Dialog Topics that relied on new script fragments may not work
+			correctly.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
@@ -2661,9 +3006,10 @@ information on file-specific assets.
 		<TD>
 			<P>If checked, a merged BSA will be created from
 			the contents of all the BSAs associated with plugins that were
-			merged.  This requires setting up the BSAOpt integration.  This is
-			a nice alternative to Extract BSAs if you're using NMM.  Note:
-			BSAs have a maximum filesize of 2gb.</P>
+			merged.  This option requires setting up the BSAOpt integration,
+			and will disabled until you have done so.  This is a nice
+			alternative to Extract BSAs if you're using NMM.  Note: BSAs have
+			a maximum file size of 2gb.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
@@ -2679,17 +3025,31 @@ information on file-specific assets.
 	</TR>
 </TABLE>
 
-<H3>Advanced Tab<a name=m60></a></H3>
 
-<H4>Backend<a name=m61></a></H4>
+<H3>Advanced Tab<A name=m64></A></H3>
+
+<center>
+  <div class="imgbig" style="height:500">
+    <img src="images/img19.png"></img>
+    <br><P class="caption">Illustration 14: The Advanced Tab of the Options Window.</P>
+  </div>
+</center>
+
+<H4>Merge Profile<A name=m65></A></H4>
+<P>Provides the name of your currently active profile.  You can click
+the &ldquo;Switch merge profiles&rdquo; button to restart the
+application and go to the <A HREF="#3.1.Select Profile Window|outline">Select
+Profile Window</A>.</P>
+
+<H4>Backend<A name=m66></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=92*>
 	<COL WIDTH=164*>
 	<TR VALIGN=TOP>
-		<TH WIDTH=36%>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=64%>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2714,7 +3074,7 @@ information on file-specific assets.
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
-		<TD HEIGHT=52>
+		<TD WIDTH=36% HEIGHT=52>
 			<P>Don't send usage statistics<BR>(functional as
 			of v2.0.2.3)</P>
 		</TD>
@@ -2730,15 +3090,16 @@ information on file-specific assets.
 	</TR>
 </TABLE>
 
-<H4>Logging<a name=m62></a></H4>
+
+<H4>Logging<A name=m67></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=45*>
 	<COL WIDTH=211*>
 	<TR VALIGN=TOP>
-		<TH WIDTH=18%>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=82%>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2817,20 +3178,32 @@ information on file-specific assets.
 	</TR>
 </TABLE>
 
-<H3>Integrations Tab<a name=m63></a></H3>
-<P>The integrations tab allows you to configure the integrations
-supported by Merge Plugins.  You can have Merge Plugins search for
-installed integrations by clicking the Detect Integrations button.</P>
 
-<H4>Mod Organizer<a name=m64></a></H4>
+<H3>Integrations Tab<A name=m68></A></H3>
+
+<center>
+  <div class="imgbig" style="height:500">
+    <img src="images/img20.png"></img>
+    <br><P class="caption">Illustration 15: The Integrations Tab of the Options Window.</P>
+  </div>
+</center>
+
+<H4>Detect Integrations<A name=m69></A></H4>
+<P>You can have Merge Plugins search for installed integrations by
+clicking the Detect Integrations button.   Make sure you verify the
+integration paths found by Merge Plugins, especially in regards to
+the Mod Manager integration.  Sometimes Merge Plugins detects the
+wrong installation of Mod Organizer.</P>
+
+<H4>Mod Manager<A name=m70></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
-	<COL WIDTH=66*>
-	<COL WIDTH=190*>
+	<COL WIDTH=187>
+	<COL WIDTH=460>
 	<TR VALIGN=TOP>
-		<TH WIDTH=26%>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=74%>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2839,20 +3212,38 @@ installed integrations by clicking the Detect Integrations button.</P>
 			<P>I'm using Mod Organizer</P>
 		</TD>
 		<TD>
-			<P>If checked, the program will attempt to use the
-			Mod Organizer integration.</P>
+			<P>Check this if you're using Mod Organizer.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P>Mod Organizer mods path</P>
+			<P>I'm using Nexus Mod Manager</P>
 		</TD>
 		<TD>
-			<P>Set this to the path to Mod Organizer's mods
-			folder.  The default location is the folder &ldquo;mods&rdquo; in
-			the same directory as ModOrganizer.exe.  You will not be able to
-			build merges if this is not set and the Mod Organizer integration
-			is enabled.</P>
+			<P>Check this if you're using Nexus Mod Manager
+			0.60a or later.  0.60a and later versions of NMM use a virtual
+			directory structure similar to Mod Organizer.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Mod manager path</P>
+		</TD>
+		<TD>
+			<P>Set this path to the folder holder the Mod
+			Manager's executable file.  E.g. ModOrganizer.exe or
+			NexusModManager.exe.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Mod manager mods path</P>
+		</TD>
+		<TD>
+			<P>Set this to the path to the folder that holds
+			the mods associated with the mod manager.  For Mod Organizer the
+			default location is the mods folder alongside ModOrganizer.exe.  
+			</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
@@ -2867,15 +3258,16 @@ installed integrations by clicking the Detect Integrations button.</P>
 	</TR>
 </TABLE>
 
-<H4>Papyrus<a name=m65></a></H4>
+
+<H4>Papyrus<A name=m71></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=75*>
 	<COL WIDTH=181*>
 	<TR VALIGN=TOP>
-		<TH WIDTH=29%>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=71%>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2911,15 +3303,15 @@ installed integrations by clicking the Detect Integrations button.</P>
 	</TR>
 </TABLE>
 
-<H4>BSAs<a name=m66></a></H4>
+<H4>BSAs<A name=m72></A></H4>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=47*>
 	<COL WIDTH=209*>
 	<TR VALIGN=TOP>
-		<TH WIDTH=18%>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=82%>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -2944,7 +3336,24 @@ installed integrations by clicking the Detect Integrations button.</P>
 	</TR>
 </TABLE>
 
-<H2>Progress Window<a name=m67></a></H2>
+
+<H2>Changelog Window<A name=m73></A></H2>
+
+<center>
+  <div class="imgbig" style="height:400">
+    <img src="images/img22.png"></img>
+    <br><P class="caption">Illustration 16: The Changelog Window.</P>
+  </div>
+</center>
+
+<P>The Changelog Window shows you the changes between the version
+you're running and the newest program update before installing it. 
+Once you've reviewed the changes you can click &ldquo;Install&rdquo;
+to have the program download and install the update or &ldquo;Skip&rdquo;
+to not do so.</P>
+
+
+<H2>Progress Window<A name=m74></A></H2>
 <P>The Progress Window is a window that comes up when Merge Plugins
 is performing a large task, such as merging plugins or checking
 plugins for errors.  The window displays the progress of the task
@@ -2953,10 +3362,10 @@ being performed through an embedded log and a progress bar.</P>
 	<COL WIDTH=54*>
 	<COL WIDTH=202*>
 	<TR VALIGN=TOP>
-		<TH WIDTH=21%>
+		<TH>
 			<P>Element</P>
 		</TH>
-		<TH WIDTH=79%>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
@@ -3011,281 +3420,285 @@ being performed through an embedded log and a progress bar.</P>
 </TABLE>
 
 
-<H1>General Reference<a name=m68></a><a name="General Reference"></a></H1>
+<H1>General Reference<a name=m75></a><a name="General Reference"></a></H1>
 
-<H2>Merge Statuses<a name=m69></a></H2>
+<H2>Merge Statuses<A name=m76></A></H2>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=61>
 	<COL WIDTH=187>
 	<COL WIDTH=391>
 	<TR VALIGN=TOP>
-		<TH WIDTH=61>
+		<TH>
 			<P>Color</P>
 		</TH>
-		<TH WIDTH=187>
+		<TH>
 			<P>Title</P>
 		</TH>
-		<TH WIDTH=391>
+		<TH>
 			<P>Description</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#999999"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Grey</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#999999"><B>Grey</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Unknown</P>
+			<P CLASS="tableText">Unknown</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			status for this merge has not yet been determined.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#ff0000"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Red</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#999999"><B>Grey</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">No
-			plugins to merge</P>
-		</TD>
-		<TD>
-			<P class="tableText">The
-			merge has no plugins in it and can't be built.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P><FONT COLOR="#ff0000"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Red</B></FONT></P>
-		</TD>
-		<TD>
-			<P class="tableText">Directories
-			invalid</P>
-		</TD>
-		<TD>
-			<P class="tableText">Your
-			directories are invalid.  Set them in the Options Window.</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P><FONT COLOR="#ff0000"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Red</B></FONT></P>
-		</TD>
-		<TD>
-			<P class="tableText">Plugins
+			<P CLASS="tableText">Plugins
 			not loaded</P>
 		</TD>
 		<TD>
-			<P class="tableText">Plugins
+			<P CLASS="tableText">Plugins
 			from the merge are not loaded in the application.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#ff0000"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Red</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#ff0000"><B>Red</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Errors
+			<P CLASS="tableText">No
+			plugins to merge</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">The
+			merge has no plugins in it and can't be built.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText"><FONT COLOR="#ff0000"><B>Red</B></FONT></P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">Directories
+			invalid</P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">Your
+			directories are invalid.  Set them in the Options Window.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText"><FONT COLOR="#ff0000"><B>Red</B></FONT></P>
+		</TD>
+		<TD>
+			<P CLASS="tableText">Errors
 			in plugins</P>
 		</TD>
 		<TD>
-			<P class="tableText">Plugins
+			<P CLASS="tableText">Plugins
 			in the merge have errors in them.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#ff0000"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Red</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#ff0000"><B>Red</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Merge
+			<P CLASS="tableText">Merge
 			failed</P>
 		</TD>
 		<TD>
-			<P class="tableText">Building
+			<P CLASS="tableText">Building
 			the merge failed.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#ff8800"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Orange</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#ff3300"><B>Orange</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Check
+			<P CLASS="tableText">Check
 			for errors required</P>
 		</TD>
 		<TD>
-			<P class="tableText">You
+			<P CLASS="tableText">You
 			need to check all plugins in the merge for errors before the merge
 			can be built.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#000099"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Blue</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#000099"><B>Blue</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Up
+			<P CLASS="tableText">Up
 			to date</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			merge has been built and doesn't need to be rebuilt.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#000099"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Blue</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#000099"><B>Blue</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Up
-			to date [Forced]</P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>Up
+			to date [Forced]</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			merge has been marked as up to date by the user.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#009900"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Green</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#009900"><B>Green</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Ready
+			<P CLASS="tableText">Ready
 			to be built</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			merge has never been built before, and is ready.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#009900"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Green</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#009900"><B>Green</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Ready
+			<P CLASS="tableText">Ready
 			to be rebuilt</P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			merge has been built, but changes in source plugin files have been
 			detected.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#009900"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Green</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#009900"><B>Green</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Ready
-			to be rebuilt [Forced]</P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>Ready
+			to be rebuilt [Forced]</FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">The
+			<P CLASS="tableText">The
 			merge has been built, but marked as needing to be rebuilt by the
 			user.</P>
 		</TD>
 	</TR>
 </TABLE>
 
-<H2>Rating Colors<a name=m70></a></H2>
+
+<H2>Rating Colors<A name=m77></A></H2>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=112>
 	<COL WIDTH=535>
 	<TR VALIGN=TOP>
-		<TH WIDTH=112>
+		<TH>
 			<P>Color</P>
 		</TH>
-		<TH WIDTH=535>
+		<TH>
 			<P>Meaning</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#999999"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Grey</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#999999"><B>Grey</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">No
+			<P CLASS="tableText">No
 			user reports on this plugin.  Merge rating unknown.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText"><B>Black</B></P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Black</B></FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Plugin
+			<P CLASS="tableText">Plugin
 			blacklisted.  This plugin should never be merged under any
 			circumstances.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#ff0000"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Red</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#ff0000"><B>Red</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Average
-			rating ~0.0, failure to merge</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P><FONT COLOR="#ff8800"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Orange</B></FONT></P>
-		</TD>
-		<TD>
-			<P class="tableText">Average
-			rating ~1.0, dysfunctional</P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>Average
+			rating ~0.0, failure to merge</FONT></FONT></P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#ffbb00"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Yellow</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#ff3300"><B>Orange</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Average
-			rating ~2.0, partially functional</P>
-		</TD>
-	</TR>
-	<TR VALIGN=TOP>
-		<TD>
-			<P><FONT COLOR="#aecf00"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Olive</B></FONT></P>
-		</TD>
-		<TD>
-			<P class="tableText">Average
-			rating ~3.0, tweaking required</P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>Average
+			rating ~1.0, dysfunctional</FONT></FONT></P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P><FONT COLOR="#00cc00"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>Green</B></FONT></P>
+			<P CLASS="tableText"><FONT COLOR="#ffcc00"><B>Yellow</B></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Average
-			rating ~4.0, merges perfectly</P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>Average
+			rating ~2.0, partially functional</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText"><FONT COLOR="#aecf00"><B>Olive</B></FONT></P>
+		</TD>
+		<TD>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>Average
+			rating ~3.0, tweaking required</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P CLASS="tableText"><FONT COLOR="#00cc00"><B>Green</B></FONT></P>
+		</TD>
+		<TD>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2>Average
+			rating ~4.0, merges perfectly</FONT></FONT></P>
 		</TD>
 	</TR>
 </TABLE>
-<P>Also see <a href="#m71">Plugin Ratings.</a></P>
 
-<H2>Plugin Ratings<a name=m71></a></H2>
+
+<P>Also see Plugin Ratings.</P>
+
+<H2>Plugin Ratings<A name=m78></A></H2>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
-	<COL WIDTH=189>
-	<COL WIDTH=458>
+	<COL WIDTH=159>
+	<COL WIDTH=488>
 	<TR VALIGN=TOP>
-		<TH WIDTH=159>
+		<TH>
 			<P>Rating</P>
 		</TH>
-		<TH WIDTH=488>
+		<TH>
 			<P>Notes</P>
 		</TH>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText"><B>-1: Blacklist</B></P>
+			<P><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>-1:
+			Blacklist</B></FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Only
+			<P CLASS="tableText">Only
 			recommend a plugin be blacklisted if you're certain there are no
 			circumstances in which it will ever be mergeable.  This is for
 			plugins that absolutely cannot be merged.  Please explain why you
@@ -3294,10 +3707,11 @@ being performed through an embedded log and a progress bar.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText"><FONT COLOR="#ff0000"><B>0: Failure</B></FONT></P>
+			<P><FONT COLOR="#ff0000"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>0:
+			Failure</B></FONT></FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Failure
+			<P CLASS="tableText">Failure
 			to merge means merging the plugin fails completely.  E.g. the
 			merged plugin causes CTDs, major stability problems, or merging
 			fails to create a plugin at all.</P>
@@ -3305,20 +3719,22 @@ being performed through an embedded log and a progress bar.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText"><FONT COLOR="#ff8800"><B>1: Dysfunctional</B></FONT></P>
+			<P><FONT COLOR="#ff6600"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>1:
+			Dysfunctional</B></FONT></FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Dysfunctional
+			<P CLASS="tableText">Dysfunctional
 			means the merge doesn't work ingame, with major aspects of the
 			plugins that were merged not working or being entirely missing.</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText"><FONT COLOR="#ffbb00"><B>2: Partially functional</B></FONT></P>
+			<P><FONT COLOR="#ffcc00"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>2:
+			Partially functional</B></FONT></FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Partially
+			<P CLASS="tableText">Partially
 			functional means the majority of the plugin content works but some
 			of it doesn't.  This would be if the plugin achieves its goals but
 			has bugs that were created in merging.</P>
@@ -3326,10 +3742,11 @@ being performed through an embedded log and a progress bar.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText"><FONT COLOR="#aecf00"><B>3: Tweaking required</B></FONT></P>
+			<P><FONT COLOR="#aecf00"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>3:
+			Tweaking required</B></FONT></FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Tweaking
+			<P CLASS="tableText">Tweaking
 			required means you got the plugin to work perfectly in a merge,
 			but had to tweak some things to get it to work.  E.g. you modified
 			the plugin or its asset files.</P>
@@ -3337,17 +3754,20 @@ being performed through an embedded log and a progress bar.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P class="tableText"><FONT COLOR="#009900"><B>4: Perfect</B></FONT></P>
+			<P><FONT COLOR="#009900"><FONT FACE="Arial, sans-serif"><FONT SIZE=2><B>4:
+			Perfect</B></FONT></FONT></FONT></P>
 		</TD>
 		<TD>
-			<P class="tableText">Perfect
+			<P CLASS="tableText">Perfect
 			means all aspects of the plugin work perfectly right away and you
 			didn't have to do any tweaking.  Nothing missing, nothing broken.</P>
 		</TD>
 	</TR>
 </TABLE>
 
-<H2>File-specific Assets<a name=m72></a></H2>
+
+<H2>
+File-specific Assets<A name=m79></A></H2>
 <P>The following table lists the paths of all file specific assets
 that Merge Plugins can handle.  Anything that is put into &lt;angled
 brackets&gt; is a placeholder.</P>
@@ -3355,12 +3775,12 @@ brackets&gt; is a placeholder.</P>
 	<COL WIDTH=313>
 	<COL WIDTH=333>
 	<TR VALIGN=TOP>
-		<TH WIDTH=313>
-			<P>Path</P>
-		</TH>
-		<TH WIDTH=333>
-			<P>Description</P>
-		</TH>
+		<TD>
+			<P><I><B>Path</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
@@ -3398,7 +3818,8 @@ brackets&gt; is a placeholder.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P>meshes\actors\character\facegendata\facegeom\<br>&lt;filename&gt;\&lt;FormID&gt;.nif</P>
+			<P>meshes\actors\character\facegendata\facegeom\</P>
+			<P>&lt;filename&gt;\&lt;FormID&gt;.nif</P>
 		</TD>
 		<TD>
 			<P>FaceGenData for the shape of an NPC's face. 
@@ -3408,7 +3829,8 @@ brackets&gt; is a placeholder.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P>textures\actors\character\facegendata\facetint\<br>&lt;filename&gt;\FormID&gt;(.dds or .tga)</P>
+			<P>textures\actors\character\facegendata\facetint\</P>
+			<P>&lt;filename&gt;\FormID&gt;(.dds or .tga)</P>
 		</TD>
 		<TD>
 			<P>FaceGenData for the tinting of an NPC's face. 
@@ -3417,7 +3839,9 @@ brackets&gt; is a placeholder.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P>sound\voice\&lt;filename&gt;\&lt;VoiceType&gt;\<br>&lt;Name&gt;__&lt;FormID&gt;_&lt;#&gt;(.xwm, .lip, or .fuz)</P>
+			<P>sound\voice\&lt;filename&gt;\&lt;VoiceType&gt;\</P>
+			<P>&lt;Name&gt;__&lt;FormID&gt;_&lt;#&gt;(.xwm,
+			.lip, or .fuz)</P>
 		</TD>
 		<TD>
 			<P>Voice data for how an NPC speaks.</P>
@@ -3425,7 +3849,9 @@ brackets&gt; is a placeholder.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
-			<P>Scripts\<br>&lt;Name&gt;_(TIF, QF, or SF)_&lt;name&gt;_&lt;FormID&gt;.pex</P>
+			<P>Scripts\</P>
+			<P>&lt;Name&gt;_(TIF, QF, or
+			SF)_&lt;name&gt;_&lt;FormID&gt;.pex</P>
 		</TD>
 		<TD>
 			<P>Script fragment for a dialogue topic-info
@@ -3435,68 +3861,181 @@ brackets&gt; is a placeholder.</P>
 </TABLE>
 
 
-<H1>Tutorials<a name=m73></a><a name="Tutorials"></a></H1>
+<H2>Merging and Renumbering Methods<A name=m80></A></H2>
 
-<H2>Merging with Mod Organizer<a name=m74></a></H2>
-<P>Mod Organizer is a tool created by Tanin which, in my opinion,
-offers the best and most powerful way of managing mods.  It offers
-several features which distinguish it from other tools such as Wrye
-Bash and Nexus Mod Manager.  A short list of these features is below:</P>
-<UL>
-	<LI><P><B>Arbitrary BSA loading:</B> You can manage your BSA files
-	as you would manage ESPs, forcing the game to load BSAs even if
-	there is no matching ESP in your load order.</P>
-	<LI><P><B>Install order management: </B><SPAN>You
-	can change the install order of mods extremely easily.  Where with
-	most tools you'd have to reinstall mods to change their install
-	order, with Mod Organizer you need only change a number in the GUI.</SPAN></P>
-	<LI><P><B>Directory virtualization: </B><SPAN>Mod
-	Organizer extends your game's data directory, never actually
-	installing anything directly to it.  This clean encapsulation gives
-	you a great degree of control over mods even after they have been
-	installed, and allows third party tools (such as Merge Plugins) to
-	interface with your individual mods and their associated assets
-	directly.</SPAN></P>
-	<LI><P><B>Asset conflict management: </B><SPAN>Mod
-	Organizer also provides easy listing of assets which conflict
-	between your installed mods.  Because of the aforementioned
-	directory virtualization, you can easily resolve these conflicts
-	however you see fit without having to uninstall/reinstall mods.</SPAN></P>
-	<LI><P><B>Overwrite folder: </B><SPAN>Mod
-	Organizer provides a psudeo-mod called &ldquo;Overwrite&rdquo;. 
-	This allows you to sort the output of various tools into separate
-	mods (e.g. FNIS), and thus allows you to gain a greater degree of
-	control over your load order and reduce time wasted on repetitive
-	tasks.</SPAN></P>
-</UL>
+<H3>Renumbering<A name=m81></A></H3>
+<P>Renumbering methods correspond to how the application renumbers
+FormIDs when merging to prevent collisions.  The method you want to
+use by default is Renumber Conflicting, which only renumbers FormIDs
+that conflict with each other, and, by definition, does not affect
+any FormIDs in the first plugin in a merge (the one at a lowest
+index).</P>
+<P>Renumber All renumbers every FormID in the mods being merged, and
+is less useful.  It is still valuable for testing and is the only
+valid option for use with the New Records record copying method.</P>
 
-<H3>Mod Organizer Integration Advantages<a name=m75></a></H3>
-<P>Mod Organizer's directory virtualization allows Merge Plugins to
-associate assets with specific ESP files, and to easily create and
-install new mods.  As a result, you can easily create entirely
-independent, encapsulated merged mods with Mod Organizer, where you'd
-normally have to do manual asset copying.</P>
-<P>In addition, Mod Organizer's arbitrary BSA loading allows you to
-create merges without having to extract the BSAs of the ESPs merged. 
-This will save on hard drive space, keep your merged mods cleaner,
-and allow you to specify asset priority between the assets in the
-BSAs from the merged plugins after merging.</P>
+<H3>Record Copying<A name=m82></A></H3>
+<P>Record Copying methods correspond to how the application copies
+records to a merged plugin.  The Overrides method is the method that
+has been used since 2013, and copies records to the merged plugin as
+overrides.  This is the method you should usually use.</P>
+<P>The New Records copying method has the program copy non-override
+records from the plugins being merged into the merged plugin as new
+records.  This method has an advantage over the Overrides method in
+that it doesn't require the clamping of FormIDs after merging. 
+FormID clamping is in an inexact process and can, in extremely rare
+cases, cause issues after merging.  You should use the New Records
+merging method if the Overrides method produces a plugin with errors.</P>
 
-<H3>Mod Organizer Integration Set Up<a name=m76></a></H3>
+<H2>Limitations<A name=m83></A></H2>
 
-<H4>Starting Merge Plugins through Mod Organizer<a name=m77></a></H4>
+<H3>255 Plugins Limit<A name=m84></A></H3>
+<P>You cannot load more than 255 plugins into Merge Plugins.  This is
+due to an engine limitation with how Skyrim (and xEdit) represent
+FormIDs &ndash; the IDs associated with records.  There is no way to
+easily bypass this, so you're just going to have to deal with it. 
+Load only the plugins you plan on merging if your load order is
+extremely large, uninstalling/disabling them after merging.</P>
+<P><SPAN STYLE="font-style: normal"><B>Note:</B></SPAN> Each merge
+you build will also use up another of the slots going towards the 255
+plugin limit.  So, if you have 250 plugins loaded in Merge Plugins
+you can build a maximum of 5 merges before running out of plugin
+slots.</P>
+
+<H3>Plugins Must be Loaded<A name=m85></A></H3>
+<P>You cannot build a merge unless all of the source plugins for it
+are loaded.  In the past you could merge a merged plugin or merge
+into an existing plugin, but that is no longer supported due to
+issues with asset priority and override record priority.  You'll have
+to load all plugins associated with a merge in order to rebuild it,
+even if you're only removing or adding a single plugin.</P>
+
+<H3>GetFormFromFile
+isn't Handled<A name=m86></A></H3>
+<P>Some papyrus scripts use GetFormFromFile to get a record reference
+in the context of the script.  This call includes both the filename
+and the FormID to be targeted.  If a plugin is targeted by this sort
+of script call and is then merged, the GetFormFromFile calls will
+stop working.  Fixing this requires a very large and complex feature.
+ This sort of feature is on the horizon, but isn't the current
+priority.  For now all you can do is avoid merging mods that are
+targeted by scripts using GetFormFromFile.  There is currently
+no easy way to recognize whether or not a mod is targeted by
+GetFormFromFile, so the community will have to use user reports to
+identify and share information on which mods are targeted in this
+way.</P>
+
+<H2>Arguments<A name=m87></A></H2>
+<P>The following table lists arguments you can use to adjust how
+Merge Plugins starts.  You can apply these arguments to shortcuts to
+the Merge Plugins executable or in Mod Organizer.</P>
+<TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=143>
+	<COL WIDTH=504>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Argument</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>-profile {ProfileName}</P>
+		</TD>
+		<TD>
+			<P>Use this argument to start the program using
+			the profile specified by {ProfileName}.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>-offline</P>
+		</TD>
+		<TD>
+			<P>Use this argument to start the program in
+			offline mode.  In this mode the program will not attempt to
+			connect to the backend server under any circumstances.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+<H3>Arguments with Mod Organizer<A name=m88></A></H3>
+
+<center>
+  <div class="imgbig" style="height:400">
+    <img src="images/img23.png"></img>
+    <br><P class="caption">Illustration 17: Adding arguments through Mod Organizer.</P>
+  </div>
+</center>
+
+<P>If you use Mod Organizer you can configure the
+Merge Plugins executable to have the arguments you want from the
+Arguments text box in the Modify Executables Window.  See <A HREF="#5.1.2.1.Starting Merge Plugins through Mod Organizer|outline">Starting
+Merge Plugins through Mod Organizer</A> for more information.
+</P>
+
+<H3>Arguments with Shortcuts<A name=m89></A></H3>
+<P>If you don't use Mod Organizer you can apply a target line
+parameter to a shortcut to Merge Plugins.</P>
+<OL>
+	<LI><P>Go to the directory where you installed Merge Plugins, right
+	click the Merge Plugins executable, and choose Create Shortcut.  
+	</P>
+	<LI><P>Move the shortcut wherever you want, and rename it as you see
+	fit.</P>
+	<LI><P>Right-click the shortcut and choose properties.</P>
+
+  <center>
+    <div class="imgbig" style="height:540">
+      <img src="images/img21.png"></img>
+      <br><P class="caption">Illustration 18: Adding a target line parameter to a shortcut.</P>
+    </div>
+  </center>
+  
+	<LI><P>At the end of the Target text box type a space
+	and then the target line parameter you want to use.  E.g. -profile
+	SkyrimProfile
+	</P>
+</OL>
+
+
+<H1>Tutorials<a name=m90></a><a name="Tutorials"></a></H1>
+
+<H2>Merging with a Mod Manager<A name=m91></A></H2>
+<P>Using Mod Organizer or Nexus Mod
+Manager v0.60a+ will allow you to set up the Mod Manager integration,
+which helps Merge Plugins to better interface with your mods.</P>
+<P>Mod Organizer and Nexus Mod Manager's virtual mod installations
+allow Merge Plugins to associate assets with specific ESP files.  As
+a result, you can easily create entirely independent, encapsulated
+merged mods where you'd normally have to do manual asset copying.</P>
+
+<H3>Mod Organizer Advantages<A name=m92></A></H3>
+<P>Mod Organizer's arbitrary BSA loading allows you to create merges
+without having to extract the BSAs of the ESPs merged.  This will
+save on hard drive space, keep your merged mods cleaner, and allow
+you to specify asset priority between the assets in the BSAs from the
+merged plugins after merging. Using the Mod Organizer integration
+also requires fewer post-merge steps, with merged mods made available
+in Mod Organizer's mods list immediately after merging.</P>
+
+<H3>Mod Organizer Integration Set Up<A name=m93></A></H3>
+
+<H4>Starting Merge Plugins through Mod Organizer<a name=m94></a></H4>
 <OL>
   <center>
     <div class="imgbig" style="height:99">
       <img src="images/img11.png"></img>
-      <br><P class="caption">Illustration 11: The Modify Executables button in Mod Organizer.</P>
+      <br><P class="caption">Illustration 19: The Modify Executables button in Mod Organizer.</P>
     </div>
   </center>
 	<LI><P>Click on the Modify Executables button.</P></LI>
   <center>
     <div class="imgbig" style="height:419">
       <img src="images/img12.png"></img>
-      <br><P class="caption">Illustration 12: Adding the Merge Plugins executable.</P>
+      <br><P class="caption">Illustration 20: Adding the Merge Plugins executable.</P>
     </div>
   </center>
 	<LI><P>Enter the title &ldquo;Merge Plugins&rdquo;
@@ -3507,44 +4046,49 @@ BSAs from the merged plugins after merging.</P>
   <center>
     <div class="imgbig" style="height:106">
       <img src="images/img13.png"></img>
-      <br><P class="caption">Illustration 13: Running Merge Plugins through Mod Organizer.</P>
+      <br><P class="caption">Illustration 21: Running Merge Plugins through Mod Organizer.</P>
     </div>
   </center>
 	<LI><P>When you want to start Merge Plugins, select it from the dropdown menu and click Run.
 	</P></LI>
 </OL>
 
-<H4>Configuring the Mod Organizer Integration<a name=m78></a></H4>
+<H4>Configuring the Mod Organizer Integration<A name=m95></A></H4>
 <OL>
-	<LI><P>Run Merge Plugins through Mod Organizer.</P></LI>
-	<LI><P>Open the Options Window and go to the Integrations Tab.</P></LI>
+	<LI><P>Run Merge Plugins through Mod Organizer.</P>
+	<LI><P>Open the <A HREF="#3.8.Options Window |outline">Options
+	Window</A> and go to the Integrations Tab.
+	</P>
   <center>
     <div class="imgbig" style="height:199">
       <img src="images/img14.png"></img>
-      <br><P class="caption">Illustration 14: Setting up the Mod Organizer Integration.</P>
+      <br><P class="caption">Illustration 22: Setting up the Mod Organizer Integration.</P>
     </div>
   </center>
 	<LI><P>Check <B>I'm using Mod Organizer</B> and click <B>Detect
 	integrations</B>.  If your Mod Organizer installation is not found
-	automatically, click on the folder icon by the <B>Mod Organizer path</B>
+	automatically, click on the folder icon by the <B>Mod manager path</B>
 	text box and browse to its location on your file system.  Do the
-	same for the <B>Mod Organizer mods path</B><SPAN>,
+	same for the <B>Mod manager mods path</B><SPAN STYLE="font-weight: normal">,
 	browsing to the location of your mods folder if it is not the
-	default </SPAN><I><SPAN>Mod
-	Organizer\mods</SPAN></I><SPAN> folder.</SPAN></P></LI>
-	<LI><P>Verify the paths are correct.</P></LI>
-	<LI><P>Proceed to the Merging Tab in the Options Window and specify
-	the <B>Merge destination directory</B>.   It is best to set this to
-	Mod Organizer's mods folder because merges will then be created as
-	mods directly available through Mod Organizer's interface, without
-	requiring any post-merge steps.</P></LI>
+	default </SPAN><I><SPAN STYLE="font-weight: normal">Mod
+	Organizer\mods</SPAN></I><SPAN STYLE="font-weight: normal"> folder.</SPAN></P>
+	<LI><P>Verify the paths are correct.</P>
+	<LI><P>Proceed to the <A HREF="#3.8.2.Merging Tab|outline">Merging
+	Tab</A> of the Options Window and specify the <B>Merge destination
+	directory</B>.   It is best to set this to Mod Organizer's mods
+	folder because merges will then be created as mods directly
+	available through Mod Organizer's interface, without requiring any
+	post-merge steps.</P>
 	<LI><P>Restart Merge Plugins to correctly load your Mod Organizer
-	load order.</P></LI>
+	load order.</P>
 </OL>
 
-<H3>Mod Organizer Post-Merge Steps<a name=m79></a></H3>
 
-<H4>With Copy General Assets<a name=m80></a></H4>
+<H3>
+Mod Organizer Post-Merge Steps<A name=m96></A></H3>
+
+<H4>With Copy General Assets<A name=m97></A></H4>
 <OL>
 	<LI><P>If you don't see the merged mod in Mod Organizer, right-click
 	&rarr; All &rarr; Refresh.</P>
@@ -3561,7 +4105,7 @@ BSAs from the merged plugins after merging.</P>
 	to order them properly as well by dragging and dropping them.</P>
 </OL>
 
-<H4>Without Copy General Assets<a name=m81></a></H4>
+<H4>Without Copy General Assets<A name=m98></A></H4>
 <OL>
 	<LI><P>If you don't see the merged mod in Mod Organizer, right-click
 	&rarr; All &rarr; Refresh.</P>
@@ -3570,80 +4114,86 @@ BSAs from the merged plugins after merging.</P>
 	<LI><P>Disable the ESPs you merged from your load order.</P>
 </OL>
 
-<H2>Merging with Nexus Mod Manager<a name=m82></a></H2>
-<P>Nexus Mod Manager is a multi-game mod manager which offers a basic
-managed approach to modding.  As far as Merge Plugins is concerned,
-using Nexus Mod Manager is pretty much equivalent to having unmanaged
-mods.</P>
+<H3>Nexus Mod Manager Integration Set Up<A name=m99></A></H3>
 
-<H3>Settings for use with Nexus Mod Manager<a name=m83></a></H3>
-<P>Nexus Mod Manager doesn't do any special handling of BSA files. 
-Because of this, you need to use either the Extract BSAs or the Build
-merged BSA setting.  You can enable these in the Merging Tab of the
-<A HREF="#3.10.Options Window |outline">Options Window</A>.  You
-should only enable one of these options.</P>
-
-<H3>Nexus Mod Manager Post-Merge Steps<a name=m84></a></H3>
-<P>Because you can't copy general assets with Nexus Mod Manager, you
-have two major choices for post-merge procedures to get a functioning
-merge.</P>
-
-<H4>Disabling ESPs<a name=m85></a></H4>
-<P>The easiest post-merge procedure is to simply disable the ESPs you
-merged in your load order.  This will leave all the assets associated
-with the mods behind in your data folder.</P>
+<H4>Configuring the Nexus Mod Manager Integration<A name=m100></A></H4>
 <OL>
-	<LI><P>Go to your merge destination directory, and find the folder
-	named after the merge you built.</P>
-	<LI><P>Go inside of the folder, select all files in it, and add them
-	to an archive.</P>
-	<LI><P>Load the archive into NMM.</P>
-	<LI><P>Uncheck the plugins you merged from the plugins tab in NMM.</P>
+	<LI VALUE=1><P>Open the <A HREF="#3.8.Options Window |outline">Options
+	Window</A> and go to the Integrations Tab.
+	</P>
+  <center>
+    <div class="imgbig" style="height:199">
+      <img src="images/img15.png"></img>
+      <br><P class="caption">Illustration 14: Setting up the Nexus Mod Manager Integration.</P>
+    </div>
+  </center>
+	<LI><P>Check <B>I'm using Nexus Mod Manager</B> and click <B>Detect
+	integrations</B>.  If your Nexus Mod Manager installation is not
+	found automatically, click on the folder icon by the <B>Mod manager
+	path</B> text box and browse to its location on your file system. 
+	Do the same for the <B>Mod manager mods path</B><SPAN STYLE="font-weight: normal">,
+	browsing to the location of your </SPAN><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">Virtual
+	Install</SPAN></SPAN><SPAN STYLE="font-weight: normal"> folder.</SPAN></P>
+	<LI><P>Verify the paths are correct.</P>
+	<LI><P>Proceed to the <A HREF="#3.8.2.Merging Tab|outline">Merging
+	Tab</A> of the Options Window and specify the <B>Merge destination
+	directory</B>.   You can set this to whatever you want, but I'd
+	recommend something like &ldquo;C:\Games\Nexus Mod
+	Manager\Skyrim\Mods\Merges&rdquo;.</P>
+	<LI><P>Nexus Mod Manager doesn't do any special handling of BSA
+	files.  Because of this, you need to use either the Extract BSAs or
+	the Build merged BSA setting.  You can enable these in the <A HREF="#3.8.2.Merging Tab|outline">Merging
+	Tab</A> of the Options Window.  You should only enable one of these
+	options.</P>
 </OL>
 
-<H4>Manually Copying General Assets<a name=m86></a></H4>
-<P>If you instead want to save a bit on hard drive space, and have a
-cleaner looking load order (with fewer deactivated plugins), you can
-instead opt to manually copy general assets.</P>
+
+<H3>
+Nexus Mod Manager Post-Merge Steps<A name=m101></A></H3>
+
+<H4>With Copy General Assets<A name=m102></A></H4>
 <OL>
-	<LI><P>Open NMM's archives folder.</P>
-	<LI><P>Find the archives associated with the mods you merged.</P>
-	<LI><P>Extract all of the archives to a single folder in the order
-	that the mods were installed.</P>
-	<LI><P>Delete all file-specific assets associated with the plugins
-	you merged, as well as the plugins you merged.  A list of
-	file-specific assets can be found <A HREF="#4.4.File-specific Assets|outline">here</A>.
-	   <B>Note: </B><SPAN>If there are any
-	plugins here that you didn't merge, do not delete them or the
-	file-specific assets associated with them.</SPAN></P>
-	<LI><P>Copy all remaining assets to the folder for the merge you
-	(which you can find in your merge destination directory), then
-	select all files in the folder and add them to an archive.</P>
-	<LI><P>In NMM, deactivate the mods corresponding to the archives you
-	just handled.</P>
-	<LI><P>Load the new, merged mod archive into NMM and activate it.</P>
+	<LI VALUE=1><P>Go to your <B>Merge destination directory</B><SPAN STYLE="font-weight: normal">,
+	navigate into the folder named after your merge, and add all of the
+	files and folders to an archive.  Install the archive into Nexus Mod
+	Manager</SPAN>.</P>
+	<LI><P>Enable the merged mod in Nexus Mod Manager.  It should be the
+	last mod in the list.</P>
+	<LI><P>Uninstall the mods you merged in Nexus Mod Manager.  For mods
+	that have multiple ESPs in them, if you didn't include all of those
+	ESPs in your merge you'll have to leave the mod enabled and disable
+	the ESPs you merged from your load order instead (in the plugins
+	tab).  It's not recommended to merge only a few ESPs from a mod
+	because it will create asset duplication.</P>
 </OL>
 
-<H2>Integration Set Up<a name=m87></a></H2>
+<H4>Without Copy General Assets<A name=m103></A></H4>
+<OL>
+	<LI><P>Go to your <B>Merge destination directory</B><SPAN STYLE="font-weight: normal">,
+	navigate into the folder named after your merge, and add all of the
+	files to an archive.  Install the archive into Nexus Mod Manager</SPAN>.</P>
+	<LI><P>Enable the merged mod in Nexus Mod Manager.  It should be the
+	last mod in the list.</P>
+	<LI><P>Disable the ESPs you merged from your load order.</P>
+</OL>
+
+
+<H2>Integration Set Up<A name=m104></A></H2>
 <P>All integrations can be automatically detected by Merge Plugins. 
 Merge Plugins searches for the Decompiler, Compiler, and BSAOpt
 integrations in its folder and in your game path up to two folders
 deep.  Merge Plugins searches for the papyrus flags file at
 <I>scripts\source\TESV_Papyrus_Flags.flg</I>.  Merge Plugins searches
 for Mod Organizer in your game path (up to two folders deep) and in
-both <I>*:\Program Files </I><SPAN>and</SPAN>
-<I>*:\Program Files (x86)</I><SPAN>.</SPAN></P>
+both <I>*:\Program Files </I><SPAN STYLE="font-style: normal">and</SPAN>
+<I>*:\Program Files (x86)</I><SPAN STYLE="font-style: normal">.</SPAN></P>
 
-<H3>Mod Organizer<a name=m88></a></H3>
-<P>See <A HREF="#5.1.2.Mod Organizer Integration Set Up|outline">Mod
-Organizer Integration Setup</A>.</P>
-
-<H3>Papyrus<a name=m89></a></H3>
+<H3>Papyrus<A name=m105></A></H3>
 <P>The papyrus integrations are only used for handling Skyrim script
 fragments.  If you don't want to handle Skyrim script fragments, you
 don't need to set them up.</P>
 
-<H4>Champollion Decompiler<a name=m90></a></H4>
+<H4>Champollion Decompiler<A name=m106></A></H4>
 <OL>
 	<LI><P><FONT COLOR="#000066"><SPAN LANG="zxx"><U><A HREF="http://www.nexusmods.com/skyrim/mods/35307">Download
 	Champollion</A></U></SPAN></FONT>.</P>
@@ -3653,23 +4203,25 @@ don't need to set them up.</P>
 	<LI><P><A NAME="__DdeLink__3530_1694865995"></A>Click the Detect
 	Integrations button, the program should find Champollion.exe
 	automatically.  If it doesn't, click the browse button and go to the
-	location of <SPAN>Champollion.exe</SPAN>,
+	location of <SPAN STYLE="font-style: normal">Champollion.exe</SPAN>,
 	select it and click OK.</P>
 	<LI><P>Don't forget to endorse Champollion on Nexus Mods!</P>
 </OL>
 
-<H4>Papyrus Compiler<a name=m91></a></H4>
+<H4>Papyrus Compiler<A name=m107></A></H4>
 <OL>
 	<LI><P><A HREF="https://steamdb.info/app/202480/"><FONT COLOR="#000066"><U>Download
 	the Creation Kit from Steam</U></FONT></A>.</P>
 	<LI><P><A NAME="__DdeLink__3520_1694865995"></A>Click the Detect
 	Integrations button, the program should find PapyrusCompiler.exe
 	automatically.  IF it doesn't click the browse button and go to the
-	location of <SPAN>the Papyrus Compiler
+	location of <SPAN STYLE="font-style: normal">the Papyrus Compiler
 	executable</SPAN>, select it, and click OK.</P>
+	<LI><P>If you're merging mods that use SKSE, you should also install
+	the SKSE source files.</P>
 </OL>
 
-<H4>Papyrus Flags<a name=m92></a></H4>
+<H4>Papyrus Flags<A name=m108></A></H4>
 <OL>
 	<LI><P><A HREF="https://steamdb.info/app/202480/"><FONT COLOR="#000066"><U>Download
 	the Creation Kit from Steam</U></FONT></A>.  If you already have it,
@@ -3683,7 +4235,8 @@ don't need to set them up.</P>
 	TESV_Papyrus_Flags.flg file, select it, and click OK.</P>
 </OL>
 
-<H3>BSAOpt<a name=m93></a></H3>
+
+<H3>BSAOpt<A name=m109></A></H3>
 <P>You only need the BSAOpt integration if you plan on using the
 Build merged BSA option.</P>
 <OL>
@@ -3703,77 +4256,187 @@ Build merged BSA option.</P>
 	<LI><P>Don't forget to endorse BSAOpt!</P>
 </OL>
 
-<H2>Rebuilding Merges<a name=m94></a></H2>
+<H2>Rebuilding Merges<A name=m110></A></H2>
 
-<H3>When to Rebuild a Merge<a name=m95></a></H3>
+<H3>When to Rebuild a Merge<A name=m111></A></H3>
 <P>You should rebuild a merge when:</P>
 <OL TYPE=a>
 	<LI><P>You download a new version of one or more mods in the merge.</P>
-	<LI><P>You add a new plugin to your load order which requires a
-	plugin that's in one of your merges</P>
+	<LI><P>You add a new plugin to the merge.</P>
+	<LI><P>You remove a plugin from the merge.</P>
+	<LI><P>The merge has issues ingame and you want to try building it
+	with different options set.</P>
 </OL>
-<P>It's not necessary to rebuild merges when the program updates.</P>
+<P>It's not necessary to rebuild merges when the program updates
+unless your merge didn't work and you want to try it again with the
+new version.</P>
 
-<H3>Effects of Rebuilding a Merge<a name=m96></a></H3>
+<H3>Effects of Rebuilding a Merge<A name=m112></A></H3>
 <P>Rebuilding a merge will delete all files associated with that
 merge.  Nothing from the previous build of the merge will be
 preserved.  In addition, all properties of the merge will be updated
 (e.g. plugin hashes, and record copying failures).</P>
 
-<H3>Rebuild Status Detection<a name=m97></a></H3>
+<H3>Rebuild Status Detection<A name=m113></A></H3>
 <P>The application will detect that a merge needs to be rebuilt if
 one or more plugins associated with it have been modified (detected
 through their CRC32 hash) or if the merged plugin has been deleted.</P>
 <P><B>Note:</B> you can ignore or force rebuild statuses by
-right-clicking a merge and choosing &ldquo;Toggle rebuild status&rdquo;.</P>
+right-clicking a merge and choosing <A HREF="#3.4.3.2.Merges Popup Menu|outline">Toggle
+rebuild status</A>.</P>
 
-<H2>Updating<a name=m98></a></H2>
 
-<H3>Updating the Program<a name=m99></a></H3>
+<H2>Updating<A name=m114></A></H2>
+
+<H3>Updating the Program<A name=m115></A></H3>
 <OL>
-	<LI><P>Click the Update button in the Quickbar, or go to the Options
-	Window and click Update Program.</P>
-	<LI><P>Look over the changes in the Changelog Window.  If you're
-	cool with the changes, click Install.</P>
+	<LI><P>Click the <A HREF="#3.4.1.6.Update|outline">Update button</A>
+	in the Quickbar, or go to the <A HREF="#3.8.Options Window |outline">Options
+	Window</A> and click Update Program.</P>
+	<LI><P>Look over the changes in the <A HREF="#3.9.Changelog Window|outline">Changelog
+	Window</A>.  If you're cool with the changes, click Install.</P>
 	<LI><P>The program will download the new version of the program from
-	the backend, install it, and restart itself.  <B>NOTE: </B><SPAN>If
+	the backend, install it, and restart itself.  <B>NOTE: </B><SPAN STYLE="font-weight: normal">If
 	you're using a recent version of Mod Organizer, the program
 	restarting may cause Mod Organizer to stop applying its virtual
-	directory structure, causing fewer plugins to be loaded.</SPAN></P>
+	directory structure.  If this happens you'll have to close and
+	restart the program manually.</SPAN></P>
 </OL>
 
-<H3>Updating the Dictionary<a name=m100></a></H3>
+<H3>Updating the Dictionary<A name=m116></A></H3>
+<OL>
+	<LI VALUE=1><P>Click the <A HREF="#3.4.1.6.Update|outline">Update
+	button</A> in the Quickbar, or go to the <A HREF="#3.8.Options Window |outline">Options
+	Window</A> and click Update Dictionary.</P>
+	<LI><P>The program should update the plugins list view if necessary,
+	using the new dictionary definitions.</P>
+</OL>
 
-<H3>Automatic Updating<a name=m101></a></H3>
+<H3>Automatic Updating<A name=m117></A></H3>
+<P>If you want to have the program automatically update itself or the
+dictionary file, you can check the appropriate options in the <A HREF="#3.8.1.General Tab|outline">General
+Tab</A> of the Options Window.  If these options are enabled,
+automatic updating will occur when the <A HREF="#3.3.Splash Window|outline">Splash
+Window</A> is displayed during application startup.</P>
 
-<H2>Submitting Reports<a name=m102></a></H2>
 
-<H2>Debugging<a name=m103></a></H2>
+<H2>Submitting Reports<A name=m118></A></H2>
 
-<H1>Community<a name=m104></a><a name="Community"></a></H1>
+<H3>When to Submit Reports<A name=m119></A></H3>
+<P>When you've built a merged and tested it ingame thoroughly, it is
+a good idea to submit reports on the plugins in that merge, even if
+reports have already been submitted on them.  Submitting reports in
+this way helps other users to know what they can and cannot merge. 
+Don't submit reports unless you tested thoroughly, incorrect reports
+aren't very nice.</P>
+<P>Please make certain to note if the plugin you're reporting on was
+the first plugin in your merge, whether you used the <A HREF="#3.8.2.2.Asset handling|outline">Handle
+Script Fragments</A> option, and any bugs you encountered ingame.</P>
 
-<H2>Making a Translation<a name=m105></a></H2>
+<H3>How to Submit Reports<A name=m120></A></H3>
+<P>You can submit reports on all of the plugins in the merges you've
+built by clicking the <A HREF="#3.4.1.3.Report on Merges|outline">Report
+on Merges Button</A> in the Quickbar.  You can also use the <A HREF="#3.4.3.2.Merges Popup Menu|outline">Merges
+Popup Menu</A> to report on individual merges, and the <A HREF="#3.4.2.3.Plugins Popup Menu|outline">Plugins
+Popup Menu</A> to report on individual plugins.</P>
+<P>You can update a report on a plugin by submitting a new report on
+the same plugin.</P>
+
+
+<H2>Debugging<A name=m121></A></H2>
+
+<H3>Logs<A name=m122></A></H3>
+<P>The program saves logs into the logs folder, which is located
+alongside the executable.  You will be asked to provide a log
+whenever you submit a help request on Nexus Mods, GitHub, or
+elsewhere.  Logs provide a means to understand what the program is
+doing and what may be going wrong.  If you take the time you can
+learn to spot issues in your own logs instead of having someone else
+evaluate them for you.</P>
+<TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=104>
+	<COL WIDTH=543>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I><B>Folder</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I>logs\merge</I></P>
+		</TD>
+		<TD>
+			<P>Logs from merges.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I>logs\errors</I></P>
+		</TD>
+		<TD>
+			<P>Logs from error-checking and error-fixing
+			tasks.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P><I>logs\main</I></P>
+		</TD>
+		<TD>
+			<P>Logs from the main program.  This includes
+			saving logs and the log that is displayed in the <A HREF="#3.4.4.Log Tab|outline">Log
+			Tab</A> of the Main Application Window.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+<H3>Debug Options<A name=m123></A></H3>
+<P>In the <A HREF="#3.8.2.Merging Tab|outline">Merging Tab</A> of the
+Options Window you can find several debug options.  These debug
+options make Merge Plugins print more messages to the log.  Enabling
+these debug options can help you and others to identify issues with
+Merge Plugins.</P>
+
+<H3>Reading the Documentation<A name=m124></A></H3>
+<P>Issues can occur because you don't know what you're doing.  For
+this reason, I recommend you read this documentation thoroughly
+<I><B>before </B></I><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">asking
+for help</SPAN></SPAN>.  I know it's long, but it's an extremely
+valuable source of information.  Your ability to resolve issues and
+create merges successfully will be greatly improved if you read this
+documentation thoroughly.</P>
+<P>Help me to help you &ndash; RTFM.</P>
+
+
+<H1>Community<a name=m125></a><a name="Community"></a></H1>
+
+<H2>Making a Translation<A name=m126></A></H2>
 <P>Merge Plugins Standalone offers a highly extensible, simple
 translation system.  If you want to make a translation, you need only
 translate the strings in the <I>lang\english.lang</I> file to your
 chosen language and save it as a new file.  From there, you can
-switch to your new langauge from within the program from the language
-dropdown.</P>
+switch to your new language from within the program from the language
+drop-down.</P>
 
-<H3>Latest english.lang<a name=m106></a></H3>
-<P>If you want to make a translation, I recommend you get the <SPAN STYLE="text-decoration: none"><A HREF="https://github.com/matortheeternal/merge-plugins/blob/master/frontend/lang/english.lang"><FONT COLOR="#000066"><U>latest
+<H3>Latest
+english.lang<A name=m127></A></H3>
+<P>If you want to make a translation, I recommend you get the <FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><A HREF="https://github.com/matortheeternal/merge-plugins/blob/master/frontend/lang/english.lang"><FONT COLOR="#000066"><U>latest
 english.lang file from GitHub</U></FONT></A></SPAN></FONT>.  This
 will make certain your translation doesn't need to be updated anytime
 soon.</P>
 
-<H3>Notepad++ Environment<a name=m107></a></H3>
+<H3>Notepad++
+Environment<A name=m128></A></H3>
 <P>If you use Notepad++, you can use my user-defined language and
 custom theme when editing language files to make your experience of
 making a translation easier and more efficient.</P>
 
-<H4>Custom Style<a name=m108></a></H4>
+<H4>Custom Style<A name=m129></A></H4>
 <OL>
-	<LI><P>Download the <SPAN STYLE="text-decoration: none"><A HREF="https://github.com/matortheeternal/merge-plugins/tree/master/setup/inverted.xml"><FONT COLOR="#000066"><U>inverted.xml
+	<LI><P>Download the <FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><A HREF="https://github.com/matortheeternal/merge-plugins/tree/master/setup/inverted.xml"><FONT COLOR="#000066"><U>inverted.xml
 	file</U></FONT></A></SPAN></FONT> from GitHub</P>
 	<LI><P>Install it in the themes folder in your Notepad++ program
 	directory, e.g. <BR>	<I>C:\Program</I><I> Files
@@ -3782,7 +4445,7 @@ making a translation easier and more efficient.</P>
 	Style Configurator in Notepad++</P>
 </OL>
 
-<H4>User-defined Language<a name=m109></a></H4>
+<H4>User-defined Language<A name=m130></A></H4>
 <OL>
 	<LI><P>Download the <A HREF="https://github.com/matortheeternal/merge-plugins/tree/master/setup/lang-markup.xml"><FONT COLOR="#000066"><U>lang-markup.xml
 	file</U></FONT></A> from GitHub</P>
@@ -3794,28 +4457,30 @@ making a translation easier and more efficient.</P>
 	Lang</P>
 </OL>
 
-<H3>UTF8<a name=m110></a></H3>
-<P><SPAN>If you're translating into a
+<H3>UTF8<A name=m131></A></H3>
+<P><SPAN STYLE="font-style: normal">If you're translating into a
 language that has special non-alphanumeric characters (e.g. any
-character not in standard </SPAN><A HREF="http://www.asciitable.com/"><SPAN>ASCII</SPAN></A><SPAN>),
+character not in standard </SPAN><A HREF="http://www.asciitable.com/"><SPAN STYLE="font-style: normal">ASCII</SPAN></A><SPAN STYLE="font-style: normal">),
 you'll need to save your file with UTF8 encoding.  How you do this
 will depend on the text editor you're using.  I recommend using
 Notepad++.  If you're using Notepad++ you simply need to go to the
-Encoding tab and choose &ldquo;Encode in UTF8&rdquo;.</SPAN></P>
+Encoding tab, choose &ldquo;Encode in UTF8&rdquo;, and then save the
+file.</SPAN></P>
 
-<H3>Syntax<a name=m111></a></H3>
+
+<H3>Syntax<A name=m132></A></H3>
 <P>There is some basic syntax to language files.  Below are some
 symbols and their meanings.</P>
 <TABLE WIDTH=790 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=29*>
 	<COL WIDTH=227*>
 	<TR VALIGN=TOP>
-		<TH WIDTH=11%>
-			<P ALIGN=CENTER>Symbol</P>
-		</TH>
-		<TH WIDTH=89%>
-			<P>Meaning</P>
-		</TH>
+		<TD>
+			<P ALIGN=CENTER><I><B>Symbol</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Meaning</B></I></P>
+		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
@@ -3865,32 +4530,34 @@ symbols and their meanings.</P>
 	</TR>
 </TABLE>
 
-<H2>Development<a name=m112></a></H2>
 
-<H3>GitHub, Hipchat, and Forums<a name=m113></a></H3>
+<H2>Development<A name=m133></A></H2>
+
+<H3>GitHub,
+Hipchat, and Forums<A name=m134></A></H3>
 <P>There are several places where you can participate in the
 development of Merge Plugins.</P>
 <UL>
-	<LI><P><B>GitHub </B><SPAN>provides a
-	means by which you can follow Merge Plugins </SPAN><A HREF="https://github.com/matortheeternal/merge-plugins/commits/master"><SPAN>development</SPAN></A><SPAN>
-	and </SPAN><A HREF="https://github.com/matortheeternal/merge-plugins/issues"><SPAN>issues</SPAN></A><SPAN>.
+	<LI><P><B>GitHub </B><SPAN STYLE="font-weight: normal">provides a
+	means by which you can follow Merge Plugins </SPAN><A HREF="https://github.com/matortheeternal/merge-plugins/commits/master"><SPAN STYLE="font-weight: normal">development</SPAN></A><SPAN STYLE="font-weight: normal">
+	and </SPAN><A HREF="https://github.com/matortheeternal/merge-plugins/issues"><SPAN STYLE="font-weight: normal">issues</SPAN></A><SPAN STYLE="font-weight: normal">.
 	This is a great way to get an idea of how development is
 	progressing.</SPAN></P>
-	<LI><P><B>Hipchat </B><SPAN>is a program
+	<LI><P><B>Hipchat </B><SPAN STYLE="font-weight: normal">is a program
 	that provides a network of chatrooms.  The xEdit Hipchat has a room
 	for Merge Plugins as well as general Chit-chat.  If you want to get
 	help with the program or get involved in the development process,
-	you can join as a </SPAN><A HREF="https://www.hipchat.com/gWNjHvaRq"><SPAN>guest</SPAN></A><SPAN>
-	or </SPAN><A HREF="https://www.hipchat.com/invite/383998/fa29a42bb587e40d32d981de43e791d2"><SPAN>register
-	an account</SPAN></A><SPAN>.</SPAN></P>
-	<LI><P><B>Forums </B><SPAN>are used by
+	you can join as a </SPAN><A HREF="https://www.hipchat.com/gWNjHvaRq"><SPAN STYLE="font-weight: normal">guest</SPAN></A><SPAN STYLE="font-weight: normal">
+	or </SPAN><A HREF="https://www.hipchat.com/invite/383998/fa29a42bb587e40d32d981de43e791d2"><SPAN STYLE="font-weight: normal">register
+	an account</SPAN></A><SPAN STYLE="font-weight: normal">.</SPAN></P>
+	<LI><P><B>Forums </B><SPAN STYLE="font-weight: normal">are used by
 	most users.  Merge Plugins discussion takes place on the Nexus Mods
 	forums, STEP forums, AFKMods forums, and Bethesda forums.  Feel free
 	to post in these topics whenever you need help, or to keep
 	up-to-date with the latest news and developments.</SPAN></P>
 </UL>
 
-<H3>Reporting Issues<a name=m114></a></H3>
+<H3>Reporting Issues<A name=m135></A></H3>
 <P>If you feel you may have found an issue in Merge Plugins, I ask
 that you submit it in a certain fashion.  This is to help me to
 resolve issues in a timely manner and keep my sanity intact. 
@@ -3908,16 +4575,16 @@ submitting an issue:</P>
 	<LI><P><B>Provide logs.</B>  Merge Plugins logs things extremely
 	well.  Go to the logs folder and get the log where the bug occurred
 	and include it with your bug report.</P>
-	<LI><P><B>Provide screenshots.  </B><SPAN>Depending
+	<LI><P><B>Provide screenshots.  </B><SPAN STYLE="font-weight: normal">Depending
 	on the bug, screenshots may or may not be useful.  If your bug has
 	anything to do with the GUI, a screenshot can be valuable.</SPAN></P>
 </OL>
-<P><SPAN>Please submit issues to the
-</SPAN><A HREF="https://github.com/matortheeternal/merge-plugins/issues"><FONT COLOR="#000066"><U><SPAN>GitHub
-issue tracker</SPAN></U></FONT></A><SPAN STYLE="text-decoration: none"><SPAN>.</SPAN></SPAN></FONT></P>
+<P><SPAN STYLE="font-weight: normal">Please submit issues to the
+</SPAN><A HREF="https://github.com/matortheeternal/merge-plugins/issues"><FONT COLOR="#000066"><U><SPAN STYLE="font-weight: normal">GitHub
+issue tracker</SPAN></U></FONT></A><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-weight: normal">.</SPAN></SPAN></FONT></P>
 
-<H3>Feature Requests<a name=m115></a></H3>
-<P>Merge
+<H3>Feature Requests<A name=m136></A></H3>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT COLOR="#000000">Merge
 Plugins is a massive project.  I really appreciate community input on
 features, but it's important to understand that not every feature
 that is presented to me will be made.  Some features aren't feasible,
@@ -3925,7 +4592,7 @@ and others are simply not useful enough to be worth the time required
 to build them.  Please exercise the understanding that your feature
 requests may be accepted or denied.</FONT></P>
 
-<H3>Joining the Development Team<a name=m116></a></H3>
+<H3>Joining the Development Team<A name=m137></A></H3>
 <P>Merge Plugins Standalone is open source, and I would love the
 opportunity to work with other developers to improve it.  If you have
 experience programming, and like what Merge Plugins does, please feel
@@ -3936,9 +4603,9 @@ application without compromising established style or architecture.</P>
 proofreading documentation, submitting issues, making feature
 requests, etc.  I appreciate any help I can get.</P>
 
-<H2>Service<a name=m117></a></H2>
+<H2>Service<A name=m138></A></H2>
 
-<H3>Service Agreement<a name=m118></a></H3>
+<H3>Service Agreement<A name=m139></A></H3>
 <P>Merge Plugins Standalone is both a backend and a frontend.  The
 frontend runs on your computer, and is what you interface, where the
 backend is run on a server that I manage with.  The backend is what
@@ -3965,7 +4632,7 @@ abuse, but I have the infrastructure in place to deal with any abuse
 that does occur.  Please be aware that your access to the backend
 service is not irrevocable, and malicious actions will not tolerated.</P>
 
-<H3>Service Transference<a name=m119></a></H3>
+<H3>Service Transference<A name=m140></A></H3>
 <P>Should I ever stop running the server that hosts the Merge Plugins
 backend, it is completely possible for another user to create a new
 server hosting the backend.  The source code for the Merge Plugins
@@ -3973,7 +4640,7 @@ backend is available on GitHub in the same repository as the Merge
 Plugins frontend, and there are also several resources for set up
 that should make it extremely easy.</P>
 
-<H4>Backend Set Up<a name=m120></a></H4>
+<H4>Backend Set Up<A name=m141></A></H4>
 <OL>
 	<LI><P>Compile the backend using Delphi XE or newer.</P>
 	<LI><P>Install MySQL 5.6, and set up a database and tables for the
@@ -3987,16 +4654,16 @@ that should make it extremely easy.</P>
 	<LI><P>Get a public domain or subdomain address, and bind it to the
 	IP address of your server.  You can do this through any of many
 	services, such as <A HREF="http://dyn.com/dns/"><FONT COLOR="#000066"><U>DynDNS</U></FONT></A>
-	or <A HREF="https://freedns.afraid.org/"><FONT COLOR="#000066"><U>freedns.afraid.org</U></FONT></A><SPAN STYLE="text-decoration: none">.
-	 </SPAN></FONT><SPAN STYLE="text-decoration: none"><B>NOTE:</B></SPAN></FONT><SPAN STYLE="text-decoration: none">
+	or <A HREF="https://freedns.afraid.org/"><FONT COLOR="#000066"><U>freedns.afraid.org</U></FONT></A><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none">.
+	 </SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><B>NOTE:</B></SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none">
 	this is optional, you can use an IP address instead, but using a DNS
 	is highly recommended.</SPAN></FONT></P>
-	<LI><P STYLE="text-decoration: none">Instruct
+	<LI><P STYLE="text-decoration: none"><FONT COLOR="#000000">Instruct
 	users to modify their <I>profiles\&lt;ProfileName&gt;\settings.ini</I>
 	file, changing the serverHost value to the address of your server.</FONT></P>
 </OL>
 
-<H3>Privacy<a name=m121></a></H3>
+<H3>Privacy<A name=m142></A></H3>
 <P>Your privacy is important to me, and so is transparency.  I
 understand that you may not be interested in allowing Merge Plugins
 to gain access to statistics about your usage of the program.  Below
@@ -4007,16 +4674,15 @@ users, and how you can opt out of them.</P>
 	<COL WIDTH=161*>
 	<COL WIDTH=45*>
 	<TR VALIGN=TOP>
-		<TH WIDTH=19%>
-			<P>Statistic</P>
-		</TH>
-		<TH WIDTH=62%>
-			<P>Description</P>
-		</TH>
-		<TH WIDTH=18%>
-			<P ALIGN=CENTER>How to opt
-			out</P>
-		</TH>
+		<TD>
+			<P><I><B>Statistic</B></I></P>
+		</TD>
+		<TD>
+			<P><I><B>Description</B></I></P>
+		</TD>
+		<TD>
+			<P ALIGN=CENTER><I><B>How to opt out</B></I></P>
+		</TD>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD>
@@ -4169,20 +4835,21 @@ users, and how you can opt out of them.</P>
 		</TD>
 	</TR>
 </TABLE>
-<P><BR>
-</P>
+
+
 <OL>
-	<LI><P>Enable the <A HREF="#3.10.5.1.Backend|outline">Do not send
-	usage statistics</A> option.</P>
-	<LI><P>Block Merge Plugins from accessing the internet <B>OR</B>
-	change the <A HREF="#3.10.5.1.Backend|outline">server host option</A>
-	to 127.0.0.1.  Doing either of these will make it so you can no
-	longer get dictionary or program updates through the program.</P>
-	<LI><P>Don't enter a username on the options window.  If you do
-	this, you will no longer be able to submit user reports.</P>
+	<LI><P STYLE="margin-top: 0.06in; margin-bottom: 0in">Enable the <A HREF="#3.10.5.1.Backend|outline">Do
+	not send usage statistics</A> option.</P>
+	<LI><P STYLE="margin-top: 0.06in; margin-bottom: 0in">Use <A HREF="#4.5.Arguments|outline">the
+	-offline argument</A>.  Doing this will make it so you cannot get
+	dictionary or program updates through the program.</P>
+	<LI><P STYLE="margin-top: 0.06in; margin-bottom: 0in">Don't enter a
+	username on the options window.  If you do this, you will not be
+	able to submit user reports.</P>
 </OL>
 
-<H2>License<a name=m122></a></H2>
+
+<H2>License<A name=m143></A></H2>
 <P>Merge Plugins is <A HREF="http://opensource.com/resources/what-open-source">open
 source</A>, and licensed under the MPL.  Please refer to <A HREF="https://github.com/matortheeternal/merge-plugins/blob/master/license.txt"><FONT COLOR="#000066"><U>the
 license on GitHub</U></FONT></A> for more information.  Merge Plugins
@@ -4190,11 +4857,9 @@ cannot be licensed under any license other than the MPL because xEdit
 is licensed under the MPL, and Merge Plugins relies on xEdit as an
 API.</P>
 
-<H3>Plain English<a name=m123></a></H3>
+<H3>Plain English<A name=m144></A></H3>
 <P>Check out <A HREF="https://www.tldrlegal.com/l/mpl-1.1">the
 tl;drLegal page on the MPL 1.1</A>.</P>
 
-<br>
-<br>
-<br>
-</div></BODY>
+</BODY>
+</HTML>

@@ -6,7 +6,7 @@ output = open('./out.htm', 'w+')
 # parse headers from input file
 with open(filename, 'r') as input:
 	data = input.read()
-	pattern = re.compile(r"name=m([0-9]+)")
+	pattern = re.compile(r"name=m([0-9]{2,3})")
 	i = 0
 	for line in data.splitlines():
 		n = pattern.search(line)
