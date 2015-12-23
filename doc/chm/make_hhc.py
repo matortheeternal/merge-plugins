@@ -37,9 +37,10 @@ with open(filename, 'r') as input:
 			
 			# produce li
 			link = h.a['name']
+			name = h.text.strip().replace("\n", " ").replace(",", "").replace("-", " ")
 			ws = '  ' * level
 			output.write(ws + '<LI> <OBJECT type="text/sitemap">\n')
-			output.write(ws + '	 <param name="Name" value="' + h.text + '">\n')
+			output.write(ws + '	 <param name="Name" value="' + name + '">\n')
 			output.write(ws + '	 <param name="Local" value="' + filename + '#' + link + '">\n')
 			output.write(ws + '	 </OBJECT>\n')
 			current_level = level

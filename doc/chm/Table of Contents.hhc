@@ -223,7 +223,7 @@
       	 <param name="Local" value="1.htm#m48">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Entry Fields ">
+      	 <param name="Name" value="Entry Fields">
       	 <param name="Local" value="1.htm#m49">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
@@ -244,8 +244,7 @@
     	 <param name="Local" value="1.htm#m53">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
-    	 <param name="Name" value="
-Options Window	">
+    	 <param name="Name" value="Options Window">
     	 <param name="Local" value="1.htm#m54">
     	 </OBJECT>
     <UL>
@@ -353,8 +352,7 @@ Options Window	">
     	 <param name="Local" value="1.htm#m78">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
-    	 <param name="Name" value="
-File-specific Assets">
+    	 <param name="Name" value="File specific Assets">
     	 <param name="Local" value="1.htm#m79">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
@@ -385,8 +383,7 @@ File-specific Assets">
       	 <param name="Local" value="1.htm#m85">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="GetFormFromFile
-isn't Handled">
+      	 <param name="Name" value="GetFormFromFile isn't Handled">
       	 <param name="Local" value="1.htm#m86">
       	 </OBJECT>
     </UL>
@@ -434,8 +431,7 @@ isn't Handled">
         	 </OBJECT>
       </UL>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="
-Mod Organizer Post-Merge Steps">
+      	 <param name="Name" value="Mod Organizer Post Merge Steps">
       	 <param name="Local" value="1.htm#m96">
       	 </OBJECT>
       <UL>
@@ -459,8 +455,7 @@ Mod Organizer Post-Merge Steps">
         	 </OBJECT>
       </UL>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="
-Nexus Mod Manager Post-Merge Steps">
+      	 <param name="Name" value="Nexus Mod Manager Post Merge Steps">
       	 <param name="Local" value="1.htm#m101">
       	 </OBJECT>
       <UL>
@@ -582,13 +577,11 @@ Nexus Mod Manager Post-Merge Steps">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Latest
-english.lang">
+      	 <param name="Name" value="Latest english.lang">
       	 <param name="Local" value="1.htm#m127">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Notepad++
-Environment">
+      	 <param name="Name" value="Notepad++ Environment">
       	 <param name="Local" value="1.htm#m128">
       	 </OBJECT>
       <UL>
@@ -597,7 +590,7 @@ Environment">
         	 <param name="Local" value="1.htm#m129">
         	 </OBJECT>
         <LI> <OBJECT type="text/sitemap">
-        	 <param name="Name" value="User-defined Language">
+        	 <param name="Name" value="User defined Language">
         	 <param name="Local" value="1.htm#m130">
         	 </OBJECT>
       </UL>
@@ -616,8 +609,7 @@ Environment">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="GitHub,
-Hipchat, and Forums">
+      	 <param name="Name" value="GitHub Hipchat and Forums">
       	 <param name="Local" value="1.htm#m134">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">

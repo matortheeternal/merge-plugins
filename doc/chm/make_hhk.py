@@ -21,8 +21,9 @@ with open(filename, 'r') as input:
 	for h in headers:
 		if h.a != None:
 			link = h.a['name']
+			name = h.text.strip().replace("\n", " ").replace(",", "").replace("-", " ")
 			output.write('<LI> <OBJECT type="text/sitemap">\n')
-			output.write('     <param name="Name" value="' + h.text + '">\n')
+			output.write('     <param name="Name" value="' + name + '">\n')
 			output.write('     <param name="Local" value="' + filename + '#' + link + '">\n')
 			output.write('     </OBJECT>\n')
 			output.write('     \n')
