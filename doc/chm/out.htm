@@ -729,6 +729,24 @@ Popup Menu&rdquo;.</P>
 
 
 <H2>Splash Window<A NAME="m00"></A></H2>
+<P>The splash will be displayed after a merge
+profile has been chosen.  The splash shows the progress of automatic
+updates as well as the loading of plugins, merges, and plugin
+information.  It also displays the version of the application.  The
+splash should close automatically and open the main application
+window after 10-30 seconds, depending on the size of your load order
+and your system specs.
+</P>
+
+<H3>Automatic Updates<A NAME="m00"></A></H3>
+<P>If you have enabled automatic updates in your settings, the
+application will attempt to connect to the server and get any
+dictionary or program updates that are available.  If there is a
+program update, the application will restart, taking you back to the
+profile screen.</P>
+
+
+<H2>Main Application Window<A NAME="m00"></A></H2>
 <P>The Main Application Window is the location
 from which you can interface with all of the functionality offered by
 Merge Plugins, and is the window that is shown after you've selected
@@ -2430,8 +2448,125 @@ the header will differ.</P>
 <P>[User: {{user}}] [Records: {{records}}] [Version: {{version}}]</P>
 
 <H2>Report Window<A NAME="m00"></A></H2>
-<P>Edit Merge Window
-<A NAME="m00"></A></H2>
+<P>The Report Window is used to create reports on
+the merge-ability of plugins to be submitted to the Merge Plugins
+server, where it is later built into the dictionary file.
+</P>
+<TABLE>
+	<COL WIDTH=133>
+	<COL WIDTH=514>
+	<TR VALIGN=TOP>
+		<TH>
+			<P>Element</P>
+		</TH>
+		<TH>
+			<P>Description</P>
+		</TH>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Filename</P>
+		</TD>
+		<TD>
+			<P>The filename of the plugin you're reporting on.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Hash</P>
+		</TD>
+		<TD>
+			<P>The CRC32 hash of the plugin you're reporting
+			on.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Records</P>
+		</TD>
+		<TD>
+			<P>The number of records in the plugin you're
+			reporting on.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Flags</P>
+		</TD>
+		<TD>
+			<P>The flags associated with the plugin you're
+			reporting on, as a string.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Average rating</P>
+		</TD>
+		<TD>
+			<P>The average rating from existing user reports
+			on the plugin you're reporting on.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Number of reports</P>
+		</TD>
+		<TD>
+			<P>The number of reports that have already been
+			submitted on the plugin you're reporting on.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>View details</P>
+		</TD>
+		<TD>
+			<P>Opens the View Dictionary Window with a
+			filename filter for the plugin you're reporting on.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Rating</P>
+		</TD>
+		<TD>
+			<P>This is a drop-down where you can specify the
+			rating you want to submit for the plugin.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Notes</P>
+		</TD>
+		<TD>
+			<P>Notes on the merge-ability of the plugin for
+			your report.  You are required to enter at least 16 characters in
+			the notes field to create a report.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Next button</P>
+		</TD>
+		<TD>
+			<P>Proceed to reporting on the next plugin in the
+			reporting task you created.  Changes to &ldquo;Done&rdquo; when
+			you reach the last plugin.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD>
+			<P>Previous button</P>
+		</TD>
+		<TD>
+			<P>Go back to the report on the previous plugin in
+			the reporting task you created.</P>
+		</TD>
+	</TR>
+</TABLE>
+
+
+<H2>Edit Merge Window<A NAME="m00"></A></H2>
 <P STYLE="margin-bottom: 0in">The Edit Merge Window is used to edit
 the details of a merge.  Also see <A HREF="#4.5.Merging Methods|outline">Merging
 and Renumbering Methods</A>.</P>
@@ -2796,7 +2931,7 @@ you change the directories used by Merge Plugins.</P>
 
 <H3>Advanced Tab<A NAME="m00"></A></H3>
 
-<H4>Merge Profile <A NAME="m00"></A></H4>
+<H4>Merge Profile<A NAME="m00"></A></H4>
 <P>Provides the name of your currently active profile.  You can click
 the &ldquo;Switch merge profiles&rdquo; button to restart the
 application and go to the <A HREF="#3.1.Select Profile Window|outline">Select
@@ -3708,8 +3843,68 @@ the Merge Plugins executable or in Mod Organizer.</P>
 </TABLE>
 
 <H3>Arguments with Mod Organizer<A NAME="m00"></A></H3>
-<P>Click on the Modify Executables button.
+<P>If you use Mod Organizer you can configure the
+Merge Plugins executable to have the arguments you want from the
+Arguments text box in the Modify Executables Window.  See <A HREF="#5.1.2.1.Starting Merge Plugins through Mod Organizer|outline">Starting
+Merge Plugins through Mod Organizer</A> for more information.
+</P>
+
+<H3>Arguments with Shortcuts<A NAME="m00"></A></H3>
+<P>If you don't use Mod Organizer you can apply a target line
+parameter to a shortcut to Merge Plugins.</P>
+<OL>
+	<LI><P>Go to the directory where you installed Merge Plugins, right
+	click the Merge Plugins executable, and choose Create Shortcut.  
 	</P>
+	<LI><P>Move the shortcut wherever you want, and rename it as you see
+	fit.</P>
+	<LI><P>Right-click the shortcut and choose properties.</P>
+	<LI><P>At the end of the Target text box type a space
+	and then the target line parameter you want to use.  E.g. -profile
+	SkyrimProfile
+	</P>
+</OL>
+
+
+<H1>Tutorials<A NAME="m00"></A></H1>
+
+<H2>Merging with a Mod Manager<A NAME="m00"></A></H2>
+<P>Using Mod Organizer or Nexus Mod
+Manager v0.60a+ will allow you to set up the Mod Manager integration,
+which helps Merge Plugins to better interface with your mods.</P>
+<P>Mod Organizer and Nexus Mod Manager's virtual mod installations
+allow Merge Plugins to associate assets with specific ESP files.  As
+a result, you can easily create entirely independent, encapsulated
+merged mods where you'd normally have to do manual asset copying.</P>
+
+<H3>Mod Organizer Advantages<A NAME="m00"></A></H3>
+<P>Mod Organizer's arbitrary BSA loading allows you to create merges
+without having to extract the BSAs of the ESPs merged.  This will
+save on hard drive space, keep your merged mods cleaner, and allow
+you to specify asset priority between the assets in the BSAs from the
+merged plugins after merging. Using the Mod Organizer integration
+also requires fewer post-merge steps, with merged mods made available
+in Mod Organizer's mods list immediately after merging.</P>
+
+<H3>Mod Organizer Integration Set Up<A NAME="m00"></A></H3>
+
+<H4>Starting Merge Plugins through Mod Organizer<A NAME="m00"></A></H4>
+<OL>
+	<LI><P>Click on the Modify Executables button.
+	</P>
+	<LI><P>Enter the title &ldquo;Merge Plugins&rdquo;
+	and click the first [ &hellip; ] button to specify the location of
+	the Merge Plugins binary.
+	</P>
+	<LI><P>Click Add and close the window.</P>
+	<LI><P>When you want to start Merge Plugins, select
+	it from the drop-down menu and click Run.
+	</P>
+</OL>
+
+<H4>Configuring the Mod Organizer Integration<A NAME="m00"></A></H4>
+<OL>
+	<LI><P>Run Merge Plugins through Mod Organizer.</P>
 	<LI><P>Open the <A HREF="#3.8.Options Window |outline">Options
 	Window</A> and go to the Integrations Tab.
 	</P>
@@ -4502,8 +4697,6 @@ API.</P>
 <H3>Plain English<A NAME="m00"></A></H3>
 <P STYLE="margin-bottom: 0in">Check out <A HREF="https://www.tldrlegal.com/l/mpl-1.1">the
 tl;drLegal page on the MPL 1.1</A>.</P>
-<DIV TYPE=FOOTER>
-	<P ALIGN=CENTER STYLE="margin-top: 0.2in; margin-bottom: 0in"><SDFIELD TYPE=PAGE SUBTYPE=RANDOM FORMAT=PAGE>v</SDFIELD></P>
-</DIV>
+
 </BODY>
 </HTML>
