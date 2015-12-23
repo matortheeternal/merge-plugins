@@ -22,7 +22,7 @@ with open(filename, 'r') as input:
 	# replace redundant newlines
 	data = re.sub('<P( STYLE="margin-bottom: 0in"){0,1}>(<BR>)*(\n)*(<BR>)*</P>', '\n', data)
 	# replace redundant table cell widths
-	data = re.sub("<T(D|H) WIDTH=([0-9]{1,3})>", "<T\\1>", data)
+	data = re.sub("<T(D|H) WIDTH=([0-9]{1,3})(%){0,1}>", "<T\\1>", data)
 	# replace refheading links
 	data = re.sub('<A NAME="__RefHeading__([0-9]{1,4})_([0-9]{1,10})"></A>', '', data)
 	# replace class tableText
