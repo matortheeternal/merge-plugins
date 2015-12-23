@@ -40,6 +40,8 @@ with open(filename, 'r') as input:
 	# remove newlines from headers
 	data = re.sub('<H([1-5])>([\w| ]*)\n([\w| |?]*)(\n){0,1}<A NAME="m00"></A></H([1-5])>', '<H\\1>\\2 \\3<A NAME="m00"></A></H\\5>', data)
 	data = re.sub('<H([1-5])>( ){0,1}([\w| ]*)<A NAME="m00"></A></H([1-5])>', '<H\\1>\\3<A NAME="m00"></A></H\\4>', data)
+	# trim maximum newline count to 2 blank lines
+	data = re.sub('(\n){4,12}', '\n\n\n', data)
 	
 	# write data to output
 	output.write(data)
