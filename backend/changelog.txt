@@ -52,3 +52,27 @@ Version 2.0.2.37
   - Now handles initialization exceptions better, so you'll know when the program has borked up
   - Program updates will now properly extract ALL files from the program zip archive to relative directories
   - Profiles now get sent to the recycle bin instead of deleted permanently
+
+Version 2.1.1.0
+  - Fixed TESV_Papyrus_Flags browse filter, added All files (*.*) filter
+  - Fixed bug with copy general assets using the game's data directory in certain cases
+  - Created plugin selection form
+  - Added type-to-search to all list views
+  - Added help integrations/documentation framework
+  - Completed documentation
+  - Added Verify File Access button to merging tab
+  - Integration-dependent options are now disabled if the integrations they depend on aren't set up
+  - We now open the Options Form when a new profile has been created
+  - When editing/creating a merge, a filename missing .esp at the end is now invalid, and entering the TEdit highlights the text before the .esp file extension
+  - Added -profile target line parameter
+  - Added -offline target line parameter
+  - OK button of Options Form is now disabled if the Mod Manager integration is invalid
+  - Fixed integration detection exception, and the annoying disk prompt that would sometimes come up when detecting integrations
+  - Balloon hints are now hidden when the user brings up a child form
+  - Added NMM integration for Nexus Mod Manager v0.60a+
+  - Changed the TDetailsListEditor into a virtual TStringGrid, allowing for link styling and (nearly) unlimited rows (allowing us to remove the limitation on the Files and Errors sections for merges)
+  - Heavily refactored the entire project
+  - Logs now saved to separate folders
+  - Fixed asset copying being backwards
+  - Made it so resetting user registration re-registers them if possible
+  - Fixed script fragment copying targetting the merged plugin instead of the plugins that were merged
