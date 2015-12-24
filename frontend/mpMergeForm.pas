@@ -161,6 +161,9 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure DetailsGridDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
+    procedure DetailsCopyToClipboardItemClick(Sender: TObject);
+    procedure DetailsGridMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
     // PLUGINS LIST VIEW EVENTS
     procedure UpdatePluginDetails;
     procedure AddPluginsToMerge(var merge: TMerge);
@@ -239,10 +242,7 @@ type
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     procedure ToggleAutoScrollItemClick(Sender: TObject);
-    procedure DetailsCopyToClipboardItemClick(Sender: TObject);
     procedure ImageDisconnectedClick(Sender: TObject);
-    procedure DetailsGridMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
   protected
     procedure WMSize(var AMessage: TMessage); message WM_SIZE;
     procedure WMMove(var AMessage: TMessage); message WM_MOVE;
