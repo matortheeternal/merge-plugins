@@ -54,6 +54,7 @@ Version 2.0.2.37
   - Profiles now get sent to the recycle bin instead of deleted permanently
 
 Version 2.1.1.0
+  - Official public release
   - Fixed TESV_Papyrus_Flags browse filter, added All files (*.*) filter
   - Fixed bug with copy general assets using the game's data directory in certain cases
   - Created plugin selection form
@@ -75,4 +76,4 @@ Version 2.1.1.0
   - Logs now saved to separate folders
   - Fixed asset copying being backwards
   - Made it so resetting user registration re-registers them if possible
-  - Fixed script fragment copying targetting the merged plugin instead of the plugins that were merged
+  - Fixed script fragment copying targeting the merged plugin instead of the plugins that were merged
