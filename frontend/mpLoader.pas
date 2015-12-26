@@ -134,8 +134,11 @@ begin
 
   // GET LOAD ORDER PATH
   sLoadPath := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\';
-  if not (settings.usingMO and FileExists(sLoadPath)) then
+  if (not settings.usingMO) or (not DirectoryExists(sLoadPath)) then begin
+    if settings.usingMO then
+      Logger.Write('GENERAL', 'Load Order', 'Couldn''t find MO profile folder '+sLoadPath);
     sLoadPath := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName+'\';
+  end;
   Logger.Write('GENERAL', 'Load Order', 'Using '+sLoadPath);
 
   // LOAD LIST OF ACTIVE PLUGINS (plugins.txt)
@@ -164,12 +167,15 @@ begin
   RemoveMissingFiles(slLoadOrder);
   AddMissingFiles(slLoadOrder);
 
-  // if GameMode is not Skyrim sort by date modified
-  // else add Update.esm and Skyrim.esm to load order
+  // if GameMode is not Skyrim and user isn't using MO,
+  // sort by date modified else add Update.esm and
+  // Skyrim.esm to load order if they're missing
   if wbGameMode <> gmTES5 then begin
-    GetPluginDates(slPlugins);
-    slPlugins.CustomSort(PluginListCompare);
-    slLoadOrder.CustomSort(PluginListCompare);
+    if not settings.usingMO then begin
+      GetPluginDates(slPlugins);
+      slPlugins.CustomSort(PluginListCompare);
+      slLoadOrder.CustomSort(PluginListCompare);
+    end;
   end
   else begin
     if slLoadOrder.IndexOf('Update.esm') = -1 then
