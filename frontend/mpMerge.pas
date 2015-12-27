@@ -80,28 +80,42 @@ begin
   end;
 end;
 
-procedure RenumberRecord(aRecord: IwbMainRecord; NewFormID: cardinal);
+procedure RenumberRecord(var merge: TMerge; aRecord: IwbMainRecord;
+  NewFormID: cardinal);
 var
   OldFormID: cardinal;
-  prc, i: integer;
+  i: integer;
+  sFail: string;
 begin
   OldFormID := aRecord.LoadOrderFormID;
-  // change references, then change form
-  prc := 0;
-  while aRecord.ReferencedByCount > 0 do begin
-    if prc = aRecord.ReferencedByCount then break;
-    prc := aRecord.ReferencedByCount;
+
+  // change references
+  for i := Pred(aRecord.ReferencedByCount) downto 0 do begin
     if settings.debugRenumbering then
-      Tracker.Write('      Changing reference on '+aRecord.ReferencedBy[0].Name);
-    aRecord.ReferencedBy[0].CompareExchangeFormID(OldFormID, NewFormID);
+      Tracker.Write('      Changing reference on '+aRecord.ReferencedBy[i].Name);
+    aRecord.ReferencedBy[i].CompareExchangeFormID(OldFormID, NewFormID);
   end;
-  if (aRecord.ReferencedByCount > 0) and settings.debugRenumbering then
-     Tracker.Write('      Couldn''t change reference: '+aRecord.ReferencedBy[0].Name);
+
+  // log references that couldn't be changed
+  if aRecord.ReferencedByCount > 0 then begin
+    sFail := 'Failed to change some references on '+aRecord.Name;
+    merge.fails.Add(sFail);
+    Tracker.Write('    '+sFail);
+    for i := 0 to Pred(aRecord.ReferencedByCount) do begin
+      sFail := 'Couldn''t change reference: '+aRecord.ReferencedBy[i].Name;
+      merge.fails.Add('  '+sFail);
+      Tracker.Write('      '+sFail);
+    end;
+  end;
+
+  // correct overrides
   for i := Pred(aRecord.OverrideCount) downto 0 do begin
     if settings.debugRenumbering then
       Tracker.Write('      Renumbering override in file: '+aRecord.Overrides[i]._File.Name);
     aRecord.Overrides[i].LoadOrderFormID := NewFormID;
   end;
+
+  // change formID
   aRecord.LoadOrderFormID := NewFormID;
 end;
 
@@ -119,11 +133,14 @@ var
   header: IwbContainer;
 begin
   if Tracker.Cancel then exit;
+
   // inital messages
   bRenumberAll := merge.renumbering = 'All';
   Tracker.Write(' ');
-  if bRenumberAll then Tracker.Write('Renumbering All FormIDs')
-  else Tracker.Write('Renumbering Conflicting FormIDs');
+  if bRenumberAll then
+    Tracker.Write('Renumbering All FormIDs')
+  else
+    Tracker.Write('Renumbering Conflicting FormIDs');
 
   // initialize variables
   total := 0;
@@ -156,7 +173,7 @@ begin
       if aRecord.Signature = 'TES4' then continue;
       if IsOverride(aRecord) then continue;
       OldFormID := LocalFormID(aRecord);
-      // skip records that aren't conflicting if not renumberAll
+      // skip records that aren't conflicting if not bRenumberAll
       if (not bRenumberAll) and (UsedFormIDs[OldFormID] = 0) then begin
         UsedFormIDs[OldFormID] := 1;
         Tracker.UpdateProgress(1);
@@ -170,7 +187,7 @@ begin
       if settings.debugRenumbering then
         Tracker.Write('    Changing FormID to ['+IntToHex(NewFormID, 8)+'] on '+aRecord.Name);
       merge.map.Add(IntToHex(OldFormID, 8)+'='+IntToHex(BaseFormID, 8));
-      RenumberRecord(aRecord, NewFormID);
+      RenumberRecord(merge, aRecord, NewFormID);
 
       // increment BaseFormID, totals, tracker position
       Inc(BaseFormID);
@@ -892,6 +909,7 @@ var
   mElement: IwbElement;
   mRecord: IwbMainRecord;
   oldLoadID, newLoadID, oldID, newID: string;
+  bIsDuplicateException: boolean;
 begin
   try
     // detect conflicting navmeshes
@@ -914,8 +932,11 @@ begin
       merge.lmap.Values[oldLoadID] := newLoadID;
     end;
   except on x : Exception do begin
-      Tracker.Write('    Exception copying '+aRecord.Name+': '+x.Message);
-      merge.fails.Add(aRecord.Name+': '+x.Message);
+      bIsDuplicateException := Pos('Duplicate FormID', x.Message) = 1;
+      if (not bIsDuplicateException) or settings.debugRenumbering then begin
+        Tracker.Write('    Exception copying '+aRecord.Name+': '+x.Message);
+        merge.fails.Add(aRecord.Name+': '+x.Message);
+      end;
     end;
   end;
 end;

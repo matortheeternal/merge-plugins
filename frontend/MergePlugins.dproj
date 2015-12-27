@@ -118,6 +118,16 @@
 			<DCCReference Include="mpConfiguration.pas"/>
 			<DCCReference Include="mpLoader.pas"/>
 			<None Include="ModelSupport_MergePlugins\default.txvpck"/>
+			<None Include="ModelSupport_MergePlugins\mpCore\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpProfilePanel\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpThreads\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpClient\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpProfileForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpReportForm\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpLoader\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpConfiguration\default.txaPackage"/>
+			<None Include="ModelSupport_MergePlugins\mpResolveForm\default.txaPackage"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -150,7 +160,7 @@
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">1</VersionInfo>
 						<VersionInfo Name="Release">1</VersionInfo>
-						<VersionInfo Name="Build">1</VersionInfo>
+						<VersionInfo Name="Build">12</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -162,7 +172,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.1.1.1</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.1.1.12</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
