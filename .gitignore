@@ -74,3 +74,5 @@ frontend/TES4Dictionary.txt
 frontend/TES5Dictionary.txt
 frontend/doc/
 doc/chm/Merge Plugins Documentation.chw
+*.txaPackage
+*.txvpck
