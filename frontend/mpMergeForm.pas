@@ -2832,7 +2832,7 @@ begin
   for i := 0 to Pred(PluginsList.Count) do begin
     plugin := TPlugin(PluginsList[i]);
     Logger.Write('PLUGIN', 'Check', 'Checking for errors in '+plugin.filename);
-    if (IS_BLACKLISTED in plugin.flags) or (HAS_ERRORS in plugin.flags) then
+    if (IS_BLACKLISTED in plugin.flags) or (plugin.HasBeenCheckedForErrors) then
       continue;
     pluginsToHandle.Add(plugin);
     timeCosts.Add(IntToStr(plugin._File.RecordCount));
