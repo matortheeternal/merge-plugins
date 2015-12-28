@@ -452,7 +452,6 @@ end;
 procedure TMergeForm.WMActivateApp(var AMessage: TMessage);
 begin
   if bCreated and (Now - LastMessageTime > MessageDelay) then begin
-    Repaint;
     LastMessageTime := Now;
     if AMessage.WParam = 1 then
       DisplayHints
