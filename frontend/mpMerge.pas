@@ -1938,7 +1938,12 @@ var
   i: integer;
   path: string;
 begin
-  // delete files
+  // delete merge\ folder
+  path := merge.dataPath + 'merge\';
+  if DirectoryExists(path) then
+    DeleteDirectory(path);
+
+  // delete asset files
   for i := Pred(merge.files.Count) downto 0 do begin
     path := merge.files[i];
     if FileExists(path) then
