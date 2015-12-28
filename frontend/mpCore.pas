@@ -505,7 +505,6 @@ begin
   navConflicts.Free;
   fails.Free;
   ignoredDependencies.Free;
-  plugin.Free;
   inherited;
 end;
 
