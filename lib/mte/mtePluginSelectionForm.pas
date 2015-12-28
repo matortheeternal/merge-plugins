@@ -158,7 +158,7 @@ begin
         // if master is not found, continue
         if (index = -1) then
           continue;
-        // if master is unchecked, ad to slDisabled
+        // if master is unchecked, add to slDisabled
         MasterItem := TPluginListItem(ListItems[index]);
         if MasterItem.StateIndex = cUnChecked then
           slDisabled.Add(sl[j]);
@@ -533,6 +533,10 @@ begin
   // set plugin count for display
   lvPlugins.Items.Count := slAllPlugins.Count;
   ListView_CorrectWidth(lvPlugins);
+
+  // update disabled
+  UpdateDisabled;
+  lvPlugins.Repaint;
 end;
 
 procedure TPluginSelectionForm.CheckAllItemClick(Sender: TObject);
