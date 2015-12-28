@@ -3052,6 +3052,7 @@ begin
     LocalStatus := TmpStatus.Create;
     CompareStatuses;
     UpdatePluginData;
+    UpdateQuickbar;
     UpdateListViews;
   end;
 
