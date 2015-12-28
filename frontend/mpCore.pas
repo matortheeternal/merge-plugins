@@ -199,6 +199,8 @@ const
   ForcedStatuses = [msUpToDateForced, msRebuildReadyForced];
   ResolveStatuses = [msNoPlugins, msDirInvalid, msUnloaded, msErrors,
     msNotContiguous, msBreaksDependencies, msCheckErrors];
+  ImmutableStauses = [msUpToDateForced, msRebuildReadyforced, msFailed,
+    msCanceled, msBuilt];
 
 var
   Dictionary, Blacklist, MergesList: TList;
@@ -642,7 +644,7 @@ var
   plugin: TPlugin;
   bBrokeDependencies: boolean;
 begin
-  if (status = msBuilt) or (status = msCanceled) then
+  if (status in ImmutableStauses) then
     exit;
   Logger.Write('MERGE', 'Status', name + ' -> Getting status');
   status := msUnknown;

@@ -1727,8 +1727,7 @@ begin
     // sort plugins in merge
     merge.SortPlugins;
     // get status of each merge
-    if not (merge.status in ForcedStatuses) then
-      merge.GetStatus;
+    merge.GetStatus;
   end;
 end;
 
