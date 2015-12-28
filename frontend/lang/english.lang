@@ -386,6 +386,8 @@ mpRes_btnOK_Caption=OK
 { ## Broken Dependencies Tab ## }
 mpRes_tsBrokenDependencies_Caption=Broken dependencies
 mpRes_lblBrokenDependencies_Caption=Your merge breaks the dependencies of other plugins in your load order.  You can either remove the problematic plugins from the merge or add dependent plugins to the merge.
+mpRes_lvBrokenDependencies_Column0=Plugin filename
+mpRes_lvBrokenDependencies_Column1=Broken dependency
 { ## Broken Dependencies Popup Menu ## }
 mpRes_IgnoreDependencyItem_Caption=Ignore dependency
 mpRes_RemoveBreakingPluginItem_Caption=Remove plugin from merge
@@ -394,9 +396,14 @@ mpRes_AddDependencyItem_Caption=Add dependency to merge
 mpRes_tsNonContiguous_Caption=Non-contiguous plugins
 mpRes_lblNonContiguous_Caption=Your merge has non-contiguous plugins in it.  It is highly recommended to only merge plugins that are contiguous to avoid issues in the resulting merged plugin.  You will have to adjust your load order and restart Merge Plugins to resolve this.
 mpRes_btnIgnoreContiguous_Caption=Ignore
+mpRes_lvNonContiguous_Column0=Load order
+mpRes_lvNonContiguous_Column1=Plugin filename
+mpRes_lvNonContiguous_Column1=Severity
 { ## Plugin Errors Tab ## }
 mpRes_tsPluginErrors_Caption=Plugin errors
 mpRes_lblPluginErrors_Caption=You need to check all plugins in your merge for errors before you can build the merge.  Plugins with errors may not merge properly - some content may be lost!  You can have merge plugins attempt to fix errors in plugins, or remove plugins with errors from your merge.  Ignore errors in plugins at your own risk!
+mpRes_lvPluginErrors_Column0=Error status
+mpRes_lvPluginErrors_Column1=Plugin filename
 { ## Plugin Errors Popup Menu ## }
 mpRes_IgnoreErrorsItem_Caption=Ignore errors
 mpRes_RemoveErrorsPluginItem_Caption=Remove plugin from merge
@@ -405,6 +412,8 @@ mpRes_FixErrorsItem_Caption=Fix errors in plugin
 { ## Other Issues Tab ## }
 mpRes_tsOtherIssues_Caption=Other issues
 mpRes_lblOtherIssues_Caption=Your merge has other issues that make it so you cannot build it.  Perhaps there are plugins in this merge that aren't loaded, or your directories are invalid, or your merge has no plugins in it.
+mpRes_lvOtherIssues_Column0=Issue
+mpRes_lvOtherIssues_Column1=Details
 { ## Other Issues Popup Menu ## }
 mpRes_RemoveUnloadedPluginItem_Caption=Remove plugin
 { #### DYNAMIC #### }
