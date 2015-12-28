@@ -123,6 +123,10 @@ object ResolveForm: TResolveForm
           item
             AutoSize = True
             Caption = 'Plugin filename'
+          end
+          item
+            Caption = 'Severity'
+            Width = 100
           end>
         ColumnClick = False
         DoubleBuffered = True

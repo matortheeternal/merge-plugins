@@ -84,12 +84,13 @@ uses
 {$R *.dfm}
 
 var
-  bBrokenDependencies, bNonContiguous, bPluginErrors, bOtherIssues: boolean;
+  bBrokenDependencies, bNonContiguous, bPluginErrors, bOtherIssues,
+  bNonContiguousCritical: boolean;
 
 procedure TResolveForm.EvaluateMergeIssues;
 var
-  i, j, currentLoadOrder, lastLoadOrder: Integer;
-  plugin: TPlugin;
+  i, j, currentLoadOrder, lastLoadOrder, firstLoadOrder: Integer;
+  plugin, master: TPlugin;
   ListItem: TListItem;
   fn: string;
 begin
@@ -100,6 +101,7 @@ begin
   lvOtherIssues.Items.Clear;
   bBrokenDependencies := false;
   bNonContiguous := false;
+  bNonContiguousCritical := false;
   bPluginErrors := false;
   bOtherIssues := false;
 
@@ -137,6 +139,7 @@ begin
   end;
 
   // loop through plugins
+  firstLoadOrder := -1;
   lastLoadOrder := -1;
   for i := 0 to Pred(merge.plugins.Count) do begin
     plugin := PluginByFilename(merge.plugins[i]);
@@ -153,10 +156,37 @@ begin
 
     // check if plugins are contiguous
     currentLoadOrder := plugin._File.LoadOrder;
+    if firstLoadOrder = -1 then
+      firstLoadOrder := currentLoadOrder;
     if (lastLoadOrder > -1) and (not merge.bIgnoreNonContiguous)
     and (currentLoadOrder - lastLoadOrder <> 1) then
       bNonContiguous := true;
     lastLoadOrder := currentLoadOrder;
+
+    if bNonContiguous then begin
+      // add non-contiguous list items
+      ListItem := lvNonContiguous.Items.Add;
+      ListItem.Caption := IntToStr(plugin._File.LoadOrder);
+      ListItem.SubItems.Add(plugin.filename);
+
+      // check if plugins are critically non-contiguous
+      // this is when masters of the plugins being merged are interpolated
+      // between plugins being merged, but are not in the merge themselves
+      for j := 0 to Pred(plugin.masters.Count) do begin
+        fn := plugin.masters[j];
+        if merge.plugins.IndexOf(fn) = -1 then begin
+          master := PluginByFileName(fn);
+          if master._File.LoadOrder > firstLoadOrder then begin
+            bNonContiguousCritical := true;
+            ListItem.SubItems.Add('Critical');
+          end;
+        end;
+      end;
+
+      // add Minor subitem if not Critical
+      if ListItem.SubItems.Count = 1 then
+        ListItem.SubItems.Add('Minor');
+    end;
 
     // check if plugins break dependencies
     for j := 0 to Pred(plugin.requiredBy.Count) do begin
@@ -185,21 +215,6 @@ begin
     end;
   end;
 
-  // add plugins to non-contiguous list
-  if bNonContiguous then begin
-    for i := 0 to Pred(merge.plugins.Count) do begin
-      plugin := PluginByFilename(merge.plugins[i]);
-
-      // skip plugin if not loaded
-      if not Assigned(plugin) then
-        continue;
-
-      ListItem := lvNonContiguous.Items.Add;
-      ListItem.Caption := IntToStr(plugin._File.LoadOrder);
-      ListItem.SubItems.Add(plugin.filename);
-    end;
-  end;
-
   // set active page
   if bBrokenDependencies then
     ResolvePageControl.ActivePage := tsBrokenDependencies
@@ -219,6 +234,7 @@ begin
   tsNonContiguous.TabVisible := bNonContiguous;
   tsPluginErrors.TabVisible := bPluginErrors;
   tsOtherIssues.TabVisible := bOtherIssues;
+  btnIgnoreContiguous.Enabled := not bNonContiguousCritical;
 
   // correct list view widths
   ListView_CorrectWidth(lvBrokenDependencies);
