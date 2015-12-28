@@ -2432,8 +2432,9 @@ var
   mergeNames: string;
   bApproved: boolean;
   mergesToDelete: TList;
+  frmDialog: TForm;
 begin
-  // see how many merges the user selected
+  // figure out which merges the user selected
   bApproved := false;
   mergesToDelete := TList.Create;
   mergeNames := '';
@@ -2445,10 +2446,15 @@ begin
       mergeNames := mergeNames + #13#10'    - ' + merge.name;
     end;
 
-  // show multi-merge prompt if multiple merges selected
-  if mergesToDelete.Count > 0 then
-    bApproved := MessageDlg(GetLanguageString('mpMain_DeleteMerges') + mergeNames, mtConfirmation,
-      mbOKCancel, 0) = mrOk;
+  // prompt user if a merge was selected
+  if mergesToDelete.Count > 0 then begin
+    frmDialog := CreateMessageDialog(GetLanguageString('mpMain_DeleteMerges') + mergeNames,
+      mtConfirmation, mbOKCancel, mbOk);
+    frmDialog.PopupParent := self;
+    ToggleFormState(false);
+    bApproved := frmDialog.ShowModal = mrOk;
+    ToggleFormState(true);
+  end;
 
   // exit if user didn't approve deletion
   if not bApproved then
