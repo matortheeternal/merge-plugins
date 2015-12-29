@@ -173,8 +173,9 @@ function ShortenVersion(vs: string; numClauses: Integer): string;
 var
   i, numDots: Integer;
 begin
+  Result := '';
   numDots := 0;
-  for i := 0 to Pred(Length(vs)) do begin
+  for i := 1 to Pred(Length(vs)) do begin
     if vs[i] = '.' then
       Inc(numDots);
     if numDots = numClauses then
