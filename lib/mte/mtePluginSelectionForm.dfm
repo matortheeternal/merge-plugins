@@ -80,6 +80,7 @@ object PluginSelectionForm: TPluginSelectionForm
     OnClick = btnOKClick
   end
   object PluginsPopupMenu: TPopupMenu
+    OnPopup = PluginsPopupMenuPopup
     Left = 48
     Top = 24
     object CheckAllItem: TMenuItem
@@ -94,6 +95,31 @@ object PluginSelectionForm: TPluginSelectionForm
       Caption = 'Toggle all'
       OnClick = ToggleAllItemClick
     end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object MastersItem: TMenuItem
+      Caption = 'Masters'
+      object CheckMastersItem: TMenuItem
+        Caption = 'Check masters'
+        OnClick = CheckMastersItemClick
+      end
+      object UncheckMastersItem: TMenuItem
+        Caption = 'Uncheck masters'
+        OnClick = UncheckMastersItemClick
+      end
+    end
+    object DependenciesItem: TMenuItem
+      Caption = 'Dependencies'
+      object CheckDependenciesItem: TMenuItem
+        Caption = 'Check dependencies'
+        OnClick = CheckDependenciesItemClick
+      end
+      object UncheckDependenciesItem: TMenuItem
+        Caption = 'Uncheck dependencies'
+        OnClick = UncheckDependenciesItemClick
+      end
+    end
   end
   object StateImages: TImageList
     Height = 17
@@ -101,7 +127,7 @@ object PluginSelectionForm: TPluginSelectionForm
     Left = 136
     Top = 24
     Bitmap = {
-      494C0101030034005C0011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103003400600011001100FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000440000001100000001002000000000001012
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

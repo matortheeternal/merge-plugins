@@ -25,6 +25,13 @@ type
     UncheckAllItem: TMenuItem;
     ToggleAllItem: TMenuItem;
     StateImages: TImageList;
+    MastersItem: TMenuItem;
+    N1: TMenuItem;
+    CheckMastersItem: TMenuItem;
+    UncheckMastersItem: TMenuItem;
+    CheckDependenciesItem: TMenuItem;
+    UncheckDependenciesItem: TMenuItem;
+    DependenciesItem: TMenuItem;
     procedure LoadFields(aListItem: TPluginListItem; sPlugin: string);
     procedure UpdateDisabled;
     procedure FormShow(Sender: TObject);
@@ -47,6 +54,11 @@ type
     function GetMasterStatus(filename: string): Integer;
     procedure lvPluginsData(Sender: TObject; Item: TListItem);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure CheckMastersItemClick(Sender: TObject);
+    procedure UncheckMastersItemClick(Sender: TObject);
+    procedure CheckDependenciesItemClick(Sender: TObject);
+    procedure UncheckDependenciesItemClick(Sender: TObject);
+    procedure PluginsPopupMenuPopup(Sender: TObject);
   private
     { Private declarations }
     slMasters, slDependencies, slMissing, slDisabled: TStringList;
@@ -539,6 +551,16 @@ begin
   lvPlugins.Repaint;
 end;
 
+procedure TPluginSelectionForm.PluginsPopupMenuPopup(Sender: TObject);
+var
+  bHasMasters, bHasDependencies: Boolean;
+begin
+  bHasMasters := slMasters.Count > 0;
+  bHasDependencies := slDependencies.Count > 0;
+  MastersItem.Enabled := bHasMasters;
+  DependenciesItem.Enabled := bHasDependencies;
+end;
+
 procedure TPluginSelectionForm.CheckAllItemClick(Sender: TObject);
 var
   i: Integer;
@@ -571,6 +593,76 @@ begin
   for i := 0 to Pred(lvPlugins.Items.Count) do
     if slMissing.IndexOf(slAllPlugins[i]) = -1 then
       ToggleState(TPluginListItem(ListItems[i]));
+
+  // repaint to show updated checkbox state
+  UpdateDisabled;
+  lvPlugins.Repaint;
+end;
+
+procedure TPluginSelectionForm.CheckMastersItemClick(Sender: TObject);
+var
+  i, index: Integer;
+begin
+  // loop through masters of selected plugins
+  for i := 0 to Pred(slMasters.Count) do begin
+    index := slAllPlugins.IndexOf(slMasters[i]);
+    // if the masters isn't loaded, skip it
+    if index = -1 then
+      continue;
+    // else check it
+    TPluginListItem(ListItems[index]).StateIndex := cChecked;
+  end;
+
+  // repaint to show updated checkbox state
+  UpdateDisabled;
+  lvPlugins.Repaint;
+end;
+
+procedure TPluginSelectionForm.UncheckMastersItemClick(Sender: TObject);
+var
+  i, index: Integer;
+begin
+  // loop through masters of selected plugins
+  for i := 0 to Pred(slMasters.Count) do begin
+    index := slAllPlugins.IndexOf(slMasters[i]);
+    // if the masters isn't loaded, skip it
+    if index = -1 then
+      continue;
+    // else uncheck it
+    TPluginListItem(ListItems[index]).StateIndex := cUnChecked;
+  end;
+
+  // repaint to show updated checkbox state
+  UpdateDisabled;
+  lvPlugins.Repaint;
+end;
+
+procedure TPluginSelectionForm.CheckDependenciesItemClick(Sender: TObject);
+var
+  i, index: Integer;
+begin
+  // loop through dependencies of selected plugins
+  for i := 0 to Pred(slDependencies.Count) do begin
+    index := slAllPlugins.IndexOf(slDependencies[i]);
+    // check it
+    TPluginListItem(ListItems[index]).StateIndex := cChecked;
+  end;
+
+  // repaint to show updated checkbox state
+  UpdateDisabled;
+  lvPlugins.Repaint;
+end;
+
+procedure TPluginSelectionForm.UncheckDependenciesItemClick(Sender: TObject);
+var
+  i, index: Integer;
+begin
+  // loop through dependencies of selected plugins
+  for i := 0 to Pred(slDependencies.Count) do begin
+    index := slAllPlugins.IndexOf(slDependencies[i]);
+    // uncheck it
+    TPluginListItem(ListItems[index]).StateIndex := cUnChecked;
+  end;
 
   // repaint to show updated checkbox state
   UpdateDisabled;
