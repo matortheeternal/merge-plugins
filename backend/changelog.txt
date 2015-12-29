@@ -77,3 +77,21 @@ Version 2.1.1.0
   - Fixed asset copying being backwards
   - Made it so resetting user registration re-registers them if possible
   - Fixed script fragment copying targeting the merged plugin instead of the plugins that were merged
+
+Version 2.1.2.0
+  - Hotfix release
+  - Fixed issue with styles not drawing when plugin selection form initially appears
+  - Fixed load order being incorrect for FO3/FNV/TES4
+  - Fixed main application window not repainting when restored sometimes
+  - Updated the limitation section of the documentation
+  - Fixed some issues with record renumbering code that could cause issues when renumbering FormIDs, specifically when merging TES4 plugins.
+  - Fixed issue with merge deletion sometimes causing the program to freeze
+  - Fixed issue with Dictionary button not enabling when the user downloads a dictionary they didn't have using the Update Button
+  - Fixed list views on the Main Application window not repainting enough
+  - Improved non-contiguous plugin handling.  Critical non-contiguous issues can no longer be ignored
+  - Fixed Find Errors checking plugins that have already been checked for errors
+  - Resolved issue with the merge/ folder not being cleared when rebuilding a merge
+  - Fixed issue with the Delete Merge confirmation box sometimes being hidden behind the main application window
+  - The msFailed merge status is now immutable, as it should be.
+  - Added a note in the documentation about Copy General Assets being on the Integrations tab
+  - Fixed a critical issue with Merge version in submitted reports having a leading space, which caused the loss of some reports that were submitted over the last few days.
