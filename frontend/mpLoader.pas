@@ -173,6 +173,7 @@ begin
   if wbGameMode <> gmTES5 then begin
     if not settings.usingMO then begin
       GetPluginDates(slPlugins);
+      GetPluginDates(slLoadOrder);
       slPlugins.CustomSort(PluginListCompare);
       slLoadOrder.CustomSort(PluginListCompare);
     end;
@@ -510,8 +511,7 @@ begin
     Result := 1;
 end;
 
-{}
-
+{ Log Initialization }
 procedure InitLog;
 begin
   // INITIALIZE GROUP FILTERS
