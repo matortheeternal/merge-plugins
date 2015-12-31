@@ -56,6 +56,7 @@ procedure TEditForm.btnOkClick(Sender: TObject);
 begin
   if Assigned(merge) then begin
     merge.name := Trim(edName.Text);
+    merge.dataPath := settings.mergeDirectory + merge.name + '\';
     merge.filename := Trim(edFilename.Text);
     merge.method := cbMethod.Text;
     merge.renumbering := cbRenumbering.Text;
