@@ -1358,7 +1358,7 @@ begin
   CheckForErrorsItem.Enabled := ProgramStatus.bLoaderDone and bAllNeedErrorCheck and not bBlacklisted;
   FixErrorsItem.Enabled := ProgramStatus.bLoaderDone and bHasErrors and not bBlacklisted;
   IgnoreErrorsItem.Enabled := bHasErrors and not bBlacklisted;
-  ResetErrorsItem.Enabled := bHasErrors and not bBlacklisted;
+  ResetErrorsItem.Enabled := (not bAllNeedErrorCheck) and (not bBlacklisted);
   ReportOnPluginItem.Enabled := not bBlacklisted;
 end;
 
