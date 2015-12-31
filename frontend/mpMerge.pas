@@ -882,6 +882,7 @@ begin
     s := p + ChangeFileExt(_File.FileName, '.seq');
     FileStream := TFileStream.Create(s, fmCreate);
     FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
+    Tracker.Write(' ');
     Tracker.Write('Created SEQ file: ' + s);
     merge.files.Add(s);
   except
@@ -1752,7 +1753,16 @@ begin
   end;
 end;
 
-procedure HandleMergedBSA(var merge: TMerge; var lst: TList);
+procedure HandleBSAs(var merge: TMerge; var lst: TList);
+const
+  fsFaceGeom = 'meshes\actors\character\facegendata\facegeom\%s';
+  fsFaceTint = 'textures\actors\character\facegendata\facetint\%s';
+  fsVoice = 'sound\voice\%s';
+var
+  i: Integer;
+  plugin: TPlugin;
+  bsaFilename: string;
+  ignore: TStringList;
 begin
   // build merged bsa
   if settings.buildMergedBSA and FileExists(settings.bsaOptPath)
@@ -1760,6 +1770,39 @@ begin
     Tracker.Write(' ');
     Tracker.Write('Building Merged BSA...');
     BuildMergedBSA(merge, lst);
+  end;
+
+  // extract BSAs
+  if settings.extractBSAs and (not Tracker.Cancel) then begin
+    // initialize stringlists
+    ignore := TStringList.Create;
+
+    // print initial messages
+    Tracker.Write(' ');
+    Tracker.Write('Extracting BSAs...');
+
+    // extract existing BSAs
+    for i := 0 to Pred(lst.Count) do begin
+      if Tracker.Cancel then
+        break;
+      plugin := TPlugin(lst[i]);
+      if HAS_BSA in plugin.flags then begin
+        // prepare paths to ignore
+        ignore.Add(Format(fsFaceGeom,[Lowercase(plugin.filename)]));
+        ignore.Add(Format(fsFaceTint,[Lowercase(plugin.filename)]));
+        ignore.Add(Format(fsVoice,[Lowercase(plugin.filename)]));
+        ignore.Add('seq');
+
+        // extract bsa
+        bsaFilename := wbDataPath + ChangeFileExt(plugin.filename, '.bsa');
+        Tracker.Write('  Extracting '+bsaFilename+'\');
+        ExtractBSA(bsaFilename, merge.dataPath, ignore);
+        ignore.Clear;
+      end;
+    end;
+
+    // clean up
+    ignore.Free;
   end;
 end;
 
@@ -1896,7 +1939,7 @@ begin
     HandleCanceled(failed);
     HandleScripts(merge);
     HandleCanceled(failed);
-    HandleMergedBSA(merge, pluginsToMerge);
+    HandleBSAs(merge, pluginsToMerge);
     HandleCanceled(failed);
     HandleBatchCopy(merge);
     HandleCanceled(failed);
