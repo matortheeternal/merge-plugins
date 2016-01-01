@@ -1856,8 +1856,10 @@ begin
     end;
   end
   // else just clean masters
-  else
+  else begin
+    mergeFile := merge.plugin._File;
     mergeFile.CleanMasters;
+  end;
 end;
 
 procedure SaveMergeFiles(var merge: TMerge);
