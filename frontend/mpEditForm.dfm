@@ -92,10 +92,10 @@ object EditForm: TEditForm
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = edNameChange
-        OnKeyDown = edNameKeyDown
+        OnKeyDown = edKeyDown
       end
       object edFilename: TEdit
-        Left = 109
+        Left = 112
         Top = 39
         Width = 195
         Height = 21
@@ -105,7 +105,7 @@ object EditForm: TEditForm
         TabOrder = 1
         OnChange = edFilenameChange
         OnEnter = edFilenameEnter
-        OnKeyDown = edFilenameKeyDown
+        OnKeyDown = edKeyDown
       end
       object cbMethod: TComboBox
         Left = 109

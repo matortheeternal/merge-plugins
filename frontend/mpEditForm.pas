@@ -32,9 +32,7 @@ type
     procedure btnOkClick(Sender: TObject);
     procedure edNameChange(Sender: TObject);
     procedure edFilenameChange(Sender: TObject);
-    procedure edNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure edFilenameKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure edKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure edFilenameEnter(Sender: TObject);
     procedure cbMethodChange(Sender: TObject);
@@ -176,18 +174,8 @@ begin
     edName.Font.Color := clWindowText;
 end;
 
-{ Save merge by pressing enter in edName }
-procedure TEditForm.edNameKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  if (HiWord(GetKeyState(vk_Return)) <> 0) and btnOk.Enabled then begin
-    btnOkClick(nil);
-    ModalResult := mrOk;
-  end;
-end;
-
-{ Save merge by pressing enter in edFilename }
-procedure TEditForm.edFilenameKeyDown(Sender: TObject; var Key: Word;
+{ Save merge by pressing enter in edName or edFilename }
+procedure TEditForm.edKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if (HiWord(GetKeyState(vk_Return)) <> 0) and btnOk.Enabled then begin
