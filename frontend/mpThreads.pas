@@ -278,29 +278,34 @@ begin
   // build list of post-merge steps
   slGeck := TStringList.Create;
   slNav := TStringList.Create;
-  for i := 0 to Pred(mergesToBuild.Count) do begin
-    merge := TMerge(mergesToBuild[i]);
-    // build geck scripts list
-    if merge.geckScripts.Count > 0 then begin
-      slGeck.Add(Format('[%s]', [merge.filename]));
-      for j := 0 to Pred(merge.geckScripts.Count) do
-        slGeck.Add('  '+merge.geckScripts[j]);
-      slGeck.Add(' ');
+  try
+    for i := 0 to Pred(mergesToBuild.Count) do begin
+      merge := TMerge(mergesToBuild[i]);
+      // build geck scripts list
+      if merge.geckScripts.Count > 0 then begin
+        slGeck.Add(Format('[%s]', [merge.filename]));
+        for j := 0 to Pred(merge.geckScripts.Count) do
+          slGeck.Add('  '+merge.geckScripts[j]);
+        slGeck.Add(' ');
+      end;
+      // build nav list
+      if merge.navConflicts.Count > 0 then begin
+        slNav.Add(Format('[%s]', [merge.filename]));
+        for j := 0 to Pred(merge.navConflicts.Count) do
+          slNav.Add('  '+merge.navConflicts[j]);
+        slNav.Add(' ');
+      end;
     end;
-    // build nav list
-    if merge.navConflicts.Count > 0 then begin
-      slNav.Add(Format('[%s]', [merge.filename]));
-      for j := 0 to Pred(merge.navConflicts.Count) do
-        slNav.Add('  '+merge.navConflicts[j]);
-      slNav.Add(' ');
-    end;
-  end;
 
-  // inform user about post-merge steps
-  if slGeck.Count > 0 then
-    ShowMessage(Format(GetLanguageString('mpProg_GeckScripts'), [Trim(slGeck.Text)]));
-  if slNav.Count > 0 then
-    ShowMessage(Format(GetLanguageString('mpProg_NavConflicts'), [Trim(slNav.Text)]));
+    // inform user about post-merge steps
+    if slGeck.Count > 0 then
+      ShowMessage(Format(GetLanguageString('mpProg_GeckScripts'), [Trim(slGeck.Text)]));
+    if slNav.Count > 0 then
+      ShowMessage(Format(GetLanguageString('mpProg_NavConflicts'), [Trim(slNav.Text)]));
+  finally
+    slGeck.Free;
+    slNav.Free;
+  end;
 
   // say thread is done if it wasn't cancelled
   if not Tracker.Cancel then
