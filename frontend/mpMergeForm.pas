@@ -1701,12 +1701,20 @@ begin
   AddDetailsItem(GetLanguageString('mpMain_Renumbering'), merge.renumbering);
 
   // files list
-  sl := TStringList.Create;
-  sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
-  AddDetailsList(GetLanguageString('mpMain_Files'), sl);
-  sl.Free;
+  if merge.files.Count > 1000 then
+    AddDetailsItem(GetLanguageString('mpMain_Files'), GetLanguageString('mpMain_TooManyFiles'))
+  else begin
+    sl := TStringList.Create;
+    sl.Text := StringReplace(merge.files.Text, settings.mergeDirectory, '', [rfReplaceAll]);
+    AddDetailsList(GetLanguageString('mpMain_Files'), sl);
+    sl.Free;
+  end;
+
   // fails list
-  AddDetailsList(GetLanguageString('mpMain_Fails'), merge.fails);
+  if merge.fails.Count > 1000 then
+    AddDetailsItem(GetLanguageString('mpMain_Fails'), GetLanguageString('mpMain_TooManyFails'))
+  else
+    AddDetailsList(GetLanguageString('mpMain_Fails'), merge.fails);
 
   // update gui
   StringGrid_CorrectWidth(DetailsGrid);
