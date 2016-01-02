@@ -134,6 +134,9 @@ type
     procedure UpdateButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     // SERVER EVENTS
+    procedure QueueLogMessage(group, &label, msg: string);
+    procedure QueueHandleReport(report: TReport);
+    procedure DisconnectIP(ip: string);
     procedure TCPServerConnect(AContext: TIdContext);
     procedure TCPServerDisconnect(AContext: TIdContext);
     procedure TCPServerException(AContext: TIdContext; AException: Exception);
@@ -1091,22 +1094,63 @@ end;
 }
 {******************************************************************************}
 
+procedure TBackendForm.QueueLogMessage(group, &label, msg: string);
+begin
+  // print terminated message on main thread
+  TThread.Queue(nil,
+    procedure
+    begin
+      LogMessage(group, &label, msg);
+    end
+  );
+end;
+
+procedure TBackendForm.QueueHandleReport(report: TReport);
+begin
+  TThread.Queue(nil,
+    procedure
+    begin
+      // replace reports from same user on same plugin
+      if ReportExists(UnapprovedReports, report) then begin
+        UnapprovedListView.Items.Count := UnapprovedReports.Count - 1;
+        RemoveExistingReports(UnapprovedReports, report);
+        DBRemoveReport(report, 'unapproved_reports');
+      end;
+
+      // add report
+      UnapprovedReports.Add(report);
+      UnapprovedListView.Items.Count := UnapprovedReports.Count;
+      DBAddReport(report, 'unapproved_reports');
+    end
+  );
+end;
+
+procedure TBackendForm.DisconnectIP(ip: string);
+var
+  index: Integer;
+begin
+  index := slConnectedIPs.IndexOf(ip);
+  if index > -1 then
+    slConnectedIPs.Delete(index);
+end;
+
 procedure TBackendForm.TCPServerConnect(AContext: TIdContext);
 var
   ip: string;
   user: TUser;
 begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
-  // handle blacklisted ip
+
+  // disconnect blacklisted users
   if IsBlacklisted(ip) then begin
-    LogMessage('SERVER', 'Terminated', ip);
     AContext.Connection.Disconnect;
+    QueueLogMessage('SERVER', 'Terminated', ip);
     exit;
   end;
 
   // handle connection
-  LogMessage('SERVER', 'Connected', ip);
   slConnectedIPs.AddObject(ip, TObject(AContext));
+  QueueLogMessage('SERVER', 'Connected', ip);
   user := GetUser(ip);
   if not Assigned(user) then
     user := AddUser(ip);
@@ -1116,28 +1160,24 @@ end;
 procedure TBackendForm.TCPServerDisconnect(AContext: TIdContext);
 var
   ip: string;
-  index: integer;
 begin
   ip := AContext.Connection.Socket.Binding.PeerIP;
   AContext.Connection.Disconnect;
-  LogMessage('SERVER', 'Disconnected', ip);
-  index := slConnectedIPs.IndexOf(ip);
-  if index > -1 then
-    slConnectedIPs.Delete(index);
+  QueueLogMessage('SERVER', 'Disconnected', ip);
+  DisconnectIP(ip);
 end;
 
 procedure TBackendForm.TCPServerException(AContext: TIdContext;
   AException: Exception);
 var
-  index: Integer;
+  ip: string;
 begin
-  if AException.Message <> 'Connection Closed Gracefully.' then
-    LogMessage('ERROR', 'Server', AContext.Connection.Socket.Binding.PeerIP+
-      ' '+AException.Message);
+  ip := AContext.Connection.Socket.Binding.PeerIP;
+  DisconnectIP(ip);
 
-  index := slConnectedIPs.IndexOf(AContext.Connection.Socket.Binding.PeerIP);
-  if index > -1 then
-    slConnectedIPs.Delete(index);
+  // print message if exception wasn't connection closed gracefully
+  if AException.Message <> 'Connection Closed Gracefully.' then
+    QueueLogMessage('ERROR', 'Server', ip+' '+AException.Message);
 end;
 
 procedure TBackendForm.SendResponse(var user: TUser; var AContext: TIdContext;
@@ -1147,12 +1187,20 @@ var
   response: TmpMessage;
 begin
   response := TmpMessage.Create(id, '', '', data);
-  json := TRttiJson.ToJson(response);
-  Inc(user.download, Length(json));
-  Inc(sessionBandwidth, Length(json));
-  AContext.Connection.IOHandler.WriteLn(json);
-  if bLog then LogMessage('SERVER', 'Response', response.data);
-  response.Free;
+  try
+    json := TRttiJson.ToJson(response);
+    AContext.Connection.IOHandler.WriteLn(json);
+
+    // increment counters
+    Inc(user.download, Length(json));
+    Inc(sessionBandwidth, Length(json));
+
+    // log it if bLog is true
+    if bLog then
+      QueueLogMessage('SERVER', 'Response', response.data);
+  finally
+    response.Free;
+  end;
 end;
 
 procedure TBackendForm.HandleMessage(msg: TmpMessage; size: integer;
@@ -1237,7 +1285,7 @@ begin
         userStatistics.Free;
       except
         on x : Exception do begin
-          LogMessage('ERROR', 'Server', 'Failed to load statistics '+x.Message);
+          QueueLogMessage('ERROR', 'Server', 'Failed to load statistics '+x.Message);
           note := 'Failed to load statistics.';
         end;
       end;
@@ -1260,7 +1308,7 @@ begin
           Inc(sessionBandwidth, stream.Size);
           Inc(user.download, stream.Size);
           Inc(statistics.dictionaryUpdates);
-          LogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ GetDictionaryHash(msg.data));
+          QueueLogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ GetDictionaryHash(msg.data));
           stream.Free;
         end;
       end
@@ -1273,7 +1321,7 @@ begin
           Inc(sessionBandwidth, stream.Size);
           Inc(user.download, stream.Size);
           Inc(statistics.programUpdates);
-          LogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ status.programVersion);
+          QueueLogMessage('SERVER', 'Response', 'Sent '+msg.data+' '+ status.programVersion);
           stream.Free;
         end
         else
@@ -1287,7 +1335,7 @@ begin
           AContext.Connection.IOHandler.Write(stream, 0, true);
           Inc(sessionBandwidth, stream.Size);
           Inc(user.download, stream.Size);
-          LogMessage('SERVER', 'Response', 'Sent changelog');
+          QueueLogMessage('SERVER', 'Response', 'Sent changelog');
           stream.Free;
         end
         else
@@ -1300,28 +1348,18 @@ begin
     MSG_REPORT: begin
       note := 'Not authorized';
       if bAuthorized then try
-        report := TReport.Create;
         report := TReport(TRttiJson.FromJson(msg.data, TReport));
         report.username := msg.username;
         report.dateSubmitted := Now;
         report.notes := StringReplace(report.notes, '@13', #13#10, [rfReplaceAll]);
         report.notes := Wordwrap(report.notes, 70);
-        LogMessage('SERVER', 'Message', Format('Recieved report %s %s %s',
+        QueueLogMessage('SERVER', 'Message', Format('Recieved report %s %s %s',
           [report.game, report.username, report.filename]));
 
-        // replace reports from same user on same plugin
-        if ReportExists(UnapprovedReports, report) then begin
-          UnapprovedListView.Items.Count := UnapprovedReports.Count - 1;
-          RemoveExistingReports(UnapprovedReports, report);
-          DBRemoveReport(report, 'unapproved_reports');
-        end;
+        // handle report
+        QueueHandleReport(report);
 
-        // add report to gui
-        UnapprovedReports.Add(report);
-        UnapprovedListView.Items.Count := UnapprovedReports.Count;
-
-        // add report to sql
-        DBAddReport(report, 'unapproved_reports');
+        // send response to user
         note := 'Report accepted.';
         Inc(statistics.reportsRecieved);
         Inc(user.reportsSubmitted);
@@ -1337,7 +1375,7 @@ begin
           Inc(statistics.fo3Reports);
       except
         on x : Exception do begin
-          LogMessage('ERROR', 'Server', 'Failed to load report '+x.Message);
+          QueueLogMessage('ERROR', 'Server', 'Failed to load report '+x.Message);
           note := 'Failed to load report.';
         end;
       end;
@@ -1354,9 +1392,9 @@ end;
 
 procedure TBackendForm.WriteMessage(msg: TmpMessage; ip: string);
 begin
-  LogMessage('SERVER', 'Message', ip+' ('+msg.username+')  '+MSG_STRINGS[msg.id]);
+  QueueLogMessage('SERVER', 'Message', ip+' ('+msg.username+')  '+MSG_STRINGS[msg.id]);
   if (Length(msg.data) > 1) and (Length(msg.data) < 60) then
-    LogMessage('SERVER', 'Message', msg.data);
+    QueueLogMessage('SERVER', 'Message', msg.data);
 end;
 
 procedure TBackendForm.TCPServerExecute(AContext: TIdContext);
