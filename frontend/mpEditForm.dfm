@@ -95,8 +95,8 @@ object EditForm: TEditForm
         OnKeyDown = edKeyDown
       end
       object edFilename: TEdit
-        Left = 112
-        Top = 39
+        Left = 109
+        Top = 41
         Width = 195
         Height = 21
         Hint = 'Filename invalid.'

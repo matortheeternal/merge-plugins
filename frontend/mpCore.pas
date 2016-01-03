@@ -109,6 +109,7 @@ type
     procedure LoadDump(obj: ISuperObject);
     function GetTimeCost: integer;
     procedure UpdateHashes;
+    procedure UpdateDataPath;
     procedure GetStatus;
     procedure GetLoadOrders;
     procedure SortPlugins;
@@ -722,7 +723,11 @@ begin
     end;
   end;
 
-  dataPath := settings.mergeDirectory + name + '\';
+  // update the merge's datapath
+  UpdateDataPath;
+
+  // check plugins were modified or files were deleted before
+  // giving merge the up to date status
   if (not PluginsModified) and FilesExist and (status = msUnknown) then begin
     Logger.Write('MERGE', 'Status', name + ' -> Up to date');
     status := msUpToDate;
@@ -755,6 +760,17 @@ begin
     if Assigned(aPlugin) then
       hashes.Add(aPlugin.hash);
   end;
+end;
+
+// Updates the data path to be used by the merge
+procedure TMerge.UpdateDataPath;
+begin
+  // use the game's data path instead of using a subfolder
+  // if the merge directory is the game's data path,
+  if (settings.mergeDirectory = wbDataPath) then
+    dataPath := wbDataPath
+  else
+    dataPath := settings.mergeDirectory + name + '\';
 end;
 
 // Get load order for plugins in merge that don't have it
