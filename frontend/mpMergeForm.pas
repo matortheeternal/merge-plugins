@@ -1145,6 +1145,7 @@ end;
 procedure TMergeForm.PluginsListViewData(Sender: TObject; Item: TListItem);
 var
   plugin: TPlugin;
+  fRating: Real;
 begin
   if Item.Index > Pred(PluginsList.Count) then
     exit;
@@ -1153,7 +1154,8 @@ begin
   Item.SubItems.Add(plugin.filename);
   Item.SubItems.Add(plugin.GetFlagsString);
   Item.SubItems.Add(plugin.merge);
-  PluginsListView.Canvas.Font.Color := GetRatingColor(StrToFloatDef(plugin.entry.rating, -2.0));
+  fRating := StrToFloatDef(plugin.entry.rating, -2.0, enFormatSettings);
+  PluginsListView.Canvas.Font.Color := GetRatingColor(fRating);
   PluginsListView.Canvas.Font.Style := PluginsListView.Canvas.Font.Style + [fsBold];
 end;
 

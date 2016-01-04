@@ -56,7 +56,6 @@ var
   i: Integer;
 begin
   // set important vars
-  SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.HintHidePause := 8000;
   PathList.Values['ProgramPath'] := ExtractFilePath(ParamStr(0));
 
