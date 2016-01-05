@@ -73,10 +73,10 @@ type
     procedure LoadInfoDump(obj: ISuperObject);
     function InfoDump: ISuperObject;
   end;
-  TMergeStatusID = ( msUnknown, msNoPlugins, msDirInvalid, msUnloaded,
-    msErrors, msFailed, msNotContiguous, msBreaksDependencies, msCheckErrors,
+  TMergeStatusID = ( msUnknown, msUnloaded, msNoPlugins, msDirInvalid,
+    msErrors, msCheckErrors, msNotContiguous, msBreaksDependencies,
     msUpToDate, msUpToDateForced, msBuildReady, msRebuildReady,
-    msRebuildReadyForced, msBuilt, msCanceled );
+    msRebuildReadyForced, msFailed, msBuilt, msCanceled );
   TMergeStatus = Record
     id: TMergeStatusID;
     color: integer;
