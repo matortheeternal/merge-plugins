@@ -973,8 +973,6 @@ begin
   Result := merge;
 end;
 
-{}
-
 procedure LoadDictionary;
 var
   i: Integer;

@@ -1312,7 +1312,9 @@ end;
 initialization
 begin
   bAllowHelp := false;
-  enFormatSettings := TFormatSettings.Create('en-US');
+  enFormatSettings := TFormatSettings.Create('en-us');
+  enFormatSettings.DecimalSeparator := '.';
+  enFormatSettings.ThousandSeparator := ',';
 end;
 
 end.
