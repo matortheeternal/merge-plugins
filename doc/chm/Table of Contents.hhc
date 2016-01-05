@@ -334,353 +334,409 @@
     	 <param name="Local" value="1.htm#m74">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
-    	 <param name="Name" value="Progress Window">
+    	 <param name="Name" value="Resolve Issues Window">
     	 <param name="Local" value="1.htm#m75">
+    	 </OBJECT>
+    <UL>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Broken Dependencies Tab">
+      	 <param name="Local" value="1.htm#m76">
+      	 </OBJECT>
+      <UL>
+        <LI> <OBJECT type="text/sitemap">
+        	 <param name="Name" value="Broken Dependencies Popup Menu">
+        	 <param name="Local" value="1.htm#m77">
+        	 </OBJECT>
+      </UL>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Non Contiguous Plugins Tab">
+      	 <param name="Local" value="1.htm#m78">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Plugin Errors Tab">
+      	 <param name="Local" value="1.htm#m79">
+      	 </OBJECT>
+      <UL>
+        <LI> <OBJECT type="text/sitemap">
+        	 <param name="Name" value="Plugin Errors Popup Menu">
+        	 <param name="Local" value="1.htm#m80">
+        	 </OBJECT>
+      </UL>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Other Issues Tab">
+      	 <param name="Local" value="1.htm#m81">
+      	 </OBJECT>
+    </UL>
+    <LI> <OBJECT type="text/sitemap">
+    	 <param name="Name" value="Progress Window">
+    	 <param name="Local" value="1.htm#m82">
     	 </OBJECT>
   </UL>
   <LI> <OBJECT type="text/sitemap">
   	 <param name="Name" value="General Reference">
-  	 <param name="Local" value="1.htm#m76">
+  	 <param name="Local" value="1.htm#m83">
   	 </OBJECT>
   <UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Merge Statuses">
-    	 <param name="Local" value="1.htm#m77">
+    	 <param name="Local" value="1.htm#m84">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Rating Colors">
-    	 <param name="Local" value="1.htm#m78">
+    	 <param name="Local" value="1.htm#m85">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Plugin Ratings">
-    	 <param name="Local" value="1.htm#m79">
+    	 <param name="Local" value="1.htm#m86">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="File specific Assets">
-    	 <param name="Local" value="1.htm#m80">
+    	 <param name="Local" value="1.htm#m87">
     	 </OBJECT>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Merging and Renumbering Methods">
-    	 <param name="Local" value="1.htm#m81">
+    	 <param name="Local" value="1.htm#m88">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Renumbering">
-      	 <param name="Local" value="1.htm#m82">
+      	 <param name="Local" value="1.htm#m89">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Record Copying">
-      	 <param name="Local" value="1.htm#m83">
+      	 <param name="Local" value="1.htm#m90">
       	 </OBJECT>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Limitations">
-    	 <param name="Local" value="1.htm#m84">
+    	 <param name="Local" value="1.htm#m91">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Doesn't Do Conflict Resolution">
-      	 <param name="Local" value="1.htm#m85">
+      	 <param name="Local" value="1.htm#m92">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="255 Plugins Limit">
-      	 <param name="Local" value="1.htm#m86">
+      	 <param name="Local" value="1.htm#m93">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Conflicting Navmeshes">
-      	 <param name="Local" value="1.htm#m87">
+      	 <param name="Local" value="1.htm#m94">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Plugins Must be Loaded">
-      	 <param name="Local" value="1.htm#m88">
+      	 <param name="Local" value="1.htm#m95">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Master Dependencies">
-      	 <param name="Local" value="1.htm#m89">
+      	 <param name="Local" value="1.htm#m96">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Merged Plugins and Saves">
-      	 <param name="Local" value="1.htm#m90">
+      	 <param name="Local" value="1.htm#m97">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Mods that Use DLLs">
-      	 <param name="Local" value="1.htm#m91">
+      	 <param name="Local" value="1.htm#m98">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="GetFormFromFile isn't Handled">
-      	 <param name="Local" value="1.htm#m92">
+      	 <param name="Local" value="1.htm#m99">
+      	 </OBJECT>
+    </UL>
+    <LI> <OBJECT type="text/sitemap">
+    	 <param name="Name" value="Troubleshooting">
+    	 <param name="Local" value="1.htm#m100">
+    	 </OBJECT>
+    <UL>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Antivirus Issues">
+      	 <param name="Local" value="1.htm#m101">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="File Access Issues on Windows 8 and Windows 10">
+      	 <param name="Local" value="1.htm#m102">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="CHM Issues">
+      	 <param name="Local" value="1.htm#m103">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Extracting the Archive">
+      	 <param name="Local" value="1.htm#m104">
       	 </OBJECT>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Arguments">
-    	 <param name="Local" value="1.htm#m93">
+    	 <param name="Local" value="1.htm#m105">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Arguments with Mod Organizer">
-      	 <param name="Local" value="1.htm#m94">
+      	 <param name="Local" value="1.htm#m106">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Arguments with Shortcuts">
-      	 <param name="Local" value="1.htm#m95">
+      	 <param name="Local" value="1.htm#m107">
       	 </OBJECT>
     </UL>
   </UL>
   <LI> <OBJECT type="text/sitemap">
   	 <param name="Name" value="Tutorials">
-  	 <param name="Local" value="1.htm#m96">
+  	 <param name="Local" value="1.htm#m108">
   	 </OBJECT>
   <UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Merging with a Mod Manager">
-    	 <param name="Local" value="1.htm#m97">
+    	 <param name="Local" value="1.htm#m109">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Mod Organizer Advantages">
-      	 <param name="Local" value="1.htm#m98">
+      	 <param name="Local" value="1.htm#m110">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Mod Organizer Integration Set Up">
-      	 <param name="Local" value="1.htm#m99">
+      	 <param name="Local" value="1.htm#m111">
       	 </OBJECT>
       <UL>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Starting Merge Plugins through Mod Organizer">
-        	 <param name="Local" value="1.htm#m100">
+        	 <param name="Local" value="1.htm#m112">
         	 </OBJECT>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Configuring the Mod Organizer Integration">
-        	 <param name="Local" value="1.htm#m101">
+        	 <param name="Local" value="1.htm#m113">
         	 </OBJECT>
       </UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Mod Organizer Post Merge Steps">
-      	 <param name="Local" value="1.htm#m102">
+      	 <param name="Local" value="1.htm#m114">
       	 </OBJECT>
       <UL>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="With Copy General Assets">
-        	 <param name="Local" value="1.htm#m103">
+        	 <param name="Local" value="1.htm#m115">
         	 </OBJECT>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Without Copy General Assets">
-        	 <param name="Local" value="1.htm#m104">
+        	 <param name="Local" value="1.htm#m116">
         	 </OBJECT>
       </UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Nexus Mod Manager Integration Set Up">
-      	 <param name="Local" value="1.htm#m105">
+      	 <param name="Local" value="1.htm#m117">
       	 </OBJECT>
       <UL>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Configuring the Nexus Mod Manager Integration">
-        	 <param name="Local" value="1.htm#m106">
+        	 <param name="Local" value="1.htm#m118">
         	 </OBJECT>
       </UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Nexus Mod Manager Post Merge Steps">
-      	 <param name="Local" value="1.htm#m107">
+      	 <param name="Local" value="1.htm#m119">
       	 </OBJECT>
       <UL>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="With Copy General Assets">
-        	 <param name="Local" value="1.htm#m108">
+        	 <param name="Local" value="1.htm#m120">
         	 </OBJECT>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Without Copy General Assets">
-        	 <param name="Local" value="1.htm#m109">
+        	 <param name="Local" value="1.htm#m121">
         	 </OBJECT>
       </UL>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Integration Set Up">
-    	 <param name="Local" value="1.htm#m110">
+    	 <param name="Local" value="1.htm#m122">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Papyrus">
-      	 <param name="Local" value="1.htm#m111">
+      	 <param name="Local" value="1.htm#m123">
       	 </OBJECT>
       <UL>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Champollion Decompiler">
-        	 <param name="Local" value="1.htm#m112">
+        	 <param name="Local" value="1.htm#m124">
         	 </OBJECT>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Papyrus Compiler">
-        	 <param name="Local" value="1.htm#m113">
+        	 <param name="Local" value="1.htm#m125">
         	 </OBJECT>
         <LI> <OBJECT type="text/sitemap">
         	 <param name="Name" value="Papyrus Flags">
-        	 <param name="Local" value="1.htm#m114">
+        	 <param name="Local" value="1.htm#m126">
         	 </OBJECT>
       </UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="BSAOpt">
-      	 <param name="Local" value="1.htm#m115">
+      	 <param name="Local" value="1.htm#m127">
       	 </OBJECT>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Rebuilding Merges">
-    	 <param name="Local" value="1.htm#m116">
+    	 <param name="Local" value="1.htm#m128">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="When to Rebuild a Merge">
-      	 <param name="Local" value="1.htm#m117">
+      	 <param name="Local" value="1.htm#m129">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Effects of Rebuilding a Merge">
-      	 <param name="Local" value="1.htm#m118">
+      	 <param name="Local" value="1.htm#m130">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Rebuild Status Detection">
-      	 <param name="Local" value="1.htm#m119">
+      	 <param name="Local" value="1.htm#m131">
       	 </OBJECT>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Integrated Updating">
-    	 <param name="Local" value="1.htm#m120">
+    	 <param name="Local" value="1.htm#m132">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Updating the Program">
-      	 <param name="Local" value="1.htm#m121">
+      	 <param name="Local" value="1.htm#m133">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Updating the Dictionary">
-      	 <param name="Local" value="1.htm#m122">
+      	 <param name="Local" value="1.htm#m134">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Automatic Updating">
-      	 <param name="Local" value="1.htm#m123">
+      	 <param name="Local" value="1.htm#m135">
       	 </OBJECT>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Submitting Reports">
-    	 <param name="Local" value="1.htm#m124">
+    	 <param name="Local" value="1.htm#m136">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="When to Submit Reports">
-      	 <param name="Local" value="1.htm#m125">
+      	 <param name="Local" value="1.htm#m137">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="How to Submit Reports">
-      	 <param name="Local" value="1.htm#m126">
+      	 <param name="Local" value="1.htm#m138">
       	 </OBJECT>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Debugging">
-    	 <param name="Local" value="1.htm#m127">
+    	 <param name="Local" value="1.htm#m139">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Logs">
-      	 <param name="Local" value="1.htm#m128">
+      	 <param name="Local" value="1.htm#m140">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Debug Options">
-      	 <param name="Local" value="1.htm#m129">
+      	 <param name="Local" value="1.htm#m141">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Reading the Documentation">
-      	 <param name="Local" value="1.htm#m130">
+      	 <param name="Local" value="1.htm#m142">
       	 </OBJECT>
     </UL>
   </UL>
   <LI> <OBJECT type="text/sitemap">
   	 <param name="Name" value="Community">
-  	 <param name="Local" value="1.htm#m131">
+  	 <param name="Local" value="1.htm#m143">
   	 </OBJECT>
   <UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="Making a Translation">
-    	 <param name="Local" value="1.htm#m132">
-    	 </OBJECT>
-    <UL>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Latest english.lang">
-      	 <param name="Local" value="1.htm#m133">
-      	 </OBJECT>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Notepad++ Environment">
-      	 <param name="Local" value="1.htm#m134">
-      	 </OBJECT>
-      <UL>
-        <LI> <OBJECT type="text/sitemap">
-        	 <param name="Name" value="Custom Style">
-        	 <param name="Local" value="1.htm#m135">
-        	 </OBJECT>
-        <LI> <OBJECT type="text/sitemap">
-        	 <param name="Name" value="User defined Language">
-        	 <param name="Local" value="1.htm#m136">
-        	 </OBJECT>
-      </UL>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="UTF8">
-      	 <param name="Local" value="1.htm#m137">
-      	 </OBJECT>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Syntax">
-      	 <param name="Local" value="1.htm#m138">
-      	 </OBJECT>
-    </UL>
-    <LI> <OBJECT type="text/sitemap">
-    	 <param name="Name" value="Development">
-    	 <param name="Local" value="1.htm#m139">
-    	 </OBJECT>
-    <UL>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="GitHub Hipchat and Forums">
-      	 <param name="Local" value="1.htm#m140">
-      	 </OBJECT>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Reporting Issues">
-      	 <param name="Local" value="1.htm#m141">
-      	 </OBJECT>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Feature Requests">
-      	 <param name="Local" value="1.htm#m142">
-      	 </OBJECT>
-      <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Joining the Development Team">
-      	 <param name="Local" value="1.htm#m143">
-      	 </OBJECT>
-    </UL>
-    <LI> <OBJECT type="text/sitemap">
-    	 <param name="Name" value="Service">
     	 <param name="Local" value="1.htm#m144">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Service Agreement">
+      	 <param name="Name" value="Latest english.lang">
       	 <param name="Local" value="1.htm#m145">
       	 </OBJECT>
       <LI> <OBJECT type="text/sitemap">
-      	 <param name="Name" value="Service Transference">
+      	 <param name="Name" value="Notepad++ Environment">
       	 <param name="Local" value="1.htm#m146">
       	 </OBJECT>
       <UL>
         <LI> <OBJECT type="text/sitemap">
-        	 <param name="Name" value="Backend Set Up">
+        	 <param name="Name" value="Custom Style">
         	 <param name="Local" value="1.htm#m147">
+        	 </OBJECT>
+        <LI> <OBJECT type="text/sitemap">
+        	 <param name="Name" value="User defined Language">
+        	 <param name="Local" value="1.htm#m148">
+        	 </OBJECT>
+      </UL>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="UTF8">
+      	 <param name="Local" value="1.htm#m149">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Syntax">
+      	 <param name="Local" value="1.htm#m150">
+      	 </OBJECT>
+    </UL>
+    <LI> <OBJECT type="text/sitemap">
+    	 <param name="Name" value="Development">
+    	 <param name="Local" value="1.htm#m151">
+    	 </OBJECT>
+    <UL>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="GitHub Hipchat and Forums">
+      	 <param name="Local" value="1.htm#m152">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Reporting Issues">
+      	 <param name="Local" value="1.htm#m153">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Feature Requests">
+      	 <param name="Local" value="1.htm#m154">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Joining the Development Team">
+      	 <param name="Local" value="1.htm#m155">
+      	 </OBJECT>
+    </UL>
+    <LI> <OBJECT type="text/sitemap">
+    	 <param name="Name" value="Service">
+    	 <param name="Local" value="1.htm#m156">
+    	 </OBJECT>
+    <UL>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Service Agreement">
+      	 <param name="Local" value="1.htm#m157">
+      	 </OBJECT>
+      <LI> <OBJECT type="text/sitemap">
+      	 <param name="Name" value="Service Transference">
+      	 <param name="Local" value="1.htm#m158">
+      	 </OBJECT>
+      <UL>
+        <LI> <OBJECT type="text/sitemap">
+        	 <param name="Name" value="Backend Set Up">
+        	 <param name="Local" value="1.htm#m159">
         	 </OBJECT>
       </UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Privacy">
-      	 <param name="Local" value="1.htm#m148">
+      	 <param name="Local" value="1.htm#m160">
       	 </OBJECT>
     </UL>
     <LI> <OBJECT type="text/sitemap">
     	 <param name="Name" value="License">
-    	 <param name="Local" value="1.htm#m149">
+    	 <param name="Local" value="1.htm#m161">
     	 </OBJECT>
     <UL>
       <LI> <OBJECT type="text/sitemap">
       	 <param name="Name" value="Plain English">
-      	 <param name="Local" value="1.htm#m150">
+      	 <param name="Local" value="1.htm#m162">
       	 </OBJECT>
     </UL>
   </UL>
