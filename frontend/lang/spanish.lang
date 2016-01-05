@@ -1,25 +1,27 @@
 ﻿{ TMergeForm }
 { ## QuickBar ## }
-mpMain_NewButton_Hint=Crear nueva fusión|Hacer una nueva fusión.
-mpMain_FindErrorsButton_Hint=Encontrar errores|
+mpMain_NewButton_Hint=Crear nueva fusión|Hacer nueva fusión.
+mpMain_FindErroresButton_Hint=Encontrar errores|
 mpMain_BuildButton_Hint=Construir fusiones|
-mpMain_ReportButton_Hint=Presentar informes|Presentar informes sobre todos las fusiones #13#10de los plugins que tienes construidos con éxito.#13#10
-mpMain_DictionaryButton_Hint=Ver Diccionario|Abrir el visor de diccionario para ver todos #13#10los informes enviados por otros usuarios.#13#10
-mpMain_OptionsButton_Hint=Opciones|Cambiar las opciones que controlan cómo #13#10se ejecuta el plugin.#13#10
+mpMain_ReportButton_Hint=Presentar informes|Presentar informes sobre todos las fusiones #13#10construido con éxito.#13#10
+mpMain_DictionaryButton_Hint=Ver Diccionario|Abir el visor de diccionario para ver todos los informes #13#10enviados por otros usuarios.#13#10
+mpMain_OptionsButton_Hint=Opciones|Cambiar las opciones que controlan cómo el #13#10inicio del programa.#13#10
 mpMain_UpdateButton_Hint=Actualización|
-mpMain_HelpButton_Hint=Ayuda|Lo sentimos, esto aún no funciona.
+mpMain_HelpButton_Hint=Ayuda|Pulsa en este botón, luego pulsa en cualquier componente #13#10para obtener ayuda sobre ello.#13#10
 { #### DYNAMIC #### }
 mpMain_NoPluginsToCheck=No hay ningún plugins para comprobar errores.
-mpMain_FindErrors_Loader=No puedes comprobar plugins para errores hasta que el #13#10cargador de fondo haya terminado.#13#10
+mpMain_FindErrores_Loader=No puedes comprobar plugins para errores hasta que el #13#10cargador de fondo haya terminado.#13#10
 mpMain_CheckAllPlugins=Comprueba todos los plugins que están cargados y no #13#10estan en la lista negra de errores.#13#10
 mpMain_NoMerges=No hay ninguna fusion a construir o reconstruir.
-mpMain_BuildMerges_Loader=No se pueden construir las fusiones hasta que el fondo del #13#10cargador termine.#13#10
+mpMain_BuildMerges_Loader=No se pueden construir fusiones hasta que el fondo del #13#10cargador termine.#13#10
 mpMain_CheckMerges=Necesitas comprobar los plugins que planeas fusionar #13#10para errores antes de poder construir las fusiones.#13#10
 mpMain_BuildAllMerges=Construye todas las fusiones que están listas para ser construidas o #13#10reconstruidas.#13#10
 mpMain_UpdateBoth=Programa y actualización de diccionario disponible.
 mpMain_UpdateProgram=Actualización de programa disponible.
 mpMain_UpdateDictionary=Actualización de diccionario disponible.
-mpMain_NoUpdates=Ninguna actualizacione disponible.
+mpMain_NoUpdates=Ninguna actualizacion disponible.
+mpMain_NoMergesToReportOn=Presentar informes|No hay fusiones que informar.
+mpMain_NoDictionary=Ver diccionario|No hay ningún archivo de diccionario disponible.
 { ## Main Panel ## }
 { ## Details Panel ## }
 mpMain_DetailsLabel_Caption=Detalles
@@ -37,14 +39,14 @@ mpMain_Filename=Nombre de archivo
 mpMain_Hash=Hash
 mpMain_FileSize=Tamaño del archivo
 mpMain_DateModified=Fecha de modificación
-mpMain_MergeRating=Fusionar valuación
+mpMain_MergeRating=Calificación de fusión
 mpMain_Flags=Flags
 mpMain_NumRecords=Número de registros
-mpMain_NumOverrides=Número de anulaciones
+mpMain_NumAnulaciones=Número de anulaciones
 mpMain_Author=Autor
 mpMain_Description=Descripción
 mpMain_Masters=Maestros
-mpMain_Errors=Errores
+mpMain_Errores=Errores
 mpMain_Reports=Informes
 { ## Plugins Popup Menu ## }
 mpMain_AddToMergeItem_Caption=Añadir a Fusionar
@@ -53,14 +55,16 @@ mpMain_RemoveFromMergeItem_Caption=Eliminar de la fusión
 mpMain_ReportOnPluginItem_Caption=Informe sobre el plugin
 mpMain_DoNotMergeItem_Caption=No permitir la fusión
 mpMain_OpenPluginLocationItem_Caption=Abrir localización del plugin
-{ ## Errors Submenu ## }
-mpMain_ErrorsItem_Caption=Errores
-mpMain_CheckForErrorsItem_Caption=Comprobación de errores
-mpMain_FixErrorsItem_Caption=Corregir errores
-mpMain_IgnoreErrorsItem_Caption=Ignorar errores
-mpMain_ResetErrorsItem_Caption=Resetear errores
+{ ## Errores Submenu ## }
+mpMain_ErroresItem_Caption=Errores
+mpMain_CheckForErroresItem_Caption=Comprobación para Errores
+mpMain_FixErroresItem_Caption=Corregir errores
+mpMain_IgnoreErroresItem_Caption=Ignorar errores
+mpMain_ResetErroresItem_Caption=Resetear errores
+mpMain_DoNotMergeItem_Caption=No permitir la fusión
+mpMain_OpenPluginLocationItem_Caption=Abrir localización del plugin
 { #### DYNAMIC #### }
-mpMain_UnignoreErrors=Ignorar errores
+mpMain_UnignoreErrores=Desactivar Errores
 mpMain_AllowMerging=Permitir la fusión
 { ## Merges Tab ## }
 mpMain_MergesTabSheet_Caption=Fusionar
@@ -73,23 +77,24 @@ mpMain_MergesListView_Column4=Fecha de construcción
 mpMain_MergeDetails=Fusionar Detalles
 mpMain_Status=Estado
 mpMain_MergeName=Fusionar nombre
-mpMain_PluginCount=Cont de plugin
+mpMain_PluginCount=Contador de plugin
 mpMain_DateBuilt=Fecha de construcción
 mpMain_Plugins=Plugins
 mpMain_MergeMethod=Fusionar método
-mpMain_Renumbering=Renumerar
+mpMain_Renumbering=Renumeración
 mpMain_Files=Archivos
 mpMain_Fails=Fallos
 mpMain_TooManyFiles=Hay demasiados archivos para mostrar.
-mpMain_TooManyFails=Demasiados fallos para mostrar.
+mpMain_TooManyFails=Hay demasiados fallos para mostrar.
 mpMain_DeleteMerges=¿Está seguro que desea eliminar estas fusiones?
 { ## Merges Popup Menu ## }
-mpMain_CreateNewMergeItem_Caption=Crear nueva fusion
+mpMain_CreateNewMergeItem_Caption=Crear nueva fusión
 mpMain_EditMergeItem_Caption=Editar fusión
 mpMain_DeleteMergeItem_Caption=Eliminar fusión
 mpMain_BuildMergeItem_Caption=Construir fusión
+mpMain_ToggleRebuildItem=Cambiar estado de reconstrucción
 mpMain_OpenInExplorerItem_Caption=Abrir en el explorador
-mpMain_ToggleRebuildItem_Caption=Alternar estado de reconstrucción
+mpMain_ToggleRebuildItem_Caption=Cambiar estado de reconstrucción
 { ## Plugins Submenu ## }
 mpMain_PluginsItem_Caption=Plugins
 mpMain_CheckPluginsItem_Caption=Comprobar plugins para errores
@@ -102,7 +107,7 @@ mpMain_RebuildMerge=Reconstruir fusión
 mpMain_BuildMerges=Construir fusiones
 mpMain_RebuildMerges=Reconstruir fusiones
 { ## Log Tab ## }
-mpMain_LogTabSheet_Caption=Log
+mpMain_LogTabSheet_Caption=Registro
 { #### DYNAMIC #### }
 mpMain_AppDetails=Detalles de la Aplicación
 mpMain_Application=Aplicación
@@ -112,45 +117,55 @@ mpMain_DateBuilt=Fecha de construcción
 mpMain_GameMode=Modo juego
 mpMain_Language=Idioma
 mpMain_TimesRun=Tiempo de ejecución
-mpMain_MergesBuilt=Fusiones construida
+mpMain_MergesBuilt=Fusiones construidas
 mpMain_PluginsChecked=Comprobar Plugins para errores
 mpMain_PluginsFixed=Plugins corregidos
 mpMain_PluginsMerged=Plugins fusionados
 mpMain_ReportsSubmitted=Informes presentados
-mpMain_Website=Sitio Web
-mpMain_ApiCredits=API Créditos
-mpMain_xEditVersion=xEdit Versión
-mpMain_xEditCredits=xEdit Créditos
+mpMain_NexusMods=Página Nexus Mods
+mpMain_GitHub=GitHub Repo
+mpMain_ApiCredits=Créditos API
+mpMain_xEditVersion=Versión xEdit
+mpMain_xEditCredits=Créditos xEdit
 mpMain_Testers=Probadores
 mpMain_Translators=Traductores
+mpMain_LoadException=Excepción Cargando Plugins
+mpMain_PluginsNotLoaded=Debido a una excepción, no todos sus plugins #13#10se han cargado. Puede seguir utilizando el programa. #13#10Ver la ficha de registro para obtener más información.#13#10
 { ## Log Popup Menu ## }
 mpMain_FilterGroupItem_Caption=Grupo con filtro
 mpMain_FilterLabelItem_Caption=Etiqueta con filtro
 mpMain_CopyToClipboardItem_Caption=Copiar al portapapeles
 mpMain_SaveAndClearItem_Caption=Limpiar y Guardar
-mpMain_ToggleAutoScrollItem_Caption=Desactivar desplazamiento automático
 { #### DYNAMIC #### }
 mpMain_Enable=Habilitar
 mpMain_Disable=Deshabilitar
-mpMain_AutoScroll=Desplazamiento automático
+mpMain_AutoScroll=Auto desplazamiento
 { ## Status Bar ## }
 { #### DYNAMIC #### }
-mpMain_LoaderLimitations=No podrás comprobar los errores o construir las #13#10fusiones hasta que el cargador termine.#13#10
+mpMain_LoaderLimitations=No podrás comprobar los errores #13#10o construir las fusiones hasta que el cargador termine.#13#10
 mpMain_LoaderInProgress=Cargador de fondo en curso
 mpMain_LoaderFinished=Cargador de fondo terminado
  
 { TDictionaryForm }
 { ## Entries ## }
 mpDict_gbFiltering_Caption=Opciones de filtrado
-mpDict_lblFilename_Caption=Nombre
+mpDict_lblFilename_Caption=Nombre de archivo
 mpDict_lblRecords_Caption=Registros 
 mpDict_lblVersion_Caption=Versión
 mpDict_lblReports_Caption=Informes
-mpDict_lblRating_Caption=Califica
+mpDict_lblRating_Caption=Calificación
 { ## Details ## }
 mpDict_lblDictionary_Caption=Información de diccionario:
 { ## Notes ## }
 mpDict_lblNotes_Caption=Notas de entrada:
+{ #### DYNAMIC #### }
+mpDict_Filename=Nombre de archivo
+mpDict_FileSize=Tamaño de archivo
+mpDict_DateModified=Fecha de modificación
+mpDict_NumEntries=Número de entradas
+mpDict_NumReports=Informes totales
+mpDict_EntriesDisplayed=Entradas mostradas
+mpDict_BlacklistSize=Tamaño de la lista negra
  
 { TEditForm }
 mpEdit_lblName_Caption=Nombre
@@ -159,42 +174,49 @@ mpEdit_lblMethod_Caption=Fusionar método
 mpEdit_cbMethod_Item0=Anulaciones
 mpEdit_cbMethod_Item1=Nuevos registros
 mpEdit_lblRenumbering_Caption=Renumeración
-mpEdit_cbRenumbering_Item0=Conflicto
+mpEdit_cbRenumbering_Item0=Contradictorio
 mpEdit_cbRenumbering_Item1=Todo
 mpEdit_btnOk_Caption=OK
 mpEdit_btnCancel_Caption=Cancelar
-mpEdit_TabSheet_Caption=Editar Fusion
+mpEdit_TabSheet_Caption=Editar Fusión
 
 { TOptionsForm }
 mpOpt_btnCancel_Caption=Cancelar
 mpOpt_btnOK_Caption=OK
 { #### DYNAMIC #### }
-mpOpt_Browse=Navegador
+mpOpt_Browse=Browse
 { ## General Tab ## }
 mpOpt_GeneralTabSheet_Caption=General
 mpOpt_gbLanguage_Caption=Idioma
 mpOpt_lblLanguage_Caption=Idioma actual
+mpOpt_lblLanguage_Hint=El idioma que está utilizando actualmente. Se puede #13#10cambiar mientras el programa se está ejecutando, y todos los #13#10strings se actualizará a tu idioma recién seleccionado.
 mpOpt_gbStyle_Caption=Estilo
-mpOpt_kbSimpleDictionary_Caption=Vista diccionario simple
-mpOpt_kbSimplePlugins_Caption=Lista de plugins simple
+mpOpt_kbSimpleDictionary_Caption=Vista simple de diccionario
+mpOpt_kbSimpleDictionary_Hint=Habilitar para mostrar las entradas en el diccionario #13#10visor sin color.
+mpOpt_kbSimplePlugins_Caption=Lista simple de plugins
+mpOpt_kbSimplePlugins_Hint=Habilitar para mostrar las entradas en la lista de plugins #13#10vista sin color o de flag imágenes.
 mpOpt_gbReports_Caption=Informes
 mpOpt_lblUsername_Caption=Nombre usuario
+mpOpt_lblUsername_Hint=Tu nombre de usuario con el Merge Plugins Backend.  #13#10Se utiliza para la presentación de informes. No puede enviar #13#10informes hasta que se haya registrado un nombre de usuario.
 mpOpt_btnRegister_Caption=Comprobar
 mpOpt_btnRegister_Hint=Comprueba si el nombre de usuario está disponible
 mpOpt_lblStatus_Caption=Estado de registro
+mpOpt_lblStatus_Hint=El estado de su inscripción en el backend.
 mpOpt_lblStatusValue_Caption=Nombre de usuario no válido
 mpOpt_lblStatusValue_Hint=Nombre de usuario debe tener 4 o más caracteres
 mpOpt_btnReset_Caption=Resetear
 mpOpt_gbUpdating_Caption=Actualización
-mpOpt_kbUpdateDictionary_Caption=Dicc. de act. automáticamente
+mpOpt_kbUpdateDictionary_Caption=Actualizar diccionario automáticamente
+mpOpt_kbUpdateDictionary_Hint=Si está activado, el programa comprobará si hay una #13#10actualización de diccionario, y lo descargara #13#10automáticamente si se encuentra.
 mpOpt_lblDictionaryStatus_Caption=Hasta la fecha
-mpOpt_btnUpdateDictionary_Caption=Diccionario Actualizado
-mpOpt_kbUpdateProgram_Caption=Act.automáticamente programa
+mpOpt_btnUpdateDictionary_Caption=Actualizar Diccionario
+mpOpt_kbUpdateProgram_Caption=Actualizar programa automáticamente
+mpOpt_kbUpdateProgam_Hint=Si está activado, el programa comprobará si hay una #13#10actualización, y lo descargara #13#10automáticamente si se encuentra.
 mpOpt_lblProgramStatus_Caption=Hasta la fecha
-mpOpt_btnUpdateProgram_Caption=Programa actualizado
+mpOpt_btnUpdateProgram_Caption=Actualizar Programa
 { #### DYNAMIC #### }
 mpOpt_Check=Check
-mpOpt_PendingUpdate=Tienes una actualización pendiente del programa!
+mpOpt_PendingUpdate=Ya tiene una actualización del programa en espera!
 mpOpt_ServerUnavailable=Servidor no disponible
 mpOpt_Register=Registro
 mpOpt_Registered=Registrado
@@ -210,44 +232,60 @@ mpOpt_VerionCompare=Versión actual: %s#13#10Nueva Versión: %s
 mpOpt_ServerUnavailable=Lo sentimos, el servidor no está disponible, inténtalo más tarde.
 mpOpt_FailedToRegister=Oops.  Algo salió mal.  o_o
 mpOpt_CheckUsername=Compruebe si el nombre de usuario está disponible
-mpOpt_UsernameAvailable=Haga clic en registro para reclamarlo.
-mpOpt_UsernameUnavailable=Alguien ya lo esta usando, intentalo con otro
+mpOpt_UsernameAvailable=Pulsa en el registro para reclamarlo.
+mpOpt_UsernameUnavailable=Alguien ya lo esta usando, intentalo con otro.
 mpOpt_UsernameTooShort=Longitud de nombre de usuario debe tener al menos 4 caracteres.
 mpOpt_UsernameTooLong=Longitud de nombre de usuario no puede exceder de 24 caracteres.
-mpOpt_ValidUsername=Haga clic en el botón de comprobar para ver si #13#10el nombre de usuario está disponible
-mpOpt_AuthFailed=Haz clic en reset para restablecer su clave de autenticación. #13#10NOTA: esto producirá un error si tu IP ha cambiado desde el último inicio de sesión.#13#10Si no puedes recuperar tu nombre de usuario puedes hacer uno nuevo o #13#10contactar con el soporte.
+mpOpt_ValidUsername=Pulsa en el botón de comprobar para ver si #13#10el nombre de usuario está disponible
+mpOpt_Reset_Hint=Si su dirección IP no ha cambiado, pero que de alguna manera #13#10ha perdido su clave de autenticación, puede restablecer su #13#10inscripción en el backend pulsando en este botón.
+mpOpt_AuthFailed=Pulsa en Restablecer para restablecer la clave de autenticación.#13#10NOTE: NOTA: Esto fallará si su IP ha cambiado desde la última vez que entro.#13#10Si no puede recuperar su nombre de usuario puede hacer uno nuevo o #13#10Contactar con el soporte.
 { ## Merging Tab ## }
 mpOpt_MergingTabSheet_Caption=Fusión
-mpOpt_gbAssetHandling_Caption=Gestión de recursos.
+mpOpt_gbAssetHandling_Caption=Gestión de recursos
 mpOpt_lblMergeDestination_Caption=Directorio destino de fusión
-mpOpt_kbFaceGen_Caption=Gestionar FaceGen
-mpOpt_kbVoiceAssets_Caption=Gestionar voice
-mpOpt_kbTranslations_Caption=Gestión trad.MCM
-mpOpt_kbINIs_Caption=Gestionar INI
-mpOpt_kbSEQ_Caption=Gestionar SEQ
-mpOpt_kbFragments_Caption=Gestión frag.script
-mpOpt_kbSelfRef_Caption=Gestiónar mis ref.
+mpOpt_lblMergeDestination_Hint=Este es el directorio donde sus fusiones serán #13#10salvadas. Las fusiones se guardan en las carpetas correspondientes #13#10a su nombre en el directorio que especifique aquí.
+mpOpt_kbFaceGen_Caption=Gestionar archivos FaceGen
+mpOpt_kbFaceGen_Hint=Si está marcado, Merge Plugins copiará y cambiara el nombre #13#10de archivos facegen como sea necesario para mantenerlos asociado #13#10con sus correspondientes registros de NPC. Esto  #13#10evitara el error gris de la cara después de #13#10que merging plugin añada nuevos NPCs.
+mpOpt_kbVoiceAssets_Caption=Gestionar archivos de voz
+mpOpt_kbVoiceAssets_Hint=Si está marcado, Merge Plugins copiará y cambiara el nombre #13#10de archivos de voz como sea necesario para mantenerlos asociado #13#10con sus correspondientes registros de NPC.  Esto #13#10previene el error mudo que pueda ocurrir con NPC #13#10despues que merging plugin añada nuevas personalizaciones #13#10de dialogos a NPCs.
+mpOpt_kbTranslations_Caption=Gestionar traducciones MCM
+mpOpt_kbTranslations_Hint=Si se marca, Merge Plugins Gestionara #13#10archivos de traducción MCM #13#10Esto evitara el bug que se produzcan en MCM.
+mpOpt_kbINIs_Caption=Gestionar archivos INI
+mpOpt_kbINIs_Hint=Si está marcado, Merge Plugin combinará archivos INI  #13#10asociados con ESPs en una fusión. No #13#10se ve estos muy a menudo, pero algunos mods tienen archivos INI #13#10asociados con sus plugins, en el juego #13#10que se cargan con el plugin.
+mpOpt_kbSEQ_Caption=Gestionar archivos SEQ
+mpOpt_kbSEQ_Hint=Si está marcado, Merge Plugin generará una SEQ  #13#10archivo para tus plugins combinado si es necesario. Esto #13#10es un archivo especial que se utiliza en el juego #13#10para obtener misiones en el Inicio del juego habilitado para arrancar en #13#10el momento adecuado.
+mpOpt_kbFragments_Caption=Gestión fragmentos script
+mpOpt_kbFragments_Hint=If checked, Merge Plugins will decompile, adjust, #13#10and recompile papyrus script fragments as #13#10necessary to maintain their functionality in #13#10merged plugins.  This feature is only #13#10necessary/available for Skyrim.  In order to use #13#10this feature you need to have the papyrus #13#10integration set up properly (decompiler, compiler, #13#10and papyrus flags file).
+mpOpt_kbSelfRef_Caption=Gestionar mí referencias
+mpOpt_kbSelfRef_Hint=Si se marca, Merge Plugins manejará script GECK #13#10fuente de código que hacen referencia al archivo del plugin son #13#10utilizado en el. Esto sólo es necesario/disponible para el FO3 #13#10y FNV.  Nota: Tendrás que compilar estos #13#10scripts desde el GECK después de fusionarlos.
 mpOpt_kbExtractBSAs_Caption=Extraer BSAs
-mpOpt_kbBuildBSA_Caption=Constr fusión BSA
-mpOpt_kbBatCopy_Caption=Activo copia por lote
-mpOpt_gbDebug_Caption=Depuración
-mpOpt_kbDebugRenumbering_Caption=Renum. de depu.
-mpOpt_kbDebugMergeStatus_Caption=Edo. fusión depu.
-mpOpt_kbDebugAssetCopying_Caption=Copia depu. de act.
-mpOpt_kbDebugRecordCopying_Caption=Copia registro de depu.
-mpOpt_kbDebugMasters_Caption=Depur. de maestros
-mpOpt_kbDebugBatchCopying_Caption=Depu. copia por lotes
-mpOpt_kbDebugBSAs_Caption=Depu.BSAs
-mpOpt_kbDebugScriptFragments_Caption=Depur.Fragmentos script
+mpOpt_kbExtractBSAs_Hint=Si está marcada, Merge Plugins extrae archivos BSA #13#10que se encuentran asociados con plugins que se fusionaron.  #13#10No es necesario usar esta opción si utilizas Mod #13#10Organizer.  Es necesario utilizar esto o la #13#10Build merged BSA option si está usando NMM o #13#10cualquiere otro administrador de mod.
+mpOpt_kbBuildBSA_Caption=Construir BSA fusionado
+mpOpt_kbBuildBSA_Hint=Si está marcada, Merge Plugins combinará la BSAs #13#10de los plugins que está fundiéndose en una solo BSA.  #13#10Es necesario tener la integración de BSAOpt configurado #13#10correctamente al utilizar esta opción. No es necesario #13#10Usar esta opción si está utilizando Mod Organizer.  #13#10Nota: BSAs tienen un tamaño de archivo máximo de 2gb.  Si #13#10Merge Plugins detecta que la BSA combinada sería demasiado #13#10grande le avisará.
+mpOpt_kbBatCopy_Caption=Activos de copia por lotes
+mpOpt_kbBatCopy_Hint=Si está marcada, Merge Plugins realizará todos los archivos #13#10copia de las operaciones a través de un script por lotes. Esto #13#10optimiza la fusión y ayuda a prevenir la memoria #13#10Si hay fugas. Esta opción es muy recomendable.
+mpOpt_gbDebug_Caption=Depurar
+mpOpt_kbDebugRenumbering_Caption=Depurar renumeración
+mpOpt_kbDebugMergeStatus_Caption=Depurar estado de fusión
+mpOpt_kbDebugAssetCopying_Caption=Depurar copia activos
+mpOpt_kbDebugRecordCopying_Caption=Depurar copia  registro
+mpOpt_kbDebugMasters_Caption=Depurar maestros
+mpOpt_kbDebugBatchCopying_Caption=Depurar copia por lotes
+mpOpt_kbDebugBSAs_Caption=Depurar BSAs
+mpOpt_kbDebugScriptFragments_Caption=Depurar fragmentos script
 { ## Advanced Tab ## }
 mpOpt_AdvancedTabSheet_Caption=Avanzado
 mpOpt_gbMergeProfile_Caption=Fusionar perfil
 mpOpt_lblCurrentProfile_Caption=Perfil actual
 mpOpt_btnChangeMergeProfile_Caption=Interruptor Fusión Perfiles
+mpOpt_btnChangeMergeProfile_Hint=Pulsa en esto para reiniciar la aplicación con un #13#10perfil diferente.
 mpOpt_gbBackend_Caption=Backend
-mpOpt_lblHost_Caption=Host servidor
+mpOpt_lblHost_Caption=Servidor host
+mpOpt_lblHost_Hint=El nombre IP o dominio para conectarse al #13#10servicio Merge Plugins Backend.
 mpOpt_lblPort_Caption=Puerto servidor
-mpOpt_kbNoStatistics_Caption=No enviar edo. de uso
+mpOpt_lblPort_Hint=El puerto para conectarse a Merge Plugins #13#10servicio Backend.
+mpOpt_kbNoStatistics_Caption=No enviar estadísticas de uso
+mpOpt_kbNoStatistics_Hint=Si está marcada, no se va a enviar estadísticas de uso de #13#10el merge plugins backend.  Por favor, consulte la #13#10documentación para obtener más información sobre esta #13#10función y privacidad.
 mpOpt_gbLogging_Caption=Logging
 mpOpt_lblClientColor_Caption=Cliente
 mpOpt_lblGeneralColor_Caption=General
@@ -256,26 +294,38 @@ mpOpt_lblMergeColor_Caption=Fusión
 mpOpt_lblPluginColor_Caption=Plugin
 mpOpt_lblErrorColor_Caption=Errores
 mpOpt_lblTemplate_Caption=Plantilla
+mpOpt_lblTemplate_Hint=La plantilla para los mensajes de registro. Puedes cambiar #13#10esto para cambiar cómo se muestran los mensajes de registro en #13#10la aplicación. Las variables disponibles: {{Time}}, #13#10{{AppTime}}, {{Group}}, {{Label}}, {{Text}}.
 mpOpt_lblSample_Caption=Muestra
 { ## Integrations Tab ## }
 mpOpt_IntegrationsTabSheet_Caption=Integraciones
 mpOpt_btnDetect_Caption=Detectar integraciones
-mpOpt_gbModOrganizer_Caption=Mod Organizer
+mpOpt_gbModManager_Caption=Mod Manager (NMM or MO)
 mpOpt_kbUsingMO_Caption=Estoy utilizando Mod Organizer
-mpOpt_kbCopyGeneralAssets_Caption=Copiar activos generales
-mpOpt_lblModOrganizerPath_Caption=Mod Organizer path
-mpOpt_lblModOrganizerModsPath_Caption=Mod Organizer mods path
+mpOpt_kbUsingMO_Hint=Marcar si está utilizando Mod Organizer y quiere #13#10acceder a la orden de carga de su perfi de Mod Organizer #13#10y funciones de integración de Mod Organizer.
+mpOpt_kbUsingNMM_Caption=Estoy utilizando Nexus Mod Manager
+mpOpt_kbUsingNMM_Hint=Marcar si está utilizando Nexus Mod Manager alpha #13#10v0.60+ acceder a Nexus Mod Manager características de integración.
+mpOpt_kbCopyGeneralAssets_Caption=Copia de activos generales
+mpOpt_kbCopyGeneralAssets_Hint=Si se marca, los activos generales de las instalaciones de la MOD #13#10serán copiados durante el proceso de fusión, lo que permite#13#10 crear enteramente independientee #13#10mods fusionados. Consulte la documentación para obtener más #13#10información sobre los activos generales.
+mpOpt_lblManagerPath_Caption=Mod manager path
+mpOpt_lblModManagerPath_Hint=La ruta de la carpeta que contiene ModOrganizer.exe or #13#10NexusModManager.exe.  Al usar Mod Organizer, este debe estar configurado correctamente para que la #13#10aplicación acceda a su pedido de carga de Mod Organizer.
+mpOpt_lblModsPath_Caption=Mod manager mods path
+mpOpt_lblModsPath_Hint=La ruta de su MO/NMM. Esta #13#10debe establecerse correctamente para utilizar los activos generales de copia de la #13#10opción.
 mpOpt_gbPapyrus_Caption=Papyrus
 mpOpt_lblDecompilerPath_Caption=Champollion Decompiler path
+mpOpt_lblDecompilerPath_Hint=La ruta de acceso al archivo ejecutable Champollion Decompiler #13#10(x32 or x64), que se puede descargar de Nexus #13#10Mods.  Se debe establecer correctamente para usar la gestion de #13#10opción fragmento script.
 mpOpt_lblCompilerPath_Caption=Papyrus Compiler path
+mpOpt_lblCompilerPath_Hint=The path to the Papyrus Compiler executable, #13#10which comes with the Creation Kit.  Must be set #13#10correctly to use the Handle script fragments #13#10option.
 mpOpt_lblFlagsPath_Caption=Papyrus flags path
+mpOpt_lblFlagsPath_Hint=La ruta de acceso al archivo Papyrus flags, que viene #13#10con el Creation Kit.  Debe establecerse correctamente para #13#10usar la opción gestión de fragmentos script.
 mpOpt_gbBSAs_Caption=BSAs
 mpOpt_lblBSAOptPath_Caption=BSAOpt path
+mpOpt_lblBSAOptPath_Hint=La ruta de acceso al archivo ejecutable BSAOpt v2.0 (x32 or #13#10x64).  Debe establecerse correctamente para utilizar la opción de #13#10reconstrución fusion BSA.
 mpOpt_lblBSAOptOptions_Caption=BSAOpt opciones
+mpOpt_lblBSAOptOptions_Hint=Sus opciones de línea de comandos para la construcción de BSA utilizando #13#10BSAOpt.  Debe establecerse correctamente para utilizar el Build #13#10merged BSA option.  Consulte la documentación de #13#10más información.
 { #### DYNAMIC #### }
-mpOpt_ExeFilter=Executables|*.exe
-mpOpt_FlagsFilter=Flags files|*.flg
-mpOpt_ModOrganizerNotFound=No se pudo detectar automáticamente la ruta del archivo de Mod Organizer's. Por favor, buscala por ti mismo.
+mpOpt_ExeFilter=Ejecutables (*.exe)|*.EXE|Todos los archivos (*.*)|*.*
+mpOpt_FlagsFilter=Flags archivos (*.flg)|*.FLG|Todos los archivos (*.*)|*.*
+mpOpt_ModOrganizerNotFound=No se pudo detectar automáticamente la ruta del archivo de Mod Organizer. Por favor, localizalo manualmente.
  
 { TReportForm }
 mpRep_btnNext_Caption=Siguiente
@@ -285,7 +335,7 @@ mpRep_Done=Hecho
 mpRep_cbRating_Hint0=Sólo recomendar un plugin de la lista negra si estás seguro de que en ningún caso#13#10sera alguna vez fusionables.  Esto es#13#10para los plugins que no se pueden fusionar. Por favor, explique por qué#13#10el plugin debe ser puesto en la lista negra en la sección de Notas.
 mpRep_cbRating_Hint1=Fallo de fusión significa que al combinar el plugin fallo completamente. E.g.#13#10La fusion del plugin causa CTDs, problemas de estabilidad importante o fusión#13#10fallos para crear un plugin en todos.
 mpRep_cbRating_Hint2=Disfuncional significa que la fusión no funciona dentro del juego, con los aspectos principales#13#10De los plugins que se fusionaron no trabajaran o estan totalmente ausentes.
-mpRep_cbRating_Hint3=Parcialmente funcional significa que la mayor parte del contenido del plugin funciona#13#10Pero algunos de ellos no lo hace Esto sería si el plugin logra sus#13#10metas, pero tiene errores que se crearon en la fusión.
+mpRep_cbRating_Hint3=Parcialmente funcional significa que la mayor parte del contenido del plugin es funciona#13#10Pero algunos de ellos no lo son. Esto sería si el plugin logra sus#13#10metas, pero tiene errores que se crearon en la fusión.
 mpRep_cbRating_Hint4=Ajuste requerido significa que tienes el plugin para funcionar a la perfección en una#13#10fusión, pero tuvo que ajustar algunas cosas para conseguir que funcione. Por ejemplo errores#13#10arreglos o modificación de archivos activos.
 mpRep_cbRating_Hint5=Perfecto significa que todos los aspectos del plugin funcionan perfectamente#13#10Y que no tienes que hacer ningun ajuste. Nada falta, nada#13#10esta roto.
 { ## Info panel ## }
@@ -294,14 +344,14 @@ mpRep_lblHash_Caption=HASH: %s
 mpRep_lblRecords_Caption=REGISTROS: %d
 { ## User reports ## }
 mpRep_gbUserReports_Caption=Informes existentes
-mpRep_lblExRating_Caption=Clasificación media
+mpRep_lblExRating_Caption=Valoración media
 mpRep_lblExReports_Caption=Número de informes
-mpRep_lblViewDetails_Caption=Ver más detalles
+mpRep_lblViewDetails_Caption=Ver detalles
 mpRep_lblExRatingValue_Caption=Sin clasificación
 mpRep_lblExReportsvalue_Caption=0
 { ## Your report ## }
 mpRep_gbYourReport_Caption=Su informe
-mpRep_lblRating_Caption=clasificación 
+mpRep_lblRating_Caption=Clasificación 
 mpRep_cbRating_Item0=-1: Lista negra
 mpRep_cbRating_Item1=0: Fracaso
 mpRep_cbRating_Item2=1: Disfuncional
@@ -310,8 +360,8 @@ mpRep_cbRating_Item4=3: Ajuste requerido
 mpRep_cbRating_Item5=4: Perfecto
 mpRep_lblNotes_Caption=Notas
 mpRep_lblCharacters_Caption=255
-mpRep_NotesTooShort=Notes too short!  Enter moar!
-mpRep_NotesTooLong=Notes too long, cut back dawg!
+mpRep_NotesTooShort=Notas demasiado cortas! Introduzca Moar!
+mpRep_NotesTooLong=Notas demasiado largas, recortar!
  
 { TChangeLogForm }
 mpCha_LabelPrompt_Caption=Registro de cambios
@@ -320,14 +370,14 @@ mpCha_ButtonSkip_Caption=Saltar
  
 { TProgressForm }
 { #### DYNAMIC #### }
-mpProg_Closing=Cerrar
-mpProg_Checking=Comprobación de errores
-mpProg_DoneChecking=Comprobación de errores realizado
-mpProg_Merging=Construir fusiones
-mpProg_DoneBuilding=Construcción de Fusiones realizado
-mpProg_Fixing=Solución de errores
-mpProg_DoneFixing=Solución de errores realizado
-mpProg_SavePlugin=Salvar plugin %s?
+mpProg_Closing=Cerrando
+mpProg_Checking=Comprobando errores
+mpProg_DoneChecking=Comprobación de errores realizada
+mpProg_Merging=Construyendo fusiones
+mpProg_DoneBuilding=Construcción de Fusiones realizada
+mpProg_Fixing=Arreglando Errores
+mpProg_DoneFixing=Arreglo de errores realizado
+mpProg_SavePlugin=Salvado plugin %s?
 mpProg_GeckScripts=Se modificó el código fuente de ciertos scripts, así que es #13#10necesario volver a compilar en el GECK:#13#10#13#10%s
 mpProg_NavConflicts=Había algunos conflictos NavMesh. Necesitarás reconstruir #13#10estas navmeshes en el CK:#13#10#13#10%s
 
@@ -337,24 +387,24 @@ mpRes_btnOK_Caption=OK
 mpRes_tsBrokenDependencies_Caption=Dependencias rotas
 mpRes_lblBrokenDependencies_Caption=Su fusión rompe las dependencias de otros plugins en su orden de carga. Puede quitar los plugins problemáticos de la fusión o añadir plugins dependientes a la fusión.
 { ## Broken Dependencies Popup Menu ## }
-mpRes_IgnoreDependencyItem_Caption=Ignorar dependencia
+mpRes_IgnoreDependencyItem_Caption=Ignorar dependencias
 mpRes_RemoveBreakingPluginItem_Caption=Quitar plugin de la fusión
 mpRes_AddDependencyItem_Caption=Añadir dependencia a la fusión
 { ## Non-contiguous Plugins Tab ## }
-mpRes_tsNonContiguous_Caption=Plugins no contiguos
+mpRes_tsNonContiguous_Caption=Plugins NO contiguos
 mpRes_lblNonContiguous_Caption=Su fusión tiene plugins no contiguos. Se recomienda combinar solo plugins que son contiguos para evitar problemas en el plugin combinado resultante. Tendrás que ajustar su orden de carga y reiniciar fusiónar Plugins para resolver esto.
 mpRes_btnIgnoreContiguous_Caption=Ignorar
-{ ## Plugin Errors Tab ## }
-mpRes_tsPluginErrors_Caption=Errores de plugin
-mpRes_lblPluginErrors_Caption=Es necesario comprobar todos los plugins en su combinación de errores antes de poder construir la fusión. Plugins con errores no puede combinarse correctamente - algunos contenidos se pueden perder! Puedes tener errores en la fusión del plugins intenta corregir los errores del plugins o quitar los plugins con errores de su fusión. Ignorar los errores en los plugins es bajo su propio riesgo!
-{ ## Plugin Errors Popup Menu ## }
-mpRes_IgnoreErrorsItem_Caption=Ignorar los errores
-mpRes_RemoveErrorsPluginItem_Caption=Quitar plugin de la fusión
+{ ## Plugin Errores Tab ## }
+mpRes_tsPluginErrores_Caption=Errores de Plugin
+mpRes_lblPluginErrores_Caption=Es necesario comprobar todos los plugins en su combinación de errores antes de poder construir la fusión. Plugins con errores no puede combinarse correctamente - algunos contenidos se pueden perder! Puedes tener errores en la fusión del plugins intenta corregir los errores del plugins o quitar los plugins con errores de su fusión. Ignorar los errores en los plugins es bajo su propio riesgo!
+{ ## Plugin Errores Popup Menu ## }
+mpRes_IgnoreErroresItem_Caption=Ignorar Errores
+mpRes_RemoveErroresPluginItem_Caption=Quitar plugin de la fusión
 mpRes_CheckPluginItem_Caption=Comprobar plugin para errores
-mpRes_FixErrorsItem_Caption=Corregir errores de plugin
+mpRes_FixErroresItem_Caption=Corregir errores en plugin
 { ## Other Issues Tab ## }
 mpRes_tsOtherIssues_Caption=Otras cuestiones
-mpRes_lblOtherIssues_Caption=Su fusión tiene otros problemas que hace que no se pueda construir. Tal vez haya plugins en esta fusión que no estan cargados, sus directorios no son válidos o su fusión no tiene plugins.
+mpRes_lblOtherIssues_Caption=Su fusión tiene otros problemas que hace que no se pueda construir. Tal vez haya plugins en esta fusión que no estan cargados, sus directorios no son válidos o su fusión no tiene pluginst.
 { ## Other Issues Popup Menu ## }
 mpRes_RemoveUnloadedPluginItem_Caption=Quitar plugin
 { #### DYNAMIC #### }
@@ -363,11 +413,13 @@ mpRes_NoPlugins=No plugins
 mpRes_NoPlugins_Merge=Fusión no tiene plugins
 mpRes_DirBlank_Merge=Directorio de fusión está en blanco
 mpRes_DirBlank_MO=Directorio Mod Organizer está en blanco
-mpRes_DirInvalid=Directorio no válido
-mpRes_DirInvalid_MO=Directorio Mod Organizer directory no es válido
+mpRes_DirInvalid=Directorio invalido
+mpRes_DirInvalid_MO=Directorio Mod Organizer es invalido
 mpRes_UnloadedPlugin=Descargar plugin
-mpRes_NeedsErrorCheck=Necesitan verificar errores
-mpRes_HasErrors=Has errores
-mpRes_DoNotMerge=Couldn't add plugin %s to merge %s, it has the "Do not merge" flag.
-mpRes_Blacklisted=Couldn't add plugin %s to merge %s, it's blacklisted.
-mpRes_InMerge=Couldn't add plugin %s to merge %s, it's already in a merge.
+mpRes_NeedsErrorCheck=Necesitas verificar errores
+mpRes_HasErrores=Has Errores
+mpRes_DoNotMerge=No puedes agregar plugin %s para fusionar %s, tienes la flag de "No fusionar".
+mpRes_Blacklisted=No puedes agregar plugin %s para fusionar %s, está en la lista negra.
+mpRes_InMerge=No puedes agregar plugin %s para fusionar %s, ya está en una fusión.
+mpRes_Minor=Menor
+mpRes_Critical=Critico
