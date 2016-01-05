@@ -178,14 +178,14 @@ begin
           master := PluginByFileName(fn);
           if master._File.LoadOrder > firstLoadOrder then begin
             bNonContiguousCritical := true;
-            ListItem.SubItems.Add('Critical');
+            ListItem.SubItems.Add(GetLanguageString('mpRes_Critical'));
           end;
         end;
       end;
 
       // add Minor subitem if not Critical
       if ListItem.SubItems.Count = 1 then
-        ListItem.SubItems.Add('Minor');
+        ListItem.SubItems.Add(GetLanguageString('mpRes_Minor'));
     end;
 
     // check if plugins break dependencies

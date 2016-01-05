@@ -430,3 +430,5 @@ mpRes_HasErrors=Has errors
 mpRes_DoNotMerge=Couldn't add plugin %s to merge %s, it has the "Do not merge" flag.
 mpRes_Blacklisted=Couldn't add plugin %s to merge %s, it's blacklisted.
 mpRes_InMerge=Couldn't add plugin %s to merge %s, it's already in a merge.
+mpRes_Minor=Minor
+mpRes_Critical=Critical
