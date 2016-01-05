@@ -171,6 +171,7 @@ begin
   end;
 
   // create new plugin file
+  SysUtils.FormatSettings.DecimalSeparator := '.';
   aFile := wbNewFile(wbDataPath + filename, LoadOrder);
   aFile._AddRef;
 
