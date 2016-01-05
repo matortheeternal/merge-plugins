@@ -1,0 +1,421 @@
+﻿{ TMergeForm }
+{ ## QuickBar ## }
+mpMain_NewButton_Hint=创造新合并项|生成一个新合并文件。
+mpMain_FindErrorsButton_Hint=寻找错误|
+mpMain_BuildButton_Hint=建立合并项|
+mpMain_ReportButton_Hint=提交报告|针对你已经成功合并的#13#10所有插件提交报告。#13#10
+mpMain_DictionaryButton_Hint=查看插件报告|打开插件报告查看器来查看其它使用者#13#10提交的所有报告。#13#10
+mpMain_OptionsButton_Hint=选项|改变用来控制程序运行#13#10的选项。#13#10
+mpMain_UpdateButton_Hint=更新|
+mpMain_HelpButton_Hint=帮助|点击这个按钮，然后点击任何组件#13#10来获得帮助。#13#10
+{ #### DYNAMIC #### }
+mpMain_NoPluginsToCheck=没有任何插件可以检查错误。
+mpMain_FindErrors_Loader=你不能检查插件错误，直到#13#10后台加载完成。#13#10
+mpMain_CheckAllPlugins=检查所有已经加载，并且没有#13#10列入黑名单的插件错误。#13#10
+mpMain_NoMerges=没有任何合并项可以建立或者重建。
+mpMain_BuildMerges_Loader=你不能建立合并项，直到#13#10后台加载完成。#13#10
+mpMain_CheckMerges=在建立合并项之前，你需要检查#13#10你准备合并的所有插件的潜在错误。#13#10
+mpMain_BuildAllMerges=建立所有你准备建立或者重建#13#10的合并项。#13#10
+mpMain_UpdateBoth=程序和插件报告文件有可用更新。
+mpMain_UpdateProgram=程序有可用更新。
+mpMain_UpdateDictionary=插件报告文件有可用更新。
+mpMain_NoUpdates=没有可用更新。
+mpMain_NoMergesToReportOn=提交报告|没有合并项可以提交。
+mpMain_NoDictionary=查看插件报告|没有插件报告文件可以查看。
+{ ## Main Panel ## }
+{ ## Details Panel ## }
+mpMain_DetailsLabel_Caption=详细说明
+mpMain_DetailsCopyToClipboardItem_Caption=复制到剪切板
+{ ## Plugins Tab ## }
+mpMain_PluginsTabSheet_Caption=插件
+mpMain_PluginsListView_Column0=索引
+mpMain_PluginsListView_Column1=文件名
+mpMain_PluginsListView_Column2=标记
+mpMain_PluginsListView_Column3=合并项
+{ #### DYNAMIC #### }
+mpMain_PluginFlags=%s#13#10标记为#13#10%s
+mpMain_PluginDetails=插件详细信息
+mpMain_Filename=文件名
+mpMain_Hash=哈希值
+mpMain_FileSize=文件大小
+mpMain_DateModified=修改日期
+mpMain_MergeRating=合并评级
+mpMain_Flags=标记
+mpMain_NumRecords=记录数据数量
+mpMain_NumOverrides=覆写数据数量
+mpMain_Author=作者
+mpMain_Description=描述
+mpMain_Masters=前置Master文件
+mpMain_Errors=错误
+mpMain_Reports=报告
+{ ## Plugins Popup Menu ## }
+mpMain_AddToMergeItem_Caption=添加到合并项
+mpMain_NewMergeItem_Caption=<New Merge>
+mpMain_RemoveFromMergeItem_Caption=从合并项移除
+mpMain_ReportOnPluginItem_Caption=报告插件
+mpMain_DoNotMergeItem_Caption=不允许合并
+mpMain_OpenPluginLocationItem_Caption=打开插件位置
+{ ## Errors Submenu ## }
+mpMain_ErrorsItem_Caption=错误
+mpMain_CheckForErrorsItem_Caption=检查错误
+mpMain_FixErrorsItem_Caption=修复错误
+mpMain_IgnoreErrorsItem_Caption=忽略错误
+mpMain_ResetErrorsItem_Caption=重置错误
+mpMain_DoNotMergeItem_Caption=不允许合并
+mpMain_OpenPluginLocationItem_Caption=打开插件位置
+{ #### DYNAMIC #### }
+mpMain_UnignoreErrors=取消忽略错误
+mpMain_AllowMerging=允许合并
+{ ## Merges Tab ## }
+mpMain_MergesTabSheet_Caption=合并项
+mpMain_MergesListView_Column0=索引
+mpMain_MergesListView_Column1=名字
+mpMain_MergesListView_Column2=文件名
+mpMain_MergesListView_Column3=大小
+mpMain_MergesListView_Column4=建立日期
+{ #### DYNAMIC #### }
+mpMain_MergeDetails=合并细节
+mpMain_Status=状态
+mpMain_MergeName=合并项名称
+mpMain_PluginCount=插件总数
+mpMain_DateBuilt=建立日期
+mpMain_Plugins=插件
+mpMain_MergeMethod=合并方法
+mpMain_Renumbering=重编号
+mpMain_Files=文件
+mpMain_Fails=失败
+mpMain_TooManyFiles=文件太多以至于不能显示。
+mpMain_TooManyFails=失败项太多以至于不能显示。
+mpMain_DeleteMerges=你确定要删除这些合并项吗？
+{ ## Merges Popup Menu ## }
+mpMain_CreateNewMergeItem_Caption=创造新合并项
+mpMain_EditMergeItem_Caption=编辑合并项
+mpMain_DeleteMergeItem_Caption=删除合并项
+mpMain_BuildMergeItem_Caption=建立合并项
+mpMain_ToggleRebuildItem=开关重建状态
+mpMain_OpenInExplorerItem_Caption=在管理器内打开
+mpMain_ToggleRebuildItem_Caption=开关重建状态
+{ ## Plugins Submenu ## }
+mpMain_PluginsItem_Caption=插件
+mpMain_CheckPluginsItem_Caption=检查插件错误
+mpMain_ResolveIssuesItem_Caption=解决方案
+mpMain_ReportOnPluginsItem_Caption=报告插件
+mpMain_FixPluginsItem_Caption=修复插件错误
+{ #### DYNAMIC #### }
+mpMain_BuildMerge=建立合并项
+mpMain_RebuildMerge=重建合并项
+mpMain_BuildMerges=建立合并项
+mpMain_RebuildMerges=重建合并项
+{ ## Log Tab ## }
+mpMain_LogTabSheet_Caption=记录日志
+{ #### DYNAMIC #### }
+mpMain_AppDetails=应用详细说明
+mpMain_Application=应用
+mpMain_Author=作者
+mpMain_Version=版本
+mpMain_DateBuilt=建立日期
+mpMain_GameMode=游戏模式
+mpMain_Language=语言
+mpMain_TimesRun=运行次数
+mpMain_MergesBuilt=已建立合并项
+mpMain_PluginsChecked=已检查错误插件
+mpMain_PluginsFixed=已修复插件
+mpMain_PluginsMerged=已合并插件
+mpMain_ReportsSubmitted=已递交报告
+mpMain_NexusMods=Nexus Mods页面
+mpMain_GitHub=GitHub协议
+mpMain_ApiCredits=API制作人员
+mpMain_xEditVersion=xEdit版本
+mpMain_xEditCredits=xEdit制作人员
+mpMain_Testers=测试者
+mpMain_Translators=翻译者
+mpMain_LoadException=插件加载异常
+mpMain_PluginsNotLoaded=由于异常情况，有部分插件没有被#13#10加载。你仍然可以使用此程序。请查看#13#10记录日志窗口查看详细信息。#13#10
+{ ## Log Popup Menu ## }
+mpMain_FilterGroupItem_Caption=过滤器群组
+mpMain_FilterLabelItem_Caption=过滤器标记
+mpMain_CopyToClipboardItem_Caption=复制到剪切板
+mpMain_SaveAndClearItem_Caption=保存并清除
+{ #### DYNAMIC #### }
+mpMain_Enable=启用
+mpMain_Disable=禁用
+mpMain_AutoScroll=自动滚屏
+{ ## Status Bar ## }
+{ #### DYNAMIC #### }
+mpMain_LoaderLimitations=你现在不能检查错误或者建立合并项，#13#10直到插件加载完毕。#13#10
+mpMain_LoaderInProgress=后台加载正在进行
+mpMain_LoaderFinished=后台加载已结束
+ 
+{ TDictionaryForm }
+{ ## Entries ## }
+mpDict_gbFiltering_Caption=过滤器选项
+mpDict_lblFilename_Caption=文件名
+mpDict_lblRecords_Caption=记录 
+mpDict_lblVersion_Caption=版本
+mpDict_lblReports_Caption=报告
+mpDict_lblRating_Caption=评级
+{ ## Details ## }
+mpDict_lblDictionary_Caption=插件报告文件信息：
+{ ## Notes ## }
+mpDict_lblNotes_Caption=项目注释：
+{ #### DYNAMIC #### }
+mpDict_Filename=文件名
+mpDict_FileSize=文件大小
+mpDict_DateModified=修改日期
+mpDict_NumEntries=项目数量
+mpDict_NumReports=汇总报告
+mpDict_EntriesDisplayed=展示项目
+mpDict_BlacklistSize=黑名单大小
+ 
+{ TEditForm }
+mpEdit_lblName_Caption=名称
+mpEdit_lblFilename_Caption=文件名
+mpEdit_lblMethod_Caption=合并方法
+mpEdit_cbMethod_Item0=覆写
+mpEdit_cbMethod_Item1=新记录
+mpEdit_lblRenumbering_Caption=重编号
+mpEdit_cbRenumbering_Item0=冲突项
+mpEdit_cbRenumbering_Item1=所有
+mpEdit_btnOk_Caption=是
+mpEdit_btnCancel_Caption=取消
+mpEdit_TabSheet_Caption=编辑合并项
+
+{ TOptionsForm }
+mpOpt_btnCancel_Caption=取消
+mpOpt_btnOK_Caption=是
+{ #### DYNAMIC #### }
+mpOpt_Browse=浏览
+{ ## General Tab ## }
+mpOpt_GeneralTabSheet_Caption=常规
+mpOpt_gbLanguage_Caption=语言
+mpOpt_lblLanguage_Caption=当前语言
+mpOpt_lblLanguage_Hint=你当前使用的语言。你可以在程序正在运行的时候#13#10切换语言，所有词条都会更新为你所选的语言版本。
+mpOpt_gbStyle_Caption=风格
+mpOpt_kbSimpleDictionary_Caption=简化插件报告查看器
+mpOpt_kbSimpleDictionary_Hint=启用此项使插件报告查看器的记录按照没有颜色的#13#10方法显示。
+mpOpt_kbSimplePlugins_Caption=简化插件列表
+mpOpt_kbSimplePlugins_Hint=启用此项使插件列表的记录按照没有颜色#13#10或者标记颜色的方法展示。
+mpOpt_gbReports_Caption=报告
+mpOpt_lblUsername_Caption=用户名
+mpOpt_lblUsername_Hint=你用于Merge Plugins后台的用户名。#13#10用来提交报告。你必须要先注册一个用户名#13#10才能提交报告。
+mpOpt_btnRegister_Caption=检查
+mpOpt_btnRegister_Hint=检查此用户名是否可用
+mpOpt_lblStatus_Caption=注册状态
+mpOpt_lblStatus_Hint=你的后台的注册状态。
+mpOpt_lblStatusValue_Caption=无效用户名
+mpOpt_lblStatusValue_Hint=用户名长度必须大于等于4个字符
+mpOpt_btnReset_Caption=重置
+mpOpt_gbUpdating_Caption=更新
+mpOpt_kbUpdateDictionary_Caption=自动更新插件报告
+mpOpt_kbUpdateDictionary_Hint=如果启用此项，那么此软件启动时将会自动检查#13#10是否有可用的插件报告更新，如果有的话会自动下#13#10载更新内容。
+mpOpt_lblDictionaryStatus_Caption=最新版本
+mpOpt_btnUpdateDictionary_Caption=更新插件报告
+mpOpt_kbUpdateProgram_Caption=自动更新程序
+mpOpt_kbUpdateProgam_Hint=如果启用此项，那么此软件启动时将会自动检查#13#10是否有可用的程序更新，如果有的话会自动下#13#10载更新内容。
+mpOpt_lblProgramStatus_Caption=最新版本
+mpOpt_btnUpdateProgram_Caption=更新程序
+{ #### DYNAMIC #### }
+mpOpt_Check=检查
+mpOpt_PendingUpdate=你有潜在的程序更新！
+mpOpt_ServerUnavailable=服务器错误
+mpOpt_Register=注册
+mpOpt_Registered=已注册
+mpOpt_FailedToRegister=注册失败
+mpOpt_UsernameAvailable=用户名可以使用！
+mpOpt_UsernameUnavailable=对不起，用户名不能使用
+mpOpt_UpdateAvailable=可以进行更新！
+mpOpt_UpToDate=最新版本
+mpOpt_InvalidUsername=无效用户名
+mpOpt_ValidUsername=有效，它可用吗？
+mpOpt_AuthFailed=授权失败！
+mpOpt_VerionCompare=目前版本：%s#13#10最新版本：%s
+mpOpt_ServerUnavailable=对不起，服务器错误，请稍后再次尝试。
+mpOpt_FailedToRegister=出了一些问题。  o_o
+mpOpt_CheckUsername=检查用户名是否可用
+mpOpt_UsernameAvailable=单击注册按钮来确认。
+mpOpt_UsernameUnavailable=有人已经使用此用户名，请尝试其他的名称。
+mpOpt_UsernameTooShort=用户名长度至少需要4个字符。
+mpOpt_UsernameTooLong=用户名长度不能超过24个字符。
+mpOpt_ValidUsername=单击检查按钮来检查用户名是否可用
+mpOpt_Reset_Hint=如果你的IP地址没有变化，但是你遗失了验证秘钥的话，#13#10你可以通过单击此按钮来重置后台的注册情况。
+mpOpt_AuthFailed=单击重置按钮来重置你的验证秘钥。#13#10注意：如果你的IP地址有变化，该功能将会失效。如果你不能重新#13#10使用此用户名，请重新注册一个新用户名
+
+或者联系技术支持。
+{ ## Merging Tab ## }
+mpOpt_MergingTabSheet_Caption=合并
+mpOpt_gbAssetHandling_Caption=资源处理
+mpOpt_lblMergeDestination_Caption=合并项目标目录
+mpOpt_lblMergeDestination_Hint=这是你的合并项文件将要保存到的位置。合并项文件将根据#13#10你在这里所选择的路径进行保存。
+mpOpt_kbFaceGen_Caption=处理FaceGen文件
+mpOpt_kbFaceGen_Hint=如果选中，Merge Plugins将会根据需要复制并重命名facegen文件#13#10来与相关的NPC数据记录保持一致。此项会避免由于合并新增NPC的mod#13#10而导致的灰脸问题。
+mpOpt_kbVoiceAssets_Caption=处理声音文件
+mpOpt_kbVoiceAssets_Hint=如果选中，Merge Plugins将会根据需要复制并重命名声音文件#13#10来与相关的NPC数据记录保持一致。此项会避免由于合并新增NPC定制语音的mod#13#10而导致的NPC无语音问题。
+mpOpt_kbTranslations_Caption=处理MCM翻译文件
+mpOpt_kbTranslations_Hint=如果选中，Merge Plugins将会处理MCM翻译文件。这将防止可能发生#13#10的MCM混乱问题。
+mpOpt_kbINIs_Caption=处理INI文件
+mpOpt_kbINIs_Hint=如果选中，Merge Plugins将会合并与ESP相关的INI文件。你并不需要#13#10过分关注此项，但是有些mod有与esp相关的INI设置文件，游戏会根据插件数据加载#13#10这些文件。
+mpOpt_kbSEQ_Caption=处理SEQ文件
+mpOpt_kbSEQ_Hint=如果选中，Merge Plugins将会根据需要为合并项生成一个SEQ文件。#13#10这个文件是被游戏使用的特殊文件，用来使通过Start Game Enabled触发#13#10的任务在合适的时间启动。
+mpOpt_kbFragments_Caption=处理脚本片断
+mpOpt_kbFragments_Hint=如果选中，Merge Plugins将会根据需要反编译，调整并重编译papyrus脚本片断#13#10来保持合并插件的功能。这个特征只有“上古卷轴：天际”需要/可用。#13#10为了使用此特征，你需要正常设置papyrus集成项（反编译器，编译器和#13#10papyrus标记文件）。
+mpOpt_kbSelfRef_Caption=处理自我参照
+mpOpt_kbSelfRef_Hint=如果选中，Merge Plugins将会处理GECK的脚本源代码并修改引用。这个特征#13#10只有FO3和FNV需要/可用。注意：在合并之后你必须通过GECK来#13#10重编译这些脚本。
+mpOpt_kbExtractBSAs_Caption=提取BSAs
+mpOpt_kbExtractBSAs_Hint=如果选中，Merge Plugins将会寻找与所选插件相关的BSA文件并解压。如果你正在#13#10使用Mod Organizer，则不需要勾选此项。如果你正在使用NMM或者任何#13#10其他的mod管理器，则需要勾选此项或者生成合并BSA选项。
+mpOpt_kbBuildBSA_Caption=生成合并BSA
+mpOpt_kbBuildBSA_Hint=如果选中，Merge Plugins将会把所选插件的BSAs合并成一个单独的BSA文件。#13#10为了使用此功能，你必须正常设置BSAOpt集成项。如果你正在使用Mod Organizer，#13#10则不需要勾选此项。注意：BSA文件有最大2GB的容量限制。如果Merge Plugins#13#10检测到合并BSA文件太大则会弹出警告。
+mpOpt_kbBatCopy_Caption=批量复制资源
+mpOpt_kbBatCopy_Hint=如果选中，Merge Plugins将会通过一个批处理脚本来进行所有的源文件#13#10复制工作。这将简化合并过程并防止内存泄露。强烈推荐使用此项。
+mpOpt_gbDebug_Caption=调试
+mpOpt_kbDebugRenumbering_Caption=调试重编号
+mpOpt_kbDebugMergeStatus_Caption=调试合并状态
+mpOpt_kbDebugAssetCopying_Caption=调试资源复制
+mpOpt_kbDebugRecordCopying_Caption=调试记录复制
+mpOpt_kbDebugMasters_Caption=调试masters
+mpOpt_kbDebugBatchCopying_Caption=调试批量复制
+mpOpt_kbDebugBSAs_Caption=调试BSAs
+mpOpt_kbDebugScriptFragments_Caption=调试脚本片断
+{ ## Advanced Tab ## }
+mpOpt_AdvancedTabSheet_Caption=高级
+mpOpt_gbMergeProfile_Caption=配置文件
+mpOpt_lblCurrentProfile_Caption=当前配置文件
+mpOpt_btnChangeMergeProfile_Caption=切换配置文件
+mpOpt_btnChangeMergeProfile_Hint=选择此项来重启程序并使用不一样的配置选项。
+mpOpt_gbBackend_Caption=后台
+mpOpt_lblHost_Caption=服务器主机
+mpOpt_lblHost_Hint=用来连接Merge Plugins后台服务所需的IP或者域名。
+mpOpt_lblPort_Caption=服务器端口
+mpOpt_lblPort_Hint=用来连接Merge Plugins后台服务所需的端口。
+mpOpt_kbNoStatistics_Caption=不发送使用统计信息
+mpOpt_kbNoStatistics_Hint=如果选中，你将不会向Merge Plugins后台发送使用统计信息。#13#10查看帮助文件来获得更多关于特征和隐私的信息。
+mpOpt_gbLogging_Caption=日志
+mpOpt_lblClientColor_Caption=客户端
+mpOpt_lblGeneralColor_Caption=一般
+mpOpt_lblLoadColor_Caption=加载
+mpOpt_lblMergeColor_Caption=合并
+mpOpt_lblPluginColor_Caption=插件
+mpOpt_lblErrorColor_Caption=错误
+mpOpt_lblTemplate_Caption=模板
+mpOpt_lblTemplate_Hint=日志消息的模板。你可以修改此项来改变日志信息在应用程序窗口中的显示方式。#13#10可用变量：{{Time}}, {{AppTime}}, {{Group}}, {{Label}}, {{Text}}.
+mpOpt_lblSample_Caption=样板
+{ ## Integrations Tab ## }
+mpOpt_IntegrationsTabSheet_Caption=综合
+mpOpt_btnDetect_Caption=检测综合插件
+mpOpt_gbModManager_Caption=Mod管理器(NMM或者MO)
+mpOpt_kbUsingMO_Caption=我正在使用Mod Organizer
+mpOpt_kbUsingMO_Hint=如果你正在使用Mod Organizer，并且想要访问你的Mod Organizer配置文件#13#10的加载列表和综合特征的话请选择此项。
+mpOpt_kbUsingNMM_Caption=我正在使用Nexus Mod Manager
+mpOpt_kbUsingNMM_Hint=如果你正在使用Nexus Mod Manager alpha v0.60+，并且想要访问你的Nexus Mod Manager#13#10的综合特征的话请选择此项。
+mpOpt_kbCopyGeneralAssets_Caption=复制普通资源
+mpOpt_kbCopyGeneralAssets_Hint=如果勾选此项，则在mod安装过程中产生的普通资源将会在合并过程中被复制到合并项中，#13#10允许你创造一个完全独立的合并mod。查看帮助文件来获得更多关于普通资源的信息。
+mpOpt_lblManagerPath_Caption=Mod管理器路径
+mpOpt_lblModManagerPath_Hint=包含ModOrganizer.exe或者NexusModManager.exe的文件夹路径。当你使用Mod Organizer时，#13#10此项必须设置正确，以保证该应用能够访问Mod Organizer的加载列表。
+mpOpt_lblModsPath_Caption=Mod管理器mods路径
+mpOpt_lblModsPath_Hint=你的MO/NMM存放mod的路径。此项必须设置正确，以保证复制普通资源的正常功能。
+mpOpt_gbPapyrus_Caption=Papyrus
+mpOpt_lblDecompilerPath_Caption=Champollion反编译器路径
+mpOpt_lblDecompilerPath_Hint=指向Champollion Decompiler可执行程序(x32或者x64)的路径，你可以从Nexus Mods网站上#13#10下载此程序。此项必须设置正确，以保证处理脚本片断选项的正常功能。
+mpOpt_lblCompilerPath_Caption=Papyrus编译器路径
+mpOpt_lblCompilerPath_Hint=指向Papyrus Compiler可执行程序的路径，来自于Creation Kit。此项必须设置正确，#13#10以保证处理脚本片断选项的正常功能。
+mpOpt_lblFlagsPath_Caption=Papyrus标记文件路径
+mpOpt_lblFlagsPath_Hint=指向Papyrus标记文件的路径，来自于Creation Kit。此项必须设置正确，#13#10以保证处理脚本片断选项的正常功能。
+mpOpt_gbBSAs_Caption=BSAs
+mpOpt_lblBSAOptPath_Caption=BSAOpt路径
+mpOpt_lblBSAOptPath_Hint=指向BSAOpt v2.0可执行程序(x32或者x64)的路径。此项必须设置正确，以保证#13#10建立合并BSA选项的正常功能。
+mpOpt_lblBSAOptOptions_Caption=BSAOpt选项
+mpOpt_lblBSAOptOptions_Hint=使用BSAOpt来生成BSA时使用的命令行选项。此项必须设置正确，以保证建立合并BSA选项#13#10的正常功能。 查看帮助文件来获得更多信息。
+{ #### DYNAMIC #### }
+mpOpt_ExeFilter=可执行文件 (*.exe)|*.EXE|All files (*.*)|*.*
+mpOpt_FlagsFilter=标记文件 (*.flg)|*.FLG|All files (*.*)|*.*
+mpOpt_ModOrganizerNotFound=不能自动检测到Mod Organizer的文件路径。请手动定位。 
+{ TReportForm }
+mpRep_btnNext_Caption=下一步
+mpRep_btnPrev_Caption=前一步
+{ #### DYNAMIC #### }
+mpRep_Done=Done
+mpRep_cbRating_Hint0=只建议当你非常确定某个插件没有任何情况下能够被合并时将其列入黑名单。#13#10这是为那些绝对不能被合并的插件设置的选项。请在文本框里解释为什么#13#10你认为该插件需要被列入黑名单。
+mpRep_cbRating_Hint1=合并失败意味着合并该插件会导致完全失败。举例：合并项插件会导致CTD，#13#10核心稳定性问题，或者合并项创建完全失败。
+mpRep_cbRating_Hint2=功能失常意味着合并项在游戏内不能正常工作，被合并插件的主要功能#13#10不能起效或者完全消失。
+mpRep_cbRating_Hint3=部分功能正常意味着插件的大部分功能都能正常工作，但是某些功能不会。#13#10如果插件的功能基本正常但是在合并时出现问题时请选择此项。
+mpRep_cbRating_Hint4=需要调整意味着该插件在合并项中能够完美发挥作用，但是需要调整一些东西#13#10来达到这一点。举例：修复错误或者对资源文件的调整。
+mpRep_cbRating_Hint5=完美意味着该插件的所有功能都能完美起效并且你不需要做任何的额外调整，#13#10不会缺少功能也不会损坏插件。
+{ ## Info panel ## }
+mpRep_lblFlags_Caption=标记： %s
+mpRep_lblHash_Caption=哈希值： %s
+mpRep_lblRecords_Caption=记录： %d
+{ ## User reports ## }
+mpRep_gbUserReports_Caption=现存报告
+mpRep_lblExRating_Caption=平均评级
+mpRep_lblExReports_Caption=报告数量
+mpRep_lblViewDetails_Caption=查看详细信息
+mpRep_lblExRatingValue_Caption=无评级
+mpRep_lblExReportsvalue_Caption=0
+{ ## Your report ## }
+mpRep_gbYourReport_Caption=你的报告
+mpRep_lblRating_Caption=评级 
+mpRep_cbRating_Item0=-1: 黑名单
+mpRep_cbRating_Item1=0: 失败
+mpRep_cbRating_Item2=1: 功能失常
+mpRep_cbRating_Item3=2: 部分功能正常
+mpRep_cbRating_Item4=3: 需要调整
+mpRep_cbRating_Item5=4: 完美
+mpRep_lblNotes_Caption=注释
+mpRep_lblCharacters_Caption=255
+mpRep_NotesTooShort=注释太短！请输入更多！
+mpRep_NotesTooLong=注释太长，请缩短叙述！ 
+{ TChangeLogForm }
+mpCha_LabelPrompt_Caption=变更日志
+mpCha_ButtonInstall_Caption=安装
+mpCha_ButtonSkip_Caption=跳过 
+{ TProgressForm }
+{ #### DYNAMIC #### }
+mpProg_Closing=关闭中
+mpProg_Checking=正在检查错误
+mpProg_DoneChecking=检查错误完成
+mpProg_Merging=正在建立合并项
+mpProg_DoneBuilding=建立合并项完成
+mpProg_Fixing=正在修复错误
+mpProg_DoneFixing=修复错误完成
+mpProg_SavePlugin=是否保存插件%s？
+mpProg_GeckScripts=特定脚本的源代码已经被编辑，所以你需要#13#10使用GECK来重新编译：#13#10#13#10%s
+mpProg_NavConflicts=存在一些NavMesh冲突。你需要使用CK#13#10重建这些导航网格：#13#10#13#10%s
+{ TResolveForm }
+mpRes_btnOK_Caption=是
+{ ## Broken Dependencies Tab ## }
+mpRes_tsBrokenDependencies_Caption=依赖项被破坏
+mpRes_lblBrokenDependencies_Caption=你的合并项将会破坏你的加载列表中的其他插件的依赖性。你可以从合并项中移除有问题的插件，或者将依赖性插件加入到合并项中。
+{ ## Broken Dependencies Popup Menu ## }
+mpRes_IgnoreDependencyItem_Caption=忽略依赖项
+mpRes_RemoveBreakingPluginItem_Caption=从合并项中移除插件
+mpRes_AddDependencyItem_Caption=将依赖插件加入合并项
+{ ## Non-contiguous Plugins Tab ## }
+mpRes_tsNonContiguous_Caption=非连续插件
+mpRes_lblNonContiguous_Caption=你的合并项内有非连续排列的插件。高度建议只合并排列连续的插件来避免合并项的兼容问题。你需要调整你的排序列表并重新运行Merge Plugins来解决此问题。
+mpRes_btnIgnoreContiguous_Caption=忽略
+{ ## Plugin Errors Tab ## }
+mpRes_tsPluginErrors_Caption=插件错误
+mpRes_lblPluginErrors_Caption=你需要在建立合并项之前，检查你的合并项内的所有插件的错误。有错误的插件可能不会被正常合并 - 有一些数据可能会遗失！你可以让该软件来尝试修复插件内的错误，或者将错误插件从你的合并项内移除。忽略插件错误产生的问题由个人负责！
+{ ## Plugin Errors Popup Menu ## }
+mpRes_IgnoreErrorsItem_Caption=忽略错误
+mpRes_RemoveErrorsPluginItem_Caption=从合并项中移除插件
+mpRes_CheckPluginItem_Caption=检查插件错误
+mpRes_FixErrorsItem_Caption=修复插件错误
+{ ## Other Issues Tab ## }
+mpRes_tsOtherIssues_Caption=其他问题
+mpRes_lblOtherIssues_Caption=你的合并项存在其他问题，导致你不能建立它。也许是因为你没有加载合并项内所需的插件，或者你给的路径是无效的，或者你的合并项内没有有效插件。
+{ ## Other Issues Popup Menu ## }
+mpRes_RemoveUnloadedPluginItem_Caption=移除插件
+{ #### DYNAMIC #### }
+mpRes_IssuesResolved=所有问题已解决！
+mpRes_NoPlugins=没有插件
+mpRes_NoPlugins_Merge=合并项没有插件
+mpRes_DirBlank_Merge=合并项路径为空
+mpRes_DirBlank_MO=Mod Organizer路径为空
+mpRes_DirInvalid=路径无效
+mpRes_DirInvalid_MO=Mod Organizer路径无效
+mpRes_UnloadedPlugin=未加载插件
+mpRes_NeedsErrorCheck=需要检查错误
+mpRes_HasErrors=有错误
+mpRes_DoNotMerge=不能添加插件%s来合并%s，它有"不能合并"标记。
+mpRes_Blacklisted=不能添加插件%s来合并%s，它位于黑名单内。
+mpRes_InMerge=不能添加插件%s来合并%s，它已经存在于合并项内。
