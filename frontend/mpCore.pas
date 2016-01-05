@@ -153,7 +153,7 @@ type
 const
   // IMPORTANT CONSTANTS
   ProgramTesters = 'bla08, hishy, Kesta, EphemeralSagacity';
-  ProgramTranslators = 'GabenOurSavior, fiama, dhxxqk2010, Oaristys';
+  ProgramTranslators = 'GabenOurSavior, fiama, dhxxqk2010, Oaristys, proter, yohru';
   xEditVersion = '3.1.1';
   bTranslationDump = false;
 

@@ -1,0 +1,434 @@
+﻿{ TMergeForm }
+{ ## QuickBar ## }
+mpMain_NewButton_Hint=新規で作成|新規でマージを行います。
+mpMain_FindErrorsButton_Hint=エラー確認|
+mpMain_BuildButton_Hint=マージ作成|
+mpMain_ReportButton_Hint=レポートを提出|正常に作成できた全てのマージプラグインに関するレポートを#13#10提出してください。#13#10
+mpMain_DictionaryButton_Hint=辞書を見る|他のユーザーによって提出された全てのレポートを表示するには#13#10辞書ビューアを開きます。#13#10
+mpMain_OptionsButton_Hint=オプション|プログラムの設定を制御するオプションを変更します。#13#10
+mpMain_UpdateButton_Hint=アップデート|
+mpMain_HelpButton_Hint=ヘルプ|このボタンをクリックし、それらに関するヘルプを表示するには、#13#10フォーム上の任意のコンポーネントをクリックします。#13#10
+{ #### DYNAMIC #### }
+mpMain_NoPluginsToCheck=エラーのチェックをする為のプラグインがありません。
+mpMain_FindErrors_Loader=バックグラウンドロードが完了するまで#13#10エラーのチェックやマージを作成することはできません。#13#10
+mpMain_CheckAllPlugins=全てのプラグインのエラーのチェックをします。#13#10ただし、ブラックリストに載っていたり、#13#10ロードされていないプラグインは除きます。#13#10
+mpMain_NoMerges=作成または、再作成する為のマージはありません。
+mpMain_BuildMerges_Loader=バックグラウンドロードが完了するまで#13#10エラーのチェックやマージを作成することはできません。#13#10
+mpMain_CheckMerges=マージ作成を行う前に#13#10エラーがないか確認する必要があります。#13#10
+mpMain_BuildAllMerges=既にある、または再作成する準備の出来ている#13#10全てのマージ作業を行います。#13#10
+mpMain_UpdateBoth=プログラムと辞書の更新利用可能
+mpMain_UpdateProgram=利用可能なプログラムの更新
+mpMain_UpdateDictionary=辞書更新利用可能
+mpMain_NoUpdates=更新なし
+mpMain_NoMergesToReportOn=レポートを提出|レポートを提出しません。
+mpMain_NoDictionary=辞書を見る|辞書ファイルはありません
+{ ## Main Panel ## }
+{ ## Details Panel ## }
+mpMain_DetailsLabel_Caption=詳細
+mpMain_DetailsCopyToClipboardItem_Caption=クリップボードへコピー
+{ ## Plugins Tab ## }
+mpMain_PluginsTabSheet_Caption=プラグイン
+mpMain_PluginsListView_Column0=インデックス
+mpMain_PluginsListView_Column1=ファイル名
+mpMain_PluginsListView_Column2=フラグ
+mpMain_PluginsListView_Column3=マージ
+{ #### DYNAMIC #### }
+mpMain_PluginFlags=%s フラグ#13#10%s
+mpMain_PluginDetails=プラグイン詳細
+mpMain_Filename=ファイル名
+mpMain_Hash=ハッシュ
+mpMain_FileSize=ファイルサイズ
+mpMain_DateModified=更新日時
+mpMain_MergeRating=マージ評価
+mpMain_Flags=フラグ
+mpMain_NumRecords=レコード数
+mpMain_NumOverrides=オーバーライド数
+mpMain_Author=制作者
+mpMain_Description=説明
+mpMain_Masters=マスター
+mpMain_Errors=エラー
+mpMain_Reports=レポート
+{ ## Plugins Popup Menu ## }
+mpMain_AddToMergeItem_Caption=マージに追加
+mpMain_NewMergeItem_Caption=<新規マージ>
+mpMain_RemoveFromMergeItem_Caption=マージから削除
+mpMain_ReportOnPluginItem_Caption=プラグインのレポート
+mpMain_DoNotMergeItem_Caption=マージ不許可
+mpMain_OpenPluginLocationItem_Caption=プラグインの場所を開く
+{ ## Errors Submenu ## }
+mpMain_ErrorsItem_Caption=エラー
+mpMain_CheckForErrorsItem_Caption=エラーの確認
+mpMain_FixErrorsItem_Caption=エラーの修正
+mpMain_IgnoreErrorsItem_Caption=エラーを無視
+mpMain_ResetErrorsItem_Caption=エラーをリセット
+mpMain_DoNotMergeItem_Caption=マージを不許可
+mpMain_OpenPluginLocationItem_Caption=プラグインの場所を開く
+{ #### DYNAMIC #### }
+mpMain_UnignoreErrors=エラー除外を解除
+mpMain_AllowMerging=マージを許可
+{ ## Merges Tab ## }
+mpMain_MergesTabSheet_Caption=マージ
+mpMain_MergesListView_Column0=インデックス
+mpMain_MergesListView_Column1=名称
+mpMain_MergesListView_Column2=ファイル名
+mpMain_MergesListView_Column3=数
+mpMain_MergesListView_Column4=作成日
+{ #### DYNAMIC #### }
+mpMain_MergeDetails=マージ詳細
+mpMain_Status=ステータス
+mpMain_MergeName=マージ名称
+mpMain_PluginCount=プラグイン数
+mpMain_DateBuilt=作成日
+mpMain_Plugins=プラグイン
+mpMain_MergeMethod=マージ方式
+mpMain_Renumbering=リナンバリング
+mpMain_Files=ファイル
+mpMain_Fails=失敗
+mpMain_TooManyFiles=余りにも数が多く、ファイルの表示をしません。
+mpMain_TooManyFails=余りにも失敗数が多く、表示しません。
+mpMain_DeleteMerges=これらのマージを削除してもよろしいですか？
+{ ## Merges Popup Menu ## }
+mpMain_CreateNewMergeItem_Caption=新規でマージを作成
+mpMain_EditMergeItem_Caption=マージ編集
+mpMain_DeleteMergeItem_Caption=マージを削除
+mpMain_BuildMergeItem_Caption=マージを作成
+mpMain_ToggleRebuildItem=トグル 再作成ステータス
+mpMain_OpenInExplorerItem_Caption=エクスプローラーで開く
+mpMain_ToggleRebuildItem_Caption=トグル 再作成ステータス
+{ ## Plugins Submenu ## }
+mpMain_PluginsItem_Caption=プラグイン
+mpMain_CheckPluginsItem_Caption=確認 プラグインのエラー
+mpMain_ResolveIssuesItem_Caption=問題を解決します
+mpMain_ReportOnPluginsItem_Caption=プラグインの報告
+mpMain_FixPluginsItem_Caption=プラグインのエラー修正
+{ #### DYNAMIC #### }
+mpMain_BuildMerge=マージ作成
+mpMain_RebuildMerge=マージ再作成
+mpMain_BuildMerges=マージ作成
+mpMain_RebuildMerges=マージ再作成
+{ ## Log Tab ## }
+mpMain_LogTabSheet_Caption=ログ
+{ #### DYNAMIC #### }
+mpMain_AppDetails=アプリケーション詳細
+mpMain_Application=アプリケーション
+mpMain_Author=制作者
+mpMain_Version=バージョン
+mpMain_DateBuilt=作成日
+mpMain_GameMode=ゲームモード
+mpMain_Language=言語
+mpMain_TimesRun=起動回数
+mpMain_MergesBuilt=マージ作成
+mpMain_PluginsChecked=プラグインのエラー確認済
+mpMain_PluginsFixed=プラグインの修正済
+mpMain_PluginsMergedプラグインのマージ
+mpMain_ReportsSubmitted=レポート提出
+mpMain_NexusMods=Nexus Mods Page
+mpMain_GitHub=GitHub Repo
+mpMain_ApiCredits=APIクレジット
+mpMain_xEditVersion=xEditバージョン
+mpMain_xEditCredits=xEditクレジット
+mpMain_Testers=テスター
+mpMain_Translators=翻訳者
+mpMain_LoadException=例外プラグインのロード
+mpMain_PluginsNotLoaded=例外の為、全てのプラグインのロードはされていません#13#10しかし、プログラムは動作中です、詳細確認の為、ログタブを参照してください。
+{ ## Log Popup Menu ## }
+mpMain_FilterGroupItem_Caption=フィルター グループ
+mpMain_FilterLabelItem_Caption=フィルター ラベル
+mpMain_CopyToClipboardItem_Caption=クリップボードへコピー
+mpMain_SaveAndClearItem_Caption=セーブとクリア
+{ #### DYNAMIC #### }
+mpMain_Enable=有効
+mpMain_Disable=無効
+mpMain_AutoScroll=自動スクロール
+{ ## Status Bar ## }
+{ #### DYNAMIC #### }
+mpMain_LoaderLimitations=バックグラウンドロードが完了するまで#13#10エラーのチェックやマージを作成することはできません。
+mpMain_LoaderInProgress=バックグラウンドで読み込み中
+mpMain_LoaderFinished=バックグラウンドで読み込み完了
+ 
+{ TDictionaryForm }
+{ ## Entries ## }
+mpDict_gbFiltering_Caption=フィルタリングオプション
+mpDict_lblFilename_Caption=ファイル名
+mpDict_lblRecords_Caption=レコード
+mpDict_lblVersion_Caption=バージョン
+mpDict_lblReports_Caption=レポート
+mpDict_lblRating_Caption=評価
+{ ## Details ## }
+mpDict_lblDictionary_Caption=辞書情報:
+{ ## Notes ## }
+mpDict_lblNotes_Caption=エントリーノート:
+{ #### DYNAMIC #### }
+mpDict_Filename=ファイル名
+mpDict_FileSize=ファイルサイズ
+mpDict_DateModified=作成日
+mpDict_NumEntries=エントリー数
+mpDict_NumReports=合計レポート
+mpDict_EntriesDisplayed=エントリーが表示されます
+mpDict_BlacklistSize=ブラックリストの数
+ 
+{ TEditForm }
+mpEdit_lblName_Caption=名称
+mpEdit_lblFilename_Caption=ファイル名
+mpEdit_lblMethod_Caption=マージ方式
+mpEdit_cbMethod_Item0=Overrides
+mpEdit_cbMethod_Item1=New records
+mpEdit_lblRenumbering_Caption=Renumbering
+mpEdit_cbRenumbering_Item0=Conflicting
+mpEdit_cbRenumbering_Item1=All
+mpEdit_btnOk_Caption=OK
+mpEdit_btnCancel_Caption=キャンセル
+mpEdit_TabSheet_Caption=マージ編集
+
+{ TOptionsForm }
+mpOpt_btnCancel_Caption=キャンセル
+mpOpt_btnOK_Caption=OK
+{ #### DYNAMIC #### }
+mpOpt_Browse=Browse
+{ ## General Tab ## }
+mpOpt_GeneralTabSheet_Caption=一般
+mpOpt_gbLanguage_Caption=言語
+mpOpt_lblLanguage_Caption=現在の言語
+mpOpt_lblLanguage_Hint=現在使用している言語です。プログラムの実行中に変更可能で#13#10全ての文章は、新しく選択した言語に更新されます。
+mpOpt_gbStyle_Caption=スタイル
+mpOpt_kbSimpleDictionary_Caption=辞書簡易表示
+mpOpt_kbSimpleDictionary_Hint=色分けなしで辞書ビューアのエントリーを表示する為には、#13#10有効にします。
+mpOpt_kbSimplePlugins_Caption=プラグインリスト簡易表示
+mpOpt_kbSimplePlugins_Hint=色分けやフラグアイコンなしで#13#10プラグインのリストビュー表示にする為には、有効にします。
+mpOpt_gbReports_Caption=レポート
+mpOpt_lblUsername_Caption=ユーザー名
+mpOpt_lblUsername_Hint=バックエンドサーバーで使用するユーザー名、レポートを提出する為に使用します。#13#10ユーザー名を登録しなければ使用できません。
+mpOpt_btnRegister_Caption=チェック
+mpOpt_btnRegister_Hint=ユーザ名が利用可能であるか、確認してください。
+mpOpt_lblStatus_Caption=登録状態
+mpOpt_lblStatus_Hint=バックエンドサーバーへの登録状態
+mpOpt_lblStatusValue_Caption=無効なユーザー名
+mpOpt_lblStatusValue_Hint=ユーザー名の長さは少なくとも4文字でなければなりません。
+mpOpt_btnReset_Caption=リセット
+mpOpt_gbUpdating_Caption=アップデート
+mpOpt_kbUpdateDictionary_Caption=自動辞書更新
+mpOpt_kbUpdateDictionary_Hint=有効にした場合、起動時に辞書更新を確認し#13#10見つかった場合は、自動的にそれをダウンロード
+mpOpt_lblDictionaryStatus_Caption=最新
+mpOpt_btnUpdateDictionary_Caption=辞書更新
+mpOpt_kbUpdateProgram_Caption=自動プログラム更新
+mpOpt_kbUpdateProgam_Hint=有効にした場合、起動時にプログラム更新を確認し#13#10見つかった場合は、自動的にそれをダウンロード
+mpOpt_lblProgramStatus_Caption=最新
+mpOpt_btnUpdateProgram_Caption=プログラム更新
+{ #### DYNAMIC #### }
+mpOpt_Check=Check
+mpOpt_PendingUpdate=すでに最新版です
+mpOpt_ServerUnavailable=サーバーが使用できません
+mpOpt_Register=登録
+mpOpt_Registered=登録済
+mpOpt_FailedToRegister=登録に失敗しました。
+mpOpt_UsernameAvailable=ユーザー名使用可能
+mpOpt_UsernameUnavailable=ユーザー名が既に使用されています。
+mpOpt_UpdateAvailable=更新可能
+mpOpt_UpToDate=最新
+mpOpt_InvalidUsername=ユーザー名が無効です。
+mpOpt_ValidUsername=それは有効ですか？
+mpOpt_AuthFailed=認証に失敗しました！
+mpOpt_VerionCompare=現バージョン: %s#13#10新バージョン: %s
+mpOpt_ServerUnavailable=すみません、サーバーが使用できません、再度実行してください。
+mpOpt_FailedToRegister=おっとっと、何かが間違っていましたO_O
+mpOpt_CheckUsername=ユーザー名が利用可能であるかどうか、確認してください。
+mpOpt_UsernameAvailable=登録するにはクリックします。
+mpOpt_UsernameUnavailable=別のを試してみてください。
+mpOpt_UsernameTooShort=ユーザー名の長さは少なくとも4文字でなければなりません。
+mpOpt_UsernameTooLong=ユーザー名の長さは最大24文字です。
+mpOpt_ValidUsername=ユーザー名が利用可能であるかどうかを#13#10確認するには、チェックボタンをクリックします。
+mpOpt_Reset_Hint=IPアドレスが変更されていないが、何らかの形で自分の認証鍵を紛失した場合は#13#10このボタンをクリックすることで#13#10バックエンドサーバーで登録をリセットすることができます。
+mpOpt_AuthFailed=認証キーをリセットするには、[リセット]をクリックします。#13#10注:あなたが最後にログインしたIPが変更された場合、失敗します。#13#10ユーザー名を回復できない場合、新しいものか、サポートに問い合わせを行うことができます。
+{ ## Merging Tab ## }
+mpOpt_MergingTabSheet_Caption=マージ
+mpOpt_gbAssetHandling_Caption=Asset handling
+mpOpt_lblMergeDestination_Caption=マージファイル送り先ディレクトリー
+mpOpt_lblMergeDestination_Hint=これはマージファイルが保存されるディレクトリです。#13#10マージファイルは、ここで指定したディレクトリに#13#10その名称で各対応するフォルダに保存されます。
+mpOpt_kbFaceGen_Caption=Handle FaceGen files
+mpOpt_kbFaceGen_Hint=チェックした場合、対応するNPCレコードに関連付けられた状態を保つ為、#13#10必要に応じてファイルのfacegen名称が変更されます。#13#10これは、NPCを追加するプラグインをマージした後に起きる灰色の顔のバグを防ぐことができます。
+mpOpt_kbVoiceAssets_Caption=Handle voice files
+mpOpt_kbVoiceAssets_Hint=チェックした場合、対応するNPCレコードに関連付けられた状態を保つ為、#13#10必要に応じて音声ファイルの名称が変更されます。#13#10これは、NPCのカスタムダイアログを追加するプラグインをマージした後に起きる無声NPCのバグを防ぐことができます。
+mpOpt_kbTranslations_Caption=Handle MCM translations
+mpOpt_kbTranslations_Hint=チェックした場合、MCMの翻訳ファイルを処理します。#13#10マージした後に起きる文字化けしたMCMのバグを防ぐことができます。
+mpOpt_kbINIs_Caption=Handle INI files
+mpOpt_kbINIs_Hint=チェックした場合、プラグインのESPに関連するINIファイルを処理します。#13#10多くのmodは、この項目を持っていませんが、#13#10一部のmodは、ゲームのロードに関連するINIファイルを持っています。
+mpOpt_kbSEQ_Caption=Handle SEQ files
+mpOpt_kbSEQ_Hint=チェックした場合、必要に応じてSEQファイルを処理します。#13#10このファイルは、クエストを適切な時に起動する為に使用される、特殊なファイルです。
+mpOpt_kbFragments_Caption=Handle script fragments
+mpOpt_kbFragments_Hint=チェックした場合、プラグインがコンパイルされます。#13#10マージしたプラグインでその機能を維持する為に、#13#10必要に応じてpapyrus scriptの一部をコンパイルします。#13#10この機能は、Skyrimのみ必要で利用可能です。この機能を使用するには#13#10papyrus関連(逆コンパイラ、コンパイラ、及びpapyrusフラグファイル)#13#10を設定する必要があります。
+mpOpt_kbSelfRef_Caption=Handle self references
+mpOpt_kbSelfRef_Hint=チェックした場合、行儀の悪いスクリプトのソースコードを処理します。#13#10これはFO3とFNVでのみ必要で利用可能です#13#10注:マージ後に、これらの行儀の悪いスクリプトをあなたが再コンパイルする必要があります
+mpOpt_kbExtractBSAs_Caption=Extract BSAs
+mpOpt_kbExtractBSAs_Hint=チェックした場合、プラグインの関連付けられているBSAファイルを抽出しマージします。#13#10Mod Organizerの場合、このオプションを使用する必要はありません。#13#10NMMまたは他のMODマネージャーを#13#10使用している場合に備え、BSAのオプション項目を統合しました。
+mpOpt_kbBuildBSA_Caption=Build merged BSA
+mpOpt_kbBuildBSA_Hint=チェックした場合、単一のBSAとしてプラグインのBSAを結合しマージします。#13#10連携タブのBSAOpt項目で適切に設定する必要があります。#13#10Mod Organizerを使用している場合、このオプションを使用する必要はありません。#13#10注:BSAの最大サイズは2GBです。#13#10この容量超えのマージ処理を検出した場合、警告を出します。
+mpOpt_kbBatCopy_Caption=Batch copy assets
+mpOpt_kbBatCopy_Hint=チェックした場合、dos窓にてバッチスクリプトを使用し、マージしたmodの全てのファイルをコピーします。#13#10これは、マージ時にメモリリークを防ぐことができ合理的です。このオプションを使用することを強くお勧めします。
+mpOpt_gbDebug_Caption=デバッグ
+mpOpt_kbDebugRenumbering_Caption=Debug renumbering
+mpOpt_kbDebugMergeStatus_Caption=Debug merge status
+mpOpt_kbDebugAssetCopying_Caption=Debug asset copying
+mpOpt_kbDebugRecordCopying_Caption=Debug record copying
+mpOpt_kbDebugMasters_Caption=Debug masters
+mpOpt_kbDebugBatchCopying_Caption=Debug batch copying
+mpOpt_kbDebugBSAs_Caption=Debug BSAs
+mpOpt_kbDebugScriptFragments_Caption=Debug script fragments
+{ ## Advanced Tab ## }
+mpOpt_AdvancedTabSheet_Caption=詳細
+mpOpt_gbMergeProfile_Caption=マージプロファイル
+mpOpt_lblCurrentProfile_Caption=現在のプロファイル
+mpOpt_btnChangeMergeProfile_Caption=プロファイルの切り替え
+mpOpt_btnChangeMergeProfile_Hint=プロファイルを切り替えてアプリケーションを使用する場合は、#13#10これをクリックし再起動します。
+mpOpt_gbBackend_Caption=バックグラウンド
+mpOpt_lblHost_Caption=サーバーホスト
+mpOpt_lblHost_Hint=このIPまたはドメイン名で、マージプラグインバックエンドサーバーサービスへ接続しています。
+mpOpt_lblPort_Caption=サーバー ポート
+mpOpt_lblPort_Hint=このポート番号でマージプラグインバックエンドサーバーサービスへ接続しています。
+mpOpt_kbNoStatistics_Caption=使用統計情報を送信しない
+mpOpt_kbNoStatistics_Hint=チェックした場合は、マージプラグインのバックエンドサーバーへ使用統計情報を送信しません。#13#10この機能とプライバシーについての詳細は、マニュアルを参照してください。
+mpOpt_gbLogging_Caption=ログイン中
+mpOpt_lblClientColor_Caption=クライアント
+mpOpt_lblGeneralColor_Caption=一般
+mpOpt_lblLoadColor_Caption=ロード
+mpOpt_lblMergeColor_Caption=マージ
+mpOpt_lblPluginColor_Caption=プラグイン
+mpOpt_lblErrorColor_Caption=エラー
+mpOpt_lblTemplate_Caption=テンプレート
+mpOpt_lblTemplate_Hint=ログメッセージのテンプレート。#13#10アプリケーションに表示されているログメッセージを変更することができます。#13#10利用可能な変数: {{Time}}, {{AppTime}}, {{Group}}, {{Label}}, {{Text}}
+mpOpt_lblSample_Caption=サンプル
+{ ## Integrations Tab ## }
+mpOpt_IntegrationsTabSheet_Caption=連携
+mpOpt_btnDetect_Caption=自動検出
+mpOpt_gbModManager_Caption=Mod Manager (NMM or MO)
+mpOpt_kbUsingMO_Caption=Mod Organizerを使用
+mpOpt_kbUsingMO_Hint=Mod Organizerを使用して、modを管理している場合には#13#10ロード順序とMod Organizerのプロファイルを確認してください。
+mpOpt_kbUsingNMM_Caption=Nexus Mod Managerを使用
+mpOpt_kbUsingNMM_Hint=Nexus Mod Managerを使用している場合には#13#10Nexus Mod Managerのバージョンがアルファv0.60+以上であるか確認してください。
+mpOpt_kbCopyGeneralAssets_Caption=ファイル纏めてコピー
+mpOpt_kbCopyGeneralAssets_Hint=チェックした場合、modの一般的なファイル類はコピーされ#13#10完全に独立(スタンドアローン化)したマージmodを作成することができます。#13#10一般的なmodファイルの詳細についてはドキュメントを参照してください。
+mpOpt_lblManagerPath_Caption=Mod managerのパス
+mpOpt_lblModManagerPath_Hint=ModOrganizer.exeまたはNexusModManager.exeを含むフォルダへのパス#13#10Mod Organizerを使用している場合、#13#10modのロード順序を読み込む為、適切に設定する必要があります。
+mpOpt_lblModsPath_Caption=Mod manager modsのパス
+mpOpt_lblModsPath_Hint=MO/NMMのmodsへのパス#13#10これは、各種modファイルのコピーオプションを使用できるよう適切に設定する必要があります。
+mpOpt_gbPapyrus_Caption=Papyrus
+mpOpt_lblDecompilerPath_Caption=Champollion Decompilerのパス
+mpOpt_lblDecompilerPath_Hint=Champollion Decompilerの実行可能ファイルへのパス#13#10(x32かx64)、これはNexusからダウンロードすることができます。#13#10スクリプトの断片化を正常にする場合には、適切に設定する必要があります。
+mpOpt_lblCompilerPath_Caption=Papyrus Compilerのパス
+mpOpt_lblCompilerPath_Hint=Papyrus Compilerの実行可能ファイルへのパス#13#10これはCreation Kitに付属しています。#13#10スクリプトの断片化を正常にする場合には、適切に設定する必要があります。
+mpOpt_lblFlagsPath_Caption=Papyrus flagsのパス
+mpOpt_lblFlagsPath_Hint=Creation Kitに付属しているPapyrusフラグファイルへのパス#13#10担当したスクリプトを正しく行うには適切に設定する必要があります。
+mpOpt_gbBSAs_Caption=BSAs
+mpOpt_lblBSAOptPath_Caption=BSAOptのパス
+mpOpt_lblBSAOptPath_Hint=BSAOpt v2.0の実行可能ファイルへのパス#13#10(x32かx64)、マージ作成を行うには適切に設定する必要があります、また、BSAの各オプションを統合しました。
+mpOpt_lblBSAOptOptions_Caption=BSAOptオプション
+mpOpt_lblBSAOptOptions_Hint=BSAOptを使用して作成するBSAの為のコマンドラインオプション。#13#10マージ作成を行うには適切に設定する必要があります。#13#10また、BSAの各オプションを統合しました。#13#10詳細については、マニュアルを参照してください。
+{ #### DYNAMIC #### }
+mpOpt_ExeFilter=Executables (*.exe)|*.EXE|All files (*.*)|*.*
+mpOpt_FlagsFilter=Flags files (*.flg)|*.FLG|All files (*.*)|*.*
+mpOpt_ModOrganizerNotFound=Mod Organizerの各パスが自動取得できません。手動で設定してください。
+ 
+{ TReportForm }
+mpRep_btnNext_Caption=次
+mpRep_btnPrev_Caption=前
+{ #### DYNAMIC #### }
+mpRep_Done=Done
+mpRep_cbRating_Hint0=原因を特定している場合には、ブラックリストに登録することをオススメします。#13#10これは、絶対にマージができないプラグインの為の物です。#13#10あなたはブラックリストのノートに登録すべきと感じた理由を記入してください。
+mpRep_cbRating_Hint1=マージされたプラグインは、CTDの原因、動作の不安定を招きます。#13#10場合にはよってはゲームから認識されないでしょう。#13#10または、マージ作成は失敗しました。
+mpRep_cbRating_Hint2=マージされたプラグインの機能は完全に欠落しゲーム内で動作しません。
+mpRep_cbRating_Hint3=部分的にプラグインは動きますが、大部分は動かないでしょう。#13#10マージされたプラグインはバグを持っている場合、次のようになります。
+mpRep_cbRating_Hint4=必要な微調整を得てプラグインは完全動作します。#13#10しかし、マージされたプラグインはいくつか微調整しなければならなかったことも事実です。#13#10例えばエラー修正、ファイルの修正など。
+mpRep_cbRating_Hint5=プラグインは完全動作します。#13#10あなたは、任意の微調整を行う必要はありませんでした。#13#10何かが壊れた、不足していることも有りません。
+{ ## Info panel ## }
+mpRep_lblFlags_Caption=フラグ: %s
+mpRep_lblHash_Caption=ハッシュ: %s
+mpRep_lblRecords_Caption=レコード: %d
+{ ## User reports ## }
+mpRep_gbUserReports_Caption=既存のレポート
+mpRep_lblExRating_Caption=評価平均
+mpRep_lblExReports_Caption=レポートの数
+mpRep_lblViewDetails_Caption=詳細を見る
+mpRep_lblExRatingValue_Caption=いいえ評価しません
+mpRep_lblExReportsvalue_Caption=0
+{ ## Your report ## }
+mpRep_gbYourReport_Caption=あなたの評価
+mpRep_lblRating_Caption=評価 
+mpRep_cbRating_Item0=-1: ブラックリスト
+mpRep_cbRating_Item1=0: 失敗
+mpRep_cbRating_Item2=1: 機能不全
+mpRep_cbRating_Item3=2: 部分的に機能
+mpRep_cbRating_Item4=3: 微調整必要
+mpRep_cbRating_Item5=4: パーフェクト
+mpRep_lblNotes_Caption=ノート
+mpRep_lblCharacters_Caption=255
+mpRep_NotesTooShort=文字数が少なすぎます、書き足してください。
+mpRep_NotesTooLong=文字数が多すぎます、削ってください。
+ 
+{ TChangeLogForm }
+mpCha_LabelPrompt_Caption=更新内容
+mpCha_ButtonInstall_Caption=インストール
+mpCha_ButtonSkip_Caption=スキップ
+ 
+{ TProgressForm }
+{ #### DYNAMIC #### }
+mpProg_Closing=閉じる
+mpProg_Checking=エラーの確認
+mpProg_DoneChecking=エラー確認完了
+mpProg_Merging=マージ中
+mpProg_DoneBuilding=マージ完了
+mpProg_Fixing=エラー修正
+mpProg_DoneFixing=エラー修正完了
+mpProg_SavePlugin=プラインの保存 %s?
+mpProg_GeckScripts=特定の行儀の悪いスクリプトのソースコードが変更されました。#13#10それらをあなたは再コンパイルする必要があります。#13#10#13#10%s
+mpProg_NavConflicts=いくつかNavMeshの競合がありました。ckでこれらのnavmeshesをあなたは再構成する必要があります。#13#10#13#10%s
+
+{ TResolveForm }
+mpRes_btnOK_Caption=OK
+{ ## Broken Dependencies Tab ## }
+mpRes_tsBrokenDependencies_Caption=壊れた依存関係
+mpRes_lblBrokenDependencies_Caption=マージはロード順的に他のプラグインの依存関係を壊します。どちらかから問題のプラグインを削除、追加することができます。
+mpRes_lvPluginErrors_Column0=エラーステータス
+mpRes_lvPluginErrors_Column1=プラグイン ファイル名
+{ ## Broken Dependencies Popup Menu ## }
+mpRes_IgnoreDependencyItem_Caption=依存関係を無視します。
+mpRes_RemoveBreakingPluginItem_Caption=マージからプラグインを削除します。
+mpRes_AddDependencyItem_Caption=マージする依存関係を追加
+{ ## Non-contiguous Plugins Tab ## }
+mpRes_tsNonContiguous_Caption=不連続なプラグイン
+mpRes_lblNonContiguous_Caption=マージは、その中に不連続なプラグインがあります。マージされたプラグインで問題を回避する為に、連続しているプラグインをマージすることをお勧めします。ロード順序を調整する必要があり、これを解決する為に再起動して調整してください。
+mpRes_btnIgnoreContiguous_Caption=無視
+mpRes_lvNonContiguous_Column0=ロード順序
+mpRes_lvNonContiguous_Column1=プラグイン ファイル名
+mpRes_lvNonContiguous_Column1=重要度
+{ ## Plugin Errors Tab ## }
+mpRes_tsPluginErrors_Caption=プラグインエラー
+mpRes_lblPluginErrors_Caption=マージを作成する前のエラーの確認について、マージする全てのプラグインをチェックする必要があります。エラーのあるプラグインは正常にマージされないことがあり、一部の内容が失われることがあります！このアプリケーションの持つエラーを修正機能を使用したり、エラーのあるプラグインを削除することができます。またはご自身の責任でプラグインのエラーを無視できます！
+mpRes_lvPluginErrors_Column0=エラー ステータス
+mpRes_lvPluginErrors_Column1=プラグイン ファイル名
+{ ## Plugin Errors Popup Menu ## }
+mpRes_IgnoreErrorsItem_Caption=エラーを無視します。
+mpRes_RemoveErrorsPluginItem_Caption=マージからプラグインを削除します。
+mpRes_CheckPluginItem_Caption=プラグインのエラー
+mpRes_FixErrorsItem_Caption=プラグインのエラー修正
+{ ## Other Issues Tab ## }
+mpRes_tsOtherIssues_Caption=その他の問題
+mpRes_lblOtherIssues_Caption=マージ作成をすることはできませんので、何か他の問題があります。おそらく、そこにロードされていないプラグインがある、またはディレクトリが無効です、またはプラグインがありません。
+mpRes_lvOtherIssues_Column0=問題
+mpRes_lvOtherIssues_Column1=詳細
+{ ## Other Issues Popup Menu ## }
+mpRes_RemoveUnloadedPluginItem_Caption=プラグインを削除します。
+{ #### DYNAMIC #### }
+mpRes_IssuesResolved=すべての問題が解決！
+mpRes_NoPlugins=プラグインがありません。
+mpRes_NoPlugins_Merge=マージするプラグインがありません。
+mpRes_DirBlank_Merge=マージ ディレクトリが空です。
+mpRes_DirBlank_MO=Mod Organizerのディレクトリが空です。
+mpRes_DirInvalid=ディレクトリ無効
+mpRes_DirInvalid_MO=Mod Organizerのディレクトリ無効
+mpRes_UnloadedPlugin=プラグイン アンロード
+mpRes_NeedsErrorCheck=エラーチェックが必要
+mpRes_HasErrors=エラーがあります。
+mpRes_DoNotMerge=プラグインを追加できませんでした %s マージします %s, "マージしない"フラグがあります。
+mpRes_Blacklisted=プラグインを追加できませんでした %s マージします %s, ブラックリストです。
+mpRes_InMerge=プラグインを追加できませんでした %s マージします %s, 既にマージ済です。
+mpRes_Minor=マイナー
+mpRes_Critical=クリティカル
