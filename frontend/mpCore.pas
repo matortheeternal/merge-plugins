@@ -176,19 +176,19 @@ const
   // MERGE STATUSES
   StatusArray: array[0..15] of TMergeStatus = (
     ( id: msUnknown; color: $808080; desc: 'Unknown'; ),
+    ( id: msUnloaded; color: $808080; desc: 'Plugins not loaded'; ),
     ( id: msNoPlugins; color: $0000FF; desc: 'No plugins to merge'; ),
     ( id: msDirInvalid; color: $0000FF; desc: 'Directories invalid'; ),
-    ( id: msUnloaded; color: $808080; desc: 'Plugins not loaded'; ),
     ( id: msErrors; color: $0000FF; desc: 'Errors in plugins'; ),
-    ( id: msFailed; color: $0000FF; desc: 'Merge failed'; ),
+    ( id: msCheckErrors; color: $0080ed; desc: 'Check for errors required'; ),
     ( id: msNotContiguous; color: $0080ed; desc: 'Plugins not contiguous'; ),
     ( id: msBreaksDependencies; color: $0080ed; desc: 'Merge breaks dependencies'; ),
-    ( id: msCheckErrors; color: $0080ed; desc: 'Check for errors required'; ),
     ( id: msUpToDate; color: $900000; desc: 'Up to date'; ),
     ( id: msUpToDateForced; color: $900000; desc: 'Up to date [Forced]'; ),
     ( id: msBuildReady; color: $009000; desc: 'Ready to be built'; ),
     ( id: msRebuildReady; color: $009000; desc: 'Ready to be rebuilt'; ),
     ( id: msRebuildReadyForced; color: $009000; desc: 'Ready to be rebuilt [Forced]'; ),
+    ( id: msFailed; color: $000000; desc: 'Failed'; ),
     ( id: msBuilt; color: $000000; desc: 'Built'; ),
     ( id: msCanceled; color: $000000; desc: 'Canceled'; )
   );
