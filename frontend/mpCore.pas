@@ -315,7 +315,8 @@ begin
   if not (IS_BLACKLISTED in flags) then
     numOverrides := IntToStr(CountOverrides(_File));
 
-  // get hash
+  // get data path and hash
+  GetDataPath;
   GetHash;
 
   // call get data method
@@ -340,7 +341,7 @@ procedure TPlugin.GetDataPath;
 var
   modName: string;
 begin
-  inherited;
+  dataPath := wbDataPath;
   if settings.usingMO then begin
     modName := GetModContainingFile(ActiveMods, filename);
     if modName <> '' then
