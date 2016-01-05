@@ -27,10 +27,14 @@ object ResolveForm: TResolveForm
     Top = 8
     Width = 568
     Height = 370
+    HelpType = htKeyword
+    HelpKeyword = 'Resolve Issues Window'
     ActivePage = tsBrokenDependencies
     TabOrder = 0
     TabWidth = 140
     object tsBrokenDependencies: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Broken Dependencies Tab'
       Caption = 'Broken dependencies'
       object lblBrokenDependencies: TLabel
         Left = 3
@@ -51,6 +55,8 @@ object ResolveForm: TResolveForm
         Top = 47
         Width = 550
         Height = 292
+        HelpType = htKeyword
+        HelpKeyword = 'Broken Dependencies Tab'
         Align = alCustom
         Anchors = [akLeft, akTop, akRight, akBottom]
         Columns = <
@@ -74,6 +80,8 @@ object ResolveForm: TResolveForm
       end
     end
     object tsNonContiguous: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Non Contiguous Plugins Tab'
       Caption = 'Non-contiguous plugins'
       ImageIndex = 1
       object lblNonContiguous: TLabel
@@ -109,6 +117,8 @@ object ResolveForm: TResolveForm
         Top = 63
         Width = 550
         Height = 240
+        HelpType = htKeyword
+        HelpKeyword = 'Non Contiguous Plugins Tab'
         Align = alCustom
         Anchors = [akLeft, akTop, akRight, akBottom]
         Columns = <
@@ -135,6 +145,8 @@ object ResolveForm: TResolveForm
       end
     end
     object tsPluginErrors: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Plugin Errors Tab'
       Caption = 'Plugin errors'
       ImageIndex = 2
       object lblPluginErrors: TLabel
@@ -158,6 +170,8 @@ object ResolveForm: TResolveForm
         Top = 63
         Width = 550
         Height = 276
+        HelpType = htKeyword
+        HelpKeyword = 'Plugin Errors Tab'
         Align = alCustom
         Anchors = [akLeft, akTop, akRight, akBottom]
         Columns = <
@@ -181,6 +195,8 @@ object ResolveForm: TResolveForm
       end
     end
     object tsOtherIssues: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Other Issues Tab'
       Caption = 'Other issues'
       ImageIndex = 3
       object lblOtherIssues: TLabel
@@ -203,6 +219,8 @@ object ResolveForm: TResolveForm
         Top = 47
         Width = 550
         Height = 292
+        HelpType = htKeyword
+        HelpKeyword = 'Other Issues Tab'
         Align = alCustom
         Anchors = [akLeft, akTop, akRight, akBottom]
         Columns = <
