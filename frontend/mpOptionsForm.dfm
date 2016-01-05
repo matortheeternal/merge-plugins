@@ -347,6 +347,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 1
+          OnChange = edPathChange
           OnExit = appendBackslashOnExit
         end
         object kbVoiceAssets: TCheckBox
@@ -870,7 +871,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 0
-          OnChange = edModManagerPathChange
+          OnChange = edPathChange
           OnExit = appendBackslashOnExit
         end
         object kbCopyGeneralAssets: TCheckBox
@@ -887,7 +888,7 @@ object OptionsForm: TOptionsForm
           Width = 321
           Height = 21
           TabOrder = 2
-          OnChange = edModsPathChange
+          OnChange = edPathChange
           OnExit = appendBackslashOnExit
         end
         object kbUsingMO: TCheckBox
@@ -1091,7 +1092,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C0101010008004C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800500110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

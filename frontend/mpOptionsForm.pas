@@ -153,7 +153,8 @@ type
     procedure ToggleOkButton;
     procedure btnOKClick(Sender: TObject);
     procedure SettingsPageControlChange(Sender: TObject); 
-    procedure appendBackslashOnExit(Sender: TObject); 
+    procedure appendBackslashOnExit(Sender: TObject);
+    procedure edPathChange(Sender: TObject);
     // GENERAL TAB EVENTS 
     procedure edUsernameChange(Sender: TObject);
     procedure btnRegisterClick(Sender: TObject);
@@ -181,8 +182,6 @@ type
     procedure btnBrowseBSAOptClick(Sender: TObject);
     procedure edBsaOptPathExit(Sender: TObject);
     procedure btnDetectClick(Sender: TObject);
-    procedure edModManagerPathChange(Sender: TObject);
-    procedure edModsPathChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -943,12 +942,7 @@ begin
   ToggleOkButton;
 end;
 
-procedure TOptionsForm.edModManagerPathChange(Sender: TObject);
-begin
-  ToggleOkButton;
-end;
-
-procedure TOptionsForm.edModsPathChange(Sender: TObject);
+procedure TOptionsForm.edPathChange(Sender: TObject);
 begin
   ToggleOkButton;
 end;
