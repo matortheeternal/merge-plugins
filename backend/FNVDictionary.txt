@@ -1,5 +1,6 @@
 1nivVSLArmors.esp;437;2.0;4.0;1;[User: Archangel221] [Hash: 02F6FB37] [Version: 2.0]@13Merges fine, can also be merged with the Project Nevada optional esp@13@13
 Anchorage.esm;47055;2.0;-1.0;1;[User: Diana] [Hash: F44A1D76] [Version: 2.0]@13Official DLC, do not merge.@13@13For TTW Users@13@13
+Armor Replacer Child NPC Fix.esp;29;2.0.2.37;4.0;1;[User: hishutup] [Hash: 865BC955] [Version: 2.0.2.37]@13Merges fine, haven't checked in game.@13@13
 BrokenSteel.esm;42989;2.0;-1.0;1;[User: Diana] [Hash: DD8EFA0B] [Version: 2.0]@13Official DLC, do not merge.@13@13For TTW Users@13@13
 CaravanPack.esm;14;2.0;-1.0;1;[User: hishutup] [Hash: 228740D1] [Version: 2.0]@13Official DLC, do not merge.@13@13
 ClassicPack.esm;28;2.0;-1.0;1;[User: hishutup] [Hash: 41F95714] [Version: 2.0]@13Official DLC, do not merge.@13@13
@@ -12,6 +13,7 @@ LonesomeRoad.esm;45083;2.0;-1.0;1;[User: hishutup] [Hash: A7C199C9] [Version: 2.
 MercenaryPack.esm;14;2.0;-1.0;1;[User: hishutup] [Hash: D377B2B9] [Version: 2.0]@13Official DLC, do not merge.@13@13
 OldWorldBlues.esm;61931;2.0;-1.0;1;[User: hishutup] [Hash: EE41315B] [Version: 2.0]@13Official DLC, do not merge.@13@13
 PointLookout.esm;68442;2.0;-1.0;1;[User: Diana] [Hash: 38CF027C] [Version: 2.0]@13Official DLC, do not merge.@13@13For TTW Users@13@13
+Reload Speed Game Start Fix.esp;4;2.0.2.37;4.0;1;[User: hishutup] [Hash: 6B9C47AA] [Version: 2.0.2.37]@13Merges fine, haven't checked in game.@13@13
 ThePitt.esm;35799;2.0;-1.0;1;[User: Diana] [Hash: E3388E16] [Version: 2.0]@13Official DLC, do not merge.@13@13For TTW Users@13@13
 TribalPack.esm;10;2.0;-1.0;1;[User: hishutup] [Hash: 0DE09873] [Version: 2.0]@13Official DLC, do not merge.@13@13
 Zeta.esm;37067;2.0;-1.0;1;[User: Diana] [Hash: 1E9B9CFC] [Version: 2.0]@13Official DLC, do not merge.@13@13For TTW Users@13@13
