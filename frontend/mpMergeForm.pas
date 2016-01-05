@@ -2594,7 +2594,6 @@ end;
 procedure TMergeForm.OpenInExplorerItemClick(Sender: TObject);
 var
   i: Integer;
-  path: string;
   merge: TMerge;
 begin
   // loop through merges
@@ -2604,9 +2603,8 @@ begin
     merge := TMerge(MergesList[i]);
 
     // open in explorer
-    path := settings.mergeDirectory + merge.name;
-    ForceDirectories(path);
-    ShellExecute(0, 'open', PChar(path), '', '', SW_SHOWNORMAL);
+    ForceDirectories(merge.dataPath);
+    ShellExecute(0, 'open', PChar(merge.dataPath), '', '', SW_SHOWNORMAL);
   end;
 end;
 

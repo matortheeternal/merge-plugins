@@ -658,12 +658,15 @@ begin
     exit;
   end;
 
-  // don't merge if mod destination directory is blank
+  // don't merge if merge destination directory is blank
   if (settings.mergeDirectory = '') then begin
     Logger.Write('MERGE', 'Status', name + ' -> Merge directory blank');
     status := msDirInvalid;
     exit;
   end;
+
+  // update the merge's datapath
+  UpdateDataPath;
 
   // don't merge if usingMO is true and MODirectory is blank
   if settings.usingMO and (settings.ManagerPath = '') then begin
@@ -723,9 +726,6 @@ begin
       if status = msUnknown then status := msErrors;
     end;
   end;
-
-  // update the merge's datapath
-  UpdateDataPath;
 
   // check plugins were modified or files were deleted before
   // giving merge the up to date status

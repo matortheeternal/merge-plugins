@@ -95,3 +95,18 @@ Version 2.1.2.0
   - The msFailed merge status is now immutable, as it should be.
   - Added a note in the documentation about Copy General Assets being on the Integrations tab
   - Fixed a critical issue with Merge version in submitted reports having a leading space, which caused the loss of some reports that were submitted over the last few days.
+
+Version 2.1.3.0
+  - Hotfix release
+  - Corrected load order bug for FO3/FNV/TES4 when not using MO
+  - Implemented Extract BSAs option (it did nothing before this update)
+  - Made documentation on the Resolve Issues Window
+  - Added Troubleshooting section to documentation
+  - Updated Merge Statuses section of the documentation
+  - Fixed Reset Errors being unavailable when a plugin had no errors
+  - Fixed changing the merge name not always updating its data path
+  - Fixed merge failure due to an access violation when using the New Records merging method
+  - Returned the limitation on the fails and files sections of the Merge Details view of 1000 items each
+  - When the merge destination directory is the data folder Merge Plugins will put merged assets directly into the folder instead of creating a subfolder for each merge
+  - Merge Plugins no longer breaks due to different regional Decimal Separator characters.
+  - Fixed the OK button of the Options Form not updating when changing the Merge destination directory
