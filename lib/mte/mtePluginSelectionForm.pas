@@ -11,6 +11,7 @@ type
   public
     StateIndex: Integer;
     Fields: TStringList;
+    LoadOrder: Integer;
     constructor Create; virtual;
     destructor Destroy; override;
   end;
@@ -33,9 +34,8 @@ type
     UncheckDependenciesItem: TMenuItem;
     DependenciesItem: TMenuItem;
     procedure LoadFields(aListItem: TPluginListItem; sPlugin: string);
-    procedure UpdateDisabled;
+    procedure UpdateLists;
     procedure FormShow(Sender: TObject);
-    procedure btnOKClick(Sender: TObject);
     procedure CheckAllItemClick(Sender: TObject);
     procedure UncheckAllItemClick(Sender: TObject);
     procedure ToggleAllItemClick(Sender: TObject);
@@ -104,26 +104,12 @@ constructor TPluginListItem.Create;
 begin
   StateIndex := cUnChecked;
   Fields := TStringList.Create;
+  LoadOrder := 0;
 end;
 
 destructor TPluginListItem.Destroy;
 begin
   Fields.Free;
-end;
-
-procedure TPluginSelectionForm.btnOKClick(Sender: TObject);
-var
-  i: Integer;
-  ListItem: TListItem;
-begin
-  // clear checked plugins list
-  slCheckedPlugins.Clear;
-  // add checked plugins to slCheckedPlugins
-  for i := 0 to Pred(lvPlugins.Items.Count) do begin
-    ListItem := lvPlugins.Items[i];
-    if ListItem.StateIndex = cChecked then
-      slCheckedPlugins.Add(ListItem.Caption);
-  end;
 end;
 
 procedure TPluginSelectionForm.LoadFields(aListItem: TPluginListItem;
@@ -146,15 +132,18 @@ begin
   end;
 end;
 
-procedure TPluginSelectionForm.UpdateDisabled;
+procedure TPluginSelectionForm.UpdateLists;
 var
   i, j, index: Integer;
   filename: string;
   ListItem, MasterItem: TPluginListItem;
   sl: TStringList;
 begin
-  // update slDisabled
+  // clear lists
   slDisabled.Clear;
+  slCheckedPlugins.Clear;
+
+  // update lists
   sl := TStringList.Create;
   try
     for i := 0 to Pred(lvPlugins.Items.Count) do begin
@@ -163,6 +152,8 @@ begin
       // if unchecked, skip
       if ListItem.StateIndex = cUnChecked then
         continue;
+      // if checked, add to slCheckedPlugins
+      slCheckedPlugins.Add(filename);
       // if checked, make sure its masters are checked
       GetPluginMasters(filename, sl);
       for j := 0 to Pred(sl.Count) do begin
@@ -311,21 +302,34 @@ end;
 
 procedure TPluginSelectionForm.DrawItem(ListView: TListView; var R: TRect;
   Item: TListItem);
+var
+  sText: String;
+  index: Integer;
+  ListItem: TPluginListItem;
 begin
+  // get corresponding plugin list item
+  ListItem := TPluginListItem(ListItems[Item.Index]);
+
   // redefine rect to draw until the end of the first column
   // use trailing padding to keep items lined up on columns
   R.Right := R.Left + ListView.Columns[0].Width - 3;
 
   // draw the checkbox
-  DrawCheckbox(ListView.Canvas, R.Left, R.Top, Item.StateIndex);
+  DrawCheckbox(ListView.Canvas, R.Left, R.Top, ListItem.StateIndex);
 
   // move text down 1 pixel
   Inc(R.Top, 1);
   // padding between checkbox and text
   Inc(R.Left, 6);
 
+  // get and prepend load order if enabled
+  sText := Item.Caption;
+  index := slCheckedPlugins.IndexOf(sText);
+  if index > -1 then
+    sText := Format('[%s] %s', [IntToHex(index, 2), sText]);
+
   // draw text
-  ListView.Canvas.TextRect(R, R.Left, R.Top, Item.Caption);
+  ListView.Canvas.TextRect(R, R.Left, R.Top, sText);
 end;
 
 procedure TPluginSelectionForm.lvPluginsDrawItem(Sender: TCustomListView;
@@ -382,7 +386,7 @@ begin
             ToggleState(TPluginListItem(ListItems[i]));
       end;
       // repaint to show updated checkbox state and exit
-      UpdateDisabled;
+      UpdateLists;
       lvPlugins.Repaint;
       exit;
     end;
@@ -418,7 +422,7 @@ begin
       ToggleState(TPluginListItem(ListItems[ListItem.Index]));
 
     // repaint to show updated checkbox state
-    UpdateDisabled;
+    UpdateLists;
     lvPlugins.Repaint;
   end;
 end;
@@ -516,7 +520,7 @@ begin
     aListItem := TPluginListItem.Create;
     // check ListItem if it's in the CheckedPlugins list
     if slCheckedPlugins.IndexOf(sPlugin) > -1 then
-      aListItem.StateIndex := cChecked;
+      ToggleState(aListItem);
     // add merge subitems
     LoadFields(aListItem, sPlugin);
     ListItems.Add(aListItem);
@@ -547,7 +551,7 @@ begin
   ListView_CorrectWidth(lvPlugins);
 
   // update disabled
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
@@ -570,7 +574,7 @@ begin
       TPluginListItem(ListItems[i]).StateIndex := cChecked;
 
   // repaint to show updated checkbox state
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
@@ -582,7 +586,7 @@ begin
     TPluginListItem(ListItems[i]).StateIndex := cUnChecked;
 
   // repaint to show updated checkbox state
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
@@ -595,7 +599,7 @@ begin
       ToggleState(TPluginListItem(ListItems[i]));
 
   // repaint to show updated checkbox state
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
@@ -614,7 +618,7 @@ begin
   end;
 
   // repaint to show updated checkbox state
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
@@ -633,7 +637,7 @@ begin
   end;
 
   // repaint to show updated checkbox state
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
@@ -649,7 +653,7 @@ begin
   end;
 
   // repaint to show updated checkbox state
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
@@ -665,7 +669,7 @@ begin
   end;
 
   // repaint to show updated checkbox state
-  UpdateDisabled;
+  UpdateLists;
   lvPlugins.Repaint;
 end;
 
