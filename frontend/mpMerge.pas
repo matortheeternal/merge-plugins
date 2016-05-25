@@ -1873,23 +1873,12 @@ end;
 
 procedure SaveMergeFiles(var merge: TMerge);
 var
-  FileStream: TFileStream;
-  mergeFile: IwbFile;
   sl: TStringList;
   fn: string;
   i: Integer;
 begin
   // save merged plugin
-  FileStream := TFileStream.Create(merge.dataPath + merge.filename, fmCreate);
-  try
-    Tracker.Write(' ');
-    Tracker.Write('Saving: ' + merge.dataPath + merge.filename);
-    mergeFile := merge.plugin._File;
-    mergeFile.WriteToStream(FileStream, False);
-    merge.files.Add(merge.dataPath + merge.filename);
-  finally
-    FileStream.Free;
-  end;
+  merge.plugin.Save;
 
   // save merge map, files, fails, plugins
   merge.map.SaveToFile(mergeFilePrefix+'_map.txt');
