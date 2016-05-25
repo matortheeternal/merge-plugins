@@ -547,6 +547,7 @@ begin
   LabelFilters.Add(TFilter.Create('MERGE', 'Report', true));
   LabelFilters.Add(TFilter.Create('PLUGIN', 'Report', true));
   LabelFilters.Add(TFilter.Create('PLUGIN', 'Check', true));
+  LabelFilters.Add(TFilter.Create('PLUGIN', 'Other', true));
 end;
 
 end.
