@@ -70,6 +70,7 @@ type
     function HasErrors: boolean;
     function CanBeMerged: boolean;
     function IsInMerge: boolean;
+    procedure Save;
     procedure LoadInfoDump(obj: ISuperObject);
     function InfoDump: ISuperObject;
   end;
@@ -206,7 +207,7 @@ const
 var
   Dictionary, Blacklist, MergesList: TList;
   pluginsToHandle, mergesToBuild: TList;
-  ActiveMods: TStringList;
+  ActiveMods, SavedPluginPaths: TStringList;
   ActiveModProfile, xEditLogGroup, xEditLogLabel, DictionaryFilename: string;
 
 implementation
@@ -441,6 +442,29 @@ end;
 function TPlugin.IsInMerge: boolean;
 begin
   Result := merge <> ' ';
+end;
+
+procedure TPlugin.Save;
+var
+  path: string;
+  FileStream: TFileStream;
+begin
+  // save plugin
+  path := dataPath + filename + '.save';
+  Tracker.Write('Saving: ' + path);
+  Logger.Write('PLUGIN', 'Save', path);
+  FileStream := nil;
+  try
+    FileStream := TFileStream.Create(path, fmCreate);
+    _File.WriteToStream(FileStream, False);
+    path := dataPath + filename;
+    if SavedPluginPaths.IndexOf(path) = -1 then
+      SavedPluginPaths.Add(path);
+  except
+    on x: Exception do
+      Tracker.Write('Failed to save: '+x.Message);
+  end;
+  TryToFree(FileStream);
 end;
 
 function TPlugin.InfoDump: ISuperObject;
@@ -1228,32 +1252,26 @@ end;
 procedure RenameSavedPlugins;
 var
   i: Integer;
-  plugin: TPlugin;
   oldFileName, newFileName, bakFileName: string;
 begin
-  wbFileForceClosed;
-  for i := Pred(PluginsList.Count) downto 0 do begin
-    plugin := TPlugin(PluginsList[i]);
-    try
-      plugin._File._Release;
-      oldFileName := plugin.dataPath + plugin.filename;
-      newFileName := oldFileName + '.save';
-      if FileExists(newFileName) then begin
-        bakFileName := oldFileName + '.bak';
-        if FileExists(bakFileName) then
-          DeleteFile(bakFileName);
-        RenameFile(oldFileName, bakFileName);
-        RenameFile(newFileName, oldFileName);
-      end;
-    except
-      on x: Exception do
-        Tracker.Write('Failed to rename ' + plugin.filename + '.save');
-    end;
+  // tracker message
+  Tracker.Write(' ');
+  Tracker.Write('Renaming saved plugins');
+
+  for i := Pred(SavedPluginPaths.Count) downto 0 do try
+    oldFileName := SavedPluginPaths[i];
+    newFileName := oldFileName + '.save';
+    bakFileName := oldFileName + '.bak';
+    Tracker.Write(Format('    Renaming %s to %s', [ExtractFileName(newFileName), ExtractFileName(oldFileName)]));
+    if FileExists(bakFileName) then
+      DeleteFile(bakFileName);
+    RenameFile(oldFileName, bakFileName);
+    RenameFile(newFileName, oldFileName);
+  except
+    on x: Exception do
+      Tracker.Write('      Failed to rename ' + newFileName);
   end;
 end;
-
-{}
-
 
 function GetModContainingFile(var modlist: TStringList; filename: string): string;
 var
@@ -1388,11 +1406,13 @@ end;
 initialization
 begin
   MergesList := TList.Create;
+  SavedPluginPaths := TStringList.Create;
 end;
 
 finalization
 begin
   FreeList(MergesList);
+  SavedPluginPaths.Free;
 end;
 
 end.
