@@ -332,8 +332,13 @@ begin
     SavePluginInfo;
     Tracker.SetProgress(PluginsList.Count + 1);
     Tracker.Write(' ');
+
     // save merges
     SaveMerges;
+
+    // force close files
+    wbFileForceClosed;
+
     // rename saved plugins
     if ProgramStatus.bLoaderDone then RenameSavedPlugins;
   end;
