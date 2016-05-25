@@ -30,6 +30,10 @@ type
   protected
     procedure Execute; override;
   end;
+  TCompactThread = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
   TMergeThread = class(TThread)
   protected
     procedure Execute; override;
@@ -41,7 +45,7 @@ type
 
 var
   InitCallback, LoaderCallback, ErrorCheckCallback, ErrorFixCallback,
-  MergeCallback, SaveCallback, ConnectCallback: TCallback;
+  MergeCallback, SaveCallback, ConnectCallback, CompactCallback: TCallback;
   StatusCallback: TStatusCallback;
 
 implementation
@@ -244,6 +248,39 @@ begin
   StatusCallback(GetLanguageString('mpProg_DoneFixing'));
   if Assigned(ErrorFixCallback) then
     Synchronize(nil, ErrorFixCallback);
+end;
+
+{ TCompactThread }
+procedure TCompactThread.Execute;
+var
+  pluginToCompact: TPlugin;
+  numNewRecords: Integer;
+begin
+  // compact FormIDs
+  pluginToCompact := TPlugin(pluginsToHandle[0]);
+  StatusCallback(Format('%s "%s"',
+      [GetLanguageString('mpProg_Compacting'), pluginToCompact.filename]));
+  try
+    Compact(pluginToCompact);
+  except
+    on x: Exception do
+      Tracker.Write('Exception: '+x.Message);
+  end;
+
+  // completed
+  numNewRecords := StrToInt(pluginToCompact.numRecords) - StrToInt(pluginToCompact.numOverrides);
+  Tracker.SetProgress(numNewRecords);
+  if Tracker.Cancel then Tracker.Write('Compacting canceled.');
+
+  // say thread is done if it wasn't cancelled
+  if not Tracker.Cancel then
+    Tracker.Write('All done!');
+
+  // clean up, fire callback
+  StatusCallback(GetLanguageString('mpProg_DoneCompacting'));
+  Tracker.Cancel := false;
+  if Assigned(CompactCallback) then
+    Synchronize(nil, CompactCallback);
 end;
 
 { TMergeThread }
