@@ -2010,7 +2010,7 @@ end;
 {******************************************************************************}
 
 const
-  MinimumFormID = $200;
+  MinimumFormID = $800;
 
 var
   CurrentFormID: Cardinal;
@@ -2114,8 +2114,6 @@ procedure CompactFormIDs(plugin: TPlugin);
     end;
   end;
 
-const
-  LogRate = 1000;
 var
   i, rc, total, start: integer;
   aFile: IwbFile;
