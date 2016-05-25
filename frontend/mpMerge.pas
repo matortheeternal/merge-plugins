@@ -11,6 +11,7 @@ uses
   procedure DeleteOldMergeFiles(var merge: TMerge);
   procedure RebuildMerge(var merge: TMerge);
   procedure AddCopyOperation(src, dst: string);
+  procedure Compact(var plugin: TPlugin);
 
 implementation
 
@@ -90,7 +91,7 @@ begin
 end;
 
 procedure RenumberRecord(var merge: TMerge; aRecord: IwbMainRecord;
-  NewFormID: cardinal);
+  NewFormID: cardinal); overload;
 var
   OldFormID: cardinal;
   i: integer;
@@ -1999,6 +2000,214 @@ procedure RebuildMerge(var merge: TMerge);
 begin
   DeleteOldMergeFiles(merge);
   BuildMerge(merge);
+end;
+
+
+{******************************************************************************}
+{ Compact FormIDs Methods
+  Methods for handling compacting of formIDs.
+}
+{******************************************************************************}
+
+const
+  MinimumFormID = $200;
+
+var
+  CurrentFormID: Cardinal;
+
+procedure BuildFormIDsArray(plugin: IwbFile);
+var
+  i: Integer;
+  aRecord: IwbMainRecord;
+  formID: Cardinal;
+begin
+  // reset UsedFormIDs array
+  for i := 0 to High(UsedFormIDs) do
+    UsedFormIDs[i] := 0;
+
+  // build from the plugin
+  for i := 0 to Pred(plugin.RecordCount) do begin
+    aRecord := plugin.Records[i];
+    formID := LocalFormID(aRecord);
+    UsedFormIDs[formID] := 1;
+  end;
+end;
+
+function GetStartingIndex(RecordCount: Integer): Integer;
+var
+  i, UsedCount, AvailableCount: Integer;
+begin
+  AvailableCount := 0;
+  UsedCount := 0;
+  for i := MinimumFormID to High(UsedFormIDs) do begin
+    if UsedFormIDs[i] = 0 then
+      Inc(AvailableCount)
+    else
+      Inc(UsedCount);
+    if (AvailableCount >= RecordCount - UsedCount) then
+      break;
+  end;
+
+  // set result
+  Result := UsedCount + 1;
+end;
+
+procedure RenumberRecord(aRecord: IwbMainRecord; NewFormID: cardinal); overload;
+var
+  OldFormID: cardinal;
+  i: integer;
+begin
+  OldFormID := aRecord.LoadOrderFormID;
+
+  // change references
+  for i := Pred(aRecord.ReferencedByCount) downto 0 do begin
+    if settings.debugRenumbering then
+      Tracker.Write('      Changing reference on '+aRecord.ReferencedBy[i].Name);
+    aRecord.ReferencedBy[i].CompareExchangeFormID(OldFormID, NewFormID);
+  end;
+
+  // log references that couldn't be changed
+  if aRecord.ReferencedByCount > 0 then begin
+    Tracker.Write('    Failed to change some references on '+aRecord.Name);
+    for i := 0 to Pred(aRecord.ReferencedByCount) do
+      Tracker.Write('      Couldn''t change reference: '+aRecord.ReferencedBy[i].Name);
+  end;
+
+  // correct overrides
+  for i := Pred(aRecord.OverrideCount) downto 0 do begin
+    if settings.debugRenumbering then
+      Tracker.Write('      Renumbering override in file: '+aRecord.Overrides[i]._File.Name);
+    aRecord.Overrides[i].LoadOrderFormID := NewFormID;
+  end;
+
+  // change formID
+  aRecord.LoadOrderFormID := NewFormID;
+end;
+
+procedure SavePluginFiles(var plugin: TPlugin);
+var
+  i: Integer;
+  aPlugin: TPlugin;
+begin
+  // save compacted plugin
+  plugin.Save;
+
+  // save plugins that depend on compacted plugin
+  for i := 0 to Pred(PluginsList.Count) do begin
+    aPlugin := TPlugin(PluginsList[i]);
+    if aPlugin.masters.IndexOf(plugin.filename) > -1 then
+      aPlugin.Save;
+  end;
+
+  // message spacing
+  Tracker.Write(' ');
+end;
+
+procedure CompactFormIDs(plugin: TPlugin);
+
+  procedure GetNextAvailableFormID;
+  begin
+    while CurrentFormID < High(UsedFormIDs) do begin
+      if UsedFormIDs[CurrentFormID] = 0 then
+        break;
+      Inc(CurrentFormID);
+    end;
+  end;
+
+const
+  LogRate = 1000;
+var
+  i, rc, total, start: integer;
+  aFile: IwbFile;
+  aRecord: IwbMainRecord;
+  NewFormID: cardinal;
+  Records: array of IwbMainRecord;
+begin
+  // initialization
+  aFile := plugin._File;
+  rc := aFile.RecordCount;
+  CurrentFormID := MinimumFormID;
+  total := 0;
+  Tracker.Write('Plugin has '+IntToStr(rc)+' records.');
+  aRecord := aFile.Records[aFile.RecordCount - 1];
+  Tracker.Write('Highest FormID: '+IntToHex(LocalFormID(aRecord), 6));
+
+  // build formIDs array and get starting index
+  BuildFormIDsArray(aFile);
+  start := GetStartingIndex(rc);
+  Tracker.Write('Starting Index: '+IntToStr(start));
+
+  // build records array
+  SetLength(Records, rc);
+  for i := 0 to Pred(rc) do
+    Records[i] := aFile.Records[i];
+
+  // renumber records in file
+  Tracker.Write(' ');
+  Tracker.Write('Renumbering FormIDs');
+  for i := start to Pred(rc) do begin
+    if Tracker.Cancel then exit;
+    aRecord := Records[i];
+
+    // skip file headers and overrides
+    if aRecord.Signature = 'TES4' then continue;
+    if IsOverride(aRecord) then continue;
+
+    // prepare to renumber record
+    GetNextAvailableFormID;
+    UsedFormIDs[CurrentFormID] := 1;
+    NewFormID := LoadOrderPrefix(aRecord) + CurrentFormID;
+    if settings.debugRenumbering then
+      Tracker.Write('  Changing FormID to ['+IntToHex(NewFormID, 8)+'] on '+aRecord.Name);
+
+    // renumber the record
+    RenumberRecord(aRecord, NewFormID);
+
+    // update progress
+    Tracker.UpdateProgress(1);
+    Inc(total);
+  end;
+
+  // completion messages
+  Tracker.Write('  Renumbered '+IntToStr(total)+' FormIDs');
+  Tracker.Write(' ');
+  aRecord := aFile.Records[aFile.RecordCount - 1];
+  Tracker.Write('Highest FormID: '+IntToHex(LocalFormID(aRecord), 6));
+  Tracker.Write(' ');
+end;
+
+procedure Compact(var plugin: TPlugin);
+var
+  time: TDateTime;
+  failed: String;
+begin
+  // initialize
+  Tracker.Write('Compacting FormID space in '+plugin.filename);
+  time := Now;
+  failed := 'Failed to compact FormID space in '+plugin.filename;
+
+  try
+    // build list of plugins to patch
+    CompactFormIDs(plugin);
+    HandleCanceled(failed);
+
+    // save plugin and all plugins that use it as a master
+    SavePluginFiles(plugin);
+
+    // update statistics
+    Inc(sessionStatistics.pluginsCompacted);
+
+    // finalization messages
+    time := (Now - time) * 86400;
+    Tracker.Write(Format('Done compacting %s (%.3fs)', [plugin.filename, Real(time)]));
+  except
+    on x: Exception do begin
+      Tracker.Write(Format('Failed to compact %s, %s', [plugin.filename, x.Message]));
+    end;
+  end;
+
+  // message spacing
+  Tracker.Write(' ');
 end;
 
 end.
