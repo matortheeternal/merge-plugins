@@ -48,7 +48,7 @@ var
   i, j: Integer;
   plugin: TPlugin;
   aFile: IwbFile;
-  aRecord: IwbMainRecord;
+  aRecord, aFinalRecord: IwbMainRecord;
   formID: cardinal;
 begin
   Result := $100;
@@ -63,7 +63,10 @@ begin
       // skip override records
       if IsOverride(aRecord) then continue;
       formID := LocalFormID(aRecord);
-      if formID > Result then Result := formID;
+      if formID > Result then begin
+        aFinalRecord := aRecord;
+        Result := formID;
+      end;
     end;
   end;
 
@@ -76,8 +79,14 @@ begin
     // skip override records
     if IsOverride(aRecord) then continue;
     formID := LocalFormID(aRecord);
-    if formID > Result then Result := formID;
+    if formID > Result then begin
+      aFinalRecord := aRecord;
+      Result := formID;
+    end;
   end;
+
+  if settings.debugRenumbering then
+    Tracker.Write('  Highest FormID: '+aFinalRecord.Name+' from '+aFinalRecord._File.Name);
 end;
 
 procedure RenumberRecord(var merge: TMerge; aRecord: IwbMainRecord;
