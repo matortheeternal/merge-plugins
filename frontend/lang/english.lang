@@ -87,6 +87,7 @@ mpMain_Fails=Fails
 mpMain_TooManyFiles=Too many files to display.
 mpMain_TooManyFails=Too many fails to display.
 mpMain_DeleteMerges=Are you sure you want to delete these merges?
+mpMain_CompactFormIDs=Compacting FormIDs will change most of the FormIDs in the #13#10plugin.  Any plugins currently loaded that require the plugin #13#10will be updated as well.  Are you sure you want to proceed #13#10with compacting FormIDs in this plugin?
 { ## Merges Popup Menu ## }
 mpMain_CreateNewMergeItem_Caption=Create new merge
 mpMain_EditMergeItem_Caption=Edit merge
@@ -373,6 +374,8 @@ mpCha_ButtonSkip_Caption=Skip
 mpProg_Closing=Closing
 mpProg_Checking=Checking for errors
 mpProg_DoneChecking=Done checking for errors
+mpProg_Compacting=Compacting FormIDs
+mpProg_DoneCompacting=Done compacting FormIDs
 mpProg_Merging=Building merges
 mpProg_DoneBuilding=Done building merges
 mpProg_Fixing=Fixing errors
