@@ -1879,6 +1879,7 @@ var
   i: Integer;
 begin
   // save merged plugin
+  merge.plugin.dataPath := merge.dataPath;
   merge.plugin.Save;
 
   // save merge map, files, fails, plugins
