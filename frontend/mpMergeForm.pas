@@ -63,6 +63,7 @@ type
             AddToMergeItem: TMenuItem;
             NewMergeItem: TMenuItem;
             RemoveFromMergeItem: TMenuItem;
+            CompactFormIDsItem: TMenuItem;
             ReportOnPluginItem: TMenuItem;
             DoNotMergeItem: TMenuItem;
             OpenPluginLocationItem: TMenuItem;
@@ -187,6 +188,7 @@ type
     procedure CheckForErrorsClick(Sender: TObject);
     procedure IgnoreErrorsItemClick(Sender: TObject);
     procedure DoNotMergeItemClick(Sender: TObject);
+    procedure CompactFormIDsItemClick(Sender: TObject);
     procedure RemoveFromMergeItemClick(Sender: TObject);
     procedure OpenPluginLocationItemClick(Sender: TObject);
     procedure ReportOnPluginItemClick(Sender: TObject);
@@ -1361,6 +1363,7 @@ begin
   FixErrorsItem.Enabled := ProgramStatus.bLoaderDone and bHasErrors and not bBlacklisted;
   IgnoreErrorsItem.Enabled := bHasErrors and not bBlacklisted;
   ResetErrorsItem.Enabled := (not bAllNeedErrorCheck) and (not bBlacklisted);
+  CompactFormIDsItem.Enabled := ProgramStatus.bLoaderDone and (not bHasErrors) and (not bBlacklisted);
   ReportOnPluginItem.Enabled := not bBlacklisted;
 end;
 
@@ -1641,6 +1644,47 @@ begin
 
   // update plugins list view
   UpdateListViews;
+end;
+
+procedure TMergeForm.CompactFormIDsItemClick(Sender: TObject);
+var
+  i, numNewRecords: integer;
+  plugin: TPlugin;
+  frmDialog: TForm;
+  bApproved: Boolean;
+begin
+  // init vars
+  pluginsToHandle := TList.Create;
+  timeCosts := TStringList.Create;
+
+  // get selected plugin
+  i := PluginsListView.Selected.Index;
+  plugin := TPlugin(PluginsList[i]);
+  pluginsToHandle.Add(plugin);
+  numNewRecords := StrToInt(plugin.numRecords) - StrToInt(plugin.numOverrides);
+  timeCosts.Add(IntToStr(numNewRecords));
+
+  // prompt user
+  frmDialog := CreateMessageDialog(GetLanguageString('mpMain_CompactFormIDs'),
+    mtConfirmation, mbOKCancel, mbOk);
+  frmDialog.PopupParent := self;
+  ToggleFormState(false);
+  bApproved := frmDialog.ShowModal = mrOk;
+  ToggleFormState(true);
+
+  // compact formIDs in the plugin if the user accepts
+  if bApproved then begin
+    Logger.Write('PLUGIN', 'Other', 'Compacting FormIDs in '+plugin.filename);
+
+    // Show progress form
+    ToggleFormState(false);
+    xEditLogGroup := 'COMPACT';
+    ShowProgressForm(self, pForm, GetLanguageString('mpProg_Compacting'), 'compact');
+
+    // start merge thread
+    CompactCallback := ProgressDone;
+    TCompactThread.Create;
+  end;
 end;
 
 procedure TMergeForm.OpenPluginLocationItemClick(Sender: TObject);
