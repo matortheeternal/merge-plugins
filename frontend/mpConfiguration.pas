@@ -87,6 +87,7 @@ type
     mergesBuilt: integer;
     pluginsChecked: integer;
     pluginsFixed: integer;
+    pluginsCompacted: integer;
     pluginsMerged: integer;
     reportsSubmitted: integer;
     constructor Create; virtual;
