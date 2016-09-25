@@ -32,15 +32,11 @@ object OptionsForm: TOptionsForm
     TabWidth = 70
     object GeneralTabSheet: TTabSheet
       Caption = 'General'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbStatus: TGroupBox
         Left = 6
         Top = 6
         Width = 548
-        Height = 107
+        Height = 131
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -181,6 +177,36 @@ object OptionsForm: TOptionsForm
         object lblTES5HashValue: TLabel
           Left = 190
           Top = 53
+          Width = 63
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Caption = '$01234567'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblFO4Hash: TLabel
+          Left = 12
+          Top = 103
+          Width = 98
+          Height = 13
+          Margins.Left = 12
+          Margins.Top = 6
+          Margins.Right = 6
+          Margins.Bottom = 6
+          Align = alCustom
+          Anchors = [akTop, akRight]
+          Caption = 'FO4 Dictionary Hash'
+        end
+        object lblFO4HashValue: TLabel
+          Left = 190
+          Top = 103
           Width = 63
           Height = 13
           Margins.Left = 12
@@ -340,9 +366,9 @@ object OptionsForm: TOptionsForm
       end
       object gbStyle: TGroupBox
         Left = 6
-        Top = 125
+        Top = 168
         Width = 548
-        Height = 98
+        Height = 55
         Margins.Left = 6
         Margins.Top = 6
         Margins.Right = 6
@@ -360,16 +386,16 @@ object OptionsForm: TOptionsForm
           TabOrder = 0
         end
         object kbSimpleLog: TCheckBox
-          Left = 12
-          Top = 43
+          Left = 206
+          Top = 19
           Width = 97
           Height = 17
           Caption = 'Simple log view'
           TabOrder = 1
         end
         object kbSimpleDictionary: TCheckBox
-          Left = 12
-          Top = 66
+          Left = 392
+          Top = 18
           Width = 125
           Height = 17
           Caption = 'Simple dictionary view'
@@ -380,10 +406,6 @@ object OptionsForm: TOptionsForm
     object Dictionary: TTabSheet
       Caption = 'Dictionary'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbConsolidation: TGroupBox
         Left = 6
         Top = 6
@@ -532,10 +554,6 @@ object OptionsForm: TOptionsForm
     object UsersTabsheet: TTabSheet
       Caption = 'Users'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbBlacklist: TGroupBox
         Left = 6
         Top = 6
@@ -684,7 +702,7 @@ object OptionsForm: TOptionsForm
     Left = 16
     Top = 400
     Bitmap = {
-      494C0101010008008C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800900010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

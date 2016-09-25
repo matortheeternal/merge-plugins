@@ -93,6 +93,7 @@ type
     tes4Hash: string;
     fnvHash: string;
     fo3Hash: string;
+    fo4Hash: string;
     procedure Refresh;
   end;
   TReport = class(TObject)
@@ -163,10 +164,12 @@ type
     tes4Reports: integer;
     fnvReports: integer;
     fo3Reports: integer;
+    fo4Reports: integer;
     tes5Logins: integer;
     tes4Logins: integer;
     fnvLogins: integer;
     fo3Logins: integer;
+    fo4Logins: integer;
   end;
 
   { MySQL methods }
@@ -265,17 +268,17 @@ const
   );
 
 var
-  TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary,
+  TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary, FO4Dictionary,
   ApprovedReports, UnapprovedReports, Users, Blacklist, BaseLog, Log,
   LabelFilters, GroupFilters: TList;
   slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary,
-  slConnectedIPs: TStringList;
+  slFO4Dictionary, slConnectedIPs: TStringList;
   statistics: TServerStatistics;
   settings: TSettings;
   status: TmpStatus;
   LogPath, ProgramPath, ProgramVersion: string;
   bLoginSuccess, bRebuildTES5, bRebuildTES4, bRebuildFNV,
-  bRebuildFO3, bApprovedAscending, bUnapprovedAscending: boolean;
+  bRebuildFO3, bRebuildFO4, bApprovedAscending, bUnapprovedAscending: boolean;
   wbStartTime: TDateTime;
   sessionBandwidth: Int64;
   Connection: TZConnection;
@@ -302,7 +305,9 @@ begin
   if bRebuildTES4 then RebuildDictionary('TES4', TES4Dictionary);
   if bRebuildFNV then RebuildDictionary('FNV', FNVDictionary);
   if bRebuildFO3 then RebuildDictionary('FO3', FO3Dictionary);
-  if not (bRebuildTES5 or bRebuildTES4 or bRebuildFNV or bRebuildFO3) then
+  if bRebuildFO4 then RebuildDictionary('FO4', FO4Dictionary);
+  if not (bRebuildTES5 or bRebuildTES4 or bRebuildFNV or bRebuildFO3
+  or bRebuildFO4) then
     Logger.Write('DATA', 'Dictionary', 'No dictionaries need to be updated');
 end;
 
@@ -938,6 +943,7 @@ begin
   if report.game = 'TES4' then bRebuildTES4 := true;
   if report.game = 'FNV' then bRebuildFNV := true;
   if report.game = 'FO3' then bRebuildFO3 := true;
+  if report.game = 'FO4' then bRebuildFO4 := true;
 end;
 
 function GetDictionary(name: string): string;
@@ -949,7 +955,9 @@ begin
   else if name = 'FNVDictionary.txt' then
     Result := slFNVDictionary.Text
   else if name = 'FO3Dictionary.txt' then
-    Result := slFO3Dictionary.Text;
+    Result := slFO3Dictionary.Text
+  else if name = 'FO4Dictionary.txt' then
+    Result := slFO4Dictionary.Text;
 end;
 
 function GetDictionaryHash(name: string): string;
@@ -961,7 +969,9 @@ begin
   else if name = 'FNVDictionary.txt' then
     Result := status.fnvhash
   else if name = 'FO3Dictionary.txt' then
-    Result := status.fo3hash;
+    Result := status.fo3hash
+  else if name = 'FO4Dictionary.txt' then
+    Result := status.fo4hash;
 end;
 
 procedure LoadDictionary(var lst: TList; var sl: TStringList; filename: string);
@@ -1554,6 +1564,13 @@ begin
     if (FO3Hash <> NewVersion) then begin
       FO3Hash := NewVersion;
       Logger.Write('INIT', 'Status', 'FO3Dictionary Hash: '+FO3Hash);
+    end;
+  end;
+  if FileExists('FO4Dictionary.txt') then begin
+    NewVersion := GetCRC32('FO4Dictionary.txt');
+    if (FO4Hash <> NewVersion) then begin
+      FO4Hash := NewVersion;
+      Logger.Write('INIT', 'Status', 'FO4Dictionary Hash: '+FO4Hash);
     end;
   end;
 end;

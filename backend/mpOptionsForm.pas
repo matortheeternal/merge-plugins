@@ -24,6 +24,8 @@ type
     lblFNVHashValue: TLabel;
     lblFO3Hash: TLabel;
     lblFO3HashValue: TLabel;
+    lblFO4Hash: TLabel;
+    lblFO4HashValue: TLabel;
     lblVersionValue: TLabel;
     lblTES5HashValue: TLabel;
     btnUpdateStatus: TButton;
@@ -138,6 +140,7 @@ begin
   lblTES4HashValue.Caption := status.tes4Hash;
   lblFNVHashValue.Caption := status.fnvHash;
   lblFO3HashValue.Caption := status.fo3Hash;
+  lblFO4HashValue.Caption := status.fo4Hash;
 end;
 
 procedure TOptionsForm.FormCreate(Sender: TObject);
@@ -157,6 +160,7 @@ begin
   lblTES4HashValue.Caption := status.tes4Hash;
   lblFNVHashValue.Caption := status.fnvHash;
   lblFO3HashValue.Caption := status.fo3Hash;
+  lblFO4HashValue.Caption := status.fo4Hash;
 
   // load color choices
   cbServerColor.Selected := settings.serverMessageColor;
