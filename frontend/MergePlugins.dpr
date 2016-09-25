@@ -23,6 +23,7 @@ uses
   Classes,
   RttiIni,
   HtmlHelpViewer,
+  ImagingDds in '..\lib\xedit\Imaging\ImagingDds.pas',
   mteHelpers,
   mpProfileForm in 'mpProfileForm.pas' {ProfileForm},
   mpProfilePanel in 'mpProfilePanel.pas',

@@ -18,6 +18,54 @@ unit wbDefinitionsTES5;
 
 interface
 
+uses
+  wbInterface;
+
+var
+	wbBipedObjectFlags: IwbFlagsDef;
+	wbEquipType: IwbFlagsDef;
+	wbFurnitureEntryTypeFlags: IwbFlagsDef;
+	wbPKDTFlags: IwbFlagsDef;
+	wbPKDTInterruptFlags: IwbFlagsDef;
+	wbSMNodeFlags: IwbFlagsDef;
+
+	wbAdvanceActionEnum: IwbEnumDef;
+	wbAlignmentEnum: IwbEnumDef;
+	wbArmorTypeEnum: IwbEnumDef;
+	wbAttackAnimationEnum: IwbEnumDef;
+	wbAxisEnum: IwbEnumDef;
+	wbBipedObjectEnum: IwbEnumDef;
+	wbBlendModeEnum: IwbEnumDef;
+	wbBlendOpEnum: IwbEnumDef;
+	wbBodyPartIndexEnum: IwbEnumDef;
+	wbCastEnum: IwbEnumDef;
+	wbCastingSourceEnum: IwbEnumDef;
+	wbCrimeTypeEnum: IwbEnumDef;
+	wbCriticalStageEnum: IwbEnumDef;
+	wbEmotionTypeEnum: IwbEnumDef;
+	wbEntryPointsEnum: IwbEnumDef;
+	wbEventFunctionEnum: IwbEnumDef;
+	wbEventMemberEnum: IwbEnumDef;
+	wbFormTypeEnum: IwbEnumDef;
+	wbFunctionsEnum: IwbEnumDef;
+	wbFurnitureAnimTypeEnum: IwbEnumDef;
+	wbLocationEnum: IwbEnumDef;
+	wbMiscStatEnum: IwbEnumDef;
+	wbMusicEnum: IwbEnumDef;
+	wbObjectTypeEnum: IwbEnumDef;
+	wbPropTypeEnum: IwbEnumDef;
+	wbQuadrantEnum: IwbEnumDef;
+	wbSexEnum: IwbEnumDef;
+	wbSkillEnum: IwbEnumDef;
+	wbSoulGemEnum: IwbEnumDef;
+	wbSoundLevelEnum: IwbEnumDef;
+	wbTargetEnum: IwbEnumDef;
+	wbTintMaskTypeEnum: IwbEnumDef;
+	wbVatsValueFunctionEnum: IwbEnumDef;
+	wbWardStateEnum: IwbEnumDef;
+	wbWeaponAnimTypeEnum: IwbEnumDef;
+	wbZTestFuncEnum: IwbEnumDef;
+
 procedure DefineTES5;
 
 implementation
@@ -28,7 +76,6 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbInterface,
   wbHelpers;
 
 const
@@ -646,7 +693,6 @@ const
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
@@ -658,18 +704,6 @@ var
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
-  wbEquipType: IwbFlagsDef;
-  wbEmotionTypeEnum: IwbEnumDef;
-  wbFurnitureAnimTypeEnum: IwbEnumDef;
-  wbFurnitureEntryTypeFlags: IwbFlagsDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbWardStateEnum: IwbEnumDef;
-  wbEventFunctionEnum: IwbEnumDef;
-  wbEventMemberEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
-  wbBodyPartIndexEnum: IwbEnumDef;
-  wbAttackAnimationEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordStructDef;
@@ -704,43 +738,24 @@ var
   wbICONReq: IwbSubRecordStructDef;
   wbICO2: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
-  wbCrimeTypeEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
   wbETYP: IwbSubRecordDef;
   wbETYPReq: IwbSubRecordDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbAdvanceActionEnum: IwbEnumDef;
-  wbAlignmentEnum: IwbEnumDef;
-  wbAxisEnum: IwbEnumDef;
-  wbCastingSourceEnum: IwbEnumDef;
-  wbCriticalStageEnum: IwbEnumDef;
-  wbSexEnum: IwbEnumDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbQuadrantEnum: IwbEnumDef;
-  wbBlendModeEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbFirstPersonFlagsU32: IwbIntegerDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
   wbBODTBOD2: IwbSubRecordUnionDef;
   wbScriptEntry: IwbStructDef;
-  wbPropTypeEnum: IwbEnumDef;
-  wbScriptObject: IwbUnionDef;
+  wbScriptFlags: IwbIntegerDef;
+  wbScriptPropertyObject: IwbUnionDef;
+	wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;
   wbScriptFragmentsPack: IwbStructDef;
-  wbScriptFragmentsPerk: IwbStructDef;
   wbScriptFragmentsScen: IwbStructDef;
-  wbEntryPointsEnum: IwbEnumDef;
-  wbLocationEnum: IwbEnumDef;
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
   wbTargetData: IwbStructDef;
@@ -748,6 +763,11 @@ var
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
+  wbVMADFragmentedPERK: IwbSubRecordDef;
+  wbVMADFragmentedPACK: IwbSubRecordDef;
+  wbVMADFragmentedQUST: IwbSubRecordDef;
+  wbVMADFragmentedSCEN: IwbSubRecordDef;
+  wbVMADFragmentedINFO: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
@@ -758,8 +778,6 @@ var
   wbCITC: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbIntegerDef;
-  wbCastEnum: IwbEnumDef;
-  wbTargetEnum: IwbEnumDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
   wbDMDSs: IwbSubRecordDef;
@@ -770,10 +788,6 @@ var
   wbDMDT: IwbSubRecordDef;
   wbOwnership: IwbSubRecordStructDef;
   wbAmbientColors: IwbStructDef;
-  wbSMNodeFlags: IwbFlagsDef;
-  wbBipedObjectEnum: IwbEnumDef;
-  wbBipedObjectFlags: IwbFlagsDef;
-  wbArmorTypeEnum: IwbEnumDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
@@ -784,10 +798,7 @@ var
   wbPHWT: IwbSubRecordStructDef;
   wbMorphs: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
-  wbTintMaskTypeEnum: IwbEnumDef;
   wbQUSTAliasFlags: IwbSubRecordDef;
-  wbPKDTFlags: IwbFlagsDef;
-  wbPKDTInterruptFlags: IwbFlagsDef;
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
@@ -866,6 +877,8 @@ begin
 
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
+
+  MainRecord := MainRecord.WinningOverride;
 
   if MainRecord.Signature <> QUST then begin
     case aType of
@@ -956,6 +969,8 @@ begin
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
+  MainRecord := MainRecord.WinningOverride;
+
   if MainRecord.Signature <> QUST then begin
     case aType of
       ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
@@ -1024,6 +1039,58 @@ begin
   Result := StrToInt(s);
 end;
 
+function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+  Navmesh    : IwbElement;
+  MainRecord : IwbMainRecord;
+  Triangles  : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr: Result := IntToStr(aInt);
+    ctToEditValue: Result := IntToStr(aInt);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
+
+  Navmesh := Container.Elements[0];
+
+  if not Assigned(Navmesh) then
+    Exit;
+
+  if not Supports(Navmesh.LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  MainRecord := MainRecord.WinningOverride;
+
+  if MainRecord.Signature <> NAVM then begin
+    case aType of
+      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+    end;
+    Exit;
+  end;
+
+  if Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) and (aType = ctCheck) then
+    if aInt >= Triangles.ElementCount then
+      Result := '<Warning: Navmesh triangle not found in "' + MainRecord.Name + '">';
+end;
+
+function wbStringToInt(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := StrToIntDef(aString, 0);
+end;
+
+
 { Alias to string conversion, requires quest reference or quest record specific to record that references alias }
 function wbAliasToStr(aInt: Int64; const aQuestRef: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1059,6 +1126,8 @@ begin
   if not Supports(aQuestRef, IwbMainRecord, MainRecord) then
     if not Supports(aQuestRef.LinksTo, IwbMainRecord, MainRecord) then
       Exit;
+
+  MainRecord := MainRecord.WinningOverride;
 
   if MainRecord.Signature <> QUST then begin
     case aType of
@@ -1325,7 +1394,11 @@ begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
   else if aType = ctToStr then
-    Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
+    try
+      Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
+    except
+      Result := IntToStr(aInt)
+    end
   else
     Result := '';
 end;
@@ -1905,26 +1978,6 @@ begin
   end;
 end;
 
-//function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
-//var
-//  Rec        : IwbRecord;
-//  Element    : IwbElement;
-//  s          : string;
-//begin
-//  Result := '';
-//
-//  Rec := aMainRecord.RecordBySignature['DATA'];
-//  if Assigned(Rec) then begin
-//    Element := Rec.ElementByName['Cell'];
-//    if Assigned(Element) then
-//      Element := Element.LinksTo;
-//    if Assigned(Element) then
-//      s := Trim(Element.Name);
-//    if s <> '' then
-//      Result := 'for ' + s;
-//  end;
-//end;
-
 function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
 var
   Rec: IwbRecord;
@@ -2390,20 +2443,7 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsDontShow(const aElement: IwbElement): Boolean;
-var
-  Container: IwbContainer;
-begin
-  Result := True;
-  if Assigned(aElement) then
-    if Supports(aElement, IwbContainer, Container) then
-      if Container.ElementCount > 0 then
-        if Assigned(Container.Elements[0]) then
-          Result := VarIsClear(Container.Elements[0].NativeValue);
-end;
-
-{>>> For VMAD <<<}
-function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container     : IwbContainer;
 
@@ -2414,7 +2454,7 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Pos('Script Fragments Quest', Container.Name) <> 1) do
+  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
@@ -2422,7 +2462,7 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsInfoCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsInfoCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container     : IwbContainer;
   F             : Integer;
@@ -2434,11 +2474,11 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Pos('Script Fragments Info', Container.Name) <> 1) do
+  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  F := Container.ElementByName['Info Fragments Flags'].NativeValue;
+  F := Container.ElementByName['Flags'].NativeValue;
   for i := 0 to 2 do begin
     if (F and 1) = 1 then
       Inc(Result);
@@ -2455,7 +2495,7 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsSceneCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsSceneCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container     : IwbContainer;
   F             : Integer;
@@ -2467,11 +2507,11 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Pos('Script Fragments Scene', Container.Name) <> 1) do
+  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  F := Container.ElementByName['Scene Fragments Flags'].NativeValue;
+  F := Container.ElementByName['Flags'].NativeValue;
   for i := 0 to 2 do begin
     if (F and 1) = 1 then
       Inc(Result);
@@ -2488,7 +2528,7 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsPackCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsPackCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container     : IwbContainer;
   F             : Integer;
@@ -2500,11 +2540,11 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Pos('Script Fragments Pack', Container.Name) <> 1) do
+  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  F := Container.ElementByName['Package Fragments Flags'].NativeValue;
+  F := Container.ElementByName['Flags'].NativeValue;
   for i := 0 to 7 do begin
     if (F and 1) = 1 then
       Inc(Result);
@@ -3005,21 +3045,6 @@ const
 var
   wbCTDAFunctionEditInfo: string;
 
-function CmpU32(a, b : Cardinal) : Integer;
-asm
-  xor ecx, ecx
-  cmp eax, edx
-  ja @@GT
-  je @@EQ
-@@LT:
-  dec ecx
-  dec ecx
-@@GT:
-  inc ecx
-@@EQ:
-  mov eax, ecx
-end;
-
 function wbCTDAParamDescFromIndex(aIndex: Integer): PCTDAFunction;
 var
   L, H, I, C: Integer;
@@ -3030,7 +3055,7 @@ begin
   H := High(wbCTDAFunctions);
   while L <= H do begin
     I := (L + H) shr 1;
-    C := CmpU32(wbCTDAFunctions[I].Index, aIndex);
+    C := CmpW32(wbCTDAFunctions[I].Index, aIndex);
     if C < 0 then
       L := I + 1
     else begin
@@ -4143,7 +4168,7 @@ begin
   end;
 end;
 
-function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container : IwbDataContainer;
   Element   : IwbElement;
@@ -4775,7 +4800,7 @@ begin
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
-  wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpNormal, True);
+  wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
   wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbLStringKC(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
@@ -4817,7 +4842,14 @@ begin
     {15} 'Array of Bool'
   ]);
 
-  wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
+  wbScriptFlags := wbInteger('Flags', itU8, wbEnum([
+    {0x00} 'Local',
+    {0x01} 'Inherited',
+    {0x02} 'Removed',
+    {0x03} 'Inherited and Removed'
+  ]));
+
+  wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
@@ -4830,17 +4862,10 @@ begin
     ])
   ]);
 
-  wbScriptEntry := wbStructSK([0], 'Script', [
-    wbLenString('scriptName', 2),
-    wbInteger('Flags', itU8, wbEnum([
-      {0x00} 'Local',
-      {0x01} 'Inherited',
-      {0x02} 'Removed',
-      {0x03} 'Inherited and Removed'
-    ])),
+  wbScriptProperties :=
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
-      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False,nil, wbScriptPropertyTypeAfterSet),
+      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
       wbInteger('Flags', itU8, wbEnum([
         {0x00} '',
         {0x01} 'Edited',
@@ -4848,95 +4873,81 @@ begin
         {0x03} 'Removed'
       ])),
       wbUnion('Value', wbScriptPropertyDecider, [
-        {00} wbNull,
-        {01} wbScriptObject,
-        {02} wbLenString('String', 2),
-        {03} wbInteger('Int32', itS32),
-        {04} wbFloat('Float'),
-        {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
-        {11} wbArray('Array of Object', wbScriptObject, -1),
-        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
-        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
-        {14} wbArray('Array of Float', wbFloat('Element'), -1),
-        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
+       {00} wbNull,
+       {01} wbScriptPropertyObject,
+       {02} wbLenString('String', 2),
+       {03} wbInteger('Int32', itS32),
+       {04} wbFloat('Float'),
+       {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
+       {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
+       {12} wbArray('Array of String', wbLenString('Element', 2), -1),
+       {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
+       {14} wbArray('Array of Float', wbFloat('Element'), -1),
+       {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
-    ]), -2, cpNormal, False, nil, nil, nil, False)
+    ]), -2, cpNormal, False, nil, nil, nil, False);
+
+  wbScriptEntry := wbStructSK([0], 'Script', [
+    wbLenString('scriptName', 2),
+    wbScriptFlags,
+    wbScriptProperties
   ]);
 
-  wbScriptFragmentsInfo := wbStruct('Script Fragments Info', [
+  wbScriptFragmentsInfo := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
-    wbInteger('Info Fragments Flags', itU8, wbFlags([
+    wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Info Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
-      wbStruct('Info Fragment', [
+    wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
+      wbStruct('Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsInfoCounter)
-  ], cpNormal, false, wbScriptFragmentsDontShow);
+  ]);
 
-  wbScriptFragmentsPack := wbStruct('Script Fragments Package', [
+  wbScriptFragmentsPack := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
-    wbInteger('Package Fragments Flags', itU8, wbFlags([
+    wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd',
       {4} 'OnChange'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Package Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
-      wbStruct('Package Fragment', [
+    wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
+      wbStruct('Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsPackCounter)
-  ], cpNormal, false, wbScriptFragmentsDontShow);
+  ]);
 
-  wbScriptFragmentsPerk := wbStruct('Script Fragments Perk', [
-    wbInteger('Unknown', itS8),
-    wbLenString('fileName', 2),
-    wbArrayS('Perk Fragments',
-      wbStructSK([0], 'Perk Fragment', [
-        wbInteger('Fragment Index', itU16),
-        wbInteger('Unknown', itS16),
-        wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
-      ]), -2)
-  ], cpNormal, false, wbScriptFragmentsDontShow);
-
-  wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
+  wbScriptFragmentsQuest := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
-    wbArrayS('Quest Fragments',
-      wbStructSK([0, 2], 'Quest Fragment', [
+    wbArrayS('Fragments',
+      wbStructSK([0, 2], 'Fragment', [
         wbInteger('Quest Stage', itU16),
         wbInteger('Unknown', itS16),
         wbInteger('Quest Stage Index', itS32),
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
-      ]), wbScriptFragmentsQuestCounter),
-    wbArrayS('Aliases', wbStructSK([0], 'Alias', [
-      wbScriptObject,
-      wbInteger('Version', itS16, nil, cpIgnore),
-      wbInteger('Object Format', itS16, nil, cpIgnore),
-	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
-	  ]), -2)
-  ], cpNormal, false, wbScriptFragmentsDontShow);
+      ]), wbScriptFragmentsQuestCounter)
+  ]);
 
-  wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
+  wbScriptFragmentsScen := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
-    wbInteger('Scene Fragments Flags', itU8, wbFlags([
+    wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Scene Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
-      wbStruct('Scene Fragment', [
+    wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
+      wbStruct('Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
@@ -4954,36 +4965,70 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), -2)
-  ], cpNormal, false, wbScriptFragmentsDontShow);
+  ]);
+
+  wbScriptFragments := wbStruct('Script Fragments', [
+    wbInteger('Unknown', itS8),
+    wbLenString('fileName', 2),
+    wbArrayS('Fragments',
+      wbStructSK([0], 'Fragment', [
+        wbInteger('Fragment Index', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), -2)
+  ]);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
+
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16, nil, cpIgnore),
     wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbUnion('Data', wbScriptFragmentExistsDecider, [
-      wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-      wbStruct('Info VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsInfo
-      ], cpNormal, False, nil, 0),
-      wbStruct('Pack VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsPack
-      ], cpNormal, False, nil, 0),
-      wbStruct('Perk VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsPerk
-      ], cpNormal, False, nil, 0),
-      wbStruct('Quest VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsQuest
-      ], cpNormal, False, nil, 0),
-      wbStruct('Scene VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsScen
-      ], cpNormal, False, nil, 0)
-    ])
-  ], cpNormal, false, nil, -1);
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False)
+  ]);
+
+  wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
+    wbInteger('Version', itS16, nil, cpIgnore),
+    wbInteger('Object Format', itS16, nil, cpIgnore),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbScriptFragments
+  ], cpNormal, False, nil, 3);
+
+  wbVMADFragmentedPACK := wbStruct(VMAD, 'Virtual Machine Adapter', [
+    wbInteger('Version', itS16, nil, cpIgnore),
+    wbInteger('Object Format', itS16, nil, cpIgnore),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbScriptFragmentsPack
+  ], cpNormal, False, nil, 3);
+
+  wbVMADFragmentedQUST := wbStruct(VMAD, 'Virtual Machine Adapter', [
+    wbInteger('Version', itS16, nil, cpIgnore),
+    wbInteger('Object Format', itS16, nil, cpIgnore),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbScriptFragmentsQuest,
+    wbArrayS('Aliases', wbStructSK([0], 'Alias', [
+      wbScriptPropertyObject,
+      wbInteger('Version', itS16, nil, cpIgnore),
+      wbInteger('Object Format', itS16, nil, cpIgnore),
+	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
+	  ]), -2)
+  ], cpNormal, False, nil, 3);
+
+  wbVMADFragmentedSCEN := wbStruct(VMAD, 'Virtual Machine Adapter', [
+    wbInteger('Version', itS16, nil, cpIgnore),
+    wbInteger('Object Format', itS16, nil, cpIgnore),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbScriptFragmentsScen
+  ], cpNormal, False, nil, 3);
+
+  wbVMADFragmentedINFO := wbStruct(VMAD, 'Virtual Machine Adapter', [
+    wbInteger('Version', itS16, nil, cpIgnore),
+    wbInteger('Object Format', itS16, nil, cpIgnore),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbScriptFragmentsInfo
+  ], cpNormal, False, nil, 3);
+
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -4991,23 +5036,39 @@ begin
       wbFloat('Attack Chance'),
       wbFormIDCk('Attack Spell', [SPEL, SHOU, NULL]),
       wbInteger('Attack Flags', itU32, wbFlags([
-        {0x00000001}'Ignore Weapon',
-        {0x00000002}'Bash Attack',
-        {0x00000004}'Power Attack',
-        {0x00000008}'Left Attack',
-        {0x00000010}'Rotating Attack',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16'
-      ], True)),
+        {0x00000001} 'Ignore Weapon',
+        {0x00000002} 'Bash Attack',
+        {0x00000004} 'Power Attack',
+        {0x00000008} 'Left Attack',
+        {0x00000010} 'Rotating Attack',
+        {0x00000020} 'Unknown 5',
+        {0x00000040} 'Unknown 6',
+        {0x00000080} 'Unknown 7',
+        {0x00000100} 'Unknown 8',
+        {0x00000200} 'Unknown 9',
+        {0x00000400} 'Unknown 10',
+        {0x00000800} 'Unknown 11',
+        {0x00001000} 'Unknown 12',
+        {0x00002000} 'Unknown 13',
+        {0x00004000} 'Unknown 14',
+        {0x00008000} 'Unknown 15',
+        {0x00010000} 'Unknown 16',
+        {0x00020000} 'Unknown 17',
+        {0x00040000} 'Unknown 18',
+        {0x00080000} 'Unknown 19',
+        {0x00100000} 'Unknown 20',
+        {0x00200000} 'Unknown 21',
+        {0x00400000} 'Unknown 22',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
+        {0x02000000} 'Unknown 25',
+        {0x04000000} 'Unknown 26',
+        {0x08000000} 'Unknown 27',
+        {0x10000000} 'Unknown 28',
+        {0x20000000} 'Unknown 29',
+        {0x40000000} 'Unknown 30',
+        {0x80000000} 'Override Data'
+      ])),
       wbFloat('Attack Angle'),
       wbFloat('Strike Angle'),
       wbFloat('Stagger'),
@@ -5166,21 +5227,21 @@ begin
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], [], cpNormal, False, nil, True);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation}, True);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], [], cpNormal, True, nil, True);
@@ -5466,7 +5527,7 @@ begin
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR, SOUN]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR, SOUN]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbLString(RNAM, 'Activate Text Override'),
+    wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
       'Ignored by Sandbox'
@@ -5495,17 +5556,17 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbICON := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename'),
+    wbString(ICON, 'Large Icon filename', 0, cpNormal, True),
     wbString(MICO, 'Small Icon filename')
   ], [], cpNormal, False, nil, True);
 
   wbICONReq := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename'),
+    wbString(ICON, 'Large Icon filename', 0, cpNormal, True),
     wbString(MICO, 'Small Icon filename')
   ], [], cpNormal, True, nil, True);
 
   wbICO2 := wbRStruct('Icon 2 (female)', [
-    wbString(ICO2, 'Large Icon filename'),
+    wbString(ICO2, 'Large Icon filename', 0, cpNormal, True),
     wbString(MIC2, 'Small Icon filename')
   ], [], cpNormal, False, nil, True);
 
@@ -6251,7 +6312,7 @@ begin
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'No Auto-Calc (Unused)',
+        {0x00000001} 'No Auto-Calc',
         {0x00000002} 'Food Item',
         {0x00000004} 'Unknown 3',
         {0x00000008} 'Unknown 4',
@@ -6269,7 +6330,7 @@ begin
 				{0x00008000} 'Unknown 16',
 				{0x00010000} 'Medicine',
 				{0x00020000} 'Poison'
-      ], [0])),
+      ])),
       wbFormID('Addiction'),
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
@@ -6417,7 +6478,7 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbLStringKC(DESC, 'Book Text', 0, cpNormal, True),
+    wbLStringKC(DESC, 'Book Text', 0, cpTranslate, True),
     wbDEST,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
@@ -6446,7 +6507,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
-    wbLString(CNAM, 'Description')
+    wbLString(CNAM, 'Description', 0, cpTranslate)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
@@ -7583,8 +7644,8 @@ begin
       ], cpNormal, False, nil, 7),
     wbRStructsSK('Ranks', 'Rank', [0], [
       wbInteger(RNAM, 'Rank#', itU32),
-      wbLString(MNAM, 'Male Title'),
-      wbLString(FNAM, 'Female Title'),
+      wbLString(MNAM, 'Male Title', 0, cpTranslate),
+      wbLString(FNAM, 'Female Title', 0, cpTranslate),
       wbString(INAM, 'Insignia Unused')
     ], []),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
@@ -7705,7 +7766,7 @@ begin
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbLString('Name'),
+      wbLString('Name', 0, cpTranslate),
       wbInteger('Int', itS32),
       wbFloat('Float'),
       wbInteger('Bool', itU32, wbEnum(['False', 'True']))
@@ -8219,6 +8280,7 @@ begin
 
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
     wbMODL,
@@ -8486,7 +8548,7 @@ begin
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
-    wbVMAD,
+    wbVMADFragmentedPERK,
     wbFULL,
     wbDESCReq,
     wbICON,
@@ -8565,7 +8627,7 @@ begin
         // 5: EPFD=SPEL
         // 6: EPFD=string
         // 7: EPFD=lstring
-        wbLString(EPF2, 'Button Label'),
+        wbLString(EPF2, 'Button Label', 0, cpTranslate),
         wbStruct(EPF3, 'Script Flags', [
           wbInteger('Script Flags', itU8, wbFlags([
             'Run Immediately',
@@ -8583,8 +8645,8 @@ begin
           {3} wbFormIDCk('Leveled Item', [LVLI]),
           {4} wbFormIDCk('Spell', [SPEL]),
           {5} wbFormIDCk('Spell', [SPEL]),
-          {6} wbString('Text'),
-          {7} wbLString('Text'),
+          {6} wbString('Text', 0, cpTranslate),
+          {7} wbLString('Text', 0, cpTranslate),
           {8} wbStruct('Actor Value, Float', [
                 wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
                 wbFloat('Float')
@@ -8599,7 +8661,7 @@ begin
     wbEDID,
     wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [2], [
-      wbLString(BPTN, 'Part Name', 0, cpNormal, True),
+      wbLString(BPTN, 'Part Name', 0, cpTranslate, True),
       wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
@@ -8993,7 +9055,7 @@ begin
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbRStructs('Menu Buttons', 'Menu Button', [
-      wbLString(ITXT, 'Button Text'),
+      wbLString(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
@@ -9458,7 +9520,7 @@ begin
   wbRecord(SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
-    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
+    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
@@ -9468,7 +9530,7 @@ begin
   wbRecord(SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
-    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
+    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
     wbCTDAsCount,
     wbStruct(DNAM, 'Flags', [
@@ -9551,7 +9613,7 @@ begin
   wbRecord(WOOP, 'Word of Power', [
     wbEDID,
     wbFULL,
-    wbLString(TNAM, 'Translation', 0, cpNormal, True)
+    wbLString(TNAM, 'Translation', 0, cpTranslate, True)
   ]);
 
   wbRecord(SHOU, 'Shout',
@@ -9614,7 +9676,7 @@ begin
 
   wbRecord(SCEN, 'Scene', [
     wbEDID,
-    wbVMAD,
+    wbVMADFragmentedSCEN,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Begin on Quest Start',
       'Stop on Quest End',
@@ -10040,7 +10102,7 @@ begin
       {0x00002000} 13, 'Actor Changed'
     ])), [
     wbEDID,
-    wbVMAD,
+    wbVMADFragmentedINFO,
     wbUnknown(DATA),
     wbStruct(ENAM, 'Response flags', [
       wbInteger('Flags', itU16, wbFlags([
@@ -10088,9 +10150,9 @@ begin
         ])),
         wbByteArray('Unused', 3)
       ]),
-      wbLStringKC(NAM1, 'Response Text', 0),
-      wbString(NAM2, 'Script Notes', 0),
-      wbString(NAM3, 'Edits', 0),
+      wbLStringKC(NAM1, 'Response Text', 0, cpTranslate),
+      wbString(NAM2, 'Script Notes'),
+      wbString(NAM3, 'Edits'),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
@@ -10107,7 +10169,7 @@ begin
     ),
     {>>> END leftover from earlier CK versions <<<}
 
-    wbLString(RNAM, 'Prompt'),
+    wbLString(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])
@@ -10600,7 +10662,7 @@ begin
       ])),
       wbFormIDCk('Sound', [SNDR])
     ])),
-    wbLStringKC(DNAM, 'Magic Item Description'),
+    wbLStringKC(DNAM, 'Magic Item Description', 0, cpTranslate),
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
@@ -10770,7 +10832,7 @@ begin
     wbKWDAs,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
-    wbLString(SHRT, 'Short Name'),
+    wbLString(SHRT, 'Short Name', 0, cpTranslate),
     wbByteArray(DATA, 'Marker'),
     wbStruct(DNAM, 'Player Skills', [
       wbArray('Skill Values', wbInteger('Skill', itU8), [
@@ -10986,7 +11048,7 @@ begin
 
   wbRecord(PACK, 'Package', [
     wbEDID,
-    wbVMAD,
+    wbVMADFragmentedPACK,
 
     wbStruct(PKDT, 'Pack Data', [
       wbInteger('General Flags', itU32, wbPKDTFlags),
@@ -11180,7 +11242,7 @@ begin
 
   wbRecord(QUST, 'Quest', [
     wbEDID,
-    wbVMAD,
+    wbVMADFragmentedQUST,
     wbFULL,
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU16, wbFlags([
@@ -11251,7 +11313,7 @@ begin
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
       wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
-      wbLString(NNAM, 'Display Text', 0, cpNormal, True),
+      wbLString(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
@@ -12225,7 +12287,7 @@ begin
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
       wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Teleport Marker Triangle', itS16),
+      wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
       wbByteArray('Unused', 2, cpIgnore)
     ]),
 
@@ -12739,7 +12801,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbUnknown(PNAM),
-    wbLString(RNAM, 'Activate Text Override'),
+    wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
