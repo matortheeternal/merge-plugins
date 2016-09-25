@@ -310,6 +310,13 @@ begin
   edBsaOptPath.Text := settings.bsaOptPath;
   edBsaOptOptions.Text := settings.bsaOptOptions;
 
+  // disable BSAOpt integration if bsaOptMode is nil
+  if ProgramStatus.GameMode.bsaOptMode = '' then begin
+    edBsaOptPath.Enabled := false;
+    btnBrowseBsaOpt.Enabled := false;
+    edBsaOptOptions.Enabled := false;
+  end;
+
   // disable controls if not using MO or NMM
   if not (kbUsingMO.Checked or kbUsingNMM.Checked) then
     kbUsingMOClick(nil);
@@ -1021,11 +1028,13 @@ begin
   if FileExists(path) then
     edFlagsPath.Text := path;
 
-  // search for bsaopt
-  path := MultFileSearch(paths, validBsaOptFilenames, ignore, 2);
-  if (path <> '') then begin
-    edBsaOptPath.Text := path;
-    edBsaOptPathExit(nil);
+  // search for bsaopt if available
+  if edBsaOptPath.Enabled then begin
+    path := MultFileSearch(paths, validBsaOptFilenames, ignore, 2);
+    if (path <> '') then begin
+      edBsaOptPath.Text := path;
+      edBsaOptPathExit(nil);
+    end;
   end;
 end;
 
