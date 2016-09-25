@@ -110,3 +110,6 @@ Version 2.1.3.0
   - When the merge destination directory is the data folder Merge Plugins will put merged assets directly into the folder instead of creating a subfolder for each merge
   - Merge Plugins no longer breaks due to different regional Decimal Separator characters.
   - Fixed the OK button of the Options Form not updating when changing the Merge destination directory
+
+Version 2.2.0.0
+  - Added Fallout 4 support
