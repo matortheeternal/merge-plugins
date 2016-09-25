@@ -68,7 +68,8 @@ const
   GameItems = 'The Elder Scrolls V: Skyrim'#13#10 +
               'The Elder Scrolls IV: Oblivion'#13#10 +
               'Fallout: New Vegas'#13#10 +
-              'Fallout 3';
+              'Fallout 3'#13#10 +
+              'Fallout 4';
 begin
   // set up panel
   inherited Create(AOwner);
