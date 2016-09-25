@@ -44,7 +44,7 @@ uses
   // xEdit units
   wbHelpers, wbInterface, wbImplementation, wbBSA,
   wbDefinitionsFNV, wbDefinitionsFO3, wbDefinitionsTES3, wbDefinitionsTES4,
-  wbDefinitionsTES5;
+  wbDefinitionsTES5, wbDefinitionsFO4;
 
 
 {******************************************************************************}
@@ -288,6 +288,7 @@ begin
     gmFNV: DefineFNV;
     gmTES4: DefineTES4;
     gmFO3: DefineFO3;
+    gmFO4: DefineFO4;
   end;
 end;
 

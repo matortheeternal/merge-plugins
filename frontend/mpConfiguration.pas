@@ -132,7 +132,7 @@ var
 
 const
   // GAME MODES
-  GameArray: array[1..4] of TGameMode = (
+  GameArray: array[1..5] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
       appName: 'TES5'; exeName: 'TESV.exe'; appIDs: '72850';
       bsaOptMode: 'sk'; ),
@@ -144,7 +144,10 @@ const
       bsaOptMode: 'fo'; ),
     ( longName: 'Fallout 3'; gameName: 'Fallout3'; gameMode: gmFO3;
       appName: 'FO3'; exeName: 'Fallout3.exe'; appIDs: '22300,22370';
-      bsaOptMode: 'fo'; )
+      bsaOptMode: 'fo'; ),
+    ( longName: 'Fallout 4'; gameName: 'Fallout4'; gameMode: gmFO4;
+      appName: 'FO4'; exeName: 'Fallout4.exe'; appIDs: '377160';
+      bsaOptMode: '' )
   );
 
 implementation
