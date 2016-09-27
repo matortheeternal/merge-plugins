@@ -601,7 +601,7 @@ begin
 
     // show progress form
     pForm := TProgressForm.Create(Self);
-    pForm.pfLogPath := LogPath + 'main\';
+    pForm.pfLogPath := LogPath + 'save\';
     pForm.PopupParent := Self;
     pForm.Caption := GetLanguageString('mpProg_Closing');
     pForm.MaxProgress(PluginsList.Count + MergesList.Count + 2);
@@ -619,6 +619,9 @@ begin
   pForm.SetProgress(pForm.ProgressBar.Max);
   pForm.SaveLog;
   pForm.Free;
+
+  // save base log
+  SaveLog(BaseLog);
 
   // restart program if update applied
   if ProgramStatus.bInstallUpdate then
