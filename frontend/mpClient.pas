@@ -22,6 +22,7 @@ type
   TmpStatus = class(TObject)
   public
     programVersion: string;
+    fo4Hash: string;
     tes5Hash: string;
     tes4Hash: string;
     fnvHash: string;
@@ -86,6 +87,8 @@ end;
 constructor TmpStatus.Create;
 begin
   ProgramVersion := GetVersionMem;
+  if FileExists('FO4Dictionary.txt') then
+    TES5Hash := GetCRC32('FO4Dictionary.txt');
   if FileExists('TES5Dictionary.txt') then
     TES5Hash := GetCRC32('TES5Dictionary.txt');
   if FileExists('TES4Dictionary.txt') then
@@ -100,8 +103,9 @@ begin
   case CurrentProfile.gameMode of
     1: Logger.Write('GENERAL', 'Status', 'TES5 Dictionary Hash: '+TES5Hash);
     2: Logger.Write('GENERAL', 'Status', 'TES4 Dictionary Hash: '+TES4Hash);
-    3: Logger.Write('GENERAL', 'Status', 'FO3 Dictionary Hash: '+FNVHash);
-    4: Logger.Write('GENERAL', 'Status', 'FNV Dictionary Hash: '+FO3Hash);
+    3: Logger.Write('GENERAL', 'Status', 'FNV Dictionary Hash: '+FNVHash);
+    4: Logger.Write('GENERAL', 'Status', 'FO3 Dictionary Hash: '+FO3Hash);
+    5: Logger.Write('GENERAL', 'Status', 'FO4 Dictionary Hash: '+FO4Hash);
   end;
 end;
 
@@ -388,6 +392,12 @@ begin
 
   // handle dictionary update based on gamemode
   case wbGameMode of
+    gmFO4: begin
+      ProgramStatus.bDictionaryUpdate := LocalStatus.fo4Hash <> RemoteStatus.fo4Hash;
+      if ProgramStatus.bDictionaryUpdate then
+        Logger.Write('GENERAL', 'Status', 'Dictionary update available '+
+          LocalStatus.fo4Hash+' != '+RemoteStatus.fo4Hash);
+    end;
     gmTES5: begin
       ProgramStatus.bDictionaryUpdate := LocalStatus.tes5Hash <> RemoteStatus.tes5Hash;
       if ProgramStatus.bDictionaryUpdate then
