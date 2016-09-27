@@ -24,6 +24,7 @@ uses
   procedure RemoveCommentsAndEmpty(var sl: TStringList);
   procedure RemoveMissingFiles(var sl: TStringList);
   procedure RemoveMergedPlugins(var sl: TStringList);
+  procedure FixLoadOrder(var sl: TStringList; filename: String; index: Integer);
   procedure AddMissingFiles(var sl: TStringList);
   procedure GetPluginDates(var sl: TStringList);
   function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
@@ -167,9 +168,9 @@ begin
   RemoveMissingFiles(slLoadOrder);
   AddMissingFiles(slLoadOrder);
 
-  // if GameMode is not Skyrim and user isn't using MO,
-  // sort by date modified else add Update.esm and
-  // Skyrim.esm to load order if they're missing
+  // if GameMode is not Skyrim or Fallout 4 and user isn't
+  // using MO, sort by date modified else add base masters
+  // to load order if missing
   if (wbGameMode <> gmTES5) and (wbGameMode <> gmFO4) then begin
     if not settings.usingMO then begin
       GetPluginDates(slPlugins);
@@ -179,14 +180,11 @@ begin
     end;
   end
   else if (wbGameMode = gmTES5) then begin
-    if slLoadOrder.IndexOf('Update.esm') = -1 then
-      slLoadOrder.Insert(0, 'Update.esm');
-    if slLoadOrder.IndexOf('Skyrim.esm') = -1 then
-      slLoadOrder.Insert(0, 'Skyrim.esm');
+    FixLoadOrder(slLoadOrder, 'Skyrim.esm', 0);
+    FixLoadOrder(slLoadOrder, 'Update.esm', 1);
   end
   else if (wbGameMode = gmFO4) then begin
-    if slLoadOrder.IndexOf('Fallout4.esm') = -1 then
-      slLoadOrder.Insert(0, 'Fallout4.esm');
+    FixLoadOrder(slLoadOrder, 'Fallout4.esm', 0);
   end;
 
   // DISPLAY PLUGIN SELECTION FORM
@@ -423,6 +421,18 @@ begin
   for i := Pred(sl.Count) downto 0 do
     if Assigned(TMergeHelpers.MergeByFilename(MergesList, sl[i])) then
       sl.Delete(i);
+end;
+
+{ Forces a plugin to load at a specific position }
+procedure FixLoadOrder(var sl: TStringList; filename: String; index: Integer);
+var
+  oldIndex: Integer;
+begin
+  oldIndex := sl.IndexOf(filename);
+  if oldIndex <> index then begin
+    sl.Delete(oldIndex);
+    sl.Insert(index, filename);
+  end;
 end;
 
 { Add missing *.esp and *.esm files to list }
