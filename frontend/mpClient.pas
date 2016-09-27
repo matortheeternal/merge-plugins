@@ -88,7 +88,7 @@ constructor TmpStatus.Create;
 begin
   ProgramVersion := GetVersionMem;
   if FileExists('FO4Dictionary.txt') then
-    TES5Hash := GetCRC32('FO4Dictionary.txt');
+    FO4Hash := GetCRC32('FO4Dictionary.txt');
   if FileExists('TES5Dictionary.txt') then
     TES5Hash := GetCRC32('TES5Dictionary.txt');
   if FileExists('TES4Dictionary.txt') then
