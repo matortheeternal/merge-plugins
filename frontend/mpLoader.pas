@@ -178,11 +178,15 @@ begin
       slLoadOrder.CustomSort(PluginListCompare);
     end;
   end
-  else begin
+  else if (wbGameMode = gmTES5) then begin
     if slLoadOrder.IndexOf('Update.esm') = -1 then
       slLoadOrder.Insert(0, 'Update.esm');
     if slLoadOrder.IndexOf('Skyrim.esm') = -1 then
       slLoadOrder.Insert(0, 'Skyrim.esm');
+  end
+  else if (wbGameMode = gmFO4) then begin
+    if slLoadOrder.IndexOf('Fallout4.esm') = -1 then
+      slLoadOrder.Insert(0, 'Fallout4.esm');
   end;
 
   // DISPLAY PLUGIN SELECTION FORM
