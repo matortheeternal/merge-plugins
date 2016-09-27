@@ -389,16 +389,19 @@ end;
 { Remove comments and empty lines from a stringlist }
 procedure RemoveCommentsAndEmpty(var sl: TStringList);
 var
-  i, j: integer;
+  i, j, k: integer;
   s: string;
 begin
   for i := Pred(sl.Count) downto 0 do begin
     s := Trim(sl.Strings[i]);
     j := Pos('#', s);
+    k := Pos('*', s);
     if j > 0 then
       System.Delete(s, j, High(Integer));
-    if Trim(s) = '' then
+    if s = '' then
       sl.Delete(i);
+    if k = 1 then
+      sl[i] := Copy(s, 2, Length(s));
   end;
 end;
 
