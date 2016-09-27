@@ -83,7 +83,7 @@ begin
 
   // SET GAME VARS
   SetGame(CurrentProfile.gameMode);
-  wbVWDInTemporary := wbGameMode in [gmTES5, gmFO3, gmFNV];
+  wbVWDInTemporary := wbGameMode in [gmFO4, gmTES5, gmFO3, gmFNV];
   Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
   Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
 
@@ -170,7 +170,7 @@ begin
   // if GameMode is not Skyrim and user isn't using MO,
   // sort by date modified else add Update.esm and
   // Skyrim.esm to load order if they're missing
-  if wbGameMode <> gmTES5 then begin
+  if (wbGameMode <> gmTES5) and (wbGameMode <> gmFO4) then begin
     if not settings.usingMO then begin
       GetPluginDates(slPlugins);
       GetPluginDates(slLoadOrder);
