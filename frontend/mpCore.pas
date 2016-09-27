@@ -155,7 +155,7 @@ const
   // IMPORTANT CONSTANTS
   ProgramTesters = 'bla08, hishy, Kesta, EphemeralSagacity';
   ProgramTranslators = 'GabenOurSavior, fiama, dhxxqk2010, Oaristys, proter, yohru';
-  xEditVersion = '3.1.1';
+  xEditVersion = '3.1.3';
   bTranslationDump = false;
 
   // PLUGIN FLAGS
