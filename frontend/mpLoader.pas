@@ -105,6 +105,10 @@ begin
   wbEditAllowed := True;
   wbContainerHandler := wbCreateContainerHandler;
   wbContainerHandler._AddRef;
+  if wbGameMode = gmFO4 then begin
+    wbArchiveExtension := '.ba2';
+    wbVWDAsQuestChildren := True;
+  end;
 
   // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
   InitializeClient;
