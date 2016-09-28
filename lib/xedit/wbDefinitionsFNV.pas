@@ -2510,6 +2510,21 @@ const
 var
   wbCTDAFunctionEditInfo: string;
 
+function CmpU32(a, b : Cardinal) : Integer;
+asm
+  xor ecx, ecx
+  cmp eax, edx
+  ja @@GT
+  je @@EQ
+@@LT:
+  dec ecx
+  dec ecx
+@@GT:
+  inc ecx
+@@EQ:
+  mov eax, ecx
+end;
+
 function wbCTDAParamDescFromIndex(aIndex: Integer): PCTDAFunction;
 var
   L, H, I, C: Integer;
@@ -2520,7 +2535,7 @@ begin
   H := High(wbCTDAFunctions);
   while L <= H do begin
     I := (L + H) shr 1;
-    C := CmpW32(wbCTDAFunctions[I].Index, aIndex);
+    C := CmpU32(wbCTDAFunctions[I].Index, aIndex);
     if C < 0 then
       L := I + 1
     else begin
@@ -5515,8 +5530,7 @@ begin
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {50} wbFormIDCkNoReach('Casino', [CSNO])
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -5609,8 +5623,7 @@ begin
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {50} wbFormIDCkNoReach('Casino', [CSNO])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         'Subject',
@@ -6582,7 +6595,7 @@ begin
     ], []), cpIgnore, False, nil, nil, wbNeverShow),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-    wbString(TDUM, 'Dumb Response'),
+    wbString(TDUM),
     wbStruct(DATA, '', [
       wbInteger('Type', itU8, wbEnum([
         {0} 'Topic',

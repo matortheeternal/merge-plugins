@@ -748,13 +748,12 @@ var
   wbBOD2: IwbSubRecordDef;
   wbBODTBOD2: IwbSubRecordUnionDef;
   wbScriptEntry: IwbStructDef;
-  wbScriptFlags: IwbIntegerDef;
-  wbScriptPropertyObject: IwbUnionDef;
-	wbScriptProperties: IwbArrayDef;
+  wbScriptObject: IwbUnionDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;
   wbScriptFragmentsPack: IwbStructDef;
+  wbScriptFragmentsPerk: IwbStructDef;
   wbScriptFragmentsScen: IwbStructDef;
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
@@ -763,11 +762,6 @@ var
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
-  wbVMADFragmentedPERK: IwbSubRecordDef;
-  wbVMADFragmentedPACK: IwbSubRecordDef;
-  wbVMADFragmentedQUST: IwbSubRecordDef;
-  wbVMADFragmentedSCEN: IwbSubRecordDef;
-  wbVMADFragmentedINFO: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
@@ -1978,6 +1972,26 @@ begin
   end;
 end;
 
+//function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
+//var
+//  Rec        : IwbRecord;
+//  Element    : IwbElement;
+//  s          : string;
+//begin
+//  Result := '';
+//
+//  Rec := aMainRecord.RecordBySignature['DATA'];
+//  if Assigned(Rec) then begin
+//    Element := Rec.ElementByName['Cell'];
+//    if Assigned(Element) then
+//      Element := Element.LinksTo;
+//    if Assigned(Element) then
+//      s := Trim(Element.Name);
+//    if s <> '' then
+//      Result := 'for ' + s;
+//  end;
+//end;
+
 function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
 var
   Rec: IwbRecord;
@@ -2443,6 +2457,19 @@ begin
 end;
 
 {>>> For VMAD <<<}
+function wbScriptFragmentsDontShow(const aElement: IwbElement): Boolean;
+var
+  Container: IwbContainer;
+begin
+  Result := True;
+  if Assigned(aElement) then
+    if Supports(aElement, IwbContainer, Container) then
+      if Container.ElementCount > 0 then
+        if Assigned(Container.Elements[0]) then
+          Result := VarIsClear(Container.Elements[0].NativeValue);
+end;
+
+{>>> For VMAD <<<}
 function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container     : IwbContainer;
@@ -2454,7 +2481,7 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
+  while Assigned(Container) and (Pos('Script Fragments Quest', Container.Name) <> 1) do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
@@ -2474,11 +2501,11 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
+  while Assigned(Container) and (Pos('Script Fragments Info', Container.Name) <> 1) do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  F := Container.ElementByName['Flags'].NativeValue;
+  F := Container.ElementByName['Info Fragments Flags'].NativeValue;
   for i := 0 to 2 do begin
     if (F and 1) = 1 then
       Inc(Result);
@@ -2507,11 +2534,11 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
+  while Assigned(Container) and (Pos('Script Fragments Scene', Container.Name) <> 1) do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  F := Container.ElementByName['Flags'].NativeValue;
+  F := Container.ElementByName['Scene Fragments Flags'].NativeValue;
   for i := 0 to 2 do begin
     if (F and 1) = 1 then
       Inc(Result);
@@ -2540,11 +2567,11 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
+  while Assigned(Container) and (Pos('Script Fragments Pack', Container.Name) <> 1) do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  F := Container.ElementByName['Flags'].NativeValue;
+  F := Container.ElementByName['Package Fragments Flags'].NativeValue;
   for i := 0 to 7 do begin
     if (F and 1) = 1 then
       Inc(Result);
@@ -3045,6 +3072,21 @@ const
 var
   wbCTDAFunctionEditInfo: string;
 
+function CmpU32(a, b : Cardinal) : Integer;
+asm
+  xor ecx, ecx
+  cmp eax, edx
+  ja @@GT
+  je @@EQ
+@@LT:
+  dec ecx
+  dec ecx
+@@GT:
+  inc ecx
+@@EQ:
+  mov eax, ecx
+end;
+
 function wbCTDAParamDescFromIndex(aIndex: Integer): PCTDAFunction;
 var
   L, H, I, C: Integer;
@@ -3055,7 +3097,7 @@ begin
   H := High(wbCTDAFunctions);
   while L <= H do begin
     I := (L + H) shr 1;
-    C := CmpW32(wbCTDAFunctions[I].Index, aIndex);
+    C := CmpU32(wbCTDAFunctions[I].Index, aIndex);
     if C < 0 then
       L := I + 1
     else begin
@@ -4842,14 +4884,7 @@ begin
     {15} 'Array of Bool'
   ]);
 
-  wbScriptFlags := wbInteger('Flags', itU8, wbEnum([
-    {0x00} 'Local',
-    {0x01} 'Inherited',
-    {0x02} 'Removed',
-    {0x03} 'Inherited and Removed'
-  ]));
-
-  wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
+  wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
@@ -4862,10 +4897,17 @@ begin
     ])
   ]);
 
-  wbScriptProperties :=
+  wbScriptEntry := wbStructSK([0], 'Script', [
+    wbLenString('scriptName', 2),
+    wbInteger('Flags', itU8, wbEnum([
+      {0x00} 'Local',
+      {0x01} 'Inherited',
+      {0x02} 'Removed',
+      {0x03} 'Inherited and Removed'
+    ])),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
-      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
+      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False,nil, wbScriptPropertyTypeAfterSet),
       wbInteger('Flags', itU8, wbEnum([
         {0x00} '',
         {0x01} 'Edited',
@@ -4873,81 +4915,95 @@ begin
         {0x03} 'Removed'
       ])),
       wbUnion('Value', wbScriptPropertyDecider, [
-       {00} wbNull,
-       {01} wbScriptPropertyObject,
-       {02} wbLenString('String', 2),
-       {03} wbInteger('Int32', itS32),
-       {04} wbFloat('Float'),
-       {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
-       {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
-       {12} wbArray('Array of String', wbLenString('Element', 2), -1),
-       {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
-       {14} wbArray('Array of Float', wbFloat('Element'), -1),
-       {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
+        {00} wbNull,
+        {01} wbScriptObject,
+        {02} wbLenString('String', 2),
+        {03} wbInteger('Int32', itS32),
+        {04} wbFloat('Float'),
+        {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
+        {11} wbArray('Array of Object', wbScriptObject, -1),
+        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
+        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
+        {14} wbArray('Array of Float', wbFloat('Element'), -1),
+        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
-    ]), -2, cpNormal, False, nil, nil, nil, False);
-
-  wbScriptEntry := wbStructSK([0], 'Script', [
-    wbLenString('scriptName', 2),
-    wbScriptFlags,
-    wbScriptProperties
+    ]), -2, cpNormal, False, nil, nil, nil, False)
   ]);
 
-  wbScriptFragmentsInfo := wbStruct('Script Fragments', [
+  wbScriptFragmentsInfo := wbStruct('Script Fragments Info', [
     wbInteger('Unknown', itS8),
-    wbInteger('Flags', itU8, wbFlags([
+    wbInteger('Info Fragments Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
-      wbStruct('Fragment', [
+    wbArray('Info Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
+      wbStruct('Info Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsInfoCounter)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
-  wbScriptFragmentsPack := wbStruct('Script Fragments', [
+  wbScriptFragmentsPack := wbStruct('Script Fragments Package', [
     wbInteger('Unknown', itS8),
-    wbInteger('Flags', itU8, wbFlags([
+    wbInteger('Package Fragments Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd',
       {4} 'OnChange'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
-      wbStruct('Fragment', [
+    wbArray('Package Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
+      wbStruct('Package Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsPackCounter)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
-  wbScriptFragmentsQuest := wbStruct('Script Fragments', [
+  wbScriptFragmentsPerk := wbStruct('Script Fragments Perk', [
+    wbInteger('Unknown', itS8),
+    wbLenString('fileName', 2),
+    wbArrayS('Perk Fragments',
+      wbStructSK([0], 'Perk Fragment', [
+        wbInteger('Fragment Index', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), -2)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
+
+  wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
     wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
-    wbArrayS('Fragments',
-      wbStructSK([0, 2], 'Fragment', [
+    wbArrayS('Quest Fragments',
+      wbStructSK([0, 2], 'Quest Fragment', [
         wbInteger('Quest Stage', itU16),
         wbInteger('Unknown', itS16),
         wbInteger('Quest Stage Index', itS32),
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
-      ]), wbScriptFragmentsQuestCounter)
-  ]);
+      ]), wbScriptFragmentsQuestCounter),
+    wbArrayS('Aliases', wbStructSK([0], 'Alias', [
+      wbScriptObject,
+      wbInteger('Version', itS16, nil, cpIgnore),
+      wbInteger('Object Format', itS16, nil, cpIgnore),
+	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
+	  ]), -2)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
-  wbScriptFragmentsScen := wbStruct('Script Fragments', [
+  wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
     wbInteger('Unknown', itS8),
-    wbInteger('Flags', itU8, wbFlags([
+    wbInteger('Scene Fragments Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
-      wbStruct('Fragment', [
+    wbArray('Scene Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
+      wbStruct('Scene Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
@@ -4965,70 +5021,36 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), -2)
-  ]);
-
-  wbScriptFragments := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
-    wbLenString('fileName', 2),
-    wbArrayS('Fragments',
-      wbStructSK([0], 'Fragment', [
-        wbInteger('Fragment Index', itU16),
-        wbInteger('Unknown', itS16),
-        wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
-      ]), -2)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
-
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16, nil, cpIgnore),
     wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False)
-  ]);
-
-  wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-    wbScriptFragments
-  ], cpNormal, False, nil, 3);
-
-  wbVMADFragmentedPACK := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-    wbScriptFragmentsPack
-  ], cpNormal, False, nil, 3);
-
-  wbVMADFragmentedQUST := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-    wbScriptFragmentsQuest,
-    wbArrayS('Aliases', wbStructSK([0], 'Alias', [
-      wbScriptPropertyObject,
-      wbInteger('Version', itS16, nil, cpIgnore),
-      wbInteger('Object Format', itS16, nil, cpIgnore),
-	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
-	  ]), -2)
-  ], cpNormal, False, nil, 3);
-
-  wbVMADFragmentedSCEN := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-    wbScriptFragmentsScen
-  ], cpNormal, False, nil, 3);
-
-  wbVMADFragmentedINFO := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-    wbScriptFragmentsInfo
-  ], cpNormal, False, nil, 3);
-
+    wbUnion('Data', wbScriptFragmentExistsDecider, [
+      wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+      wbStruct('Info VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsInfo
+      ], cpNormal, False, nil, 0),
+      wbStruct('Pack VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsPack
+      ], cpNormal, False, nil, 0),
+      wbStruct('Perk VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsPerk
+      ], cpNormal, False, nil, 0),
+      wbStruct('Quest VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsQuest
+      ], cpNormal, False, nil, 0),
+      wbStruct('Scene VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsScen
+      ], cpNormal, False, nil, 0)
+    ])
+  ], cpNormal, false, nil, -1);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -8548,7 +8570,7 @@ begin
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
-    wbVMADFragmentedPERK,
+    wbVMAD,
     wbFULL,
     wbDESCReq,
     wbICON,
@@ -9676,7 +9698,7 @@ begin
 
   wbRecord(SCEN, 'Scene', [
     wbEDID,
-    wbVMADFragmentedSCEN,
+    wbVMAD,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Begin on Quest Start',
       'Stop on Quest End',
@@ -10102,7 +10124,7 @@ begin
       {0x00002000} 13, 'Actor Changed'
     ])), [
     wbEDID,
-    wbVMADFragmentedINFO,
+    wbVMAD,
     wbUnknown(DATA),
     wbStruct(ENAM, 'Response flags', [
       wbInteger('Flags', itU16, wbFlags([
@@ -11048,7 +11070,7 @@ begin
 
   wbRecord(PACK, 'Package', [
     wbEDID,
-    wbVMADFragmentedPACK,
+    wbVMAD,
 
     wbStruct(PKDT, 'Pack Data', [
       wbInteger('General Flags', itU32, wbPKDTFlags),
@@ -11242,7 +11264,7 @@ begin
 
   wbRecord(QUST, 'Quest', [
     wbEDID,
-    wbVMADFragmentedQUST,
+    wbVMAD,
     wbFULL,
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU16, wbFlags([

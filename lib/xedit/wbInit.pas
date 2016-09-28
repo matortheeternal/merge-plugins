@@ -240,7 +240,6 @@ begin
 end;
 
 {===SafeLoadLibrary============================================================}
-{$IFDEF CPUX86}
 function TestAndClearFPUExceptions(AExceptionMask: Word): Boolean;
 asm
       PUSH    ECX
@@ -275,7 +274,6 @@ begin
   end;
 end;
 {==============================================================================}
-{$ENDIF CPUX86}
 
 
 function wbLoadMOHookFile: Boolean;
@@ -438,13 +436,12 @@ begin
   // Detecting game mode
   // check command line params first for mode overrides
   // they should take precendence over application name detection
-  // AppSourceMode := SourceModes[1];
+  AppSourceMode := SourceModes[1];
   for s in SourceModes do
     if FindCmdLineSwitch(s) or wbFindCmdLineParam(s, p) or (Pos(s, wbForcedModes) <> 0) then begin
       AppSourceMode := s;
       Break;
     end;
-  // if no overrrides, then check by executable name
   if AppSourceMode = '' then
     for s in SourceModes do
       if (Pos(s, LowerCase(ExtractFileName(ParamStr(0)))) <> 0) or (Pos(s, wbForcedModes) <> 0) then begin
@@ -453,7 +450,7 @@ begin
       end;
   // if still nothing, then default value
   if AppSourceMode = '' then
-    AppSourceMode := 'plugins';
+    AppGameMode := 'plugins';
 
   for s in GameModes do
     if FindCmdLineSwitch(s) or wbFindCmdLineParam(s, p) or (Pos(s, wbForcedModes) <> 0) then begin
@@ -829,9 +826,6 @@ begin
   {$IFDEF LiteVersion}
   wbApplicationTitle := wbApplicationTitle + ' Lite';
   {$ENDIF}
-  {$IFDEF WIN64}
-  wbApplicationTitle := wbApplicationTitle + ' x64';
-  {$ENDIF WIN64}
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
