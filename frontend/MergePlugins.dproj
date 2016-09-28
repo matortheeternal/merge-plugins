@@ -151,8 +151,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">2</VersionInfo>
-						<VersionInfo Name="Release">1</VersionInfo>
-						<VersionInfo Name="Build">2</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
+						<VersionInfo Name="Build">1</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -164,7 +164,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.2.1.2</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.2.3.1</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

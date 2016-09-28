@@ -119,3 +119,10 @@ Version 2.2.1.0
   - Fixed issue with Fallout 4 load order sorting
   - Fixed issue with Fallout 4 dictionary update not working
   - Fixed issue with FNV/FO3 dictionary update messages
+
+Version 2.2.2.0
+  - Fixed more issues with Fallout 4 load order sorting (asterisks in plugins.txt)
+  - Fixed handling of missing master files in plugins.txt
+
+Version 2.2.3.0
+  - Fixed issue with building references for Fallout 4 ESPs with QUST child records (you should now be able to load the DLC ESMs and the Unofficial Fallout 4 Patch.esp)
