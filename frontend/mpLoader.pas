@@ -142,7 +142,7 @@ begin
   if (not settings.usingMO) or (not DirectoryExists(sLoadPath)) then begin
     if settings.usingMO then
       Logger.Write('GENERAL', 'Load Order', 'Couldn''t find MO profile folder '+sLoadPath);
-    sLoadPath := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName+'\';
+    sLoadPath := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName2+'\';
   end;
   Logger.Write('GENERAL', 'Load Order', 'Using '+sLoadPath);
 
@@ -223,6 +223,7 @@ procedure SetGame(id: integer);
 begin
   ProgramStatus.GameMode := GameArray[id];
   wbGameName := ProgramStatus.GameMode.gameName;
+  wbGameName2 := ProgramStatus.GameMode.regName;
   wbGameMode := ProgramStatus.GameMode.gameMode;
   wbAppName := ProgramStatus.GameMode.appName;
   wbDataPath := CurrentProfile.gamePath + 'Data\';
