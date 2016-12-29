@@ -29,12 +29,14 @@ implementation
 
 uses
   wbStreams,
-  zlibEx;
+  zlibEx,
+  lz4io;
 
 const
   { https://github.com/Ethatron/bsaopt/blob/master/io/bsa.C }
   BSAHEADER_VERSION_OB = $67; // Oblivion
   BSAHEADER_VERSION_SK = $68; // Fallout3, Skyrim
+  BSAHEADER_VERSION_SSE = $69; // Skyrim Special Edition
   BSAARCHIVE_COMPRESSFILES = $0004; // Whether the files are compressed in archive (invert file's compression flag)
   BSAARCHIVE_PREFIXFULLFILENAMES = $0100; // Whether the name is prefixed to the data?
   BSAFILE_COMPRESS = $40000000; // Whether the file is compressed
@@ -54,6 +56,7 @@ type
     procedure AddBA2(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
+    function OpenResourceData(const aContainerName, aFileName: string): TBytes;
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
     procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
@@ -285,6 +288,23 @@ begin
   SetLength(Result, j);
 end;
 
+function TwbContainerHandler.OpenResourceData(const aContainerName, aFileName: string): TBytes;
+var
+  Res : TDynResources;
+  i   : Integer;
+begin
+  Res := OpenResource(aFileName);
+
+  if Length(Res) = 0 then
+    Exit;
+
+  for i := High(Res) downto Low(Res) do
+    if (aContainerName = '') or SameText(Res[i].Container.Name, aContainerName) then begin
+      Result := Res[i].GetData;
+      Break;
+    end;
+end;
+
 procedure TwbContainerHandler.ContainerList(const aList: TStrings);
 var
   i: Integer;
@@ -425,15 +445,19 @@ begin
   if (bfFlags and BSAARCHIVE_COMPRESSFILES) <> 0 then
     IsCompressed := not IsCompressed;
   bfStream.Position := aOffset;
-  if (bfVersion = BSAHEADER_VERSION_SK) and ((bfFlags and BSAARCHIVE_PREFIXFULLFILENAMES) <> 0) then
-    aSize := aSize - Length(bfStream.ReadStringLen) - 2; // size - file name length - (string length field + trailing zero)
+  if (bfVersion >= BSAHEADER_VERSION_SK) and ((bfFlags and BSAARCHIVE_PREFIXFULLFILENAMES) <> 0) then
+    // size - file name length (no terminator) - string length prefix
+    aSize := aSize - Length(bfStream.ReadStringLen(False)) - 1;
   if IsCompressed then begin
     SetLength(Result, bfStream.ReadCardinal);
     aSize := aSize - 4;
     if (Length(Result) > 0) and (aSize > 0) then begin
       SetLength(Buffer, aSize);
       bfStream.ReadBuffer(Buffer[0], Length(Buffer));
-      DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
+      if bfVersion = BSAHEADER_VERSION_SSE then
+        lz4DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result))
+      else
+        DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
     end;
   end else begin
     SetLength(Result, aSize);
@@ -507,7 +531,7 @@ begin
   if bfStream.ReadSignature <> 'BSA' then
     raise Exception.Create(bfFileName + ' is not a valid BSA file');
   bfVersion := bfStream.ReadCardinal;
-  if not bfVersion in [BSAHEADER_VERSION_OB, BSAHEADER_VERSION_SK] then
+  if not (bfVersion in [BSAHEADER_VERSION_OB, BSAHEADER_VERSION_SK, BSAHEADER_VERSION_SSE]) then
     raise Exception.Create(bfFileName + ' has unknown version: ' + IntToStr(bfVersion) );
   bfOffset := bfStream.ReadCardinal;
   if bfOffset <> $24 then
@@ -523,7 +547,11 @@ begin
     bfStream.Position := OldPos;
     Hash := bfStream.ReadInt64; // skip hash
     SetLength(Files, bfStream.ReadCardinal);
-    NewPos := bfStream.ReadCardinal;
+    if bfVersion = BSAHEADER_VERSION_SSE then begin
+      bfStream.ReadCardinal; // skip unk32
+      NewPos := bfStream.ReadInt64;
+    end else
+      NewPos := bfStream.ReadCardinal;
     OldPos := bfStream.Position;
     bfStream.Position := NewPos - totalFileNameLength;
     Name := bfStream.ReadStringLen;

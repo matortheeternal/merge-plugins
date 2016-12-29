@@ -2510,21 +2510,6 @@ const
 var
   wbCTDAFunctionEditInfo: string;
 
-function CmpU32(a, b : Cardinal) : Integer;
-asm
-  xor ecx, ecx
-  cmp eax, edx
-  ja @@GT
-  je @@EQ
-@@LT:
-  dec ecx
-  dec ecx
-@@GT:
-  inc ecx
-@@EQ:
-  mov eax, ecx
-end;
-
 function wbCTDAParamDescFromIndex(aIndex: Integer): PCTDAFunction;
 var
   L, H, I, C: Integer;
@@ -2535,7 +2520,7 @@ begin
   H := High(wbCTDAFunctions);
   while L <= H do begin
     I := (L + H) shr 1;
-    C := CmpU32(wbCTDAFunctions[I].Index, aIndex);
+    C := CmpW32(wbCTDAFunctions[I].Index, aIndex);
     if C < 0 then
       L := I + 1
     else begin
@@ -4372,7 +4357,7 @@ begin
     {0x10000000}'Non-Pipboy / Reflected by Auto Water',
     {0x20000000}'Child Can Use / Refracted by Auto Water',
     {0x40000000}'NavMesh Generation - Ground',
-    {0x80000000}'Unknown 32'
+    {0x80000000}'Multibound'
   ]));
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
@@ -5530,7 +5515,8 @@ begin
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO])
+        {50} wbFormIDCkNoReach('Casino', [CSNO]),
+        {51} wbFormID('Form')
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -5623,7 +5609,8 @@ begin
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO])
+        {50} wbFormIDCkNoReach('Casino', [CSNO]),
+        {51} wbFormID('Form')
       ]),
       wbInteger('Run On', itU32, wbEnum([
         'Subject',
@@ -6595,7 +6582,7 @@ begin
     ], []), cpIgnore, False, nil, nil, wbNeverShow),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-    wbString(TDUM),
+    wbString(TDUM, 'Dumb Response'),
     wbStruct(DATA, '', [
       wbInteger('Type', itU8, wbEnum([
         {0} 'Topic',
@@ -10097,9 +10084,9 @@ begin
       wbEmpty(MMRK, 'Audio Marker'),
       wbUnknown(FULL),
       wbFormIDCk(CNAM, 'Audio Location', [ALOC]),
-      wbUnknown(BNAM),
-      wbFloat(MNAM),
-      wbFloat(NNAM)
+      wbInteger(BNAM, 'Flags', itU32, wbFlags(['Use Controller Values'])),
+      wbFloat(MNAM, 'Layer 2 Trigger %', cpNormal, True, 100),
+      wbFloat(NNAM, 'Layer 3 Trigger %', cpNormal, True, 100)
     ], []),
 
     wbInteger(XSRF, 'Special Rendering Flags', itU32, wbFlags([

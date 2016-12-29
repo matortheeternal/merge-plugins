@@ -31,7 +31,8 @@ uses
   {$IFDEF USE_CODESITE}
   CodeSiteLogging,
   {$ENDIF}
-  Zlibex;
+  Zlibex,
+  lz4;
 
 const
   DefaultVCS1 = 0;
@@ -45,7 +46,7 @@ var
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  aOnlyHeader: Boolean = False; IsTemporary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -1267,13 +1268,14 @@ type
   protected
     szCompressedSize   : Integer;
     szUncompressedSize : Cardinal;
+    szCompressedType   : TwbStructCompression;
     procedure Init; override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
     procedure DecompressIfNeeded;
-    function GetIsCompressed: Boolean;
-    property IsCompressed: Boolean read GetIsCompressed;
+    function GetIsCompressed: TwbStructCompression;
+    property IsCompressed: TwbStructCompression read GetIsCompressed;
   end;
 
   TwbFileHeader = class(TwbStruct, IwbFileHeader)
@@ -1609,6 +1611,7 @@ const
 
 function CompareFormIDs(Item1, Item2: Pointer): Integer;
 asm
+{$IFDEF WIN32}
   xor ecx, ecx
   cmp eax, edx
   ja @@GT
@@ -1620,6 +1623,19 @@ asm
   inc ecx
 @@EQ:
   mov eax, ecx
+{$ENDIF WIN32}
+{$IFDEF WIN64}
+  xor rax, rax
+  cmp rcx, rdx
+  ja @@GT
+  je @@EQ
+@@LT:
+  dec rax
+  dec rax
+@@GT:
+  inc rax
+@@EQ:
+{$ENDIF WIN64}
 end;
 
 function CompareSubRecords(Item1, Item2: Pointer): Integer;
@@ -1752,15 +1768,11 @@ begin
     s := IncludeTrailingPathDelimiter(s);
 
   flProgress('Adding master "' + t + '"');
-  try
-    _File := wbFile(s + t, -1, '', False, IsTemporary);
-    if wbRequireLoadOrder and (_File.LoadOrder < 0) then
-      raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
+  _File := wbFile(s + t, -1, '', IsTemporary, False);
+  if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
+    raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
+  else
     AddMaster(_File);
-  except
-    if not (wbToolMode in [tmDump, tmExport]) then
-      raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
-  end;
 end;
 
 function TwbFile.Add(const aName: string; aSilent: Boolean): IwbElement;
@@ -2279,6 +2291,8 @@ begin
   else if wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
   else if wbGameMode = gmTES5 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
+  else if wbGameMode = gmSSE then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
   else if wbGameMode = gmFO4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
@@ -3028,7 +3042,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbGameMode in [gmFO3, gmFNV, gmTES5, gmFO4] then begin
+    if wbGameMode in [gmFO3, gmFNV, gmTES5, gmSSE, gmFO4] then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
@@ -3260,7 +3274,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbGameMode in [gmFNV, gmTES5, gmFO4] then begin
+  if wbGameMode in [gmFNV, gmTES5, gmSSE, gmFO4] then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -3482,6 +3496,7 @@ type
 
 function CompareSortEntryPtrs(Item1{eax}, Item2{edx}: Pointer): Integer;
 asm
+  {$IFDEF WIN32}
   mov ecx, [eax + TwbRecordSortEntry.rseFormID]
   mov edx, [edx + TwbRecordSortEntry.rseFormID]
   xor eax, eax
@@ -3489,6 +3504,16 @@ asm
   mov ecx, -1
   cmovb eax, ecx
   seta al
+  {$ENDIF WIN32}
+  {$IFDEF WIN64}
+  mov rcx, [rcx + TwbRecordSortEntry.rseFormID]
+  mov rdx, [rdx + TwbRecordSortEntry.rseFormID]
+  xor rax, rax
+  cmp rcx, rdx
+  mov rcx, -1
+  cmovb rax, rcx
+  seta al
+  {$ENDIF WIN64}
 end;
 
 procedure TwbFile.SortRecords;
@@ -3656,28 +3681,46 @@ end;
 
 function LockedInc(var Target: Integer): Integer; register;
 asm
+  {$IFDEF WIN32}
         mov     ecx, eax
         mov     eax, 1
    lock xadd    [ecx], eax
         inc     eax
+  {$ENDIF WIN32}
+  {$IFDEF WIN64}
+        mov     rax, 1
+   lock xadd    [rcx], rax
+        inc     rax
+  {$ENDIF WIN64}
 end;
 
 function LockedDec(var Target: Integer): Integer; register;
 asm
+  {$IFDEF WIN32}
         mov     ecx, eax
         mov     eax, -1
    lock xadd    [ecx], eax
         dec     eax
+  {$ENDIF WIN32}
+  {$IFDEF WIN64}
+        mov     rax, -1
+   lock xadd    [rcx], rax
+        dec     rax
+  {$ENDIF WIN64}
 end;
 
 procedure TwbContainer.AfterConstruction;
 begin
   inherited;
-  //LockedDec(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedDec(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock dec dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
 end;
 
 function TwbContainer.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -3800,11 +3843,15 @@ procedure TwbContainer.BeforeDestruction;
 begin
   Assert(cntElementRefs = 0);
   inherited BeforeDestruction;
-  //LockedInc(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedInc(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
 end;
 
 procedure TwbContainer.BuildRef;
@@ -4016,11 +4063,15 @@ begin
   if [csInitializing, csReseting] * cntStates <> [] then
     Exit;
 
-  //LockedInc(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedInc(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
   try
     Include(cntStates, csReseting);
     Exclude(cntStates, csInitDone);
@@ -4028,11 +4079,15 @@ begin
     cntElementsMap := nil;
   finally
     Exclude(cntStates, csReseting);
-    //LockedDec(cntElementRefs);
+    {$IFDEF WIN64}
+    LockedDec(cntElementRefs);
+    {$ENDIF WIN64}
+    {$IFDEF WIN32}
     asm
            mov eax, [Self]
       lock dec dword ptr [eax + cntElementRefs]
     end;
+    {$ENDIF WIN32}
     Exclude(cntStates, csInit);
   end;
 end;
@@ -4040,11 +4095,15 @@ end;
 {$D-}
 function TwbContainer.ElementAddRef: Integer;
 begin
-  //LockedInc(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedInc(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
   Result := inherited _AddRef;
 end;
 {$D+}
@@ -4059,7 +4118,10 @@ function TwbContainer.ElementRelease: Integer;
 label
   Skip;
 begin
-  //if LockedDec(cntElementRefs) = 0 then
+  {$IFDEF WIN64}
+  if LockedDec(cntElementRefs) = 0 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, -1
          mov  ecx, [Self]
@@ -4067,6 +4129,7 @@ begin
          cmp  eax, 1
          jne  Skip
   end;
+  {$ENDIF WIN32}
   DoReset(False);
 Skip:
 
@@ -4959,6 +5022,10 @@ begin
   end;
   if aName = '..' then
     Result := GetContainer
+  else if (Length(aName) > 0) and (aName[1] = '[') and (aName[Length(aName)] = ']') then begin
+    i := StrToIntDef(Copy(aName, 2, Length(aName) - 2), 0);
+    Result := GetElement(i);
+  end
   else
     Result := GetElementByName(aName);
   if not Assigned(Result) and (Length(aName) = 4) then
@@ -5412,7 +5479,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
               Self.mrStruct.mrsVCS1 := DefaultVCS1;
-              if wbGameMode in [gmFO3, gmFNV, gmTES5, gmFO4] then begin
+              if wbGameMode in [gmFO3, gmFNV, gmTES5, gmSSE, gmFO4] then begin
                 Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
                 Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
               end;
@@ -5869,6 +5936,7 @@ begin
   case wbGameMode of
     gmFO4 : BasePtr.mrsVersion := 131;
     gmTES5: BasePtr.mrsVersion := 43;
+    gmSSE : BasePtr.mrsVersion := 44;
     gmFNV : BasePtr.mrsVersion := 15;
     gmFO3 : BasePtr.mrsVersion := 15;
     else    BasePtr.mrsVersion := 15;
@@ -9683,7 +9751,7 @@ begin
           HasUnusedData := True;
           Break;
         end;
-        Inc(Cardinal(BasePtr));
+        Inc(PByte(BasePtr));
       end;
     end;
     if HasUnusedData then begin
@@ -9959,7 +10027,7 @@ begin
   Assert( SizeAvailable >= SizeNeeded );
 
   BasePtr := aBasePtr;
-  Inc(Cardinal(aBasePtr), SizeNeeded );
+  Inc(PByte(aBasePtr), SizeNeeded );
   inherited;
 
   Assert(srStruct.srsDataSize = Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr ));
@@ -10067,7 +10135,7 @@ begin
 
   BasePtr := aBasePtr;
   Move(dcBasePtr^, aBasePtr^, SizeNeeded);
-  Inc(Cardinal(aBasePtr), SizeNeeded );
+  Inc(PByte(aBasePtr), SizeNeeded );
   inherited;
 
   if not Assigned(dcEndPtr) then
@@ -11656,7 +11724,7 @@ begin
             else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
               if not TargetRecord.ElementExists['PNAM'] then begin
                 {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                if wbGameMode = gmTES5 then begin
+                if wbGameMode in [ gmTES5, gmSSE ] then begin
                   Supports(TargetRecord.Container, IwbGroupRecord, g);
                   InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
                 end else
@@ -11664,7 +11732,7 @@ begin
                 InsertRecord := PrevRecord;
                 Inserted := False;
                 while Assigned(InsertRecord) do begin
-                  if wbGameMode = gmTES5 then begin
+                  if wbGameMode in [ gmTES5, gmSSE ] then begin
                     Supports(InsertRecord.Container, IwbGroupRecord, g);
                     InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
                   end else
@@ -11834,7 +11902,10 @@ label
   Skip;
 begin
   inherited;
-  //if LockedDec(eExternalRefs) = 0 then
+  {$IFDEF WIN64}
+  if LockedDec(eExternalRefs) = 0 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, -1
          mov  ecx, [Self]
@@ -11842,6 +11913,7 @@ begin
          cmp  eax, 1
          jne  Skip
   end;
+  {$ENDIF WIN32}
   eContainerRef := nil;
 Skip:
   Include(eStates, esConstructionComplete);
@@ -11914,13 +11986,17 @@ begin
     Assert(FRefCount = 0);
   Include(eStates, esDestroying);
   inherited BeforeDestruction;
-  //LockedInc(eExternalRefs);
-  //LockedInc(FRefCount);
+  {$IFDEF WIN64}
+  LockedInc(eExternalRefs);
+  LockedInc(FRefCount);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + eExternalRefs]
     lock inc dword ptr [eax + FRefCount]
   end;
+  {$ENDIF WIN64}
 end;
 
 function TwbElement.BeginDecide: Boolean;
@@ -13017,7 +13093,10 @@ label
   Skip;
 begin
   Assert(not (esDestroying in eStates));
-  //if LockedInc(eExternalRefs) = 1 then
+  {$IFDEF WIN64}
+  if LockedInc(eExternalRefs) = 1 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, 1
          mov  ecx, [Self]
@@ -13025,6 +13104,7 @@ begin
          cmp  eax, 0
          jne  Skip
   end;
+  {$ENDIF WIN32}
   eContainerRef := IInterface(eContainer) as IwbContainerElementRef;
 Skip:
 
@@ -13035,7 +13115,10 @@ function TwbElement._Release: Integer;
 label
   Skip;
 begin
-  //if LockedDec(eExternalRefs) = 0 then
+  {$IFDEF WIN64}
+  if LockedDec(eExternalRefs) = 0 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, -1
          mov  ecx, [Self]
@@ -13043,6 +13126,7 @@ begin
          cmp  eax, 1
          jne  Skip
   end;
+  {$ENDIF WIN32}
   eContainerRef := nil;
 Skip:
   Result := inherited _Release;
@@ -13831,7 +13915,7 @@ begin
         dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
-            Inc(Cardinal(aBasePtr));
+            Inc(PByte(aBasePtr));
             Break;
           end;
           Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
@@ -14248,18 +14332,29 @@ begin
 end;
 
 procedure TwbStruct.DecompressIfNeeded;
+var
+  sc : TwbStructCompression;
 begin
-  if IsCompressed then try
+  sc := IsCompressed;
+  if sc <> scNone then try
     InitDataPtr; // reset...
 
     SetLength(dcDataStorage, szUncompressedSize );
 
-    DecompressToUserBuf(
-      Pointer(Cardinal(dcDataBasePtr)),
-      GetDataSize,
-      @dcDataStorage[0],
-      PCardinal(dcDataBasePtr)^
-    );
+    case sc of
+      scNone: Assert(False);  // Getting there would be very funny :)
+      scZComp:
+        DecompressToUserBuf(
+          Pointer(Cardinal(dcDataBasePtr)),
+          GetDataSize,
+          @dcDataStorage[0],
+          PCardinal(dcDataBasePtr)^
+        );
+      scLZComp:
+        LZ4_decompress_safe(Pointer(Cardinal(dcDataBasePtr)), @dcDataStorage[0], GetDataSize, szUncompressedSize);
+      else
+        Assert(False);  // Something hasn't been updated yet.
+    end;
 
     dcDataEndPtr := Pointer( Cardinal(@dcDataStorage[0]) + szUncompressedSize );
     dcDataBasePtr := @dcDataStorage[0];
@@ -14269,16 +14364,21 @@ begin
   end;
 end;
 
-function TwbStruct.GetIsCompressed: Boolean;
+function TwbStruct.GetIsCompressed: TwbStructCompression;
 var
   szDef : IwbStructZDef;
+  lzDef : IwbStructLZDef;
 begin
   if (szCompressedSize = 0) then
-    if Supports(vbValueDef, IwbStructZDef, szDef)  then
-      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize)
-    else
+    if Supports(vbValueDef, IwbStructZDef, szDef)  then begin
+      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize);
+      if szUncompressedSize <> 0 then szCompressedType := scZComp;
+    end else if Supports(vbValueDef, IwbStructLZDef, lzDef)  then begin
+      szUncompressedSize := lzDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize);
+      if szUncompressedSize <> 0 then szCompressedType := scLZComp;
+    end else
       szCompressedSize := -1;
-  Result := szUncompressedSize <> 0
+  Result := szCompressedType;
 end;
 
 { TwbUnion }
@@ -14544,7 +14644,7 @@ begin
   if i = Cardinal(High(Integer)) then
     aBasePtr := aEndPtr
   else if Assigned(aBasePtr) then
-    Inc(Cardinal(aBasePtr), i);
+    Inc(PByte(aBasePtr), i);
 end;
 
 
@@ -14725,16 +14825,25 @@ begin
   FilesMap.Clear;
 end;
 
+function wbExpandFileName(const aFileName: string): string;
+begin
+  if ExtractFilePath(aFileName) = '' then
+    Result := wbDataPath + ExtractFileName(aFileName)
+  else
+    Result := aFileName;
+end;
+
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  aOnlyHeader: Boolean = False; IsTemporary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  if ExtractFilePath(aFileName) = '' then
+  FileName := wbExpandFileName(aFileName);
+  {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
-    FileName := ExpandFileName(aFileName);
+    FileName := ExpandFileName(aFileName);}
 
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
@@ -14755,10 +14864,11 @@ var
   i        : Integer;
   _File    : IwbFileInternal;
 begin
-  if ExtractFilePath(aFileName) = '' then
+  FileName := wbExpandFileName(aFileName);
+  {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
-    FileName := ExpandFileName(aFileName);
+    FileName := ExpandFileName(aFileName);}
 
   try
     if FilesMap.Find(FileName, i) then
@@ -14780,10 +14890,11 @@ var
   FileName: string;
   i: Integer;
 begin
-  if ExtractFilePath(aFileName) = '' then
+  FileName := wbExpandFileName(aFileName);
+  {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
-    FileName := ExpandFileName(aFileName);
+    FileName := ExpandFileName(aFileName);}
 
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
@@ -15226,12 +15337,12 @@ begin
 
     if BasePtr = aBasePtr then begin
       if not (dcfDontMerge in dcFlags) then
-        Inc(Cardinal(aBasePtr), SizeNeeded);
+        Inc(PByte(aBasePtr), SizeNeeded);
     end else
       if Cardinal(aBasePtr) - Cardinal(BasePtr) > SizeNeeded then // we overwrote something
         Assert( Cardinal(aBasePtr) - Cardinal(BasePtr) = SizeNeeded)
       else // Adjust size of data not initialized yet
-        Cardinal(aBasePtr) := Cardinal(BasePtr) + SizeNeeded;
+        aBasePtr := PByte(BasePtr) + SizeNeeded;
 
     dcDataBasePtr := BasePtr;
     dcDataEndPtr := aBasePtr;
@@ -15298,7 +15409,7 @@ begin
       Move(dcDataBasePtr^, aBasePtr^, SizeNeeded);
 
       dcDataBasePtr := aBasePtr;
-      Inc(Cardinal(aBasePtr), SizeNeeded);
+      Inc(PByte(aBasePtr), SizeNeeded);
       dcDataEndPtr := aBasePtr;
 
       BasePtr := dcDataBasePtr;
@@ -15966,14 +16077,14 @@ end;
 procedure TwbStringListTerminator.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
   Assert( Cardinal(aBasePtr) < Cardinal(aEndPtr));
-  Inc(Cardinal(aBasePtr));
+  Inc(PByte(aBasePtr));
 end;
 
 procedure TwbStringListTerminator.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
   Assert( Cardinal(aBasePtr) < Cardinal(aEndPtr));
   PAnsiChar(aBasePtr)^ := #0;
-  Inc(Cardinal(aBasePtr));
+  Inc(PByte(aBasePtr));
 end;
 
 procedure TwbStringListTerminator.SetEditValue(const aValue: string);
