@@ -36,7 +36,7 @@ var
 implementation
 
 uses
-  SysUtils, IniFiles, ShlObj, Controls,
+  SysUtils, StrUtils, IniFiles, ShlObj, Controls,
   // mte units
   mteTracker, mteLogger, mteLogging, mtePluginSelectionForm,
   // mp units
@@ -84,7 +84,10 @@ begin
 
   // SET GAME VARS
   SetGame(CurrentProfile.gameMode);
-  wbVWDInTemporary := wbGameMode in [gmFO4, gmTES5, gmFO3, gmFNV];
+  wbVWDInTemporary := wbGameMode in [gmSSE, gmTES5, gmFO3, gmFNV];
+  wbVWDAsQuestChildren := wbGameMode = gmFO4;
+  wbArchiveExtension := IfThen(wbGameMode = gmFO4, '.ba2', '.bsa');
+  wbLoadBSAs := wbGameMode in [gmFO4, gmSSE, gmTES5, gmTES4];
   Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
   Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
 
@@ -99,16 +102,13 @@ begin
   wbSortSubRecords := True;
   wbDisplayShorterNames := True;
   wbHideUnused := True;
+  wbHideIgnored := False;
   wbFlagsAsArray := True;
   wbRequireLoadOrder := True;
   wbLanguage := settings.language;
   wbEditAllowed := True;
   wbContainerHandler := wbCreateContainerHandler;
   wbContainerHandler._AddRef;
-  if wbGameMode = gmFO4 then begin
-    wbArchiveExtension := '.ba2';
-    wbVWDAsQuestChildren := True;
-  end;
 
   // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
   InitializeClient;
@@ -172,23 +172,23 @@ begin
   RemoveMissingFiles(slLoadOrder);
   AddMissingFiles(slLoadOrder);
 
-  // if GameMode is not Skyrim or Fallout 4 and user isn't
-  // using MO, sort by date modified else add base masters
+  // if GameMode is not Skyrim, SkyrimSE or Fallout 4 and user
+  // isn't using MO, sort by date modified else add base masters
   // to load order if missing
-  if (wbGameMode <> gmTES5) and (wbGameMode <> gmFO4) then begin
+  if (wbGameMode = gmTES5) or (wbGameMode = gmSSE) then begin
+    FixLoadOrder(slLoadOrder, 'Skyrim.esm', 0);
+    FixLoadOrder(slLoadOrder, 'Update.esm', 1);
+  end
+  else if (wbGameMode = gmFO4) then begin
+    FixLoadOrder(slLoadOrder, 'Fallout4.esm', 0);
+  end
+  else begin
     if not settings.usingMO then begin
       GetPluginDates(slPlugins);
       GetPluginDates(slLoadOrder);
       slPlugins.CustomSort(PluginListCompare);
       slLoadOrder.CustomSort(PluginListCompare);
     end;
-  end
-  else if (wbGameMode = gmTES5) then begin
-    FixLoadOrder(slLoadOrder, 'Skyrim.esm', 0);
-    FixLoadOrder(slLoadOrder, 'Update.esm', 1);
-  end
-  else if (wbGameMode = gmFO4) then begin
-    FixLoadOrder(slLoadOrder, 'Fallout4.esm', 0);
   end;
 
   // DISPLAY PLUGIN SELECTION FORM
@@ -255,20 +255,20 @@ const
     'Uninstall\Steam App ';
 var
   i: Integer;
-  gameName: string;
+  regName: string;
   keys, appIDs: TStringList;
 begin
   Result := '';
 
   // initialize variables
-  gameName := mode.gameName;
+  regName := mode.regName;
   keys := TStringList.Create;
   appIDs := TStringList.Create;
   appIDs.CommaText := mode.appIDs;
 
   // add keys to check
-  keys.Add(sBethRegKey + gameName + '\Installed Path');
-  keys.Add(sBethRegKey64 + gameName + '\Installed Path');
+  keys.Add(sBethRegKey + regName + '\Installed Path');
+  keys.Add(sBethRegKey64 + regName + '\Installed Path');
   for i := 0 to Pred(appIDs.Count) do begin
     keys.Add(sSteamRegKey + appIDs[i] + '\InstallLocation');
     keys.Add(sSteamRegKey64 + appIDs[i] + '\InstallLocation');
@@ -295,6 +295,7 @@ begin
     gmTES4: DefineTES4;
     gmFO3: DefineFO3;
     gmFO4: DefineFO4;
+    gmSSE: DefineTES5;
   end;
 end;
 

@@ -12,6 +12,7 @@ type
     longName: string;
     gameName: string;
     gameMode: TwbGameMode;
+    regName: string;
     appName: string;
     exeName: string;
     appIDs: string;
@@ -132,22 +133,25 @@ var
 
 const
   // GAME MODES
-  GameArray: array[1..5] of TGameMode = (
+  GameArray: array[1..6] of TGameMode = (
     ( longName: 'Skyrim'; gameName: 'Skyrim'; gameMode: gmTES5;
-      appName: 'TES5'; exeName: 'TESV.exe'; appIDs: '72850';
+      regName: 'Skyrim'; appName: 'TES5'; exeName: 'TESV.exe'; appIDs: '72850';
       bsaOptMode: 'sk'; ),
     ( longName: 'Oblivion'; gameName: 'Oblivion'; gameMode: gmTES4;
-      appName: 'TES4'; exeName: 'Oblivion.exe'; appIDs: '22330,900883';
-      bsaOptMode: 'ob'; ),
+      regName: 'Oblivion'; appName: 'TES4'; exeName: 'Oblivion.exe';
+      appIDs: '22330,900883'; bsaOptMode: 'ob'; ),
     ( longName: 'Fallout New Vegas'; gameName: 'FalloutNV'; gameMode: gmFNV;
-      appName: 'FNV'; exeName: 'FalloutNV.exe'; appIDs: '22380,2028016';
-      bsaOptMode: 'fo'; ),
+      regName: 'FalloutNV'; appName: 'FNV'; exeName: 'FalloutNV.exe';
+      appIDs: '22380,2028016'; bsaOptMode: 'fo'; ),
     ( longName: 'Fallout 3'; gameName: 'Fallout3'; gameMode: gmFO3;
-      appName: 'FO3'; exeName: 'Fallout3.exe'; appIDs: '22300,22370';
-      bsaOptMode: 'fo'; ),
+      regName: 'Fallout3'; appName: 'FO3'; exeName: 'Fallout3.exe';
+      appIDs: '22300,22370'; bsaOptMode: 'fo'; ),
     ( longName: 'Fallout 4'; gameName: 'Fallout4'; gameMode: gmFO4;
-      appName: 'FO4'; exeName: 'Fallout4.exe'; appIDs: '377160';
-      bsaOptMode: '' )
+      regName: 'Fallout4'; appName: 'FO4'; exeName: 'Fallout4.exe';
+      appIDs: '377160'; bsaOptMode: ''; ),
+    ( longName: 'Skyrim Special Edition'; gameName: 'Skyrim'; gameMode: gmSSE;
+      regName: 'Skyrim Special Edition'; appName: 'SSE';
+      exeName: 'SkyrimSE.exe'; appIDs: '489830'; bsaOptMode: ''; )
   );
 
 implementation
@@ -261,8 +265,6 @@ begin
   bUpdateMergeStatus := false;
   bClose := false;
 end;
-
-{}
 
 procedure DeleteTempPath;
 begin
