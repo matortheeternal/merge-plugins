@@ -1,0 +1,5 @@
+Dawnguard.esm;103328;2.3;-1.0;1;@13Can't merge Bethesda files.@13@13
+Dragonborn.esm;251404;2.3;-1.0;1;@13Can't merge Bethesda files.@13@13
+HearthFires.esm;18431;2.3;-1.0;1;@13Can't merge Bethesda files.@13@13
+Skyrim.esm;920181;2.3;-1.0;1;@13Can't merge Bethesda files.@13@13
+Update.esm;19389;2.3;-1.0;1;@13Can't merge Bethesda files.@13@13
