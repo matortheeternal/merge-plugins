@@ -293,15 +293,15 @@ object DictionaryForm: TDictionaryForm
         Align = alCustom
         Style = csDropDownList
         Anchors = [akTop, akRight]
-        ItemIndex = 0
         TabOrder = 0
-        Text = 'TES5'
         OnChange = cbGameChange
         Items.Strings = (
           'TES5'
           'TES4'
           'FNV'
-          'FO3')
+          'FO3'
+          'FO4'#11
+          'SSE')
       end
     end
     object pnlDictionaryInfo: TPanel

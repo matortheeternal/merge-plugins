@@ -94,6 +94,7 @@ type
     fnvHash: string;
     fo3Hash: string;
     fo4Hash: string;
+    sseHash: string;
     procedure Refresh;
   end;
   TReport = class(TObject)
@@ -165,11 +166,13 @@ type
     fnvReports: integer;
     fo3Reports: integer;
     fo4Reports: integer;
+    sseReports: integer;
     tes5Logins: integer;
     tes4Logins: integer;
     fnvLogins: integer;
     fo3Logins: integer;
     fo4Logins: integer;
+    sseLogins: integer;
   end;
 
   { MySQL methods }
@@ -269,16 +272,16 @@ const
 
 var
   TES5Dictionary, TES4Dictionary, FO3Dictionary, FNVDictionary, FO4Dictionary,
-  ApprovedReports, UnapprovedReports, Users, Blacklist, BaseLog, Log,
-  LabelFilters, GroupFilters: TList;
+  SSEDictionary, ApprovedReports, UnapprovedReports, Users, Blacklist, BaseLog,
+  Log, LabelFilters, GroupFilters: TList;
   slTES5Dictionary, slTES4Dictionary, slFO3Dictionary, slFNVDictionary,
-  slFO4Dictionary, slConnectedIPs: TStringList;
+  slFO4Dictionary, slSSEDictionary, slConnectedIPs: TStringList;
   statistics: TServerStatistics;
   settings: TSettings;
   status: TmpStatus;
   LogPath, ProgramPath, ProgramVersion: string;
-  bLoginSuccess, bRebuildTES5, bRebuildTES4, bRebuildFNV,
-  bRebuildFO3, bRebuildFO4, bApprovedAscending, bUnapprovedAscending: boolean;
+  bLoginSuccess, bRebuildTES5, bRebuildTES4, bRebuildFNV, bRebuildFO3,
+  bRebuildFO4, bRebuildSSE, bApprovedAscending, bUnapprovedAscending: boolean;
   wbStartTime: TDateTime;
   sessionBandwidth: Int64;
   Connection: TZConnection;
@@ -306,8 +309,9 @@ begin
   if bRebuildFNV then RebuildDictionary('FNV', FNVDictionary);
   if bRebuildFO3 then RebuildDictionary('FO3', FO3Dictionary);
   if bRebuildFO4 then RebuildDictionary('FO4', FO4Dictionary);
+  if bRebuildSSE then RebuildDictionary('SSE', SSEDictionary);
   if not (bRebuildTES5 or bRebuildTES4 or bRebuildFNV or bRebuildFO3
-  or bRebuildFO4) then
+   or bRebuildFO4 or bRebuildSSE) then
     Logger.Write('DATA', 'Dictionary', 'No dictionaries need to be updated');
 end;
 
@@ -944,6 +948,7 @@ begin
   if report.game = 'FNV' then bRebuildFNV := true;
   if report.game = 'FO3' then bRebuildFO3 := true;
   if report.game = 'FO4' then bRebuildFO4 := true;
+  if report.game = 'SSE' then bRebuildSSE := true;
 end;
 
 function GetDictionary(name: string): string;
@@ -957,7 +962,9 @@ begin
   else if name = 'FO3Dictionary.txt' then
     Result := slFO3Dictionary.Text
   else if name = 'FO4Dictionary.txt' then
-    Result := slFO4Dictionary.Text;
+    Result := slFO4Dictionary.Text
+  else if name = 'SSEDictionary.txt' then
+    Result := slSSEDictionary.Text;
 end;
 
 function GetDictionaryHash(name: string): string;
@@ -971,7 +978,9 @@ begin
   else if name = 'FO3Dictionary.txt' then
     Result := status.fo3hash
   else if name = 'FO4Dictionary.txt' then
-    Result := status.fo4hash;
+    Result := status.fo4hash
+  else if name = 'SSEDictionary.txt' then
+    Result := status.ssehash;
 end;
 
 procedure LoadDictionary(var lst: TList; var sl: TStringList; filename: string);
@@ -1518,9 +1527,22 @@ begin
 end;
 
 { TmpStatus }
-procedure TmpStatus.Refresh;
+procedure RefreshDictionary(game: String; var hash: String);
 var
   NewVersion: string;
+begin
+  if FileExists(game + 'Dictionary.txt') then begin
+    NewVersion := GetCRC32(game + 'Dictionary.txt');
+    if (hash <> NewVersion) then begin
+      hash := NewVersion;
+      Logger.Write('INIT', 'Status', game + 'Dictionary Hash: '+hash);
+    end;
+  end;
+end;
+
+procedure TmpStatus.Refresh;
+var
+  NewVersion: String;
   Zipper: TAbZipper;
 begin
   if FileExists('MergePlugins.exe') then begin
@@ -1538,41 +1560,12 @@ begin
       Zipper.Free;
     end;
   end;
-  if FileExists('TES5Dictionary.txt') then begin
-    NewVersion := GetCRC32('TES5Dictionary.txt');
-    if (TES5Hash <> NewVersion) then begin
-      TES5Hash := NewVersion;
-      Logger.Write('INIT', 'Status', 'TES5Dictionary Hash: '+TES5Hash);
-    end;
-  end;
-  if FileExists('TES4Dictionary.txt') then begin
-    NewVersion := GetCRC32('TES4Dictionary.txt');
-    if (TES4Hash <> NewVersion) then begin
-      TES4Hash := NewVersion;
-      Logger.Write('INIT', 'Status', 'TES4Dictionary Hash: '+TES4Hash);
-    end;
-  end;
-  if FileExists('FNVDictionary.txt') then begin
-    NewVersion := GetCRC32('FNVDictionary.txt');
-    if (FNVHash <> NewVersion) then begin
-      FNVHash := NewVersion;
-      Logger.Write('INIT', 'Status', 'FNVDictionary Hash: '+FNVHash);
-    end;
-  end;
-  if FileExists('FO3Dictionary.txt') then begin
-    NewVersion := GetCRC32('FO3Dictionary.txt');
-    if (FO3Hash <> NewVersion) then begin
-      FO3Hash := NewVersion;
-      Logger.Write('INIT', 'Status', 'FO3Dictionary Hash: '+FO3Hash);
-    end;
-  end;
-  if FileExists('FO4Dictionary.txt') then begin
-    NewVersion := GetCRC32('FO4Dictionary.txt');
-    if (FO4Hash <> NewVersion) then begin
-      FO4Hash := NewVersion;
-      Logger.Write('INIT', 'Status', 'FO4Dictionary Hash: '+FO4Hash);
-    end;
-  end;
+  RefreshDictionary('TES5', TES5Hash);
+  RefreshDictionary('TES4', TES4Hash);
+  RefreshDictionary('FNV', FNVHash);
+  RefreshDictionary('FO3', FO3Hash);
+  RefreshDictionary('FO4', FO4Hash);
+  RefreshDictionary('SSE', SSEHash);
 end;
 
 { TReport }

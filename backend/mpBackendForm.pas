@@ -247,11 +247,13 @@ begin
     FO3Dictionary := TList.Create;
     FNVDictionary := TList.Create;
     FO4Dictionary := TList.Create;
+    SSEDictionary := TList.Create;
     LoadDictionary(TES5Dictionary, slTES5Dictionary, 'TES5Dictionary.txt');
     LoadDictionary(TES4Dictionary, slTES4Dictionary, 'TES4Dictionary.txt');
     LoadDictionary(FO3Dictionary, slFO3Dictionary, 'FO3Dictionary.txt');
     LoadDictionary(FNVDictionary, slFNVDictionary, 'FNVDictionary.txt');
     LoadDictionary(FO4Dictionary, slFO4Dictionary, 'FO4Dictionary.txt');
+    LoadDictionary(SSEDictionary, slSSEDictionary, 'SSEDictionary.txt');
 
     // QUERY DATA FROM MYSQL
     DBQueryReports;
@@ -500,11 +502,13 @@ begin
   AddDetailsItem('FNV logins', IntToStr(statistics.fnvLogins));
   AddDetailsItem('FO3 logins', IntToStr(statistics.fo3Logins));
   AddDetailsItem('FO4 logins', IntToStr(statistics.fo4Logins));
+  AddDetailsItem('SSE logins', IntToStr(statistics.sseLogins));
   AddDetailsItem('TES5 reports recieved', IntToStr(statistics.tes5Reports));
   AddDetailsItem('TES4 reports recieved', IntToStr(statistics.tes4Reports));
   AddDetailsItem('FNV reports recieved', IntToStr(statistics.fnvReports));
   AddDetailsItem('FO3 reports recieved', IntToStr(statistics.fo3Reports));
   AddDetailsItem('FO4 reports recieved', IntToStr(statistics.fo4Reports));
+  AddDetailsItem('SSE reports recieved', IntToStr(statistics.sseReports));
   AddDetailsItem(' ', ' ');
   AddDetailsItem('Session bandwidth', FormatByteSize(sessionBandwidth));
   AddDetailsItem('Session uptime', TimeStr(sessionUptime));
@@ -757,6 +761,7 @@ begin
   bRebuildFO3 := true;
   bRebuildFNV := true;
   bRebuildFO4 := true;
+  bRebuildSSE := true;
   TTaskProcedures.RebuildDictionaries;
 end;
 
@@ -1258,7 +1263,9 @@ begin
       else if msg.data = 'FO3' then
         Inc(statistics.fo3Logins)
       else if msg.data = 'FO4' then
-        Inc(statistics.fo4Logins);
+        Inc(statistics.fo4Logins)
+      else if msg.data = 'SSE' then
+        Inc(statistics.sseLogins);
     end;
 
     MSG_REGISTER: begin
@@ -1381,7 +1388,9 @@ begin
         else if report.game = 'FO3' then
           Inc(statistics.fo3Reports)
         else if report.game = 'FO4' then
-          Inc(statistics.fo4Reports);
+          Inc(statistics.fo4Reports)
+        else if report.game = 'SSE' then
+          Inc(statistics.sseReports);
       except
         on x : Exception do begin
           QueueLogMessage('ERROR', 'Server', 'Failed to load report '+x.Message);
