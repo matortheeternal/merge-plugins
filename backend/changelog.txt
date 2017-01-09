@@ -114,7 +114,6 @@ Version 2.1.3.0
 Version 2.2.0.0
   - Added Fallout 4 support
 
-
 Version 2.2.1.0
   - Fixed issue with Fallout 4 load order sorting
   - Fixed issue with Fallout 4 dictionary update not working
@@ -126,3 +125,11 @@ Version 2.2.2.0
 
 Version 2.2.3.0
   - Fixed issue with building references for Fallout 4 ESPs with QUST child records (you should now be able to load the DLC ESMs and the Unofficial Fallout 4 Patch.esp)
+  
+Version 2.3
+  - Added SSE Support
+  - Resolved issue with handling BSA archives
+  - Adjusted how the profile form works. Now it will always create default profiles for games that don't have profiles.
+  
+Version 2.3.1
+  - Fixed issue with loading SSE Load Order from the wrong file
