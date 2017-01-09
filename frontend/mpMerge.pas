@@ -145,7 +145,7 @@ begin
   if Tracker.Cancel then exit;
 
   // inital messages
-  bRenumberAll := merge.renumbering = 'All';
+  bRenumberAll := merge.renumbering = 1;
   Tracker.Write(' ');
   if bRenumberAll then
     Tracker.Write('Renumbering All FormIDs')
@@ -965,7 +965,7 @@ begin
   Tracker.Write(' ');
   Tracker.Write('Copying records');
   //masters := TStringList.Create;
-  asNew := merge.method = 'New records';
+  asNew := merge.method = 1;
   // copy records from all plugins to be merged
   for i := Pred(pluginsToMerge.Count) downto 0 do begin
     if Tracker.Cancel then exit;
@@ -1677,14 +1677,14 @@ end;
 procedure MergeRecords(var merge: TMerge; var lst: TList);
 begin
   // overrides merging method
-  if merge.method = 'Overrides' then
+  if merge.method = 0 then
     RenumberRecords(lst, merge);
 
   // copy records
   CopyRecords(lst, merge);
 
   // new records merging method
-  if merge.method = 'New records' then
+  if merge.method = 1 then
     RemapRecords(merge);
 end;
 
@@ -1849,7 +1849,7 @@ var
   masterName: string;
 begin
   // if overrides method, remove masters to force clamping
-  if merge.method = 'Overrides' then begin
+  if merge.method = 0 then begin
     Tracker.Write(' ');
     Tracker.Write('Removing unncessary masters');
     mergeFile := merge.plugin._File;

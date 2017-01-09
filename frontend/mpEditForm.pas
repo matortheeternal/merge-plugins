@@ -56,8 +56,8 @@ begin
     merge.name := Trim(edName.Text);
     merge.dataPath := settings.mergeDirectory + merge.name + '\';
     merge.filename := Trim(edFilename.Text);
-    merge.method := cbMethod.Text;
-    merge.renumbering := cbRenumbering.Text;
+    merge.method := cbMethod.ItemIndex;
+    merge.renumbering := cbRenumbering.ItemIndex;
   end;
 end;
 
@@ -129,7 +129,7 @@ procedure TEditForm.cbMethodChange(Sender: TObject);
 var
   bNewRecords: boolean;
 begin
-  bNewRecords := cbMethod.Text = 'New records';
+  bNewRecords := cbMethod.ItemIndex = 1;
   cbRenumbering.ItemIndex := IfThenInt(bNewRecords, 1, 0);
   cbRenumbering.Enabled := not bNewRecords;
   Repaint;

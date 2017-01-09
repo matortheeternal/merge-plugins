@@ -89,8 +89,8 @@ type
     filename: string;
     dateBuilt: TDateTime;
     bIgnoreNonContiguous: boolean;
-    method: string;
-    renumbering: string;
+    method: Integer;
+    renumbering: Integer;
     dataPath: string;
     status: TMergeStatusID;
     plugin: TPlugin;
@@ -516,8 +516,8 @@ begin
   geckScripts := TStringList.Create;
   navConflicts := TStringList.Create;
   ignoredDependencies := TStringList.Create;
-  method := 'Overrides';
-  renumbering := 'Conflicting';
+  method := 0;
+  renumbering := 0;
   fails := TStringList.Create;
 end;
 
@@ -548,8 +548,8 @@ begin
   obj.S['name'] := name;
   obj.S['filename'] := filename;
   obj.S['dateBuilt'] := DateTimeToStr(dateBuilt);
-  obj.S['method'] := method;
-  obj.S['renumbering'] := renumbering;
+  obj.I['method'] := method;
+  obj.I['renumbering'] := renumbering;
   obj.B['bIgnoreNonContiguous'] := bIgnoreNonContiguous;
 
   // plugins, pluginSizes, pluginDates, masters
@@ -585,8 +585,12 @@ begin
   // load object attributes
   name := obj.AsObject.S['name'];
   filename := obj.AsObject.S['filename'];
-  method := obj.AsObject.S['method'];
-  renumbering := obj.AsObject.S['renumbering'];
+  try
+    method := obj.AsObject.I['method'];
+    renumbering := obj.AsObject.I['renumbering'];
+  except on Exception do
+    // nothing
+  end;
   try
     bIgnoreNonContiguous := obj.AsObject.B['bIgnoreNonContiguous'];
   except on Exception do
@@ -1005,6 +1009,7 @@ var
   sl: TStringList;
 begin
   // initialize dictionary and blacklist
+  Logger.Write('GENERAL', 'Dictionary', 'Using '+wbAppName+'Dictionary.txt');
   dictionary := TList.Create;
   blacklist := TList.Create;
 
@@ -1069,6 +1074,8 @@ var
   sl: TStringList;
   filename: string;
 begin
+  Tracker.Write('Loading merges');
+
   // don't load file if it doesn't exist
   filename := PathList.Values['ProfilePath'] + 'Merges.json';
   if not FileExists(filename) then
