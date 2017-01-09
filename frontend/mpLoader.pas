@@ -30,8 +30,8 @@ uses
   function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 
 var
-  slPlugins: TStringList;
   UpdateCallback: TCallback;
+  slPlugins, slLoadOrder: TStringList;
 
 implementation
 
@@ -63,41 +63,20 @@ uses
 }
 {******************************************************************************}
 
-function InitBase: boolean;
-var
-  sLoadPath, sPath: string;
-  slLoadOrder: TStringList;
-  psForm: TPluginSelectionForm;
+function GetGameIniPath: String;
 begin
-  Result := false;
+  if settings.usingMO then begin
+    Result := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\';
+    if not DirectoryExists(Result) then
+      Logger.Write('GENERAL', 'Load Order', 'Couldn''t find MO profile folder '+Result)
+    else
+      exit;
+  end;
+  Result := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName2+'\';
+end;
 
-  // INITIALIZE VARIABLES
-  LogPath := PathList.Values['ProgramPath'] + 'logs\';
-  PathList.Values['TempPath'] := PathList.Values['ProgramPath'] + 'temp\';
-  PathList.Values['ProfilePath'] := PathList.Values['ProgramPath'] +
-    'profiles\'+ CurrentProfile.name + '\';
-  ForceDirectories(PathList.Values['TempPath']);
-  ForceDirectories(LogPath);
-  ForceDirectories(PathList.Values['ProfilePath']);
-  LocalStatus := TmpStatus.Create;
-  LastStatusTime := 0;
-
-  // SET GAME VARS
-  SetGame(CurrentProfile.gameMode);
-  wbVWDInTemporary := wbGameMode in [gmSSE, gmTES5, gmFO3, gmFNV];
-  wbVWDAsQuestChildren := wbGameMode = gmFO4;
-  wbArchiveExtension := IfThen(wbGameMode = gmFO4, '.ba2', '.bsa');
-  wbLoadBSAs := wbGameMode in [gmFO4, gmSSE, gmTES5, gmTES4];
-  Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
-  Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
-
-  // INITIALIZE SETTINGS FOR GAME
-  LoadSettings;
-  LoadLanguage;
-  if settings.usingMO then
-    ModOrganizerInit;
-
-  // INITIALIZE TES5EDIT API
+procedure InitializeXEditAPI;
+begin
   wbDisplayLoadOrderFormID := True;
   wbSortSubRecords := True;
   wbDisplayShorterNames := True;
@@ -109,9 +88,10 @@ begin
   wbEditAllowed := True;
   wbContainerHandler := wbCreateContainerHandler;
   wbContainerHandler._AddRef;
+end;
 
-  // IF AUTOMATIC UPDATING IS ENABLED, CHECK FOR UPDATE
-  InitializeClient;
+procedure AutomaticUpdate;
+begin
   if settings.updateDictionary or settings.updateProgram then try
     Tracker.Write('Checking for updates');
     ConnectToServer;
@@ -124,26 +104,46 @@ begin
     on x: Exception do
       Logger.Write('CLIENT', 'Update', 'Failed to get automatic update '+x.Message);
   end;
+end;
 
-  // INITIALIZE DICTIONARY
-  Logger.Write('GENERAL', 'Dictionary', 'Using '+wbAppName+'Dictionary.txt');
-  LoadDictionary;
+procedure InitVariables;
+begin
+  LogPath := PathList.Values['ProgramPath'] + 'logs\';
+  PathList.Values['TempPath'] := PathList.Values['ProgramPath'] + 'temp\';
+  PathList.Values['ProfilePath'] := PathList.Values['ProgramPath'] +
+    'profiles\'+ CurrentProfile.name + '\';
+  ForceDirectories(PathList.Values['TempPath']);
+  ForceDirectories(LogPath);
+  ForceDirectories(PathList.Values['ProfilePath']);
+  LocalStatus := TmpStatus.Create;
+  LastStatusTime := 0;
+end;
 
-  // INITIALIZE TES5EDIT DEFINITIONS
-  Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
-  LoadDefinitions;
+procedure InitGameVariables;
+begin
+  SetGame(CurrentProfile.gameMode);
+  wbVWDInTemporary := wbGameMode in [gmSSE, gmTES5, gmFO3, gmFNV];
+  wbVWDAsQuestChildren := wbGameMode = gmFO4;
+  wbArchiveExtension := IfThen(wbGameMode = gmFO4, '.ba2', '.bsa');
+  wbLoadBSAs := wbGameMode in [gmFO4, gmSSE, gmTES5, gmTES4];
+  Logger.Write('GENERAL', 'Game', 'Using '+wbGameName);
+  Logger.Write('GENERAL', 'Path', 'Using '+wbDataPath);
+end;
 
-  // LOAD MERGES
-  Tracker.Write('Loading merges');
-  LoadMerges;
+procedure InitSettings;
+begin
+  LoadSettings;
+  LoadLanguage;
+  if settings.usingMO then
+    ModOrganizerInit;
+end;
 
+procedure BuildLoadOrder;
+var
+  sLoadPath, sPath: string;
+begin
   // GET LOAD ORDER PATH
-  sLoadPath := settings.ManagerPath + 'profiles\'+ActiveModProfile+'\';
-  if (not settings.usingMO) or (not DirectoryExists(sLoadPath)) then begin
-    if settings.usingMO then
-      Logger.Write('GENERAL', 'Load Order', 'Couldn''t find MO profile folder '+sLoadPath);
-    sLoadPath := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName2+'\';
-  end;
+  sLoadPath := GetGameIniPath;
   Logger.Write('GENERAL', 'Load Order', 'Using '+sLoadPath);
 
   // LOAD LIST OF ACTIVE PLUGINS (plugins.txt)
@@ -190,8 +190,12 @@ begin
       slLoadOrder.CustomSort(PluginListCompare);
     end;
   end;
+end;
 
-  // DISPLAY PLUGIN SELECTION FORM
+procedure DisplayPluginSelectionForm;
+var
+  psForm: TPluginSelectionForm;
+begin
   THeaderHelpers.LoadPluginHeaders(slLoadOrder);
   psForm := TPluginSelectionForm.Create(nil);
   psForm.slCheckedPlugins := slPlugins;
@@ -206,6 +210,23 @@ begin
   psForm.Free;
   wbFileForceClosed;
   FreeList(HeaderList);
+end;
+
+function InitBase: boolean;
+begin
+  Result := false;
+
+  InitVariables;
+  InitGameVariables;
+  InitSettings;
+  InitializeXEditAPI;
+  InitializeClient;
+  AutomaticUpdate;
+  LoadDictionary;
+  LoadDefinitions;
+  LoadMerges;
+  BuildLoadOrder;
+  DisplayPluginSelectionForm;
 
   // ALL DONE
   Result := true;
@@ -290,6 +311,7 @@ end;
 { Loads definitions based on wbGameMode }
 procedure LoadDefinitions;
 begin
+  Logger.Write('GENERAL', 'Definitions', 'Using '+wbAppName+'Edit Definitions');
   case wbGameMode of
     gmTES5: DefineTES5;
     gmFNV: DefineFNV;
