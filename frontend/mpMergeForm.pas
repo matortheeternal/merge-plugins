@@ -1746,8 +1746,8 @@ begin
   AddDetailsItem(GetLanguageString('mpMain_DateBuilt'), DateBuiltString(merge.dateBuilt));
   AddDetailsList(GetLanguageString('mpMain_Plugins'), merge.plugins);
   AddDetailsItem(' ', ' ');
-  AddDetailsItem(GetLanguageString('mpMain_MergeMethod'), merge.method);
-  AddDetailsItem(GetLanguageString('mpMain_Renumbering'), merge.renumbering);
+  AddDetailsItem(GetLanguageString('mpMain_MergeMethod'), GetLanguageString('mpEdit_cbMethod_Item' + IntToStr(merge.method)));
+  AddDetailsItem(GetLanguageString('mpMain_Renumbering'), GetLanguageString('mpEdit_cbRenumbering_Item' + IntToStr(merge.renumbering)));
 
   // files list
   if merge.files.Count > 1000 then

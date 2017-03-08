@@ -199,8 +199,8 @@ begin
   if Assigned(merge) then begin
     edName.Text := merge.name;
     edFilename.Text := merge.filename;
-    cbMethod.ItemIndex := cbMethod.Items.IndexOf(merge.method);
-    cbRenumbering.ItemIndex := cbRenumbering.Items.IndexOf(merge.renumbering);
+    cbMethod.ItemIndex := merge.method;
+    cbRenumbering.ItemIndex := merge.renumbering;
   end;
 end;
 
