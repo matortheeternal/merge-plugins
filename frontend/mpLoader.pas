@@ -175,9 +175,16 @@ begin
   // if GameMode is not Skyrim, SkyrimSE or Fallout 4 and user
   // isn't using MO, sort by date modified else add base masters
   // to load order if missing
-  if (wbGameMode = gmTES5) or (wbGameMode = gmSSE) then begin
+  if (wbGameMode = gmTES5) then begin
     FixLoadOrder(slLoadOrder, 'Skyrim.esm', 0);
     FixLoadOrder(slLoadOrder, 'Update.esm', 1);
+  end
+  else if (wbGameMode = gmSSE) then begin
+    FixLoadOrder(slLoadOrder, 'Skyrim.esm', 0);
+    FixLoadOrder(slLoadOrder, 'Update.esm', 1);
+    FixLoadOrder(slLoadOrder, 'Dawnguard.esm', 2);
+    FixLoadOrder(slLoadOrder, 'Hearthfires.esm', 3);
+    FixLoadOrder(slLoadOrder, 'Dragonborn.esm', 4);
   end
   else if (wbGameMode = gmFO4) then begin
     FixLoadOrder(slLoadOrder, 'Fallout4.esm', 0);
