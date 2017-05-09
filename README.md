@@ -36,7 +36,7 @@ Go to the General Tab and enter a username in the username text box.  Click "Che
 ## Contact
 If you're looking for support or want to contribute, join the [Modding Tools discord server](https://discord.gg/GUfRdpT).
 
-You can view project progress and user stories on the [trello board](https://trello.com/b/2NjpXIBZ/mator-smash).
+You can view project progress and user stories on the [trello board](https://trello.com/b/dGD038YW/merge-plugins).
 
 ## Credits
 * **xEdit**: used for interfacing with Bethesda plugin files.  xEdit was designed by zilav, hlp, Sharlikran and ElminsterAU
