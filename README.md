@@ -33,6 +33,11 @@ Go to the Merging Tab and check the boxes corresponding to the options you want 
 ### (4) register a username
 Go to the General Tab and enter a username in the username text box.  Click "Check" to verify the username is available.  Once you have a username that's available, click "Register".  This username is put on reports submitted to the backend.  A username is required if you want to submit reports on plugins you've merged.
 
+## Contact
+If you're looking for support or want to contribute, join the [Modding Tools discord server](https://discord.gg/GUfRdpT).
+
+You can view project progress and user stories on the [trello board](https://trello.com/b/2NjpXIBZ/mator-smash).
+
 ## Credits
 * **xEdit**: used for interfacing with Bethesda plugin files.  xEdit was designed by zilav, hlp, Sharlikran and ElminsterAU
 * **superobject**: used for handling json.
