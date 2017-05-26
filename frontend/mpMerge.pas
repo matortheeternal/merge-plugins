@@ -37,57 +37,40 @@ var
   Methods for renumbering formIDs.
 
   Includes:
-  - FindHighestFormID
+  - NextFormID
   - RenumberRecord
   - RenumberRecords
   - RenumberNewRecords
 }
 {******************************************************************************}
 
-function FindHighestFormID(var pluginsToMerge: TList; var merge: TMerge): Cardinal;
+procedure NextFormID(var CurrentFormID: Cardinal);
+begin
+  while true do begin
+    if UsedFormIDs[CurrentFormID] = 0 then break;
+    if CurrentFormID = $FFFFFF then
+      raise Exception.Create('Ran out of FormID space!');
+    Inc(CurrentFormID);
+  end;
+end;
+
+procedure BuildFormIDMap(var pluginsToMerge: TList);
 var
   i, j: Integer;
   plugin: TPlugin;
-  aFile: IwbFile;
-  aRecord, aFinalRecord: IwbMainRecord;
-  formID: cardinal;
+  rec: IwbMainRecord;
 begin
-  Result := $100;
-
-  // loop through plugins to merge
+  for i := 0 to High(UsedFormIDs) do
+    UsedFormIDs[i] := 0;
   for i := 0 to Pred(pluginsToMerge.Count) do begin
     plugin := pluginsToMerge[i];
-    aFile := plugin._File;
-    // loop through records
-    for j := 0 to Pred(aFile.RecordCount) do begin
-      aRecord := aFile.Records[j];
-      // skip override records
-      if IsOverride(aRecord) then continue;
-      formID := LocalFormID(aRecord);
-      if formID > Result then begin
-        aFinalRecord := aRecord;
-        Result := formID;
-      end;
+    for j := 0 to Pred(plugin._File.RecordCount) do begin
+      rec := plugin._File.Records[j];
+      if (rec.Signature = 'TES4') or IsOverride(rec) then
+        continue;
+      UsedFormIDs[LocalFormID(rec)] := 1;
     end;
   end;
-
-  // loop through mergePlugin
-  plugin := merge.plugin;
-  aFile := plugin._File;
-  // loop through records
-  for j := 0 to Pred(aFile.RecordCount) do begin
-    aRecord := aFile.Records[j];
-    // skip override records
-    if IsOverride(aRecord) then continue;
-    formID := LocalFormID(aRecord);
-    if formID > Result then begin
-      aFinalRecord := aRecord;
-      Result := formID;
-    end;
-  end;
-
-  if settings.debugRenumbering then
-    Tracker.Write('  Highest FormID: '+aFinalRecord.Name+' from '+aFinalRecord._File.Name);
 end;
 
 procedure RenumberRecord(var merge: TMerge; aRecord: IwbMainRecord;
@@ -139,7 +122,7 @@ var
   aRecord: IwbMainRecord;
   Records: array of IwbMainRecord;
   bRenumberAll: boolean;
-  BaseFormID, NewFormID, OldFormID: cardinal;
+  CurrentFormID, NewFormID, OldFormID: cardinal;
   header: IwbContainer;
 begin
   if Tracker.Cancel then exit;
@@ -154,11 +137,9 @@ begin
 
   // initialize variables
   total := 0;
-  BaseFormID := FindHighestFormID(pluginsToMerge, merge) + 128;
-  for i := 0 to High(UsedFormIDs) do
-    UsedFormIDs[i] := 0;
-  if settings.debugRenumbering then
-    Tracker.Write('  BaseFormID: '+IntToHex(BaseFormID, 8));
+  BuildFormIDMap(pluginsToMerge);
+  CurrentFormID := $800;
+  NextFormID(CurrentFormID);
 
   // renumber records in all pluginsToMerge
   for i := 0 to Pred(pluginsToMerge.Count) do begin
@@ -180,12 +161,10 @@ begin
       if Tracker.Cancel then exit;
       aRecord := Records[j];
       // skip file headers and overrides
-      if aRecord.Signature = 'TES4' then continue;
-      if IsOverride(aRecord) then continue;
+      if (aRecord.Signature = 'TES4') or IsOverride(aRecord) then continue;
       OldFormID := LocalFormID(aRecord);
       // skip records that aren't conflicting if not bRenumberAll
       if (not bRenumberAll) and (UsedFormIDs[OldFormID] = 0) then begin
-        UsedFormIDs[OldFormID] := 1;
         Tracker.UpdateProgress(1);
         if settings.debugRenumbering and debugSkips then
           Tracker.Write('    Skipping FormID '+IntToHex(OldFormID, 8));
@@ -193,14 +172,15 @@ begin
       end;
 
       // renumber record
-      NewFormID := LoadOrderPrefix(aRecord) + BaseFormID;
+      UsedFormIDs[CurrentFormID] := 1;
+      NewFormID := LoadOrderPrefix(aRecord) + CurrentFormID;
       if settings.debugRenumbering then
         Tracker.Write('    Changing FormID to ['+IntToHex(NewFormID, 8)+'] on '+aRecord.Name);
-      merge.map.Add(IntToHex(OldFormID, 8)+'='+IntToHex(BaseFormID, 8));
+      merge.map.Add(IntToHex(OldFormID, 8)+'='+IntToHex(CurrentFormID, 8));
       RenumberRecord(merge, aRecord, NewFormID);
 
-      // increment BaseFormID, totals, tracker position
-      Inc(BaseFormID);
+      // increment CurrentFormID, totals, tracker position
+      NextFormID(CurrentFormID);
       Inc(total);
       Inc(fileTotal);
       Tracker.UpdateProgress(1);
@@ -215,7 +195,7 @@ begin
 
   // set next object id
   header := merge.plugin._File.Elements[0] as IwbContainer;
-  header.ElementByPath['HEDR\Next Object ID'].NativeValue :=  BaseFormID;
+  header.ElementByPath['HEDR\Next Object ID'].NativeValue := CurrentFormID;
 end;
 
 function IsFormID(def: IwbNamedDef): boolean;
