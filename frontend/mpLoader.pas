@@ -157,7 +157,6 @@ begin
   // PREPARE PLUGINS LIST
   RemoveCommentsAndEmpty(slPlugins);
   RemoveMissingFiles(slPlugins);
-  RemoveMergedPlugins(slPlugins);
 
   // LOAD ORDER OF ALL PLUGINS (loadorder.txt)
   slLoadOrder := TStringList.Create;
@@ -171,6 +170,7 @@ begin
   RemoveCommentsAndEmpty(slLoadOrder);
   RemoveMissingFiles(slLoadOrder);
   AddMissingFiles(slLoadOrder);
+  RemoveMergedPlugins(slLoadOrder);
 
   // if GameMode is not Skyrim, SkyrimSE or Fallout 4 and user
   // isn't using MO, sort by date modified else add base masters
