@@ -166,11 +166,13 @@ begin
   else
     slLoadOrder.AddStrings(slPlugins);
 
+  // DISABLE MERGED PLUGINS
+  RemoveMergedPlugins(slPlugins);
+
   // PREPARE LOAD ORDER
   RemoveCommentsAndEmpty(slLoadOrder);
   RemoveMissingFiles(slLoadOrder);
   AddMissingFiles(slLoadOrder);
-  RemoveMergedPlugins(slLoadOrder);
 
   // if GameMode is not Skyrim, SkyrimSE or Fallout 4 and user
   // isn't using MO, sort by date modified else add base masters
