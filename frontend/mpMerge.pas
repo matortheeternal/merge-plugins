@@ -1609,7 +1609,6 @@ begin
     pluginFile := merge.plugin._File;
     for i := Pred(pluginFile.RecordCount) downto 0 do
       pluginFile.Records[i].Remove;
-    pluginFile.CleanMasters;
   end;
 
   // set result
